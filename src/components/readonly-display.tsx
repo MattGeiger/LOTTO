@@ -243,6 +243,7 @@ type ReadOnlyDisplayProps = {
   personalizedTicketNumber?: number | null;
   onRequestTicketChange?: () => void;
   onPersonalizedTicketCalled?: (details: { ticketNumber: number; calledAt: number }) => void;
+  onStateChange?: (state: RaffleState) => void;
   showQrCode?: boolean;
   showHeaderLogo?: boolean;
 };
@@ -253,6 +254,7 @@ export const ReadOnlyDisplay = ({
   personalizedTicketNumber = null,
   onRequestTicketChange,
   onPersonalizedTicketCalled,
+  onStateChange,
   showQrCode = true,
   showHeaderLogo = true,
 }: ReadOnlyDisplayProps) => {
@@ -362,6 +364,7 @@ export const ReadOnlyDisplay = ({
       }
       const payload = (await response.json()) as RaffleState;
       setState(payload);
+      onStateChange?.(payload);
       setStatus(`${t("lastChecked")}: ${formatTime(new Date(), language)}`);
 
       const nowMs = Date.now();
@@ -390,7 +393,7 @@ export const ReadOnlyDisplay = ({
       setHasError(true);
       scheduleNextPoll(POLL_ERROR_RETRY_MS);
     }
-  }, [clearPollTimeout, language, scheduleNextPoll, t]);
+  }, [clearPollTimeout, language, onStateChange, scheduleNextPoll, t]);
 
   React.useEffect(() => {
     pollStateRef.current = pollState;

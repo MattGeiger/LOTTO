@@ -14,11 +14,14 @@
 
 ## [Unreleased] - 2026-03-06
 ### Added
+- Added `docs/FEED_PUBLIC_INVENTORY.md` documenting the FEED public inventory data contract, translation mapping, intended LOTTO usage, fetch rules, UI boundaries, and first-implementation acceptance criteria.
+- Documented `/new` inventory rollout blockers in `docs/ISSUES.md`: aggressive text morph animation and ticket-selection reversal/pantry-day expiration semantics.
 - Added a shared semantic haptics layer (`src/lib/haptics.ts`, `HapticsProvider`, `useAppHaptics()`) with app-owned intent names for browser-safe button-style interactions on `/new` and Arcade.
 - Added regression coverage for the simplified provider, `/new` button haptics, Arcade direct button haptics, Arcade ticket-called visual-only behavior, and theme/language integration (`tests/haptics-provider.test.tsx`, `tests/new-page-haptics.test.tsx`, `tests/arcade-direct-input-haptics.test.tsx`, plus updated Arcade banner and theme tests).
 - Added a raw-library `/haptics` diagnostic page that renders one shadcn button per `web-haptics` built-in preset and triggers each preset directly, so device/browser support can be validated without the app's semantic mapping layer.
 
 ### Changed
+- Updated `/new` and Arcade personalized-ticket persistence to validate stored tickets against pantry operating-hours timezone, next pantry-day opening, and active LOTTO range instead of only browser-local midnight.
 - Extended optional client-device haptics from Arcade-only to `/new` and kept `/`, `/display`, admin, staff, and login haptic-free.
 - Narrowed browser haptics to direct button-style interactions only: `/new` and Arcade buttons, menu selections, theme/language choices, explicit submit/back/change-ticket actions, and Snake D-pad button presses.
 - Removed the dedicated haptics toggles and persisted `haptics-enabled` preference because browser haptics are intentionally scoped to narrow tactile feedback and the toggle consumed higher-value top-bar space.
