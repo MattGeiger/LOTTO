@@ -38,6 +38,9 @@ const normalizeTicketNumber = (rawInput: string): number | null => {
   return ticketNumber >= 0 && ticketNumber <= 99 ? ticketNumber : null;
 };
 
+const hasActiveTicketRange = (state: RaffleState | null): boolean =>
+  !!state && state.startNumber > 0 && state.endNumber >= state.startNumber;
+
 export default function NewPersonalizedHomePage() {
   const { setLanguage, t } = useLanguage();
   const { trigger } = useAppHaptics();
@@ -47,6 +50,7 @@ export default function NewPersonalizedHomePage() {
   const [ticketInputError, setTicketInputError] = React.useState("");
   const [selectedTicketNumber, setSelectedTicketNumber] = React.useState<number | null>(null);
   const [latestState, setLatestState] = React.useState<RaffleState | null>(null);
+  const ticketRangeReady = hasActiveTicketRange(latestState);
 
   const ticketStorageContext = React.useMemo<HomepageTicketStorageContext | null>(
     () =>
@@ -91,6 +95,12 @@ export default function NewPersonalizedHomePage() {
   );
 
   const handleTicketSubmit = React.useCallback(() => {
+    if (!ticketRangeReady) {
+      setTicketInputError("Ticket lookup will be available when today's tickets are ready.");
+      trigger("uiError");
+      return;
+    }
+
     const ticketNumber = normalizeTicketNumber(ticketInput);
     if (ticketNumber === null) {
       setTicketInputError("Use a ticket like C17 or 17.");
@@ -102,7 +112,7 @@ export default function NewPersonalizedHomePage() {
     setTicketInputError("");
     setIsOnboardingModalOpen(false);
     trigger("uiConfirm");
-  }, [ticketInput, ticketStorageContext, trigger]);
+  }, [ticketInput, ticketRangeReady, ticketStorageContext, trigger]);
 
   const handleTicketKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -225,6 +235,11 @@ export default function NewPersonalizedHomePage() {
                   aria-invalid={ticketInputError ? true : undefined}
                   className="h-11 text-center text-base uppercase"
                 />
+                {!ticketRangeReady && !ticketInputError ? (
+                  <p className="text-sm text-muted-foreground">
+                    Ticket lookup will be available when today&apos;s tickets are ready.
+                  </p>
+                ) : null}
                 {ticketInputError ? <p className="text-sm text-destructive">{ticketInputError}</p> : null}
                 <Button type="button" haptic="none" className="h-11 w-full text-base" onClick={handleTicketSubmit}>
                   <span>{t("searchButtonLabel")}</span>
