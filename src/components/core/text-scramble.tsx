@@ -35,8 +35,8 @@ function makeScrambledFrame(target: string[], progress: number, characterSet: st
 export function TextScramble<T extends keyof React.JSX.IntrinsicElements = "p">({
   children,
   as,
-  duration = 0.8,
-  speed = 0.04,
+  duration = 1.5,
+  speed = 0.1,
   characterSet = DEFAULT_CHARACTER_SET,
   className,
   trigger,
