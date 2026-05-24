@@ -299,11 +299,12 @@ Inventory lookup should remain separate from raffle/display features:
   existing public navigation patterns and does not disrupt queue lookup.
 - Do not add a "See our inventory" entry point to `/new` until the current
   personalized-homepage UX blockers are resolved:
-  - `/new` text morph animation is too aggressive and triggers too often.
+  - `/new` text morph animation is too aggressive and triggers too often. This
+    blocker is implemented in development.
   - `/new` ticket selection needs stronger reversal and pantry-day expiration
     semantics. The pantry-day/range persistence portion is implemented in
-    development, but `/new` remains blocked until the morph-animation issue and
-    remaining ticket reversal/clear UX are resolved.
+    development, but `/new` remains blocked until the remaining ticket
+    reversal/clear UX is resolved.
 
 ## Error and Empty States
 
@@ -336,8 +337,8 @@ Focused tests should cover:
 ## Open Decisions
 
 1. Whether `/inventory` should be linked from `/`, `/display`, `/new`, or all
-   public client surfaces. `/new` is blocked until Issue 19 and the remaining
-   Issue 20 reversal/clear UX work in `docs/ISSUES.md` are resolved.
+   public client surfaces. `/new` is blocked until the remaining Issue 20
+   reversal/clear UX work in `docs/ISSUES.md` is resolved.
 2. Whether to poll inventory periodically while the page is visible or refresh
    only on page load plus manual retry/refresh.
 3. Whether to include FEED category icons in LOTTO UI immediately or treat them

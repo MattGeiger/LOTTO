@@ -244,6 +244,7 @@ type ReadOnlyDisplayProps = {
   onRequestTicketChange?: () => void;
   onPersonalizedTicketCalled?: (details: { ticketNumber: number; calledAt: number }) => void;
   onStateChange?: (state: RaffleState) => void;
+  animateLanguageText?: boolean;
   showQrCode?: boolean;
   showHeaderLogo?: boolean;
 };
@@ -255,6 +256,7 @@ export const ReadOnlyDisplay = ({
   onRequestTicketChange,
   onPersonalizedTicketCalled,
   onStateChange,
+  animateLanguageText = true,
   showQrCode = true,
   showHeaderLogo = true,
 }: ReadOnlyDisplayProps) => {
@@ -268,7 +270,7 @@ export const ReadOnlyDisplay = ({
    * appears instantly, and only subsequent text changes morph.
    */
   const [morphReady, setMorphReady] = React.useState(false);
-  const T = morphReady ? LanguageMorphText : PlainText;
+  const T = animateLanguageText && morphReady ? LanguageMorphText : PlainText;
 
   const [state, setState] = React.useState<RaffleState | null>(null);
   const [status, setStatus] = React.useState("");
