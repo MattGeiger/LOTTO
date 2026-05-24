@@ -61,11 +61,14 @@ function renderHomePage() {
 }
 
 describe("homepage ticket persistence", () => {
+  let currentState: RaffleState;
+
   beforeEach(() => {
     window.localStorage.clear();
+    currentState = structuredClone(statePayload);
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => new Response(JSON.stringify(statePayload), { status: 200 })),
+      vi.fn(async () => new Response(JSON.stringify(currentState), { status: 200 })),
     );
   });
 
@@ -154,5 +157,32 @@ describe("homepage ticket persistence", () => {
       name: "Enter your ticket number",
     });
     expect((ticketInput as HTMLInputElement).value).toBe("24");
+  });
+
+  it("does not persist ticket input while the active ticket range is reset", async () => {
+    currentState = {
+      ...currentState,
+      startNumber: 0,
+      endNumber: 0,
+      generatedOrder: [],
+      currentlyServing: null,
+      orderLocked: false,
+      timestamp: null,
+    };
+
+    const user = userEvent.setup();
+    renderHomePage();
+
+    await user.click(await screen.findByRole("button", { name: "English" }));
+    const ticketInput = await screen.findByRole("textbox", {
+      name: "Enter your ticket number",
+    });
+    await user.clear(ticketInput);
+    await user.type(ticketInput, "24");
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+
+    expect(await screen.findByText("Ticket lookup will be available when today's tickets are ready.")).toBeInTheDocument();
+    expect(window.localStorage.getItem(HOMEPAGE_TICKET_STORAGE_KEY)).toBeNull();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 });

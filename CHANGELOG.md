@@ -30,6 +30,7 @@
 - Removed unreliable web haptics from async and game-loop-driven events: tracked ticket-called celebrations, Snake pellet/collision feedback, and Brick impact/contact/level-clear/life-loss feedback are now visual-only on the web path.
 
 ### Fixed
+- Fixed a `/new` reset-edge loop where a tab left open across staff reset could accept a ticket while no active range existed, immediately invalidate the stored ticket, and reopen the ticket modal repeatedly; ticket submit now waits until today's ticket range is ready.
 - Aligned the haptics implementation with browser activation constraints by concluding the feature as tactile input feedback rather than broad event-driven vibration.
 
 ## [1.6.2] - 2026-03-05

@@ -677,6 +677,11 @@ After entering a Start Number and End Number in the admin page, only the "Genera
 - Old local-midnight-only stored tickets are cleared as soon as pantry-day
   context is available, preventing stale prototype storage from silently
   carrying forward.
+- Added an active-range gate to `/new` ticket submission. If the tab remains
+  open across a staff reset and the current state has no active ticket range,
+  the modal now keeps the user in place with the message `Ticket lookup will be
+  available when today's tickets are ready.` instead of accepting input,
+  writing immediately-invalid storage, and reopening in a loop.
 
 ### Validation
 - Added/updated focused coverage in:
@@ -686,6 +691,8 @@ After entering a Start Number and End Number in the admin page, only the "Genera
 - Verified pantry-day expiry, previous-open-day service-key calculation before
   opening, active-range mismatch clearing, reset/no-range clearing, `/new`
   persisted-ticket writes, and Arcade ticket tracking with the new range marker.
+- Added regression coverage that submitting a ticket while the active range is
+  reset does not write local storage and keeps the modal stable.
 
 ### Inventory Rollout Dependency
 - Do not add a "See our inventory" affordance to `/new` until the remaining
