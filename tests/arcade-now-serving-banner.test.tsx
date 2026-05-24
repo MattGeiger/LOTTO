@@ -31,6 +31,8 @@ vi.mock("react-canvas-confetti", () => ({
 }));
 
 type BannerPayload = {
+  startNumber: number;
+  endNumber: number;
   currentlyServing: number | null;
   generatedOrder: number[];
   ticketStatus: Record<number, TicketStatus>;
@@ -59,6 +61,8 @@ describe("NowServingBanner", () => {
     rawTriggerMock.mockReset();
 
     payload = {
+      startNumber: 10,
+      endNumber: 40,
       currentlyServing: 14,
       generatedOrder: [14, 18, 24],
       ticketStatus: {},
@@ -88,6 +92,7 @@ describe("NowServingBanner", () => {
         ticketNumber: 24,
         expiresAt: Date.now() + 60_000,
         savedAt: Date.now(),
+        rangeKey: "10-40",
       }),
     );
 
@@ -104,6 +109,7 @@ describe("NowServingBanner", () => {
         ticketNumber: 24,
         expiresAt: Date.now() + 60_000,
         savedAt: Date.now(),
+        rangeKey: "10-40",
       }),
     );
     payload.calledAt = { 24: Date.now() };

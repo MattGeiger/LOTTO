@@ -76,6 +76,7 @@ describe("homepage ticket persistence", () => {
         ticketNumber: 24,
         expiresAt: Date.now() + 60_000,
         savedAt: Date.now(),
+        rangeKey: "10-40",
       }),
     );
 
@@ -95,6 +96,7 @@ describe("homepage ticket persistence", () => {
         ticketNumber: 24,
         expiresAt: Date.now() - 1_000,
         savedAt: Date.now() - 5_000,
+        rangeKey: "10-40",
       }),
     );
 
@@ -121,9 +123,11 @@ describe("homepage ticket persistence", () => {
       ticketNumber: number;
       expiresAt: number;
       savedAt: number;
+      rangeKey?: string;
     };
 
     expect(parsed.ticketNumber).toBe(7);
+    expect(parsed.rangeKey).toBe("10-40");
     expect(parsed.expiresAt).toBeGreaterThan(parsed.savedAt);
     expect(new Date(parsed.expiresAt).getHours()).toBe(0);
     expect(new Date(parsed.expiresAt).getMinutes()).toBe(0);
@@ -138,6 +142,7 @@ describe("homepage ticket persistence", () => {
         ticketNumber: 24,
         expiresAt: Date.now() + 60_000,
         savedAt: Date.now(),
+        rangeKey: "10-40",
       }),
     );
 

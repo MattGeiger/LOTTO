@@ -558,6 +558,119 @@ After entering a Start Number and End Number in the admin page, only the "Genera
 
 ---
 
+## Issue 19: `/new` text morph animation is too aggressive
+
+### Status
+- Open. Must be resolved before adding a FEED inventory entry point to `/new`.
+
+### Observed
+- The prototype client experience at `https://williamtemple.app/new` uses text morph animation too aggressively.
+- Animation triggers too often for a client-facing flow where the user is trying to choose a language, enter a ticket, and monitor status.
+- The frequent movement increases visual noise and can make the page feel less stable than the core public board.
+
+### Current Context
+- `/new` is the personalized homepage prototype. It uses the shared language context and a personalized `ReadOnlyDisplay` variant to show one client's ticket status, estimated wait, tickets ahead, and called-ticket alert behavior.
+- A previous page-load morph issue was documented as Issue 17 and resolved by downgrading the onboarding title from per-character morphing to a simpler transition. This follow-up is broader: even after the initial-load fix, the overall animation intensity and trigger frequency on `/new` still need product-level restraint.
+
+### Desired Behavior
+- Text should be static by default while the client is reading or entering information.
+- Animation should be reserved for meaningful transitions:
+  - initial language selection,
+  - explicit language changes,
+  - ticket status changes,
+  - called-ticket alert states.
+- Background/cycling copy should not keep pulling attention away from the primary task.
+- Reduced-motion users should see no nonessential motion.
+
+### Recommended Direction
+1. Audit all `LanguageMorphText`, `MorphingText`, and cycling text usage on `/new`.
+2. Replace nonessential morphing with plain text.
+3. Keep animation only where it communicates a state change.
+4. Consider disabling the language-title cycle after the user has selected a language.
+5. Add focused regression coverage so `/new` does not reintroduce page-load or repeated idle morphing.
+
+### Inventory Rollout Dependency
+- Do not add a "See our inventory" affordance to `/new` until this is resolved. Inventory lookup should not be layered onto a prototype surface that still has distracting motion behavior.
+
+---
+
+## Issue 20: `/new` ticket selection needs stronger reversal and pantry-day expiration semantics
+
+### Status
+- Partially implemented in development. Pantry-day/range expiration is resolved;
+  stronger ticket reversal/clear controls remain open. FEED inventory entry
+  points on `/new` remain blocked by Issue 19 and the remaining reversal UX work.
+
+### Observed
+- `/new` asks clients for an individual ticket number and stores that selection for the personalized experience.
+- Ticket entry must be easily reversible so a client can correct a wrong number without feeling stuck in the personalized state.
+- Ticket selection must expire automatically at the start of each pantry day so stale tickets are not carried into the next service period.
+
+### Current Context
+- `/new` currently provides an `Enter a new ticket number` recovery action inside the personalized card.
+- The existing persisted ticket selection is client-side browser storage and is designed to avoid carrying stale ticket state indefinitely.
+- The current behavior should be re-evaluated against pantry-day semantics, not just generic local calendar-day rollover. "Start of pantry day" should be defined by pantry operating rules/state, not assumed to be midnight unless that is explicitly accepted as the product rule.
+
+### Desired Behavior
+- Reversal is obvious and available from the main personalized surface:
+  - clients can change or clear the ticket number,
+  - the action is not hidden below less important controls,
+  - invalid corrections produce ASK-style guidance.
+- Expiration aligns with pantry operations:
+  - ticket state clears automatically at the start of each pantry day,
+  - stale selections from a previous service day cannot silently personalize the next day,
+  - the rule is deterministic across refreshes and device timezone differences.
+- The selected language may persist independently from the ticket number unless product requirements later say otherwise.
+
+### Recommended Direction
+1. Define the pantry-day boundary using available LOTTO state:
+   - preferred: operating-hours/timezone-aware start-of-service-day calculation,
+   - fallback: explicit daily reset/timestamp marker if operating hours are unavailable,
+   - avoid relying only on the browser's local midnight unless accepted as the documented rule.
+2. Update `src/lib/home-ticket-storage.ts` so stored tickets expire against the selected pantry-day boundary.
+3. Make correction/clear controls prominent on `/new`.
+4. Add tests for:
+   - changing a ticket,
+   - clearing a ticket,
+   - expiration at pantry-day start,
+   - timezone-sensitive behavior,
+   - language persistence staying independent from ticket persistence.
+
+### Fix Applied: Pantry-Day and Range Persistence
+- Replaced local-midnight-only persistence with pantry-day-aware ticket storage.
+- Stored tickets now carry:
+  - `serviceDayKey`, derived from configured pantry operating hours and timezone.
+  - `rangeKey`, derived from the active LOTTO ticket range.
+  - `expiresAt`, set to the next configured pantry opening boundary instead of
+    generic browser-local midnight when operating-hours context is available.
+- `/new` now receives fresh raffle state from the existing `ReadOnlyDisplay`
+  polling path through an `onStateChange` callback, then revalidates the
+  selected ticket against pantry-day and range context.
+- If the stored/current ticket expires, loses its service-day match, or no
+  longer matches the active range, `/new` clears the ticket and reopens the
+  ticket-entry step.
+- Arcade ticket tracking now reads persisted ticket state with the same
+  operating-hours/timezone/range context so stale personalized tickets do not
+  continue driving Arcade wait/called-ticket behavior.
+- Old local-midnight-only stored tickets are cleared as soon as pantry-day
+  context is available, preventing stale prototype storage from silently
+  carrying forward.
+
+### Validation
+- Added/updated focused coverage in:
+  - `tests/home-ticket-storage.test.ts`
+  - `tests/homepage-ticket-persistence.test.tsx`
+  - `tests/arcade-now-serving-banner.test.tsx`
+- Verified pantry-day expiry, previous-open-day service-key calculation before
+  opening, active-range mismatch clearing, reset/no-range clearing, `/new`
+  persisted-ticket writes, and Arcade ticket tracking with the new range marker.
+
+### Inventory Rollout Dependency
+- Do not add a "See our inventory" affordance to `/new` until Issue 19 and the
+  remaining ticket reversal/clear UX work are resolved.
+
+---
+
 ## Issue 17: `/new` still animates text on initial page load
 
 ### Status

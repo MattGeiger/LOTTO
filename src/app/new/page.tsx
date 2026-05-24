@@ -9,7 +9,13 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useAppHaptics } from "@/components/haptics-provider";
 import { useLanguage, type Language } from "@/contexts/language-context";
-import { readPersistedHomepageTicket, writePersistedHomepageTicket } from "@/lib/home-ticket-storage";
+import {
+  clearPersistedHomepageTicket,
+  readPersistedHomepageTicket,
+  writePersistedHomepageTicket,
+  type HomepageTicketStorageContext,
+} from "@/lib/home-ticket-storage";
+import type { RaffleState } from "@/lib/state-types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -52,6 +58,20 @@ export default function NewPersonalizedHomePage() {
   const [ticketInput, setTicketInput] = React.useState("");
   const [ticketInputError, setTicketInputError] = React.useState("");
   const [selectedTicketNumber, setSelectedTicketNumber] = React.useState<number | null>(null);
+  const [latestState, setLatestState] = React.useState<RaffleState | null>(null);
+
+  const ticketStorageContext = React.useMemo<HomepageTicketStorageContext | null>(
+    () =>
+      latestState
+        ? {
+            operatingHours: latestState.operatingHours,
+            timezone: latestState.timezone,
+            startNumber: latestState.startNumber,
+            endNumber: latestState.endNumber,
+          }
+        : null,
+    [latestState],
+  );
 
   React.useEffect(() => {
     const persistedTicket = readPersistedHomepageTicket();
@@ -60,6 +80,19 @@ export default function NewPersonalizedHomePage() {
     setTicketInput(String(persistedTicket).padStart(2, "0"));
     setIsOnboardingModalOpen(false);
   }, []);
+
+  React.useEffect(() => {
+    if (!ticketStorageContext || selectedTicketNumber === null) return;
+    const persistedTicket = readPersistedHomepageTicket(Date.now(), ticketStorageContext);
+    if (persistedTicket !== null) return;
+
+    clearPersistedHomepageTicket();
+    setSelectedTicketNumber(null);
+    setTicketInput("");
+    setTicketInputError("");
+    setOnboardingStep("ticket");
+    setIsOnboardingModalOpen(true);
+  }, [selectedTicketNumber, ticketStorageContext]);
 
   const handleLanguageSelect = React.useCallback(
     (language: Language) => {
@@ -77,11 +110,11 @@ export default function NewPersonalizedHomePage() {
       return;
     }
     setSelectedTicketNumber(ticketNumber);
-    writePersistedHomepageTicket(ticketNumber);
+    writePersistedHomepageTicket(ticketNumber, new Date(), ticketStorageContext);
     setTicketInputError("");
     setIsOnboardingModalOpen(false);
     trigger("uiConfirm");
-  }, [ticketInput, trigger]);
+  }, [ticketInput, ticketStorageContext, trigger]);
 
   const handleTicketKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -134,6 +167,7 @@ export default function NewPersonalizedHomePage() {
         displayVariant="personalized"
         personalizedTicketNumber={selectedTicketNumber}
         onRequestTicketChange={handleRequestTicketChange}
+        onStateChange={setLatestState}
         showQrCode={false}
         showHeaderLogo={false}
       />
