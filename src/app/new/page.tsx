@@ -4,7 +4,6 @@ import * as React from "react";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { ReadOnlyDisplay } from "@/components/readonly-display";
-import { LanguageMorphText } from "@/components/language-morph-text";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useAppHaptics } from "@/components/haptics-provider";
@@ -29,17 +28,6 @@ const languageOptions: Array<{ code: Language; label: string }> = [
   { code: "vi", label: "Tiếng Việt" },
   { code: "fa", label: "فارسی" },
   { code: "ar", label: "العربية" },
-];
-
-const languageTitleCycle = [
-  "Choose your language",
-  "Elige tu idioma",
-  "选择你的语言",
-  "Выберите язык",
-  "Оберіть мову",
-  "Chọn ngôn ngữ",
-  "زبان خود را انتخاب کنید",
-  "اختر لغتك",
 ];
 
 const normalizeTicketNumber = (rawInput: string): number | null => {
@@ -168,6 +156,7 @@ export default function NewPersonalizedHomePage() {
         personalizedTicketNumber={selectedTicketNumber}
         onRequestTicketChange={handleRequestTicketChange}
         onStateChange={setLatestState}
+        animateLanguageText={false}
         showQrCode={false}
         showHeaderLogo={false}
       />
@@ -181,17 +170,7 @@ export default function NewPersonalizedHomePage() {
             <>
               <DialogHeader className="mb-5">
                 <DialogTitle className="text-center text-2xl">
-                  <LanguageMorphText
-                    text={languageTitleCycle}
-                    loop
-                    holdDelay={5000}
-                    wordWrap="word"
-                    characterStagger={0.03}
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    motionMode="simple"
-                  />
+                  <span>Choose your language</span>
                 </DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-3">

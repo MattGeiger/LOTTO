@@ -561,7 +561,9 @@ After entering a Start Number and End Number in the admin page, only the "Genera
 ## Issue 19: `/new` text morph animation is too aggressive
 
 ### Status
-- Open. Must be resolved before adding a FEED inventory entry point to `/new`.
+- Implemented in development. `/new` no longer uses cycling morph text in the
+  language onboarding title, and the personalized display disables shared
+  language morphing so polling and remounts do not create extra text motion.
 
 ### Observed
 - The prototype client experience at `https://williamtemple.app/new` uses text morph animation too aggressively.
@@ -589,8 +591,28 @@ After entering a Start Number and End Number in the admin page, only the "Genera
 4. Consider disabling the language-title cycle after the user has selected a language.
 5. Add focused regression coverage so `/new` does not reintroduce page-load or repeated idle morphing.
 
+### Fix Applied
+- Removed the cycling `LanguageMorphText` title from `/new` language onboarding
+  and replaced it with static text.
+- Added an `animateLanguageText` prop to `ReadOnlyDisplay`.
+- `/new` passes `animateLanguageText={false}`, which makes the personalized
+  display render translated labels as plain text instead of using
+  `LanguageMorphText`.
+- Public `/` and `/display` keep existing display-board morph behavior.
+- Did not add `TextScramble`; the first implementation follows the lower-risk
+  policy of removing nonessential animation from the prototype client flow.
+
+### Validation
+- Covered by focused `/new` and display tests:
+  - `tests/new-page-haptics.test.tsx`
+  - `tests/homepage-ticket-persistence.test.tsx`
+  - `tests/readonly-display-personalized.test.tsx`
+  - `tests/readonly-display-public.test.tsx`
+
 ### Inventory Rollout Dependency
-- Do not add a "See our inventory" affordance to `/new` until this is resolved. Inventory lookup should not be layered onto a prototype surface that still has distracting motion behavior.
+- This blocker is resolved in development. `/new` inventory entry points remain
+  blocked until the remaining Issue 20 ticket reversal/clear UX work is
+  resolved.
 
 ---
 
@@ -599,7 +621,7 @@ After entering a Start Number and End Number in the admin page, only the "Genera
 ### Status
 - Partially implemented in development. Pantry-day/range expiration is resolved;
   stronger ticket reversal/clear controls remain open. FEED inventory entry
-  points on `/new` remain blocked by Issue 19 and the remaining reversal UX work.
+  points on `/new` remain blocked by the remaining reversal UX work.
 
 ### Observed
 - `/new` asks clients for an individual ticket number and stores that selection for the personalized experience.
@@ -666,8 +688,8 @@ After entering a Start Number and End Number in the admin page, only the "Genera
   persisted-ticket writes, and Arcade ticket tracking with the new range marker.
 
 ### Inventory Rollout Dependency
-- Do not add a "See our inventory" affordance to `/new` until Issue 19 and the
-  remaining ticket reversal/clear UX work are resolved.
+- Do not add a "See our inventory" affordance to `/new` until the remaining
+  ticket reversal/clear UX work is resolved.
 
 ---
 
