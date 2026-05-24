@@ -562,8 +562,9 @@ After entering a Start Number and End Number in the admin page, only the "Genera
 
 ### Status
 - Implemented in development. `/new` no longer uses cycling morph text in the
-  language onboarding title, and the personalized display disables shared
-  language morphing so polling and remounts do not create extra text motion.
+  language onboarding title, and the personalized display has retired
+  `LanguageMorphText` in favor of controlled TextScramble animation that only
+  triggers on language changes.
 
 ### Observed
 - The prototype client experience at `https://williamtemple.app/new` uses text morph animation too aggressively.
@@ -594,13 +595,14 @@ After entering a Start Number and End Number in the admin page, only the "Genera
 ### Fix Applied
 - Removed the cycling `LanguageMorphText` title from `/new` language onboarding
   and replaced it with static text.
-- Added an `animateLanguageText` prop to `ReadOnlyDisplay`.
-- `/new` passes `animateLanguageText={false}`, which makes the personalized
-  display render translated labels as plain text instead of using
+- Added a local `TextScramble` primitive under `src/components/core`.
+- Added `languageTextAnimation` to `ReadOnlyDisplay`.
+- `/new` passes `languageTextAnimation="scramble"`, which makes the
+  personalized display use TextScramble for translated labels instead of
   `LanguageMorphText`.
+- TextScramble is controlled by selected-language changes. It does not trigger
+  on page load, polling refresh, ticket revalidation, or regular remounts.
 - Public `/` and `/display` keep existing display-board morph behavior.
-- Did not add `TextScramble`; the first implementation follows the lower-risk
-  policy of removing nonessential animation from the prototype client flow.
 
 ### Validation
 - Covered by focused `/new` and display tests:
@@ -608,6 +610,7 @@ After entering a Start Number and End Number in the admin page, only the "Genera
   - `tests/homepage-ticket-persistence.test.tsx`
   - `tests/readonly-display-personalized.test.tsx`
   - `tests/readonly-display-public.test.tsx`
+- Production build passes with the new component.
 
 ### Inventory Rollout Dependency
 - This blocker is resolved in development. `/new` inventory entry points remain

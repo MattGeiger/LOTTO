@@ -12,6 +12,7 @@ import { RollingText } from "@/components/animate-ui/primitives/texts/rolling";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TextScramble } from "@/components/core/text-scramble";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LanguageMorphText } from "@/components/language-morph-text";
 import { TicketDetailDialog } from "@/components/ticket-detail-dialog";
@@ -244,7 +245,7 @@ type ReadOnlyDisplayProps = {
   onRequestTicketChange?: () => void;
   onPersonalizedTicketCalled?: (details: { ticketNumber: number; calledAt: number }) => void;
   onStateChange?: (state: RaffleState) => void;
-  animateLanguageText?: boolean;
+  languageTextAnimation?: "morph" | "scramble" | "none";
   showQrCode?: boolean;
   showHeaderLogo?: boolean;
 };
@@ -256,7 +257,7 @@ export const ReadOnlyDisplay = ({
   onRequestTicketChange,
   onPersonalizedTicketCalled,
   onStateChange,
-  animateLanguageText = true,
+  languageTextAnimation = "morph",
   showQrCode = true,
   showHeaderLogo = true,
 }: ReadOnlyDisplayProps) => {
@@ -270,7 +271,32 @@ export const ReadOnlyDisplay = ({
    * appears instantly, and only subsequent text changes morph.
    */
   const [morphReady, setMorphReady] = React.useState(false);
-  const T = animateLanguageText && morphReady ? LanguageMorphText : PlainText;
+  const previousLanguageRef = React.useRef<Language | null>(null);
+  const [scrambleTrigger, setScrambleTrigger] = React.useState(false);
+  const handleScrambleComplete = React.useCallback(() => {
+    setScrambleTrigger(false);
+  }, []);
+  const ScrambleText = React.useCallback(
+    ({ text, className }: { text: string; className?: string }) => (
+      <TextScramble
+        as="span"
+        className={className}
+        duration={0.35}
+        speed={0.02}
+        trigger={scrambleTrigger}
+        onScrambleComplete={handleScrambleComplete}
+      >
+        {text}
+      </TextScramble>
+    ),
+    [handleScrambleComplete, scrambleTrigger],
+  );
+  const T =
+    languageTextAnimation === "morph" && morphReady
+      ? LanguageMorphText
+      : languageTextAnimation === "scramble"
+        ? ScrambleText
+        : PlainText;
 
   const [state, setState] = React.useState<RaffleState | null>(null);
   const [status, setStatus] = React.useState("");
@@ -442,6 +468,19 @@ export const ReadOnlyDisplay = ({
   }, [morphReady, state]);
 
   React.useEffect(() => {
+    if (previousLanguageRef.current === null) {
+      previousLanguageRef.current = language;
+      return;
+    }
+
+    if (previousLanguageRef.current === language) return;
+    previousLanguageRef.current = language;
+
+    if (languageTextAnimation !== "scramble") return;
+    setScrambleTrigger(true);
+  }, [language, languageTextAnimation]);
+
+  React.useEffect(() => {
     document.title = `${t("foodPantryServiceFor")} ${formattedDate}`;
   }, [formattedDate, t]);
 
@@ -485,6 +524,7 @@ export const ReadOnlyDisplay = ({
   const isPersonalized = displayVariant === "personalized";
   const updatedTime = formatTime(state?.timestamp ?? null, language);
   const nowServingDisplayText = currentlyServing === null ? t("waiting") : String(currentlyServing);
+  const animateServingValue = languageTextAnimation === "morph";
   const pantryStatus = getPantryStatus(state?.operatingHours ?? null);
   const isPantryOpen = pantryStatus === "open";
   const nextOpenDay =
@@ -688,7 +728,14 @@ export const ReadOnlyDisplay = ({
               <p className="mb-1 text-lg uppercase tracking-[0.14em] text-muted-foreground">
                 <T text={t("nowServing")} />
               </p>
-              {currentlyServing === null ? (
+              {!animateServingValue ? (
+                <span
+                  className="inline-block overflow-visible bg-gradient-serving-text bg-clip-text pb-[0.08em] text-[96px] font-extrabold leading-[1.28] text-transparent"
+                  aria-label="Currently serving ticket number"
+                >
+                  {nowServingDisplayText}
+                </span>
+              ) : currentlyServing === null ? (
                 <MorphingText
                   text={nowServingDisplayText}
                   className="inline-block overflow-visible pb-[0.08em] text-[96px] font-extrabold leading-[1.28]"

@@ -166,7 +166,7 @@ export default function NewPersonalizedHomePage() {
         personalizedTicketNumber={selectedTicketNumber}
         onRequestTicketChange={handleRequestTicketChange}
         onStateChange={setLatestState}
-        animateLanguageText={false}
+        languageTextAnimation="scramble"
         showQrCode={false}
         showHeaderLogo={false}
       />
