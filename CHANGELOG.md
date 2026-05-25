@@ -36,6 +36,7 @@
 
 ### Fixed
 - Fixed a `/new` reset-edge loop where a tab left open across staff reset could accept a ticket while no active range existed, immediately invalidate the stored ticket, and reopen the ticket modal repeatedly; ticket submit now waits until today's ticket range is ready.
+- Fixed production inventory loading by allowing `https://feed.williamtemple.app` in the app Content Security Policy `connect-src` directive.
 - Aligned the haptics implementation with browser activation constraints by concluding the feature as tactile input feedback rather than broad event-driven vibration.
 
 ## [1.6.2] - 2026-03-05
