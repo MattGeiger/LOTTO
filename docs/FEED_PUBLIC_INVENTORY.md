@@ -7,9 +7,9 @@ items are currently available. FEED is the source of truth for inventory
 availability, categories, limits, dietary flags, and translated item/category
 names.
 
-This document captures the data contract and the intended LOTTO integration
-shape. It is a technical planning document only; no LOTTO runtime integration is
-implemented yet.
+This document captures the data contract and the LOTTO integration shape.
+Runtime integration is implemented as a standalone public inventory lookup at
+`/inventory`, linked from the personalized homepage prototype at `/new`.
 
 ## Pattern Alignment
 
@@ -207,18 +207,18 @@ const getFeedDisplayName = (
 Do not assume every enabled FEED language has a translation for every category
 or item.
 
-## Intended LOTTO Integration
+## Implemented LOTTO Integration
 
-The smallest pattern-consistent integration is a standalone public inventory
-surface, separate from raffle display state and Arcade gameplay.
+The first integration is a standalone public inventory surface, separate from
+raffle display state and Arcade gameplay.
 
-Proposed route:
+Route:
 
 ```text
 /inventory
 ```
 
-Proposed files:
+Files:
 
 ```text
 src/app/inventory/page.tsx
@@ -240,8 +240,8 @@ Local development can point this at FEED on port 3001:
 NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL=http://localhost:3001/api/public/inventory.json
 ```
 
-Default behavior should use the production FEED URL when the environment
-variable is absent.
+Default behavior uses the production FEED URL when the environment variable is
+absent.
 
 ## Fetch Contract
 
@@ -297,14 +297,12 @@ Inventory lookup should remain separate from raffle/display features:
 - Do not integrate inventory into Arcade routes.
 - A link from the public board top bar to `/inventory` is acceptable if it uses
   existing public navigation patterns and does not disrupt queue lookup.
-- Do not add a "See our inventory" entry point to `/new` until the current
-  personalized-homepage UX blockers are resolved:
-  - `/new` text morph animation is too aggressive and triggers too often. This
-    blocker is implemented in development.
-  - `/new` ticket selection needs stronger reversal and pantry-day expiration
-    semantics. The pantry-day/range persistence portion is implemented in
-    development, but `/new` remains blocked until the remaining ticket
-    reversal/clear UX is resolved.
+- `/new` now includes a `See what's in stock` entry point to `/inventory`
+  because the earlier personalized-homepage blockers have been resolved:
+  - Translated public text on `/new` now uses TextScramble instead of the
+    retired aggressive morph effect.
+  - Ticket selection is pantry-day/range aware and can be changed through the
+    personalized ticket card.
 
 ## Error and Empty States
 
@@ -336,9 +334,8 @@ Focused tests should cover:
 
 ## Open Decisions
 
-1. Whether `/inventory` should be linked from `/`, `/display`, `/new`, or all
-   public client surfaces. `/new` is blocked until the remaining Issue 20
-   reversal/clear UX work in `docs/ISSUES.md` is resolved.
+1. Whether `/inventory` should also be linked from `/` and `/display`, or only
+   from `/new` for the initial client-facing test.
 2. Whether to poll inventory periodically while the page is visible or refresh
    only on page load plus manual retry/refresh.
 3. Whether to include FEED category icons in LOTTO UI immediately or treat them

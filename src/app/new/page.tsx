@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ReadOnlyDisplay } from "@/components/readonly-display";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -158,8 +159,16 @@ export default function NewPersonalizedHomePage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button asChild variant="secondary" size="sm" className="hidden rounded-full sm:inline-flex">
+            <Link href="/inventory">See what&apos;s in stock</Link>
+          </Button>
           <ThemeSwitcher enableHaptics />
         </div>
+      </div>
+      <div className="fixed bottom-4 left-4 right-4 z-50 sm:hidden">
+        <Button asChild variant="secondary" className="h-11 w-full rounded-full shadow-lg">
+          <Link href="/inventory">See what&apos;s in stock</Link>
+        </Button>
       </div>
       <ReadOnlyDisplay
         displayVariant="personalized"
