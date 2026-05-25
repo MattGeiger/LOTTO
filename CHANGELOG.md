@@ -38,6 +38,7 @@
 - Fixed a `/new` reset-edge loop where a tab left open across staff reset could accept a ticket while no active range existed, immediately invalidate the stored ticket, and reopen the ticket modal repeatedly; ticket submit now waits until today's ticket range is ready.
 - Fixed production inventory loading by allowing `https://feed.williamtemple.app` in the app Content Security Policy `connect-src` directive.
 - Hid FEED inventory limit values of `100` or higher so no-limit categories/items no longer display misleading copy such as `Limit 100 per household`.
+- Removed the `None listed` filler from empty inventory tag cells so items without status/dietary tags leave that field blank.
 - Aligned the haptics implementation with browser activation constraints by concluding the feature as tactile input feedback rather than broad event-driven vibration.
 
 ## [1.6.2] - 2026-03-05
