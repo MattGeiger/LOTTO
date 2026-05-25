@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useLanguage } from "@/contexts/language-context";
@@ -37,16 +38,16 @@ import { cn } from "@/lib/utils";
 
 const dietaryFlags: Array<{
   key: keyof FeedInventoryItem["dietaryFlags"];
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
 }> = [
-  { key: "glutenFree", label: "Gluten-free", icon: WheatOff },
-  { key: "vegan", label: "Vegan", icon: Vegan },
-  { key: "vegetarian", label: "Vegetarian", icon: Carrot },
-  { key: "halal", label: "Halal", icon: MoonStar },
-  { key: "kosher", label: "Kosher", icon: Star },
-  { key: "organic", label: "Organic", icon: Sprout },
-  { key: "readyToEat", label: "Ready to eat", icon: UtensilsCrossed },
+  { key: "glutenFree", labelKey: "inventoryDietaryGlutenFree", icon: WheatOff },
+  { key: "vegan", labelKey: "inventoryDietaryVegan", icon: Vegan },
+  { key: "vegetarian", labelKey: "inventoryDietaryVegetarian", icon: Carrot },
+  { key: "halal", labelKey: "inventoryDietaryHalal", icon: MoonStar },
+  { key: "kosher", labelKey: "inventoryDietaryKosher", icon: Star },
+  { key: "organic", labelKey: "inventoryDietaryOrganic", icon: Sprout },
+  { key: "readyToEat", labelKey: "inventoryDietaryReadyToEat", icon: UtensilsCrossed },
 ];
 
 function formatInventoryFreshness(input: string, language: string): string {
@@ -85,44 +86,75 @@ function getFilteredCategories(
     .filter((category) => category.items.length > 0);
 }
 
+function getInventoryLastUpdatedAt(inventory: FeedPublicInventory): string {
+  const latestItemUpdatedAt = inventory.categories
+    .flatMap((category) => category.items)
+    .map((item) => new Date(item.updatedAt).getTime())
+    .filter((time) => Number.isFinite(time))
+    .reduce((latest, time) => Math.max(latest, time), 0);
+
+  return latestItemUpdatedAt > 0 ? new Date(latestItemUpdatedAt).toISOString() : inventory.generatedAt;
+}
+
+function InventoryIconChip({
+  label,
+  icon: Icon,
+  variant,
+}: {
+  label: string;
+  icon: LucideIcon;
+  variant: React.ComponentProps<typeof Badge>["variant"];
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Badge asChild variant={variant}>
+          <button type="button" aria-label={label} className="cursor-pointer">
+            <Icon className="size-3" aria-hidden="true" />
+            <span className="sr-only">{label}</span>
+          </button>
+        </Badge>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto px-3 py-2 text-sm font-medium" side="top" role="tooltip">
+        {label}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function InventoryStatusBadges({ item }: { item: FeedInventoryItem }) {
+  const { t } = useLanguage();
   if (!item.statusTags.limited && !item.statusTags.clearance) return null;
 
   return (
     <div className="flex flex-wrap gap-1.5">
       {item.statusTags.limited ? (
-        <Badge variant="warning" aria-label="Limited">
-          <AlertTriangle className="size-3" aria-hidden="true" />
-          <span className="sr-only">Limited</span>
-        </Badge>
+        <InventoryIconChip label={t("inventoryStatusLimited")} icon={AlertTriangle} variant="warning" />
       ) : null}
       {item.statusTags.clearance ? (
-        <Badge variant="danger" aria-label="Clearance">
-          <Tag className="size-3" aria-hidden="true" />
-          <span className="sr-only">Clearance</span>
-        </Badge>
+        <InventoryIconChip label={t("inventoryStatusClearance")} icon={Tag} variant="danger" />
       ) : null}
     </div>
   );
 }
 
 function InventoryDietaryFlags({ item }: { item: FeedInventoryItem }) {
+  const { t } = useLanguage();
   const activeFlags = dietaryFlags.filter(({ key }) => item.dietaryFlags[key]);
   if (activeFlags.length === 0) return null;
 
   return (
     <div className="flex flex-wrap gap-1.5">
-      {activeFlags.map(({ key, label, icon: Icon }) => (
-        <Badge key={key} variant="outline" aria-label={label}>
-          <Icon className="size-3" aria-hidden="true" />
-          <span className="sr-only">{label}</span>
-        </Badge>
+      {activeFlags.map(({ key, labelKey, icon }) => (
+        <InventoryIconChip key={key} label={t(labelKey)} icon={icon} variant="outline" />
       ))}
     </div>
   );
 }
 
 function InventoryLegend() {
+  const { t } = useLanguage();
+
   return (
     <Card className="gap-4 rounded-lg py-4">
       <CardContent className="space-y-4 px-4 sm:px-5">
@@ -131,21 +163,21 @@ function InventoryLegend() {
           <div className="mt-2 flex flex-wrap gap-2">
             <Badge variant="warning">
               <AlertTriangle className="size-3" aria-hidden="true" />
-              Limited
+              {t("inventoryStatusLimited")}
             </Badge>
             <Badge variant="danger">
               <Tag className="size-3" aria-hidden="true" />
-              Clearance
+              {t("inventoryStatusClearance")}
             </Badge>
           </div>
         </div>
         <div>
           <h2 className="text-sm font-semibold uppercase text-muted-foreground">Dietary</h2>
           <div className="mt-2 flex flex-wrap gap-2">
-            {dietaryFlags.map(({ key, label, icon: Icon }) => (
+            {dietaryFlags.map(({ key, labelKey, icon: Icon }) => (
               <Badge key={key} variant="outline">
                 <Icon className="size-3" aria-hidden="true" />
-                {label}
+                {t(labelKey)}
               </Badge>
             ))}
           </div>
@@ -242,7 +274,7 @@ export function PublicInventoryPage() {
     () => (inventory ? getFilteredCategories(inventory, language, query) : []),
     [inventory, language, query],
   );
-  const freshness = inventory ? formatInventoryFreshness(inventory.generatedAt, language) : "";
+  const freshness = inventory ? formatInventoryFreshness(getInventoryLastUpdatedAt(inventory), language) : "";
 
   return (
     <main dir={isRTL(language) ? "rtl" : "ltr"} lang={language} className="min-h-screen bg-background text-foreground">
