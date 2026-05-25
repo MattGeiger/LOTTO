@@ -130,9 +130,14 @@ describe("public inventory page", () => {
     expect(screen.queryByText("Limit 100 per household")).not.toBeInTheDocument();
     expect(screen.getAllByText("Garbanzo Beans").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Limit 1 per household").length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: "Status" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Dietary" })).toBeInTheDocument();
     expect(screen.getAllByText("Limited").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Clearance").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Ready to eat").length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText("Limited").length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText("Clearance").length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText("Ready to eat").length).toBeGreaterThan(0);
     expect(screen.getByRole("columnheader", { name: "Status" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Dietary" })).toBeInTheDocument();
     expect(screen.queryByRole("columnheader", { name: "Tags" })).not.toBeInTheDocument();
