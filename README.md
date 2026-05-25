@@ -6,6 +6,7 @@ Next.js (App Router) app with ShadCN-inspired UI, JSON persistence, and atomic b
 - Staff dashboard (`/admin`) to set ranges, toggle random vs sequential, append tickets, update “now serving,” mark returned/unclaimed tickets, and reset with confirmations.
 - Public display (`/` and `/display`) with airport-style grid, status legend, ticket detail messaging (called/returned/unclaimed), and QR code sharing, using adaptive polling with visibility pause and operating-hours backoff.
 - Personalized homepage preview (`/new`) serves the v2.0 personalization track while preserving the current board visual language (QR panel and top-bar search removed, centered WTH branding added, redundant board-row logo removed so `NOW SERVING` sits centered, and a load-time language picker modal shown on entry with a title that cycles through supported languages every 5 seconds). This preview route is slated for future promotion to the default homepage.
+- Public inventory lookup (`/inventory`) fetches FEED's unauthenticated public inventory endpoint without credentials, showing in-stock pantry items grouped by category with limits, status tags, dietary flags, freshness, and selected-language item/category names where FEED provides translations.
 - Arcade preview is available at `/arcade` with one playable game (`Snake`) in v1.5.0.
 - Multilingual display UI with language switcher (English, 中文, Español, Русский, Українська, Tiếng Việt, فارسی, العربية) and automatic RTL direction for Farsi/Arabic.
 - Built-in read-only board in Next.js plus an optional standalone server (`npm run readonly`) on its own port for edge/legacy hosting.
@@ -16,6 +17,7 @@ Next.js (App Router) app with ShadCN-inspired UI, JSON persistence, and atomic b
 - Display: http://localhost:3000/
 - Display alias: http://localhost:3000/display
 - Personalized homepage: http://localhost:3000/new
+- Inventory lookup: http://localhost:3000/inventory
 - Arcade preview: http://localhost:3000/arcade
 - Admin: http://localhost:3000/admin
 - Login: http://localhost:3000/login
@@ -50,6 +52,7 @@ NODE_ENV=production
 
 ## Read-only board options
 - Built-in: `/` is the default QR-enabled public board, `/display` is the live alias, `/new` is the homepage-personalization preview variant, and `/arcade` is the Arcade preview surface (Snake launch game).
+- FEED inventory: `/inventory` reads `NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL` when set, otherwise defaults to `https://feed.williamtemple.app/api/public/inventory.json`.
 - Optional standalone: `npm run readonly` on port `4000`, still polling `data/state.json` for legacy/edge hosting.
 - Configure standalone via env vars:
   - `READONLY_PORT` — port to listen on (default `4000`).

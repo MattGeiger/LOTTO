@@ -15,6 +15,9 @@
 ## [Unreleased] - 2026-03-06
 ### Added
 - Added `docs/FEED_PUBLIC_INVENTORY.md` documenting the FEED public inventory data contract, translation mapping, intended LOTTO usage, fetch rules, UI boundaries, and first-implementation acceptance criteria.
+- Added `/inventory`, a client-facing FEED public inventory lookup that fetches the read-only endpoint without credentials and renders in-stock items as category tables with freshness, limits, status tags, dietary flags, and FEED-provided translations where available.
+- Added a `See what's in stock` entry point from `/new` to `/inventory`.
+- Added `src/lib/feed-public-inventory.ts` plus tests covering FEED fetch options, language fallback, limit formatting, category-table rendering, filtering, and the `/new` inventory link.
 - Documented `/new` inventory rollout blockers in `docs/ISSUES.md`: aggressive text morph animation and ticket-selection reversal/pantry-day expiration semantics.
 - Added a shared semantic haptics layer (`src/lib/haptics.ts`, `HapticsProvider`, `useAppHaptics()`) with app-owned intent names for browser-safe button-style interactions on `/new` and Arcade.
 - Added regression coverage for the simplified provider, `/new` button haptics, Arcade direct button haptics, Arcade ticket-called visual-only behavior, and theme/language integration (`tests/haptics-provider.test.tsx`, `tests/new-page-haptics.test.tsx`, `tests/arcade-direct-input-haptics.test.tsx`, plus updated Arcade banner and theme tests).
@@ -23,6 +26,7 @@
 ### Changed
 - Updated `/new` and Arcade personalized-ticket persistence to validate stored tickets against pantry operating-hours timezone, next pantry-day opening, and active LOTTO range instead of only browser-local midnight.
 - Replaced translated UI text morphing with TextScramble (`duration=3.0`, `speed=0.5`), kept `/new` language onboarding static, and removed morph/rolling animation from the large public-board serving value.
+- Updated FEED inventory documentation, README, project overview, and env examples to reflect the runtime `/inventory` integration and optional FEED endpoint override.
 - Extended optional client-device haptics from Arcade-only to `/new` and kept `/`, `/display`, admin, staff, and login haptic-free.
 - Narrowed browser haptics to direct button-style interactions only: `/new` and Arcade buttons, menu selections, theme/language choices, explicit submit/back/change-ticket actions, and Snake D-pad button presses.
 - Removed the dedicated haptics toggles and persisted `haptics-enabled` preference because browser haptics are intentionally scoped to narrow tactile feedback and the toggle consumed higher-value top-bar space.

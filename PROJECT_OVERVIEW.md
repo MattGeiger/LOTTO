@@ -16,6 +16,7 @@ The William Temple House Digital Raffle system replaces a manual coffee-can raff
 - **Enterprise-grade security** (magic link + OTP authentication, domain-restricted)
 - **Automated data hygiene** (snapshot cleanup, retention policies)
 - **Multilingual public display** with language switcher (English, 中文, Español, Русский, Українська, Tiếng Việt, فارسی, العربية) and RTL support for Arabic/Farsi
+- **Public pantry inventory lookup** using FEED's read-only inventory endpoint, with current in-stock items grouped by category and translated item/category names when available
 
 **Tech Stack:** Next.js 16, React 19, Neon Postgres, Resend email, Vercel hosting
 
@@ -42,6 +43,7 @@ The William Temple House Digital Raffle system replaces a manual coffee-can raff
 
 ### 3.1 Frontend (Next.js 16 App Router)
 - **Public Display** (`/`) — High-contrast wall-screen UI, adaptive polling with visibility pause and operating-hours backoff
+- **Public Inventory** (`/inventory`) — Client-facing FEED inventory lookup, fetched read-only without credentials and rendered as category tables with limits, status tags, dietary flags, and freshness
 - **Staff Dashboard** (`/admin`) — Range management, append, mode toggle, undo/redo
 - **Authentication** (`/login`) — Magic link + OTP fallback
 - **Staff Landing** (`/staff`) — Welcome page with dashboard link
