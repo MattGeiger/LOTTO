@@ -282,6 +282,8 @@ The inventory view should be plain-language and client-friendly:
 - Show a freshness line from `generatedAt`, for example `Updated: 1:24 PM`.
 - Show category and item counts from `totals`.
 - Support client-side search/filtering by displayed category/item name.
+- Treat FEED limit values of `100` or higher as no practical limit and do not
+  display a limit string.
 - Use status tags:
   - `limited` -> `Limited`
   - `clearance` -> `Clearance`

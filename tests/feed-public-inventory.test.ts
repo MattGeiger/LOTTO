@@ -58,6 +58,7 @@ describe("FEED public inventory helpers", () => {
   it("formats practical limit labels", () => {
     expect(formatFeedLimit(1, "household")).toBe("Limit 1 per household");
     expect(formatFeedLimit(2, "person")).toBe("Limit 2 per person");
+    expect(formatFeedLimit(100, "household")).toBe("");
     expect(formatFeedLimit(null, "household")).toBe("");
   });
 });

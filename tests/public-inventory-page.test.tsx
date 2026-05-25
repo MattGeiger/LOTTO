@@ -33,7 +33,7 @@ const inventoryPayload: FeedPublicInventory = {
       name: "Canned Goods",
       translations: { Spanish: "Productos enlatados" },
       icon: "can",
-      limit: 4,
+      limit: 100,
       limitType: "household",
       itemCount: 2,
       items: [
@@ -109,6 +109,7 @@ describe("public inventory page", () => {
 
     expect(await screen.findByRole("heading", { name: "What's in stock today" })).toBeInTheDocument();
     expect(screen.getByText("Canned Goods")).toBeInTheDocument();
+    expect(screen.queryByText("Limit 100 per household")).not.toBeInTheDocument();
     expect(screen.getAllByText("Garbanzo Beans").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Limit 1 per household").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Limited").length).toBeGreaterThan(0);
