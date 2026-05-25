@@ -75,6 +75,9 @@ reads current FEED inventory state and returns a fresh JSON response.
 LOTTO should treat the response as current-at-request-time data:
 
 - Use `generatedAt` to display freshness when useful.
+- For the client-facing inventory page, show freshness from the latest included
+  item `updatedAt` value. `generatedAt` is only the JSON response generation
+  time and can be newer than the last real inventory change.
 - Avoid persistent local storage of inventory responses.
 - If a short in-memory cache is later introduced, keep it brief and never use it
   to display stale out-of-stock items for long periods.
@@ -300,6 +303,8 @@ The inventory view should be plain-language and client-friendly:
   tables.
 - Use icon-only values inside category table status/dietary cells after the
   legend establishes their meaning. Keep accessible labels for screen readers.
+- Make icon values tappable/clickable and show the localized label in a popover
+  so the meaning is available on both touch screens and mouse devices.
 - Use the same visual meanings as FEED where possible:
   - `Limited` uses an alert-triangle icon with warning styling.
   - `Clearance` uses a tag icon with danger/clearance styling.

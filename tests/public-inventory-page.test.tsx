@@ -23,7 +23,7 @@ vi.mock("@/components/theme-switcher", () => ({
 }));
 
 const inventoryPayload: FeedPublicInventory = {
-  generatedAt: "2026-05-24T12:00:00.000Z",
+  generatedAt: "2026-05-25T12:00:00.000Z",
   version: "1.2.2",
   languages: ["English", "Spanish"],
   totals: { categories: 1, foodItems: 2 },
@@ -138,6 +138,8 @@ describe("public inventory page", () => {
     expect(screen.getAllByLabelText("Limited").length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText("Clearance").length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText("Ready to eat").length).toBeGreaterThan(0);
+    expect(screen.getByText(/Updated: May 24/)).toBeInTheDocument();
+    expect(screen.queryByText(/Updated: May 25/)).not.toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Status" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Dietary" })).toBeInTheDocument();
     expect(screen.queryByRole("columnheader", { name: "Tags" })).not.toBeInTheDocument();
@@ -156,6 +158,9 @@ describe("public inventory page", () => {
     expect(await screen.findByText("Productos enlatados")).toBeInTheDocument();
     expect(screen.getAllByText("Garbanzos").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Tuna").length).toBeGreaterThan(0);
+
+    await user.click(screen.getAllByLabelText("Limitado")[0]);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Limitado");
 
     await user.type(screen.getByRole("textbox", { name: "Search inventory" }), "garbanzos");
 
