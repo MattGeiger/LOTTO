@@ -96,7 +96,7 @@ export function getFeedDisplayName(entity: TranslatedFeedEntity, language: Langu
 }
 
 export function formatFeedLimit(limit: number | null | undefined, limitType: FeedLimitType | null | undefined): string {
-  if (limit == null || !Number.isFinite(limit) || limit <= 0) return "";
+  if (limit == null || !Number.isFinite(limit) || limit <= 0 || limit >= 100) return "";
   if (limitType === "person") return `Limit ${limit} per person`;
   if (limitType === "household") return `Limit ${limit} per household`;
   return `Limit ${limit}`;

@@ -126,7 +126,7 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
               {category.items.map((item, index) => (
                 <tr key={item.id} className={cn("border-b last:border-b-0", index % 2 === 0 && "bg-muted/25")}>
                   <td className="px-4 py-3 font-medium">{getFeedDisplayName(item, language)}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatFeedLimit(item.limit, item.limitType) || "No limit listed"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{formatFeedLimit(item.limit, item.limitType)}</td>
                   <td className="px-4 py-3">
                     <InventoryBadges item={item} />
                   </td>
@@ -139,7 +139,9 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
           {category.items.map((item) => (
             <div key={item.id} className="space-y-2 px-4 py-4">
               <div className="font-medium">{getFeedDisplayName(item, language)}</div>
-              <div className="text-sm text-muted-foreground">{formatFeedLimit(item.limit, item.limitType) || "No limit listed"}</div>
+              {formatFeedLimit(item.limit, item.limitType) ? (
+                <div className="text-sm text-muted-foreground">{formatFeedLimit(item.limit, item.limitType)}</div>
+              ) : null}
               <InventoryBadges item={item} />
             </div>
           ))}
