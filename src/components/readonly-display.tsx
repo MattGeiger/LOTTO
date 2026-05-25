@@ -245,7 +245,7 @@ type ReadOnlyDisplayProps = {
   onRequestTicketChange?: () => void;
   onPersonalizedTicketCalled?: (details: { ticketNumber: number; calledAt: number }) => void;
   onStateChange?: (state: RaffleState) => void;
-  languageTextAnimation?: "morph" | "scramble" | "none";
+  languageTextAnimation?: "scramble" | "none";
   showQrCode?: boolean;
   showHeaderLogo?: boolean;
 };
@@ -257,20 +257,16 @@ export const ReadOnlyDisplay = ({
   onRequestTicketChange,
   onPersonalizedTicketCalled,
   onStateChange,
-  languageTextAnimation = "morph",
+  languageTextAnimation = "scramble",
   showQrCode = true,
   showHeaderLogo = true,
 }: ReadOnlyDisplayProps) => {
   const { language, t } = useLanguage();
 
   /**
-   * Before the first poll response, render plain spans so LanguageMorphText
-   * doesn't mount with placeholder text and then re-animate when real data
-   * arrives. Once state is loaded we switch to LanguageMorphText — since
-   * AnimatePresence has initial={false}, the first paint of real data
-   * appears instantly, and only subsequent text changes morph.
+   * Public copy uses TextScramble for explicit language changes. It stays
+   * static on initial load, polling refreshes, and regular rerenders.
    */
-  const [morphReady, setMorphReady] = React.useState(false);
   const previousLanguageRef = React.useRef<Language | null>(null);
   const [scrambleTrigger, setScrambleTrigger] = React.useState(false);
   const handleScrambleComplete = React.useCallback(() => {
@@ -292,11 +288,9 @@ export const ReadOnlyDisplay = ({
     [handleScrambleComplete, scrambleTrigger],
   );
   const T =
-    languageTextAnimation === "morph" && morphReady
-      ? LanguageMorphText
-      : languageTextAnimation === "scramble"
-        ? ScrambleText
-        : PlainText;
+    languageTextAnimation === "scramble"
+      ? ScrambleText
+      : PlainText;
 
   const [state, setState] = React.useState<RaffleState | null>(null);
   const [status, setStatus] = React.useState("");
@@ -458,15 +452,6 @@ export const ReadOnlyDisplay = ({
     };
   }, []);
 
-  // Arm morph animations after the first poll data has rendered.
-  // LanguageMorphText mounts fresh with AnimatePresence initial={false},
-  // so the first paint appears instantly; only subsequent changes morph.
-  React.useEffect(() => {
-    if (!morphReady && state !== null) {
-      setMorphReady(true);
-    }
-  }, [morphReady, state]);
-
   React.useEffect(() => {
     if (previousLanguageRef.current === null) {
       previousLanguageRef.current = language;
@@ -524,7 +509,7 @@ export const ReadOnlyDisplay = ({
   const isPersonalized = displayVariant === "personalized";
   const updatedTime = formatTime(state?.timestamp ?? null, language);
   const nowServingDisplayText = currentlyServing === null ? t("waiting") : String(currentlyServing);
-  const animateServingValue = languageTextAnimation === "morph";
+  const animateServingValue = false;
   const pantryStatus = getPantryStatus(state?.operatingHours ?? null);
   const isPantryOpen = pantryStatus === "open";
   const nextOpenDay =

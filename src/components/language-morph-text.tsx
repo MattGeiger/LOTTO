@@ -1,41 +1,54 @@
 "use client";
 
-import { MorphingText, type MorphingTextProps } from "@/components/animate-ui/primitives/texts/morphing";
+import * as React from "react";
+
+import { TextScramble, type TextScrambleProps } from "@/components/core/text-scramble";
 import { cn } from "@/lib/utils";
 
-type LanguageMorphTextProps = Omit<MorphingTextProps, "text"> & {
+type LanguageMorphTextProps = Omit<TextScrambleProps<"span">, "as" | "children"> & {
   text: string | string[];
+  loop?: boolean;
+  holdDelay?: number;
+  motionMode?: unknown;
+  wordWrap?: unknown;
+  characterClassName?: string;
+  characterStagger?: number;
+  initial?: unknown;
+  animate?: unknown;
+  exit?: unknown;
+  transition?: unknown;
 };
-
-const DEFAULT_TRANSITION = {
-  type: "spring",
-  stiffness: 90,
-  damping: 16,
-  mass: 0.4,
-} as const;
 
 export function LanguageMorphText({
   text,
   className,
-  characterStagger = 0.04,
-  wordWrap = "word",
-  initial = { opacity: 0, y: 14 },
-  animate = { opacity: 1, y: 0 },
-  exit = { opacity: 0, y: -10 },
-  transition = DEFAULT_TRANSITION,
+  loop: _loop,
+  holdDelay: _holdDelay,
+  motionMode: _motionMode,
+  wordWrap: _wordWrap,
+  characterClassName: _characterClassName,
+  characterStagger: _characterStagger,
+  initial: _initial,
+  animate: _animate,
+  exit: _exit,
+  transition: _transition,
   ...props
 }: LanguageMorphTextProps) {
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+  const currentText = Array.isArray(text) ? text[currentIndex] ?? "" : text;
+
+  React.useEffect(() => {
+    if (!Array.isArray(text)) return;
+    setCurrentIndex(0);
+  }, [text]);
+
   return (
-    <MorphingText
-      text={text}
+    <TextScramble
+      as="span"
       className={cn("inline-block overflow-visible align-baseline", className)}
-      characterStagger={characterStagger}
-      wordWrap={wordWrap}
-      initial={initial}
-      animate={animate}
-      exit={exit}
-      transition={transition}
       {...props}
-    />
+    >
+      {currentText}
+    </TextScramble>
   );
 }
