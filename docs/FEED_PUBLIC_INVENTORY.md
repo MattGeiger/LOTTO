@@ -243,6 +243,10 @@ NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL=http://localhost:3001/api/public/inventory
 Default behavior uses the production FEED URL when the environment variable is
 absent.
 
+If a configured endpoint fails, LOTTO retries once against the production FEED
+URL. This protects production from stale local-development overrides such as
+`http://localhost:3001/api/public/inventory.json`.
+
 ## Fetch Contract
 
 Preferred client fetch:
@@ -297,8 +301,10 @@ Inventory lookup should remain separate from raffle/display features:
 - Do not integrate inventory into Arcade routes.
 - A link from the public board top bar to `/inventory` is acceptable if it uses
   existing public navigation patterns and does not disrupt queue lookup.
-- `/new` now includes a `See what's in stock` entry point to `/inventory`
-  because the earlier personalized-homepage blockers have been resolved:
+- `/new` now includes a `See what's in stock` entry point to `/inventory` in
+  the existing personalized-card action stack, between `Enter a new ticket
+  number` and `PLAY GAMES`, because the earlier personalized-homepage blockers
+  have been resolved:
   - Translated public text on `/new` now uses TextScramble instead of the
     retired aggressive morph effect.
   - Ticket selection is pantry-day/range aware and can be changed through the

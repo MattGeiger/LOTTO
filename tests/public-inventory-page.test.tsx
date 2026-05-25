@@ -153,5 +153,10 @@ describe("public inventory page", () => {
 
     const links = await screen.findAllByRole("link", { name: "See what's in stock" });
     expect(links[0]).toHaveAttribute("href", "/inventory");
+    const changeTicket = await screen.findByRole("button", { name: "Enter a new ticket number" });
+    const inventory = links[0];
+    const arcade = screen.getByRole("link", { name: /PLAY GAMES/i });
+    expect(changeTicket.compareDocumentPosition(inventory) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(inventory.compareDocumentPosition(arcade) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });

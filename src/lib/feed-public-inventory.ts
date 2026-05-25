@@ -67,7 +67,26 @@ type TranslatedFeedEntity = {
 };
 
 export function getFeedPublicInventoryUrl(): string {
-  return process.env.NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL || DEFAULT_FEED_PUBLIC_INVENTORY_URL;
+  return normalizeFeedPublicInventoryUrl(process.env.NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL);
+}
+
+function normalizeFeedPublicInventoryUrl(configuredUrl: string | undefined): string {
+  const trimmedUrl = configuredUrl?.trim();
+  if (!trimmedUrl) return DEFAULT_FEED_PUBLIC_INVENTORY_URL;
+
+  if (typeof window !== "undefined") {
+    try {
+      const parsedUrl = new URL(trimmedUrl);
+      const appHost = window.location.hostname;
+      const appIsLocal = appHost === "localhost" || appHost === "127.0.0.1" || appHost === "::1";
+      const feedIsLocal = parsedUrl.hostname === "localhost" || parsedUrl.hostname === "127.0.0.1" || parsedUrl.hostname === "::1";
+      if (feedIsLocal && !appIsLocal) return DEFAULT_FEED_PUBLIC_INVENTORY_URL;
+    } catch {
+      return DEFAULT_FEED_PUBLIC_INVENTORY_URL;
+    }
+  }
+
+  return trimmedUrl;
 }
 
 export function getFeedDisplayName(entity: TranslatedFeedEntity, language: Language): string {
@@ -86,6 +105,15 @@ export function formatFeedLimit(limit: number | null | undefined, limitType: Fee
 export async function fetchFeedPublicInventory(
   url: string = getFeedPublicInventoryUrl(),
 ): Promise<FeedPublicInventory> {
+  try {
+    return await fetchFeedPublicInventoryFromUrl(url);
+  } catch (error) {
+    if (url === DEFAULT_FEED_PUBLIC_INVENTORY_URL) throw error;
+    return fetchFeedPublicInventoryFromUrl(DEFAULT_FEED_PUBLIC_INVENTORY_URL);
+  }
+}
+
+async function fetchFeedPublicInventoryFromUrl(url: string): Promise<FeedPublicInventory> {
   const response = await fetch(url, {
     cache: "no-store",
     credentials: "omit",
