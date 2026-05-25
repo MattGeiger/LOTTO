@@ -972,6 +972,9 @@ export const ReadOnlyDisplay = ({
                     <Button type="button" haptic="uiToggle" onClick={onRequestTicketChange}>
                       <T text={t("changeTicket")} />
                     </Button>
+                    <Button asChild type="button" haptic="uiConfirm" variant="secondary">
+                      <Link href="/inventory">See what&apos;s in stock</Link>
+                    </Button>
                     <Button
                       asChild
                       type="button"

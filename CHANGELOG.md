@@ -26,6 +26,7 @@
 ### Changed
 - Updated `/new` and Arcade personalized-ticket persistence to validate stored tickets against pantry operating-hours timezone, next pantry-day opening, and active LOTTO range instead of only browser-local midnight.
 - Replaced translated UI text morphing with TextScramble (`duration=3.0`, `speed=0.5`), kept `/new` language onboarding static, and removed morph/rolling animation from the large public-board serving value.
+- Moved the `/new` inventory entry point into the existing personalized-card action stack between `Enter a new ticket number` and `PLAY GAMES`, and added production FEED fallback behavior when a configured inventory endpoint fails.
 - Updated FEED inventory documentation, README, project overview, and env examples to reflect the runtime `/inventory` integration and optional FEED endpoint override.
 - Extended optional client-device haptics from Arcade-only to `/new` and kept `/`, `/display`, admin, staff, and login haptic-free.
 - Narrowed browser haptics to direct button-style interactions only: `/new` and Arcade buttons, menu selections, theme/language choices, explicit submit/back/change-ticket actions, and Snake D-pad button presses.
