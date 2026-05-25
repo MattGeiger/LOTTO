@@ -133,6 +133,9 @@ describe("public inventory page", () => {
     expect(screen.getAllByText("Limited").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Clearance").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Ready to eat").length).toBeGreaterThan(0);
+    expect(screen.getByRole("columnheader", { name: "Status" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Dietary" })).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Tags" })).not.toBeInTheDocument();
     expect(screen.queryByText("None listed")).not.toBeInTheDocument();
   });
 
