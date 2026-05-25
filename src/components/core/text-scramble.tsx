@@ -50,7 +50,9 @@ export function TextScramble<T extends keyof React.JSX.IntrinsicElements = "p">(
 
   React.useEffect(() => {
     const isControlled = typeof trigger === "boolean";
-    const shouldAnimate = isControlled ? trigger : !hasMountedRef.current;
+    const hasMounted = hasMountedRef.current;
+    const textChanged = previousChildrenRef.current !== children;
+    const shouldAnimate = isControlled ? trigger : hasMounted && textChanged;
     hasMountedRef.current = true;
 
     if (!shouldAnimate) {
@@ -97,3 +99,5 @@ export function TextScramble<T extends keyof React.JSX.IntrinsicElements = "p">(
     </Component>
   );
 }
+
+export type { TextScrambleProps };

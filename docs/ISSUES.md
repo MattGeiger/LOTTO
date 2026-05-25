@@ -562,9 +562,8 @@ After entering a Start Number and End Number in the admin page, only the "Genera
 
 ### Status
 - Implemented in development. `/new` no longer uses cycling morph text in the
-  language onboarding title, and the personalized display has retired
-  `LanguageMorphText` in favor of controlled TextScramble animation that only
-  triggers on language changes.
+  language onboarding title, and translated UI text has retired morphing in
+  favor of TextScramble animation.
 
 ### Observed
 - The prototype client experience at `https://williamtemple.app/new` uses text morph animation too aggressively.
@@ -595,14 +594,16 @@ After entering a Start Number and End Number in the admin page, only the "Genera
 ### Fix Applied
 - Removed the cycling `LanguageMorphText` title from `/new` language onboarding
   and replaced it with static text.
-- Added a local `TextScramble` primitive under `src/components/core`.
+- Added a local `TextScramble` primitive under `src/components/core` with tuned
+  defaults (`duration=3.0`, `speed=0.5`).
 - Added `languageTextAnimation` to `ReadOnlyDisplay`.
-- `/new` passes `languageTextAnimation="scramble"`, which makes the
-  personalized display use TextScramble for translated labels instead of
+- `LanguageMorphText` now delegates to TextScramble for compatibility with
+  existing call sites, replacing the old morph behavior for translated labels.
+- `ReadOnlyDisplay` now defaults translated labels to TextScramble instead of
   `LanguageMorphText`.
-- TextScramble is controlled by selected-language changes. It does not trigger
-  on page load, polling refresh, ticket revalidation, or regular remounts.
-- Public `/` and `/display` keep existing display-board morph behavior.
+- TextScramble stays static on initial mount and animates when text changes.
+- The large public-board serving value now renders statically instead of using
+  `MorphingText` / `RollingText`.
 
 ### Validation
 - Covered by focused `/new` and display tests:

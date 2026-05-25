@@ -22,7 +22,7 @@
 
 ### Changed
 - Updated `/new` and Arcade personalized-ticket persistence to validate stored tickets against pantry operating-hours timezone, next pantry-day opening, and active LOTTO range instead of only browser-local midnight.
-- Replaced `/new` language onboarding morph-cycle text with static copy and switched the personalized `/new` board from morph text to controlled TextScramble animation that only triggers on selected-language changes.
+- Replaced translated UI text morphing with TextScramble (`duration=3.0`, `speed=0.5`), kept `/new` language onboarding static, and removed morph/rolling animation from the large public-board serving value.
 - Extended optional client-device haptics from Arcade-only to `/new` and kept `/`, `/display`, admin, staff, and login haptic-free.
 - Narrowed browser haptics to direct button-style interactions only: `/new` and Arcade buttons, menu selections, theme/language choices, explicit submit/back/change-ticket actions, and Snake D-pad button presses.
 - Removed the dedicated haptics toggles and persisted `haptics-enabled` preference because browser haptics are intentionally scoped to narrow tactile feedback and the toggle consumed higher-value top-bar space.
