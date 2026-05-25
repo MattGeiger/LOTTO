@@ -295,6 +295,7 @@ The inventory view should be plain-language and client-friendly:
   - Halal
   - Kosher
   - Ready to eat
+- Leave status/dietary tag cells blank when no tags apply.
 - Use existing shadcn/ui surfaces (`Card`, `Badge`, `Input`, `Button`) and
   semantic token colors.
 - Use `isRTL(language)` for Arabic and Persian layout direction.

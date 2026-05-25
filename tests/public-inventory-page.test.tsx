@@ -73,6 +73,24 @@ const inventoryPayload: FeedPublicInventory = {
           },
           updatedAt: "2026-05-24T12:00:00.000Z",
         },
+        {
+          id: 12,
+          name: "Rice",
+          translations: {},
+          limit: null,
+          limitType: null,
+          statusTags: { inStock: true, limited: false, clearance: false },
+          dietaryFlags: {
+            vegan: false,
+            vegetarian: false,
+            glutenFree: false,
+            organic: false,
+            halal: false,
+            kosher: false,
+            readyToEat: false,
+          },
+          updatedAt: "2026-05-24T12:00:00.000Z",
+        },
       ],
     },
   ],
@@ -115,6 +133,7 @@ describe("public inventory page", () => {
     expect(screen.getAllByText("Limited").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Clearance").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Ready to eat").length).toBeGreaterThan(0);
+    expect(screen.queryByText("None listed")).not.toBeInTheDocument();
   });
 
   it("uses selected language translations and filters by displayed names", async () => {

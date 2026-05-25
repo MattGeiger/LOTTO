@@ -77,7 +77,7 @@ function InventoryBadges({ item }: { item: FeedInventoryItem }) {
     .map(([, label]) => label);
 
   if (statusBadges.length === 0 && dietaryBadges.length === 0) {
-    return <span className="text-sm text-muted-foreground">None listed</span>;
+    return null;
   }
 
   return (
