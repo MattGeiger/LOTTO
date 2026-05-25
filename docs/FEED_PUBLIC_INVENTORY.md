@@ -295,7 +295,13 @@ The inventory view should be plain-language and client-friendly:
   - Halal
   - Kosher
   - Ready to eat
-- Leave status/dietary tag cells blank when no tags apply.
+- Keep status tags and dietary flags in separate columns/sections.
+- Use the same visual meanings as FEED where possible:
+  - `Limited` uses an alert-triangle icon with warning styling.
+  - `Clearance` uses a tag icon with danger/clearance styling.
+  - Dietary flags use FEED's dietary icon set: wheat-off, vegan, carrot,
+    moon-star, star, sprout, and utensils-crossed.
+- Leave status/dietary cells blank when no values apply.
 - Use existing shadcn/ui surfaces (`Card`, `Badge`, `Input`, `Button`) and
   semantic token colors.
 - Use `isRTL(language)` for Arabic and Persian layout direction.

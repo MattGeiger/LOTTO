@@ -2,7 +2,21 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, PackageSearch, RefreshCw } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Carrot,
+  MoonStar,
+  PackageSearch,
+  RefreshCw,
+  Sprout,
+  Star,
+  Tag,
+  UtensilsCrossed,
+  Vegan,
+  WheatOff,
+  type LucideIcon,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,14 +35,18 @@ import {
 } from "@/lib/feed-public-inventory";
 import { cn } from "@/lib/utils";
 
-const dietaryLabels: Array<[keyof FeedInventoryItem["dietaryFlags"], string]> = [
-  ["vegan", "Vegan"],
-  ["vegetarian", "Vegetarian"],
-  ["glutenFree", "Gluten-free"],
-  ["organic", "Organic"],
-  ["halal", "Halal"],
-  ["kosher", "Kosher"],
-  ["readyToEat", "Ready to eat"],
+const dietaryFlags: Array<{
+  key: keyof FeedInventoryItem["dietaryFlags"];
+  label: string;
+  icon: LucideIcon;
+}> = [
+  { key: "glutenFree", label: "Gluten-free", icon: WheatOff },
+  { key: "vegan", label: "Vegan", icon: Vegan },
+  { key: "vegetarian", label: "Vegetarian", icon: Carrot },
+  { key: "halal", label: "Halal", icon: MoonStar },
+  { key: "kosher", label: "Kosher", icon: Star },
+  { key: "organic", label: "Organic", icon: Sprout },
+  { key: "readyToEat", label: "Ready to eat", icon: UtensilsCrossed },
 ];
 
 function formatInventoryFreshness(input: string, language: string): string {
@@ -67,28 +85,36 @@ function getFilteredCategories(
     .filter((category) => category.items.length > 0);
 }
 
-function InventoryBadges({ item }: { item: FeedInventoryItem }) {
-  const statusBadges = [
-    item.statusTags.limited ? "Limited" : null,
-    item.statusTags.clearance ? "Clearance" : null,
-  ].filter(Boolean);
-  const dietaryBadges = dietaryLabels
-    .filter(([flag]) => item.dietaryFlags[flag])
-    .map(([, label]) => label);
-
-  if (statusBadges.length === 0 && dietaryBadges.length === 0) {
-    return null;
-  }
+function InventoryStatusBadges({ item }: { item: FeedInventoryItem }) {
+  if (!item.statusTags.limited && !item.statusTags.clearance) return null;
 
   return (
     <div className="flex flex-wrap gap-1.5">
-      {statusBadges.map((label) => (
-        <Badge key={label} variant={label === "Limited" ? "warning" : "secondary"}>
-          {label}
+      {item.statusTags.limited ? (
+        <Badge variant="warning">
+          <AlertTriangle className="size-3" aria-hidden="true" />
+          Limited
         </Badge>
-      ))}
-      {dietaryBadges.map((label) => (
-        <Badge key={label} variant="outline">
+      ) : null}
+      {item.statusTags.clearance ? (
+        <Badge variant="danger">
+          <Tag className="size-3" aria-hidden="true" />
+          Clearance
+        </Badge>
+      ) : null}
+    </div>
+  );
+}
+
+function InventoryDietaryFlags({ item }: { item: FeedInventoryItem }) {
+  const activeFlags = dietaryFlags.filter(({ key }) => item.dietaryFlags[key]);
+  if (activeFlags.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {activeFlags.map(({ key, label, icon: Icon }) => (
+        <Badge key={key} variant="outline">
+          <Icon className="size-3" aria-hidden="true" />
           {label}
         </Badge>
       ))}
@@ -117,9 +143,10 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
           <table className="w-full table-fixed text-sm">
             <thead>
               <tr className="border-b bg-background/70 text-left text-xs font-semibold uppercase text-muted-foreground">
-                <th className="w-[42%] px-4 py-2">Item</th>
-                <th className="w-[22%] px-4 py-2">Limit</th>
-                <th className="px-4 py-2">Tags</th>
+                <th className="w-[34%] px-4 py-2">Item</th>
+                <th className="w-[18%] px-4 py-2">Limit</th>
+                <th className="w-[18%] px-4 py-2">Status</th>
+                <th className="px-4 py-2">Dietary</th>
               </tr>
             </thead>
             <tbody>
@@ -128,7 +155,10 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
                   <td className="px-4 py-3 font-medium">{getFeedDisplayName(item, language)}</td>
                   <td className="px-4 py-3 text-muted-foreground">{formatFeedLimit(item.limit, item.limitType)}</td>
                   <td className="px-4 py-3">
-                    <InventoryBadges item={item} />
+                    <InventoryStatusBadges item={item} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <InventoryDietaryFlags item={item} />
                   </td>
                 </tr>
               ))}
@@ -142,7 +172,8 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
               {formatFeedLimit(item.limit, item.limitType) ? (
                 <div className="text-sm text-muted-foreground">{formatFeedLimit(item.limit, item.limitType)}</div>
               ) : null}
-              <InventoryBadges item={item} />
+              <InventoryStatusBadges item={item} />
+              <InventoryDietaryFlags item={item} />
             </div>
           ))}
         </div>
