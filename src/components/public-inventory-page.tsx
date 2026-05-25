@@ -91,15 +91,15 @@ function InventoryStatusBadges({ item }: { item: FeedInventoryItem }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {item.statusTags.limited ? (
-        <Badge variant="warning">
+        <Badge variant="warning" aria-label="Limited">
           <AlertTriangle className="size-3" aria-hidden="true" />
-          Limited
+          <span className="sr-only">Limited</span>
         </Badge>
       ) : null}
       {item.statusTags.clearance ? (
-        <Badge variant="danger">
+        <Badge variant="danger" aria-label="Clearance">
           <Tag className="size-3" aria-hidden="true" />
-          Clearance
+          <span className="sr-only">Clearance</span>
         </Badge>
       ) : null}
     </div>
@@ -113,12 +113,45 @@ function InventoryDietaryFlags({ item }: { item: FeedInventoryItem }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {activeFlags.map(({ key, label, icon: Icon }) => (
-        <Badge key={key} variant="outline">
+        <Badge key={key} variant="outline" aria-label={label}>
           <Icon className="size-3" aria-hidden="true" />
-          {label}
+          <span className="sr-only">{label}</span>
         </Badge>
       ))}
     </div>
+  );
+}
+
+function InventoryLegend() {
+  return (
+    <Card className="gap-4 rounded-lg py-4">
+      <CardContent className="space-y-4 px-4 sm:px-5">
+        <div>
+          <h2 className="text-sm font-semibold uppercase text-muted-foreground">Status</h2>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Badge variant="warning">
+              <AlertTriangle className="size-3" aria-hidden="true" />
+              Limited
+            </Badge>
+            <Badge variant="danger">
+              <Tag className="size-3" aria-hidden="true" />
+              Clearance
+            </Badge>
+          </div>
+        </div>
+        <div>
+          <h2 className="text-sm font-semibold uppercase text-muted-foreground">Dietary</h2>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {dietaryFlags.map(({ key, label, icon: Icon }) => (
+              <Badge key={key} variant="outline">
+                <Icon className="size-3" aria-hidden="true" />
+                {label}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -298,6 +331,8 @@ export function PublicInventoryPage() {
               </CardContent>
             </Card>
           ) : null}
+
+          {!isLoading && inventory && filteredCategories.length > 0 ? <InventoryLegend /> : null}
 
           {filteredCategories.map((category) => (
             <InventoryCategoryTable key={category.id} category={category} />

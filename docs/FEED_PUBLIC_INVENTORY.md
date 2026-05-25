@@ -296,6 +296,10 @@ The inventory view should be plain-language and client-friendly:
   - Kosher
   - Ready to eat
 - Keep status tags and dietary flags in separate columns/sections.
+- Show a legend/key explaining status and dietary icons before the category
+  tables.
+- Use icon-only values inside category table status/dietary cells after the
+  legend establishes their meaning. Keep accessible labels for screen readers.
 - Use the same visual meanings as FEED where possible:
   - `Limited` uses an alert-triangle icon with warning styling.
   - `Clearance` uses a tag icon with danger/clearance styling.

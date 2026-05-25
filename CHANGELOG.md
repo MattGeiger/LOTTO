@@ -40,6 +40,7 @@
 - Hid FEED inventory limit values of `100` or higher so no-limit categories/items no longer display misleading copy such as `Limit 100 per household`.
 - Removed the `None listed` filler from empty inventory tag cells so items without status/dietary tags leave that field blank.
 - Split FEED inventory status tags and dietary flags into separate table columns, using FEED-aligned icons for Limited, Clearance, and dietary flags.
+- Added an inventory legend/key for status and dietary icons, and changed category-table status/dietary cells to icon-only values with accessible labels.
 - Aligned the haptics implementation with browser activation constraints by concluding the feature as tactile input feedback rather than broad event-driven vibration.
 
 ## [1.6.2] - 2026-03-05
