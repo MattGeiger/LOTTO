@@ -266,6 +266,12 @@ Implementation expectations:
 4. Do not proxy through `/api/state`.
 5. Do not add FEED inventory to LOTTO's raffle state schema.
 
+Production CSP must allow this public FEED origin in `connect-src`:
+
+```text
+https://feed.williamtemple.app
+```
+
 ## UI Intent
 
 The inventory view should be plain-language and client-friendly:

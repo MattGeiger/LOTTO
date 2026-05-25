@@ -16,6 +16,7 @@ describe("M3: Content Security Policy headers must be configured", () => {
     expect(configSource).toContain("script-src");
     expect(configSource).toContain("style-src");
     expect(configSource).toContain("connect-src");
+    expect(configSource).toContain("https://feed.williamtemple.app");
     expect(configSource).toContain("frame-ancestors");
   });
 });

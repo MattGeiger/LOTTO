@@ -3,14 +3,15 @@ import type { NextConfig } from "next";
 const enableTweakcnPreview = process.env.VERCEL !== "1";
 const speedInsightsScriptHost = "https://va.vercel-scripts.com";
 const speedInsightsConnectHost = "https://vitals.vercel-insights.com";
+const feedPublicInventoryHost = "https://feed.williamtemple.app";
 
 const scriptSrc = enableTweakcnPreview
   ? `script-src 'self' 'unsafe-inline' ${speedInsightsScriptHost} https://tweakcn.com https://*.tweakcn.com`
   : `script-src 'self' 'unsafe-inline' ${speedInsightsScriptHost}`;
 
 const connectSrc = enableTweakcnPreview
-  ? `connect-src 'self' ${speedInsightsConnectHost} ${speedInsightsScriptHost} https://tweakcn.com https://*.tweakcn.com`
-  : `connect-src 'self' ${speedInsightsConnectHost} ${speedInsightsScriptHost}`;
+  ? `connect-src 'self' ${speedInsightsConnectHost} ${speedInsightsScriptHost} ${feedPublicInventoryHost} https://tweakcn.com https://*.tweakcn.com`
+  : `connect-src 'self' ${speedInsightsConnectHost} ${speedInsightsScriptHost} ${feedPublicInventoryHost}`;
 
 const frameAncestors = enableTweakcnPreview
   ? "frame-ancestors 'self' https://tweakcn.com https://*.tweakcn.com"
