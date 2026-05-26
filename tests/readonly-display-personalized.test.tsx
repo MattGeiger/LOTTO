@@ -101,9 +101,10 @@ describe("ReadOnlyDisplay personalized variant", () => {
     expect(screen.getByText("2")).toBeInTheDocument();
     expect(screen.getByTestId("service-time")).toHaveTextContent(/\S/);
     expect(screen.getByRole("button", { name: "Enter a new ticket number" })).toBeInTheDocument();
-    const arcadeLink = screen.getByRole("link", { name: "PLAY GAMES" });
-    expect(arcadeLink).toBeInTheDocument();
-    expect(arcadeLink).toHaveAttribute("href", "/arcade");
+    // The inventory and games links moved out of the ticket card into the
+    // bottom tab bar (rendered by the /new page, not by ReadOnlyDisplay).
+    expect(screen.queryByRole("link", { name: "PLAY GAMES" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "See what's in stock" })).not.toBeInTheDocument();
   });
 
   it("shows inline not-in-drawing messaging and check-back placeholders", async () => {
