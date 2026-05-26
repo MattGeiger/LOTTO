@@ -558,6 +558,78 @@ After entering a Start Number and End Number in the admin page, only the "Genera
 
 ---
 
+## Issue 21: `/new` and `/inventory` prototype top controls drift
+
+### Status
+- Implemented in development for the current prototype pair.
+
+### Observed
+- The `/new` language onboarding modal originally allowed the William Temple
+  House logo from the floating header to appear in the foreground because the
+  header shared the same stacking level as dialog content and sat above the
+  shared dialog backdrop.
+- `/new` and `/inventory` placed persistent controls differently:
+  - `/new` anchored the language switcher at top-left and the theme switcher at
+    top-right, with the logo centered between them.
+  - `/inventory` placed Back navigation on the left and grouped language/theme
+    controls together on the right.
+
+### Desired Behavior
+- Persistent client controls should stay in predictable on-screen positions
+  when moving between `/new` and `/inventory`.
+- Modal focus should visually prioritize the modal and backdrop over persistent
+  page chrome.
+- Page-specific navigation such as Back should not displace global controls.
+
+### Fix Applied
+- Lowered the `/new` floating header from `z-50` to `z-30`, placing it below
+  the shared dialog overlay (`z-40`) and dialog content (`z-50`).
+- Updated `/inventory` to use the same top-control positions as `/new`:
+  language switcher top-left and theme switcher top-right.
+- Moved `/inventory` Back navigation into the inventory content header below
+  the persistent control rail.
+- Localized the `/new` inventory CTA with the shared language map so `See
+  what's in stock` renders in every supported display language instead of
+  staying hardcoded in English.
+- Removed `/inventory` client-facing FEED jargon and the redundant `Pantry
+  inventory` eyebrow/icon, localized the page title and search label, and
+  restyled inventory search to use the same rounded input-group treatment as
+  the public-board ticket search.
+- Removed the visible `/inventory` Refresh button; inventory still loads on
+  page entry, while the primary client task stays browsing/searching.
+- Moved inventory result sections into a shadcn/Radix `ScrollArea` so the top
+  controls, page heading/search, freshness/totals, and legend/key persist at
+  the top while clients browse category sections.
+- Added inner spacing inside the results scroll viewport so table/card shadows
+  have room to render instead of being clipped at the scroll boundary.
+- Switched the `/inventory` Back affordance from ghost to primary button styling
+  and mapped its label to the existing shared `back` translation key.
+- Moved `/inventory` search into the centered top-control slot to match the
+  homepage header layout, and center-aligned the inventory title, freshness
+  timestamp, and totals.
+- Simplified the `/inventory` legend by removing its card frame and `Status` /
+  `Dietary` headings, enlarging pills/icons/text, and rendering each item as
+  `icon = term`.
+- Increased the legend text size and explicitly overrode the shared badge icon
+  size so icons scale with the larger key pills.
+- Made dietary legend pills toggle item filtering with selected-state checkmark
+  indicators; multiple selected dietary flags filter to items that match all
+  selected flags, and status tags remain non-interactive.
+- Moved status keys beneath the dietary filter row as plain `icon = label`
+  entries, removed their legend pill containers, enlarged dietary filter text,
+  and increased dietary flag icon size inside inventory rows/cards.
+- Moved Back into the same row as the inventory title and simplified it to an
+  icon-only chevron control matching the language/theme trigger style while
+  preserving the localized accessible name.
+
+### Validation
+- Manual test confirmed the `/new` logo now stays behind the language modal
+  backdrop while “Choose your language” has focus.
+- Browser verification confirmed the shared dialog overlay is the top element
+  over the `/new` logo area.
+
+---
+
 ## Issue 19: `/new` text morph animation is too aggressive
 
 ### Status
