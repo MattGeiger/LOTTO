@@ -250,13 +250,14 @@ describe("public inventory page", () => {
 
     renderWithLanguage(<NewPage />);
 
-    const links = await screen.findAllByRole("link", { name: "See what's in stock" });
-    expect(links[0]).toHaveAttribute("href", "/inventory");
-    const changeTicket = await screen.findByRole("button", { name: "Enter a new ticket number" });
-    const inventory = links[0];
-    const arcade = screen.getByRole("link", { name: /PLAY GAMES/i });
-    expect(changeTicket.compareDocumentPosition(inventory) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(inventory.compareDocumentPosition(arcade) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // Inventory and games are now reached through the persistent bottom tab
+    // bar; the ticket-change action remains an in-page button.
+    const inventoryTab = await screen.findByRole("link", { name: "What's in stock" });
+    expect(inventoryTab).toHaveAttribute("href", "/inventory");
+    expect(screen.getByRole("link", { name: "Games" })).toHaveAttribute("href", "/arcade");
+    expect(screen.getByRole("button", { name: "Enter a new ticket number" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "See what's in stock" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /PLAY GAMES/i })).not.toBeInTheDocument();
   });
 
   it("localizes the /new inventory entry point", async () => {
@@ -274,8 +275,9 @@ describe("public inventory page", () => {
 
     renderWithLanguage(<NewPage />);
 
-    const links = await screen.findAllByRole("link", { name: "Ver qué hay disponible" });
-    expect(links[0]).toHaveAttribute("href", "/inventory");
+    const inventoryTab = await screen.findByRole("link", { name: "Qué hay disponible" });
+    expect(inventoryTab).toHaveAttribute("href", "/inventory");
+    expect(screen.queryByRole("link", { name: "Ver qué hay disponible" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "See what's in stock" })).not.toBeInTheDocument();
   });
 });

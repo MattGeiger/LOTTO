@@ -266,15 +266,19 @@ index (`/arcade`) but **not** on the game routes (`/arcade/brick-mayhem`,
 `/arcade/snake`). Under the per-page placement (below) this is automatic — the
 game pages simply do not render `<BottomTabBar />`; only the arcade index does.
 
-**Open finding (arcade visual language):** the arcade index (`/arcade`) is built
-with a deliberately distinct **8-bit pixel-art** UI (`@/arcade/ui/8bit`,
-`arcade-retro`, `arcade-pixel-grid`). The core-styled bar (shadcn card surface,
-primary tints, Lucide line-icons with glass dock) would clash there and brush
-against the guardrail ("separated in code *and UX*; don't reuse raffle UI for
-Arcade"). So the `/arcade` integration is **deferred** pending a decision:
-(a) author an arcade-styled pixel-art variant of the tab bar, (b) accept the
-core bar on the arcade index, or (c) keep arcade on its own back-only nav and
-let the Games tab simply link in. Not blocking the `/inventory` build-out.
+**Resolved (arcade visual language):** the arcade index (`/arcade`) uses a
+deliberately distinct **8-bit pixel-art** UI (`@/arcade/ui/8bit`, `arcade-retro`,
+`arcade-pixel-grid`), so the core glass bar would clash and brush the guardrail
+("separated in code *and UX*; don't reuse raffle UI for Arcade"). Decision:
+**option (a) — a separate arcade-styled variant.**
+`src/arcade/components/arcade-bottom-tab-bar.tsx` reuses the same three
+destinations and `nav*` labels but renders pixel-art icons
+(`src/arcade/components/icons/{receipt,shopping-cart,gaming}-icon.tsx`) and
+arcade styling (arcade CSS variables, control-dock border/neon-shadow pattern),
+inheriting the arcade font and vars from the enclosing `.arcade-scope`. It is
+rendered only on the `/arcade` index (per-page), never on the game routes —
+those keep their own Back control. The core `BottomTabBar` is **not** reused on
+arcade, keeping the two sections visually and structurally separate.
 
 ---
 
@@ -334,11 +338,17 @@ should follow once the bar is live:
       nav landmark, active-tab marker, all three tab routes, and localized
       labels (HTTP 200, `tsc`/ESLint clean). **Animation motion still needs a
       human glance in-browser** — especially the ticket clip-path rip.
-- [ ] Extend to `/new` (blocked on removing the old button cluster + relocating
-      the "different ticket" action, else duplicate nav) and the `/arcade` index
-      (blocked on the pixel-art visual-language decision above).
+- [x] Extended the bar to `/new`: removed the old "See what's in stock" and
+      "PLAY GAMES" buttons from the personalized ticket-card cluster (now in the
+      bar) plus the orphaned arcade frame/font helpers, kept "Enter a new ticket
+      number" as a standalone button, and added bottom clearance on the
+      personalized display.
+- [x] Added an arcade-styled variant (`ArcadeBottomTabBar`) on the `/arcade`
+      index only — pixel-art icons + arcade styling, absent on the game routes
+      (verified by SSR: bar present on `/arcade`, absent on `/arcade/snake` and
+      `/arcade/brick-mayhem`).
 - [x] Removed the `/inventory` top-level BACK button (the "Your ticket" tab is
       the return path).
-- [ ] Follow-up: relocate the "different ticket" link into the YOUR TICKET card
-      when the bar reaches `/new`.
+- [x] Decided to keep "Enter a new ticket number" as a standalone button on
+      `/new` rather than relocating it into the YOUR TICKET card.
 - [x] Update `CHANGELOG.md`.

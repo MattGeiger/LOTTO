@@ -18,6 +18,7 @@ import type { RaffleState } from "@/lib/state-types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
 
 const languageOptions: Array<{ code: Language; label: string }> = [
   { code: "en", label: "English" },
@@ -137,7 +138,7 @@ export default function NewPersonalizedHomePage() {
 
   return (
     <div className="relative">
-      <div className="absolute left-6 right-6 top-4 z-50 flex items-center justify-between gap-5 py-2 sm:left-8 sm:right-8 lg:left-10 lg:right-10">
+      <div className="absolute left-6 right-6 top-4 z-30 flex items-center justify-between gap-5 py-2 sm:left-8 sm:right-8 lg:left-10 lg:right-10">
         <LanguageSwitcher enableHaptics />
         <div className="flex-1 flex justify-center px-2">
           <div className="w-full max-w-[220px]">
@@ -249,6 +250,7 @@ export default function NewPersonalizedHomePage() {
           )}
         </DialogContent>
       </Dialog>
+      <BottomTabBar />
     </div>
   );
 }

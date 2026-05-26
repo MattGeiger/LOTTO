@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { ArcadeBottomTabBar } from "@/arcade/components/arcade-bottom-tab-bar";
 import { ChevronArrowLeftIcon } from "@/arcade/components/icons/chevron-arrow-left-icon";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@/arcade/ui/8bit";
 import { useLanguage } from "@/contexts/language-context";
@@ -36,7 +37,7 @@ export default function ArcadeHomePage() {
   ];
 
   return (
-    <div className="arcade-pixel-grid mx-auto min-h-[calc(100vh-4.5rem)] max-w-6xl px-4 pb-12 pt-8 sm:px-6 sm:pt-10">
+    <div className="arcade-pixel-grid mx-auto min-h-[calc(100vh-4.5rem)] max-w-6xl px-4 pb-28 pt-8 sm:px-6 sm:pb-32 sm:pt-10">
       <section className="mb-4 text-center">
         <h1 className="arcade-retro text-[2rem] leading-tight text-[var(--arcade-dot)] sm:text-[3rem]">
           {t("arcadeGames")}
@@ -106,6 +107,8 @@ export default function ArcadeHomePage() {
           </div>
         </CardContent>
       </Card>
+
+      <ArcadeBottomTabBar />
     </div>
   );
 }
