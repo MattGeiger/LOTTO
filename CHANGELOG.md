@@ -14,6 +14,12 @@
 
 ## [Unreleased] - 2026-03-06
 ### Added
+- Added an animated `package-check` icon (`src/components/animate-ui/icons/package-check.tsx`) built on the native animate-ui `path` draw-on primitive — the box, seam, top, stem, and finally the check stroke draw themselves in — used as the `/inventory` dietary-filter dropdown trigger.
+- Added `inventoryDietaryFilterLabel` and `inventoryClearFilters` translation keys across all eight supported languages.
+- Added the persistent bottom tab navigation bar (`src/components/navigation/bottom-tab-bar.tsx`) with three destinations (Your ticket → `/new`, What's in stock → `/inventory`, Games → `/arcade`): a desktop floating capsule dock and a mobile full-width blurred bar, route-aware active state via `usePathname()`, localized labels with RTL support, and a `prefers-reduced-motion` guard. Per-page placement (Option 1) with a module-level guard so the active-tab mount animation plays once per page load, not on client-side navigation.
+- Added three imperative-ref animated nav icons in `src/components/lucide-animated/` following the existing `archive.tsx` pattern: `ticket.tsx` (clipped halves rip apart and spring back), `cart.tsx` (scale pop + hop), and `gamepad-2.tsx` (controller wiggle while the d-pad and face buttons fade out and back), plus the `src/components/navigation/nav-items.ts` config (label key, route, icon, active matcher).
+- Added `navTicket`, `navInventory`, `navGames`, and `navPrimaryLabel` translation keys across all eight supported languages, grounded in the existing reviewed vocabulary.
+- Added `docs/NAVIGATION.md` documenting the approved persistent bottom-tab navigation direction: three destinations (`/new`, `/inventory`, `/arcade`), desktop floating-dock vs mobile tab-bar presentations, active/inactive states, the imperative-ref animated-icon plan (ticket-rip, cart-hop, gamepad wiggle), the active-tab-only-on-mount motion decision, arcade-boundary considerations, and an implementation checklist.
 - Added `docs/FEED_PUBLIC_INVENTORY.md` documenting the FEED public inventory data contract, translation mapping, intended LOTTO usage, fetch rules, UI boundaries, and first-implementation acceptance criteria.
 - Added `/inventory`, a client-facing FEED public inventory lookup that fetches the read-only endpoint without credentials and renders in-stock items as category tables with freshness, limits, status tags, dietary flags, and FEED-provided translations where available.
 - Added a `See what's in stock` entry point from `/new` to `/inventory`.
@@ -24,9 +30,25 @@
 - Added a raw-library `/haptics` diagnostic page that renders one shadcn button per `web-haptics` built-in preset and triggers each preset directly, so device/browser support can be validated without the app's semantic mapping layer.
 
 ### Changed
+- Condensed the `/inventory` dietary filters from a wrapping row of toggle buttons into a single multi-select dropdown (shadcn `DropdownMenuCheckboxItem`), where each option shows its dietary icon and selecting one keeps the menu open for combining flags. The trigger uses the animated `package-check` icon, shows a selected-count badge, and a Clear action appears once any flag is active. The status legend (Limited / Clearance) is retained alongside it.
+- Removed the `/inventory` BACK button now that the persistent bottom tab bar's "Your ticket" tab is the return path (the docs/NAVIGATION.md follow-up); the `next/link`, `ChevronLeft`, and `Check` imports it relied on were dropped.
+- Rendered the bottom tab navigation bar on `/inventory` as the first integration (per the Option 1 per-page placement), and added bottom scroll-area clearance so the floating dock does not cover the last inventory rows. The `/new` + `/arcade` integrations remain tracked as follow-ups in `docs/NAVIGATION.md`.
 - Updated `/new` and Arcade personalized-ticket persistence to validate stored tickets against pantry operating-hours timezone, next pantry-day opening, and active LOTTO range instead of only browser-local midnight.
 - Replaced translated UI text morphing with TextScramble (`duration=3.0`, `speed=0.5`), kept `/new` language onboarding static, and removed morph/rolling animation from the large public-board serving value.
 - Moved the `/new` inventory entry point into the existing personalized-card action stack between `Enter a new ticket number` and `PLAY GAMES`, and added production FEED fallback behavior when a configured inventory endpoint fails.
+- Standardized `/inventory` top controls with `/new` by anchoring the language switcher top-left and theme switcher top-right, with Back navigation moved into the inventory content header.
+- Localized the `/new` `See what's in stock` inventory CTA through the shared language map for all supported display languages.
+- Localized `/inventory` title/search copy, removed the FEED-oriented explainer and `Pantry inventory` eyebrow, and restyled inventory search to match the public-board ticket search control treatment.
+- Removed the visible `/inventory` Refresh button so the client page stays focused on browsing and searching available items.
+- Constrained `/inventory` to a fixed-height shell with a shadcn/Radix `ScrollArea` for inventory results so the top controls and status/dietary legend remain visible while browsing item sections.
+- Added inner padding to the `/inventory` results `ScrollArea` so inventory table card shadows are not clipped by the scroll viewport.
+- Changed the `/inventory` Back button to the primary button treatment and localized its label through the shared `back` translation key.
+- Moved `/inventory` search into the centered top-control slot used by the homepage and center-aligned the inventory title, freshness timestamp, and totals.
+- Simplified the `/inventory` legend by removing its card frame and section headings, enlarging the pills/icons/text, and showing `=` between each icon and term.
+- Increased `/inventory` legend label text and icon sizes with explicit badge icon overrides so the enlarged pills read proportionally.
+- Made `/inventory` dietary legend pills interactive filters with checkmark indicators, while leaving status tags as static legend entries.
+- Reworked the `/inventory` legend so dietary filters occupy the primary pill row, status keys render below as plain `icon = label` entries, and dietary icons are larger inside item lists.
+- Moved the `/inventory` Back control into the inventory title row and simplified it to an icon-only chevron button matching the language/theme trigger style, with the localized label preserved for assistive technology.
 - Updated FEED inventory documentation, README, project overview, and env examples to reflect the runtime `/inventory` integration and optional FEED endpoint override.
 - Extended optional client-device haptics from Arcade-only to `/new` and kept `/`, `/display`, admin, staff, and login haptic-free.
 - Narrowed browser haptics to direct button-style interactions only: `/new` and Arcade buttons, menu selections, theme/language choices, explicit submit/back/change-ticket actions, and Snake D-pad button presses.
@@ -36,6 +58,7 @@
 
 ### Fixed
 - Fixed a `/new` reset-edge loop where a tab left open across staff reset could accept a ticket while no active range existed, immediately invalidate the stored ticket, and reopen the ticket modal repeatedly; ticket submit now waits until today's ticket range is ready.
+- Lowered the `/new` floating header stacking level so the William Temple House logo stays behind the shared language onboarding modal backdrop while “Choose your language” has focus.
 - Fixed production inventory loading by allowing `https://feed.williamtemple.app` in the app Content Security Policy `connect-src` directive.
 - Hid FEED inventory limit values of `100` or higher so no-limit categories/items no longer display misleading copy such as `Limit 100 per household`.
 - Removed the `None listed` filler from empty inventory tag cells so items without status/dietary tags leave that field blank.

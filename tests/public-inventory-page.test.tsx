@@ -118,6 +118,14 @@ function renderWithLanguage(ui: React.ReactNode) {
 describe("public inventory page", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    vi.stubGlobal(
+      "ResizeObserver",
+      class ResizeObserver {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
   });
 
   it("renders FEED inventory in category tables with tags and limits", async () => {
@@ -126,12 +134,16 @@ describe("public inventory page", () => {
     renderWithLanguage(<InventoryPage />);
 
     expect(await screen.findByRole("heading", { name: "What's in stock today" })).toBeInTheDocument();
+    expect(screen.queryByText("Pantry inventory")).not.toBeInTheDocument();
+    expect(screen.queryByText("Available pantry items from FEED, grouped by category.")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Refresh" })).not.toBeInTheDocument();
     expect(screen.getByText("Canned Goods")).toBeInTheDocument();
     expect(screen.queryByText("Limit 100 per household")).not.toBeInTheDocument();
     expect(screen.getAllByText("Garbanzo Beans").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Limit 1 per household").length).toBeGreaterThan(0);
-    expect(screen.getByRole("heading", { name: "Status" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Dietary" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Status" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Dietary" })).not.toBeInTheDocument();
+    expect(screen.getAllByText("=").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Limited").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Clearance").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Ready to eat").length).toBeGreaterThan(0);
@@ -139,6 +151,7 @@ describe("public inventory page", () => {
     expect(screen.getAllByLabelText("Clearance").length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText("Ready to eat").length).toBeGreaterThan(0);
     expect(screen.getByText(/Updated: May 24/)).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Inventory results" })).toHaveAttribute("data-slot", "scroll-area");
     expect(screen.queryByText(/Updated: May 25/)).not.toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Status" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Dietary" })).toBeInTheDocument();
@@ -155,6 +168,8 @@ describe("public inventory page", () => {
     await user.click(await screen.findByRole("button", { name: /change language/i }));
     await user.click(screen.getByRole("menuitemradio", { name: "Español" }));
 
+    expect(await screen.findByRole("heading", { name: "Qué hay disponible hoy" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Buscar inventario" })).toBeInTheDocument();
     expect(await screen.findByText("Productos enlatados")).toBeInTheDocument();
     expect(screen.getAllByText("Garbanzos").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Tuna").length).toBeGreaterThan(0);
@@ -162,12 +177,63 @@ describe("public inventory page", () => {
     await user.click(screen.getAllByLabelText("Limitado")[0]);
     expect(await screen.findByRole("tooltip")).toHaveTextContent("Limitado");
 
-    await user.type(screen.getByRole("textbox", { name: "Search inventory" }), "garbanzos");
+    await user.type(screen.getByRole("textbox", { name: "Buscar inventario" }), "garbanzos");
 
     await waitFor(() => {
       expect(screen.queryByText("Tuna")).not.toBeInTheDocument();
     });
     expect(screen.getAllByText("Garbanzos").length).toBeGreaterThan(0);
+  });
+
+  it("uses the public board search control treatment for inventory search", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(inventoryPayload), { status: 200 })));
+
+    renderWithLanguage(<InventoryPage />);
+
+    const searchInput = await screen.findByRole("textbox", { name: "Search inventory" });
+    expect(searchInput.closest("[data-slot='input-group']")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Search inventory" })).toBeInTheDocument();
+  });
+
+  it("filters inventory by selected dietary flags via the filter dropdown", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(inventoryPayload), { status: 200 })));
+
+    renderWithLanguage(<InventoryPage />);
+
+    expect((await screen.findAllByText("Garbanzo Beans")).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Tuna").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Rice").length).toBeGreaterThan(0);
+
+    // Open the dietary filter dropdown; options are checkbox items that keep
+    // the menu open so multiple flags can be combined.
+    await user.click(screen.getByRole("button", { name: /Dietary filters/ }));
+
+    const glutenFree = await screen.findByRole("menuitemcheckbox", { name: "Gluten-free" });
+    expect(glutenFree).toHaveAttribute("aria-checked", "false");
+    await user.click(glutenFree);
+    expect(glutenFree).toHaveAttribute("aria-checked", "true");
+    expect(screen.getAllByText("Garbanzo Beans").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Tuna").length).toBeGreaterThan(0);
+    expect(screen.queryAllByText("Rice")).toHaveLength(0);
+
+    const vegan = await screen.findByRole("menuitemcheckbox", { name: "Vegan" });
+    await user.click(vegan);
+    expect(vegan).toHaveAttribute("aria-checked", "true");
+    expect(screen.getAllByText("Garbanzo Beans").length).toBeGreaterThan(0);
+    expect(screen.queryAllByText("Tuna")).toHaveLength(0);
+    expect(screen.queryAllByText("Rice")).toHaveLength(0);
+
+    await user.click(glutenFree);
+    expect(glutenFree).toHaveAttribute("aria-checked", "false");
+    expect(screen.getAllByText("Garbanzo Beans").length).toBeGreaterThan(0);
+    expect(screen.queryAllByText("Tuna")).toHaveLength(0);
+
+    await user.click(vegan);
+    expect(vegan).toHaveAttribute("aria-checked", "false");
+    expect(screen.getAllByText("Garbanzo Beans").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Tuna").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Rice").length).toBeGreaterThan(0);
   });
 
   it("adds an inventory entry point to /new", async () => {
@@ -191,5 +257,25 @@ describe("public inventory page", () => {
     const arcade = screen.getByRole("link", { name: /PLAY GAMES/i });
     expect(changeTicket.compareDocumentPosition(inventory) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(inventory.compareDocumentPosition(arcade) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("localizes the /new inventory entry point", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(raffleState), { status: 200 })));
+    window.localStorage.setItem("display-language", "es");
+    window.localStorage.setItem(
+      HOMEPAGE_TICKET_STORAGE_KEY,
+      JSON.stringify({
+        ticketNumber: 12,
+        expiresAt: Date.now() + 60_000,
+        savedAt: Date.now(),
+        rangeKey: "1-20",
+      }),
+    );
+
+    renderWithLanguage(<NewPage />);
+
+    const links = await screen.findAllByRole("link", { name: "Ver qué hay disponible" });
+    expect(links[0]).toHaveAttribute("href", "/inventory");
+    expect(screen.queryByRole("link", { name: "See what's in stock" })).not.toBeInTheDocument();
   });
 });

@@ -1,14 +1,11 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import {
   AlertTriangle,
-  ArrowLeft,
   Carrot,
+  ChevronDown,
   MoonStar,
-  PackageSearch,
-  RefreshCw,
   Sprout,
   Star,
   Tag,
@@ -20,8 +17,22 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { PackageCheck } from "@/components/animate-ui/icons/package-check";
+import { Search } from "@/components/animate-ui/icons/search";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useLanguage } from "@/contexts/language-context";
@@ -36,8 +47,10 @@ import {
 } from "@/lib/feed-public-inventory";
 import { cn } from "@/lib/utils";
 
+type DietaryFlagKey = keyof FeedInventoryItem["dietaryFlags"];
+
 const dietaryFlags: Array<{
-  key: keyof FeedInventoryItem["dietaryFlags"];
+  key: DietaryFlagKey;
   labelKey: string;
   icon: LucideIcon;
 }> = [
@@ -75,13 +88,17 @@ function getFilteredCategories(
   inventory: FeedPublicInventory,
   language: ReturnType<typeof useLanguage>["language"],
   query: string,
+  selectedDietaryFlags: DietaryFlagKey[],
 ): FeedInventoryCategory[] {
   const trimmedQuery = query.trim();
-  if (!trimmedQuery) return inventory.categories;
   return inventory.categories
     .map((category) => ({
       ...category,
-      items: category.items.filter((item) => matchesInventorySearch(category, item, language, trimmedQuery)),
+      items: category.items.filter((item) => {
+        const matchesSearch = matchesInventorySearch(category, item, language, trimmedQuery);
+        const matchesDietaryFlags = selectedDietaryFlags.every((flag) => item.dietaryFlags[flag]);
+        return matchesSearch && matchesDietaryFlags;
+      }),
     }))
     .filter((category) => category.items.length > 0);
 }
@@ -100,17 +117,19 @@ function InventoryIconChip({
   label,
   icon: Icon,
   variant,
+  iconClassName,
 }: {
   label: string;
   icon: LucideIcon;
   variant: React.ComponentProps<typeof Badge>["variant"];
+  iconClassName?: string;
 }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Badge asChild variant={variant}>
           <button type="button" aria-label={label} className="cursor-pointer">
-            <Icon className="size-3" aria-hidden="true" />
+            <Icon className={cn("size-3", iconClassName)} aria-hidden="true" />
             <span className="sr-only">{label}</span>
           </button>
         </Badge>
@@ -146,44 +165,86 @@ function InventoryDietaryFlags({ item }: { item: FeedInventoryItem }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {activeFlags.map(({ key, labelKey, icon }) => (
-        <InventoryIconChip key={key} label={t(labelKey)} icon={icon} variant="outline" />
+        <InventoryIconChip key={key} label={t(labelKey)} icon={icon} variant="outline" iconClassName="!size-4" />
       ))}
     </div>
   );
 }
 
-function InventoryLegend() {
+function InventoryLegend({
+  selectedDietaryFlags,
+  onToggleDietaryFlag,
+  onClearDietaryFlags,
+}: {
+  selectedDietaryFlags: DietaryFlagKey[];
+  onToggleDietaryFlag: (flag: DietaryFlagKey) => void;
+  onClearDietaryFlags: () => void;
+}) {
   const { t } = useLanguage();
+  const selectedCount = selectedDietaryFlags.length;
 
   return (
-    <Card className="gap-4 rounded-lg py-4">
-      <CardContent className="space-y-4 px-4 sm:px-5">
-        <div>
-          <h2 className="text-sm font-semibold uppercase text-muted-foreground">Status</h2>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Badge variant="warning">
-              <AlertTriangle className="size-3" aria-hidden="true" />
-              {t("inventoryStatusLimited")}
-            </Badge>
-            <Badge variant="danger">
-              <Tag className="size-3" aria-hidden="true" />
-              {t("inventoryStatusClearance")}
-            </Badge>
-          </div>
-        </div>
-        <div>
-          <h2 className="text-sm font-semibold uppercase text-muted-foreground">Dietary</h2>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {dietaryFlags.map(({ key, labelKey, icon: Icon }) => (
-              <Badge key={key} variant="outline">
-                <Icon className="size-3" aria-hidden="true" />
-                {t(labelKey)}
+    <div className="flex flex-col items-center gap-5 px-1 py-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" className="h-11 gap-2 rounded-full px-4 text-base">
+            <AnimateIcon
+              animateOnView="path"
+              animateOnHover="path"
+              animateOnTap="path"
+              completeOnStop
+              className="inline-flex"
+            >
+              <PackageCheck size={20} />
+            </AnimateIcon>
+            <span>{t("inventoryDietaryFilterLabel")}</span>
+            {selectedCount > 0 ? (
+              <Badge variant="secondary" className="ml-0.5 px-1.5">
+                {selectedCount}
               </Badge>
-            ))}
-          </div>
+            ) : null}
+            <ChevronDown className="size-4 opacity-60" aria-hidden="true" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="center" className="w-60">
+          <DropdownMenuLabel>{t("inventoryDietaryFilterLabel")}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {dietaryFlags.map(({ key, labelKey, icon: Icon }) => (
+            <DropdownMenuCheckboxItem
+              key={key}
+              checked={selectedDietaryFlags.includes(key)}
+              onCheckedChange={() => onToggleDietaryFlag(key)}
+              onSelect={(event) => event.preventDefault()}
+              className="text-base"
+            >
+              <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
+              {t(labelKey)}
+            </DropdownMenuCheckboxItem>
+          ))}
+          {selectedCount > 0 ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={onClearDietaryFlags}>
+                {t("inventoryClearFilters")}
+              </DropdownMenuItem>
+            </>
+          ) : null}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <div className="flex items-center justify-center gap-6 text-base font-medium text-muted-foreground sm:text-lg">
+        <div className="inline-flex items-center gap-2">
+          <AlertTriangle className="size-5 text-[var(--status-warning-text)]" aria-hidden="true" />
+          <span aria-hidden="true">=</span>
+          <span>{t("inventoryStatusLimited")}</span>
         </div>
-      </CardContent>
-    </Card>
+        <div className="inline-flex items-center gap-2">
+          <Tag className="size-5 text-[var(--status-danger-text)]" aria-hidden="true" />
+          <span aria-hidden="true">=</span>
+          <span>{t("inventoryStatusClearance")}</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -248,9 +309,10 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
 }
 
 export function PublicInventoryPage() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [inventory, setInventory] = React.useState<FeedPublicInventory | null>(null);
   const [query, setQuery] = React.useState("");
+  const [selectedDietaryFlags, setSelectedDietaryFlags] = React.useState<DietaryFlagKey[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState("");
 
@@ -271,106 +333,132 @@ export function PublicInventoryPage() {
   }, [loadInventory]);
 
   const filteredCategories = React.useMemo(
-    () => (inventory ? getFilteredCategories(inventory, language, query) : []),
-    [inventory, language, query],
+    () => (inventory ? getFilteredCategories(inventory, language, query, selectedDietaryFlags) : []),
+    [inventory, language, query, selectedDietaryFlags],
   );
   const freshness = inventory ? formatInventoryFreshness(getInventoryLastUpdatedAt(inventory), language) : "";
+  const handleToggleDietaryFlag = React.useCallback((flag: DietaryFlagKey) => {
+    setSelectedDietaryFlags((current) =>
+      current.includes(flag) ? current.filter((selected) => selected !== flag) : [...current, flag],
+    );
+  }, []);
 
   return (
-    <main dir={isRTL(language) ? "rtl" : "ltr"} lang={language} className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-5 sm:px-6 lg:px-8">
-        <header className="flex items-center justify-between gap-3">
-          <Button asChild variant="ghost" className="gap-2">
-            <Link href="/new">
-              <ArrowLeft className="size-4" />
-              Back
-            </Link>
-          </Button>
-          <div className="flex items-center gap-2">
-            <LanguageSwitcher enableHaptics />
-            <ThemeSwitcher enableHaptics />
-          </div>
-        </header>
-
-        <section className="mt-8 flex flex-col gap-5 sm:mt-10">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl">
-              <div className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <PackageSearch className="size-4" />
-                Pantry inventory
-              </div>
-              <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">What&apos;s in stock today</h1>
-              <p className="mt-3 text-base text-muted-foreground">
-                Available pantry items from FEED, grouped by category.
-              </p>
-              {freshness ? (
-                <p className="mt-2 text-sm text-muted-foreground">Updated: {freshness}</p>
-              ) : null}
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
-              <Input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search inventory"
-                aria-label="Search inventory"
-                className="h-11 sm:w-72"
-              />
-              <Button type="button" variant="outline" className="h-11 gap-2" onClick={loadInventory} disabled={isLoading}>
-                <RefreshCw className={cn("size-4", isLoading && "animate-spin")} />
-                Refresh
+    <main dir={isRTL(language) ? "rtl" : "ltr"} lang={language} className="relative h-screen overflow-hidden bg-background text-foreground">
+      <div className="absolute left-6 right-6 top-4 z-30 flex items-center justify-between gap-5 py-2 sm:left-8 sm:right-8 lg:left-10 lg:right-10">
+        <LanguageSwitcher enableHaptics />
+        <div className="flex flex-1 justify-center px-2">
+          <div className="min-w-0 flex-1 max-w-[360px]">
+            <label htmlFor="inventory-search" className="sr-only">
+              {t("inventorySearchPlaceholder")}
+            </label>
+            <div className="flex w-full items-center gap-0 rounded-full bg-card/80 px-0 py-0.5 shadow-sm">
+              <InputGroup className="flex-1 border-0 bg-transparent shadow-none !bg-transparent dark:bg-transparent !dark:bg-transparent">
+                <InputGroupInput
+                  id="inventory-search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder={t("inventorySearchPlaceholder")}
+                  aria-label={t("inventorySearchPlaceholder")}
+                  enterKeyHint="search"
+                />
+              </InputGroup>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="!h-[3.375rem] !w-[3.375rem] !rounded-full !border-0 bg-card/80 shadow-[var(--base-shadow-lg)] hover:bg-accent hover:text-accent-foreground [&_svg]:!size-[1.8rem]"
+                onClick={() => document.getElementById("inventory-search")?.focus()}
+              >
+                <AnimateIcon
+                  animateOnView="path"
+                  animateOnHover="find"
+                  animateOnTap="default"
+                  completeOnStop
+                  className="inline-flex"
+                >
+                  <Search size={29} />
+                </AnimateIcon>
+                <span className="sr-only">{t("inventorySearchPlaceholder")}</span>
               </Button>
             </div>
           </div>
+        </div>
+        <ThemeSwitcher enableHaptics />
+      </div>
+      <div className="mx-auto flex h-screen min-h-0 w-full max-w-6xl flex-col px-4 pb-5 pt-24 sm:px-6 lg:px-8">
+        <section className="mt-6 flex shrink-0 flex-col gap-5 sm:mt-8">
+          <div className="flex flex-col items-center gap-1 text-center">
+            <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">{t("inventoryPageTitle")}</h1>
+            {freshness ? (
+              <p className="text-sm text-muted-foreground">Updated: {freshness}</p>
+            ) : null}
+          </div>
 
           {inventory ? (
-            <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+            <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground">
               <Badge variant="secondary">{inventory.totals.categories} categories</Badge>
               <Badge variant="secondary">{inventory.totals.foodItems} items</Badge>
             </div>
           ) : null}
         </section>
 
-        <section className="mt-6 flex flex-1 flex-col gap-4 pb-10">
-          {isLoading && !inventory ? (
-            <Card className="rounded-lg">
-              <CardContent className="py-8 text-center text-muted-foreground">Loading current inventory...</CardContent>
-            </Card>
-          ) : null}
+        {!isLoading && inventory && inventory.categories.length > 0 ? (
+          <div className="mt-4 shrink-0">
+            <InventoryLegend
+              selectedDietaryFlags={selectedDietaryFlags}
+              onToggleDietaryFlag={handleToggleDietaryFlag}
+              onClearDietaryFlags={() => setSelectedDietaryFlags([])}
+            />
+          </div>
+        ) : null}
 
-          {error ? (
-            <Card className="rounded-lg border-destructive/40">
-              <CardContent className="flex flex-col items-center gap-4 py-8 text-center">
-                <p className="text-sm text-muted-foreground">{error}</p>
-                <Button type="button" onClick={loadInventory}>
-                  Try again
-                </Button>
-              </CardContent>
-            </Card>
-          ) : null}
+        <ScrollArea
+          role="region"
+          aria-label={t("inventoryResultsLabel")}
+          className="mt-4 min-h-0 flex-1"
+        >
+          <section className="flex flex-col gap-4 px-1 pt-1 pb-28 sm:pb-32">
+            {isLoading && !inventory ? (
+              <Card className="rounded-lg">
+                <CardContent className="py-8 text-center text-muted-foreground">Loading current inventory...</CardContent>
+              </Card>
+            ) : null}
 
-          {!isLoading && inventory && inventory.categories.length === 0 ? (
-            <Card className="rounded-lg">
-              <CardContent className="py-8 text-center text-muted-foreground">
-                No pantry inventory is currently listed as available.
-              </CardContent>
-            </Card>
-          ) : null}
+            {error ? (
+              <Card className="rounded-lg border-destructive/40">
+                <CardContent className="flex flex-col items-center gap-4 py-8 text-center">
+                  <p className="text-sm text-muted-foreground">{error}</p>
+                  <Button type="button" onClick={loadInventory}>
+                    Try again
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : null}
 
-          {!isLoading && inventory && inventory.categories.length > 0 && filteredCategories.length === 0 ? (
-            <Card className="rounded-lg">
-              <CardContent className="py-8 text-center text-muted-foreground">
-                No available items match your search.
-              </CardContent>
-            </Card>
-          ) : null}
+            {!isLoading && inventory && inventory.categories.length === 0 ? (
+              <Card className="rounded-lg">
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  No pantry inventory is currently listed as available.
+                </CardContent>
+              </Card>
+            ) : null}
 
-          {!isLoading && inventory && filteredCategories.length > 0 ? <InventoryLegend /> : null}
+            {!isLoading && inventory && inventory.categories.length > 0 && filteredCategories.length === 0 ? (
+              <Card className="rounded-lg">
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  No available items match your search.
+                </CardContent>
+              </Card>
+            ) : null}
 
-          {filteredCategories.map((category) => (
-            <InventoryCategoryTable key={category.id} category={category} />
-          ))}
-        </section>
+            {filteredCategories.map((category) => (
+              <InventoryCategoryTable key={category.id} category={category} />
+            ))}
+          </section>
+        </ScrollArea>
       </div>
+      <BottomTabBar />
     </main>
   );
 }
