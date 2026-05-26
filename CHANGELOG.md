@@ -1,18 +1,6 @@
 # Changelog
 
-## [1.6.3] - 2026-04-16
-### Fixed
-- Replaced the one-word `Unauthorized` Sonner toast shown when a staff member's admin sign-in expires mid-session with an ASK-compliant message (`Your sign-in expired. Sign back in to keep working.`) and an inline `Sign in` action button that routes to `/login?callbackUrl=<current-path>` so staff return to the same admin surface after re-auth (Issue 18).
-- Mapped 401 responses from `/api/state` and `/api/state/cleanup` to the new session-expired toast inside both the legacy and optimistic admin action dispatchers, so draw, mark, reset, and cleanup taps all surface the same ASK copy on auth expiry instead of echoing the raw HTTP token.
-
-### Added
-- Added `src/lib/session-expired.ts` with `SESSION_EXPIRED_MESSAGE`, `SessionExpiredError`, and `showSessionExpiredToast()` so future callers can classify 401s without re-implementing the toast + callback URL plumbing.
-- Added `tests/admin-session-expired.test.tsx` verifying that `/admin` swallows the raw `Unauthorized` token on a 401 action response and surfaces the ASK copy + `Sign in` action instead.
-
-### Changed
-- Logged the error-message violation and fix in `docs/ISSUES.md` as Issue 18 with the ASK rubric breakdown and Option 5 implementation notes.
-
-## [Unreleased] - 2026-03-06
+## [1.6.99] - 2026-05-26
 ### Added
 - Added an arcade-styled bottom navigation bar (`src/arcade/components/arcade-bottom-tab-bar.tsx`) for the `/arcade` index, reusing the same three destinations and `nav*` labels but rendered with pixel-art icons (`src/arcade/components/icons/{receipt,shopping-cart,gaming}-icon.tsx`) and arcade styling (arcade CSS variables, the control-dock border/neon-shadow pattern), inheriting the arcade font and theme from `.arcade-scope`. Kept separate from the core `BottomTabBar` per the Arcade guardrails.
 - Added an animated `package-check` icon (`src/components/animate-ui/icons/package-check.tsx`) built on the native animate-ui `path` draw-on primitive — the box, seam, top, stem, and finally the check stroke draw themselves in — used as the `/inventory` dietary-filter dropdown trigger.
@@ -71,6 +59,18 @@
 - Added tap/click popovers for inventory status and dietary icons with localized labels across LOTTO's supported languages.
 - Changed inventory freshness to display the latest included item `updatedAt` timestamp instead of FEED response `generatedAt`.
 - Aligned the haptics implementation with browser activation constraints by concluding the feature as tactile input feedback rather than broad event-driven vibration.
+
+## [1.6.3] - 2026-04-16
+### Fixed
+- Replaced the one-word `Unauthorized` Sonner toast shown when a staff member's admin sign-in expires mid-session with an ASK-compliant message (`Your sign-in expired. Sign back in to keep working.`) and an inline `Sign in` action button that routes to `/login?callbackUrl=<current-path>` so staff return to the same admin surface after re-auth (Issue 18).
+- Mapped 401 responses from `/api/state` and `/api/state/cleanup` to the new session-expired toast inside both the legacy and optimistic admin action dispatchers, so draw, mark, reset, and cleanup taps all surface the same ASK copy on auth expiry instead of echoing the raw HTTP token.
+
+### Added
+- Added `src/lib/session-expired.ts` with `SESSION_EXPIRED_MESSAGE`, `SessionExpiredError`, and `showSessionExpiredToast()` so future callers can classify 401s without re-implementing the toast + callback URL plumbing.
+- Added `tests/admin-session-expired.test.tsx` verifying that `/admin` swallows the raw `Unauthorized` token on a 401 action response and surfaces the ASK copy + `Sign in` action instead.
+
+### Changed
+- Logged the error-message violation and fix in `docs/ISSUES.md` as Issue 18 with the ASK rubric breakdown and Option 5 implementation notes.
 
 ## [1.6.2] - 2026-03-05
 ### Added
