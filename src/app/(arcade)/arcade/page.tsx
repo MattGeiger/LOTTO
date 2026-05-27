@@ -3,7 +3,6 @@
 import Link from "next/link";
 
 import { ArcadeBottomTabBar } from "@/arcade/components/arcade-bottom-tab-bar";
-import { ChevronArrowLeftIcon } from "@/arcade/components/icons/chevron-arrow-left-icon";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@/arcade/ui/8bit";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -43,15 +42,6 @@ export default function ArcadeHomePage() {
           {t("arcadeGames")}
         </h1>
       </section>
-
-      <div className="mb-10 flex justify-start">
-        <Button asChild size="sm" haptic="uiToggle" className="px-3">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <ChevronArrowLeftIcon className="pixelated inline-block h-3.5 w-auto shrink-0" />
-            <span>{t("back")}</span>
-          </Link>
-        </Button>
-      </div>
 
       <Card className="mx-auto w-full max-w-5xl">
         <CardHeader className="pb-4">

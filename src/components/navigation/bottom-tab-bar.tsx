@@ -74,7 +74,7 @@ export function BottomTabBar() {
                 onMouseLeave={stop}
                 onPointerDown={animate}
                 className={cn(
-                  "relative flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2 outline-none transition-colors",
+                  "relative flex flex-1 flex-col items-center justify-start gap-1 rounded-2xl px-3 py-2 outline-none transition-colors",
                   "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   "sm:min-w-[5.5rem] sm:px-5",
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground"
@@ -91,7 +91,7 @@ export function BottomTabBar() {
                     size={24}
                     className="inline-flex"
                   />
-                  <span className={cn("text-xs leading-none", active ? "font-semibold" : "font-medium")}>
+                  <span className={cn("text-center text-xs leading-tight", active ? "font-semibold" : "font-medium")}>
                     {t(item.labelKey)}
                   </span>
                 </span>

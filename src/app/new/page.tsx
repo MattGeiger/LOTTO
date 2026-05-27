@@ -92,7 +92,7 @@ export default function NewPersonalizedHomePage() {
   const handleTicketSubmit = React.useCallback(() => {
     const ticketNumber = normalizeTicketNumber(ticketInput);
     if (ticketNumber === null) {
-      setTicketInputError("Use a ticket like C17 or 17.");
+      setTicketInputError(t("ticketFormatHint"));
       trigger("uiError");
       return;
     }
@@ -104,7 +104,7 @@ export default function NewPersonalizedHomePage() {
     setTicketInputError("");
     setIsOnboardingModalOpen(false);
     trigger("uiConfirm");
-  }, [ticketInput, ticketStorageContext, trigger]);
+  }, [ticketInput, ticketStorageContext, t, trigger]);
 
   const handleTicketKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -177,7 +177,7 @@ export default function NewPersonalizedHomePage() {
             <>
               <DialogHeader className="mb-5">
                 <DialogTitle className="text-center text-2xl">
-                  <span>Choose your language</span>
+                  <span>{t("chooseLanguage")}</span>
                 </DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-3">
@@ -233,9 +233,7 @@ export default function NewPersonalizedHomePage() {
                   className="h-11 text-center text-base uppercase"
                 />
                 {!ticketRangeReady && !ticketInputError ? (
-                  <p className="text-sm text-muted-foreground">
-                    The drawing hasn&apos;t started yet — enter your number and we&apos;ll save it for today.
-                  </p>
+                  <p className="text-sm text-muted-foreground">{t("drawingNotStartedHint")}</p>
                 ) : null}
                 {ticketInputError ? <p className="text-sm text-destructive">{ticketInputError}</p> : null}
                 <Button type="button" haptic="none" className="h-11 w-full text-base" onClick={handleTicketSubmit}>
@@ -248,7 +246,7 @@ export default function NewPersonalizedHomePage() {
                   className="h-9 w-full text-sm font-normal text-muted-foreground"
                   onClick={handleDismissOnboarding}
                 >
-                  <span>I don&apos;t have a ticket — just browsing</span>
+                  <span>{t("justBrowsing")}</span>
                 </Button>
               </div>
             </>
