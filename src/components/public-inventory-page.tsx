@@ -261,7 +261,7 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
             <CardTitle className="text-xl leading-tight">{categoryName}</CardTitle>
             {categoryLimit ? <p className="mt-1 text-sm text-muted-foreground">{categoryLimit}</p> : null}
           </div>
-          <Badge variant="secondary">{category.items.length} items</Badge>
+          <Badge variant="outline">{category.items.length} items</Badge>
         </div>
       </CardHeader>
       <CardContent className="p-0">
@@ -397,8 +397,8 @@ export function PublicInventoryPage() {
 
           {inventory ? (
             <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground">
-              <Badge variant="secondary">{inventory.totals.categories} categories</Badge>
-              <Badge variant="secondary">{inventory.totals.foodItems} items</Badge>
+              <Badge variant="outline">{inventory.totals.categories} categories</Badge>
+              <Badge variant="outline">{inventory.totals.foodItems} items</Badge>
             </div>
           ) : null}
         </section>

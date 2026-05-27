@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+### Changed
+- Reworked the `secondary` color token into an adaptive neutral (light: near-white gray + near-black text; dark: dark gray + near-white text), fixing white-on-light-teal `secondary` badges and buttons that failed WCAG AA in both light and dark mode (most visibly the dark-mode `/inventory` count pills). Aligns with the FEED app's adaptive-neutral secondary; the `hi-viz` themes were left as-is.
+- Switched the `/inventory` informational count pills (category/item totals and per-category counts) to the quieter `outline` badge treatment.
+
 ## [1.6.99] - 2026-05-26
 ### Added
 - Added an arcade-styled bottom navigation bar (`src/arcade/components/arcade-bottom-tab-bar.tsx`) for the `/arcade` index, reusing the same three destinations and `nav*` labels but rendered with pixel-art icons (`src/arcade/components/icons/{receipt,shopping-cart,gaming}-icon.tsx`) and arcade styling (arcade CSS variables, the control-dock border/neon-shadow pattern), inheriting the arcade font and theme from `.arcade-scope`. Kept separate from the core `BottomTabBar` per the Arcade guardrails.
