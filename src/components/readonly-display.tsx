@@ -195,7 +195,6 @@ export const ReadOnlyDisplay = ({
   const [hasError, setHasError] = React.useState(false);
   const [selectedTicket, setSelectedTicket] = React.useState<number | null>(null);
   const [notFoundDialogOpen, setNotFoundDialogOpen] = React.useState(false);
-  const [qrUrl, setQrUrl] = React.useState("");
   const qrCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const pollTimeoutRef = React.useRef<number | null>(null);
   const pollStateRef = React.useRef<() => void>(() => {});
@@ -369,31 +368,16 @@ export const ReadOnlyDisplay = ({
 
   React.useEffect(() => {
     if (!showQrCode) return;
-    const fetchDisplayUrl = async () => {
-      try {
-        const response = await fetch("/api/state", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "getDisplayUrl" }),
-        });
-        const data = await response.json();
-        setQrUrl(data.displayUrl || (typeof window !== "undefined" ? window.location.href : ""));
-      } catch {
-        setQrUrl(typeof window !== "undefined" ? window.location.href : "");
-      }
-    };
-    fetchDisplayUrl();
-  }, [showQrCode]);
-
-  React.useEffect(() => {
-    if (!showQrCode) return;
-    const target = qrUrl || (typeof window !== "undefined" ? window.location.href : "");
+    // The QR target comes from the live polled state, so an admin change to the
+    // display URL propagates to the QR on the next poll without a reload. Falls
+    // back to the display's own URL until a custom URL is configured.
+    const target = state?.displayUrl || (typeof window !== "undefined" ? window.location.href : "");
     const canvas = qrCanvasRef.current;
     if (!canvas) return;
     QRCode.toCanvas(canvas, target, { width: 150, margin: 1 }).catch(() => {
       // ignore render errors
     });
-  }, [qrUrl, showQrCode]);
+  }, [state?.displayUrl, showQrCode]);
 
   const startNumber = state?.startNumber ?? 0;
   const endNumber = state?.endNumber ?? 0;

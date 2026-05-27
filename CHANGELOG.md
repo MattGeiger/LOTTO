@@ -13,6 +13,9 @@
 - Removed the obsolete `/arcade` Back button now that the persistent bottom navigation handles switching between Your ticket, What's in stock, and Games.
 - Fixed bottom navigation label rendering in non-English languages — long translated labels (e.g. Russian "Что есть в наличии") now wrap centered with readable line spacing and keep tab icons aligned (top-aligned, matching the arcade variant) instead of rendering off-center.
 
+### Fixed
+- Fixed the display-page QR code continuing to show the default URL after an admin configured a custom display URL. The QR target now derives from the live polled state (`state.displayUrl`) instead of a one-time fetch on mount, so an admin change propagates to the QR on the next poll without a page reload (and a redundant network round-trip is removed).
+
 ## [1.6.99] - 2026-05-26
 ### Added
 - Added an arcade-styled bottom navigation bar (`src/arcade/components/arcade-bottom-tab-bar.tsx`) for the `/arcade` index, reusing the same three destinations and `nav*` labels but rendered with pixel-art icons (`src/arcade/components/icons/{receipt,shopping-cart,gaming}-icon.tsx`) and arcade styling (arcade CSS variables, the control-dock border/neon-shadow pattern), inheriting the arcade font and theme from `.arcade-scope`. Kept separate from the core `BottomTabBar` per the Arcade guardrails.
