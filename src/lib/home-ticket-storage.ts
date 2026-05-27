@@ -1,34 +1,21 @@
-import { fromZonedTime, toZonedTime } from "date-fns-tz";
-
-import type { DayOfWeek, OperatingHours } from "@/lib/state-types";
-import { resolveTimeZone } from "@/lib/timezone-utils";
-
 const HOMEPAGE_TICKET_STORAGE_KEY = "homepage-ticket-selection-v1";
+
+// Tickets are retained on the client for a single business block. Eight hours
+// comfortably covers a service day; in the rare case a user returns after the
+// window, the only cost is re-entering their number.
+const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
 
 type PersistedTicketSelection = {
   ticketNumber: number;
   expiresAt: number;
   savedAt: number;
-  serviceDayKey?: string;
   rangeKey?: string;
 };
 
 export type HomepageTicketStorageContext = {
-  operatingHours: OperatingHours | null;
-  timezone?: string | null;
   startNumber?: number | null;
   endNumber?: number | null;
 };
-
-const DAYS: DayOfWeek[] = [
-  "sunday",
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-];
 
 function hasWindow(): boolean {
   return typeof window !== "undefined";
@@ -48,84 +35,6 @@ function isValidPersistedTicketSelection(value: unknown): value is PersistedTick
     typeof maybe.savedAt === "number" &&
     Number.isFinite(maybe.savedAt)
   );
-}
-
-export function getNextLocalMidnight(now: Date = new Date()): number {
-  const next = new Date(now);
-  next.setHours(24, 0, 0, 0);
-  return next.getTime();
-}
-
-const addDays = (base: Date, days: number) => {
-  const copy = new Date(base);
-  copy.setDate(copy.getDate() + days);
-  return copy;
-};
-
-const formatDateKey = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
-const buildZonedDateTime = (baseZonedDate: Date, timeZone: string, time24: string) => {
-  const [hoursRaw, minutesRaw, secondsRaw] = time24.split(":");
-  const local = new Date(
-    baseZonedDate.getFullYear(),
-    baseZonedDate.getMonth(),
-    baseZonedDate.getDate(),
-    Number(hoursRaw ?? 0),
-    Number(minutesRaw ?? 0),
-    Number(secondsRaw ?? 0),
-    0,
-  );
-  return fromZonedTime(local, timeZone);
-};
-
-export function getHomepageTicketServiceDay(
-  context: HomepageTicketStorageContext | null | undefined,
-  now: Date = new Date(),
-): { serviceDayKey: string; expiresAt: number } | null {
-  if (!context?.operatingHours) return null;
-
-  const timeZone = resolveTimeZone(context.timezone);
-  const zonedNow = toZonedTime(now, timeZone);
-
-  let currentServiceDay: { zonedDate: Date; opensAt: Date } | null = null;
-  for (let offset = 0; offset >= -7; offset -= 1) {
-    const candidate = addDays(zonedNow, offset);
-    const day = DAYS[candidate.getDay()];
-    const config = context.operatingHours[day];
-    if (!config?.isOpen) continue;
-
-    const opensAt = buildZonedDateTime(candidate, timeZone, config.openTime);
-    if (opensAt.getTime() <= now.getTime()) {
-      currentServiceDay = { zonedDate: candidate, opensAt };
-      break;
-    }
-  }
-
-  let nextOpenAt: Date | null = null;
-  for (let offset = 0; offset <= 8; offset += 1) {
-    const candidate = addDays(zonedNow, offset);
-    const day = DAYS[candidate.getDay()];
-    const config = context.operatingHours[day];
-    if (!config?.isOpen) continue;
-
-    const opensAt = buildZonedDateTime(candidate, timeZone, config.openTime);
-    if (opensAt.getTime() > now.getTime()) {
-      nextOpenAt = opensAt;
-      break;
-    }
-  }
-
-  if (!currentServiceDay || !nextOpenAt) return null;
-
-  return {
-    serviceDayKey: `${timeZone}:${formatDateKey(currentServiceDay.zonedDate)}`,
-    expiresAt: nextOpenAt.getTime(),
-  };
 }
 
 const getActiveRangeKey = (context: HomepageTicketStorageContext | null | undefined): string | null => {
@@ -162,38 +71,18 @@ export function readPersistedHomepageTicket(
       return null;
     }
 
+    // 8-hour expiry from the moment the ticket was entered.
     if (parsed.expiresAt <= nowMs) {
       clearPersistedHomepageTicket();
       return null;
     }
 
-    const currentServiceDay = getHomepageTicketServiceDay(context, new Date(nowMs));
-    if (currentServiceDay && !parsed.serviceDayKey) {
-      clearPersistedHomepageTicket();
-      return null;
-    }
-
-    if (
-      currentServiceDay &&
-      parsed.serviceDayKey &&
-      parsed.serviceDayKey !== currentServiceDay.serviceDayKey
-    ) {
-      clearPersistedHomepageTicket();
-      return null;
-    }
-
-    if (currentServiceDay && currentServiceDay.expiresAt <= nowMs) {
-      clearPersistedHomepageTicket();
-      return null;
-    }
-
+    // Drop a ticket that was saved against a now-superseded drawing range (e.g.
+    // after an operator reset / new draw). A ticket entered before any drawing
+    // started has no rangeKey and is retained so the "not in the drawing yet"
+    // holding state can show until a drawing begins.
     const currentRangeKey = getActiveRangeKey(context);
-    if (context && !currentRangeKey) {
-      clearPersistedHomepageTicket();
-      return null;
-    }
-
-    if (currentRangeKey && parsed.rangeKey !== currentRangeKey) {
+    if (currentRangeKey && parsed.rangeKey && parsed.rangeKey !== currentRangeKey) {
       clearPersistedHomepageTicket();
       return null;
     }
@@ -213,18 +102,17 @@ export function writePersistedHomepageTicket(
   if (!hasWindow()) return;
   if (!isValidTicketNumber(ticketNumber)) return;
 
-  const serviceDay = getHomepageTicketServiceDay(context, now);
+  const nowMs = now.getTime();
   const rangeKey = getActiveRangeKey(context);
   const payload: PersistedTicketSelection = {
     ticketNumber,
-    expiresAt: serviceDay?.expiresAt ?? getNextLocalMidnight(now),
-    savedAt: now.getTime(),
-    serviceDayKey: serviceDay?.serviceDayKey,
+    expiresAt: nowMs + EIGHT_HOURS_MS,
+    savedAt: nowMs,
     rangeKey: rangeKey ?? undefined,
   };
 
   window.localStorage.setItem(HOMEPAGE_TICKET_STORAGE_KEY, JSON.stringify(payload));
 }
 
-export { HOMEPAGE_TICKET_STORAGE_KEY };
+export { HOMEPAGE_TICKET_STORAGE_KEY, EIGHT_HOURS_MS };
 export type { PersistedTicketSelection };

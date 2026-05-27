@@ -4,6 +4,8 @@
 ### Changed
 - Reworked the `secondary` color token into an adaptive neutral (light: near-white gray + near-black text; dark: dark gray + near-white text), fixing white-on-light-teal `secondary` badges and buttons that failed WCAG AA in both light and dark mode (most visibly the dark-mode `/inventory` count pills). Aligns with the FEED app's adaptive-neutral secondary; the `hi-viz` themes were left as-is.
 - Switched the `/inventory` informational count pills (category/item totals and per-category counts) to the quieter `outline` badge treatment.
+- Reworked the `/new` ticket onboarding so a client holding a physical ticket is never blocked before the operator starts the drawing: a valid-format number is always accepted and saved (the existing "not in the drawing yet — check back soon" holding state then shows), the red gate error became calm copy, and an "I don't have a ticket — just browsing" action dismisses the modal onto the page + nav bar.
+- Simplified `home-ticket-storage.ts` to a flat 8-hour client-side TTL from entry time (dropping the operating-hours/pantry-day expiry), while keeping the drawing-range clearing that protects both `/new` and the Arcade now-serving banner from tracking stale tickets. The onboarding modal no longer auto-reopens on a stale/cleared ticket, removing the prior reset-loop path.
 
 ## [1.6.99] - 2026-05-26
 ### Added

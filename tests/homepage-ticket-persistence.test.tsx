@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import HomePage from "@/app/new/page";
 import { LanguageProvider } from "@/contexts/language-context";
-import { HOMEPAGE_TICKET_STORAGE_KEY } from "@/lib/home-ticket-storage";
+import { EIGHT_HOURS_MS, HOMEPAGE_TICKET_STORAGE_KEY } from "@/lib/home-ticket-storage";
 import type { RaffleState } from "@/lib/state-types";
 
 vi.mock("next/font/local", () => ({
@@ -131,11 +131,7 @@ describe("homepage ticket persistence", () => {
 
     expect(parsed.ticketNumber).toBe(7);
     expect(parsed.rangeKey).toBe("10-40");
-    expect(parsed.expiresAt).toBeGreaterThan(parsed.savedAt);
-    expect(new Date(parsed.expiresAt).getHours()).toBe(0);
-    expect(new Date(parsed.expiresAt).getMinutes()).toBe(0);
-    expect(new Date(parsed.expiresAt).getSeconds()).toBe(0);
-    expect(new Date(parsed.expiresAt).getMilliseconds()).toBe(0);
+    expect(parsed.expiresAt).toBe(parsed.savedAt + EIGHT_HOURS_MS);
   });
 
   it("reopens ticket modal prefilled when entering a new ticket number", async () => {
@@ -159,7 +155,7 @@ describe("homepage ticket persistence", () => {
     expect((ticketInput as HTMLInputElement).value).toBe("24");
   });
 
-  it("does not persist ticket input while the active ticket range is reset", async () => {
+  it("saves the ticket and dismisses onboarding even before the drawing has started", async () => {
     currentState = {
       ...currentState,
       startNumber: 0,
@@ -181,8 +177,16 @@ describe("homepage ticket persistence", () => {
     await user.type(ticketInput, "24");
     await user.click(screen.getByRole("button", { name: "Submit" }));
 
-    expect(await screen.findByText("Ticket lookup will be available when today's tickets are ready.")).toBeInTheDocument();
-    expect(window.localStorage.getItem(HOMEPAGE_TICKET_STORAGE_KEY)).toBeNull();
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    // No active range yet, but the ticket is accepted, persisted, and the
+    // onboarding modal is dismissed (the holding "check back soon" state shows).
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+    const raw = window.localStorage.getItem(HOMEPAGE_TICKET_STORAGE_KEY);
+    expect(raw).not.toBeNull();
+    const parsed = JSON.parse(raw ?? "{}") as { ticketNumber: number; rangeKey?: string };
+    expect(parsed.ticketNumber).toBe(24);
+    // No active range at save time → no rangeKey stored.
+    expect(parsed.rangeKey).toBeUndefined();
   });
 });
