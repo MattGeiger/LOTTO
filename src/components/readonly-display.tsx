@@ -797,6 +797,14 @@ export const ReadOnlyDisplay = ({
                         </div>
                       </div>
                     )}
+
+                    {pantryStatus === "after_closing" && onRequestTicketChange ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <Button type="button" haptic="uiToggle" onClick={onRequestTicketChange}>
+                          <T text={t("changeTicket")} />
+                        </Button>
+                      </div>
+                    ) : null}
                   </>
                 ) : (
                   <>
