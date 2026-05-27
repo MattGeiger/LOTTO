@@ -235,8 +235,6 @@ export function NowServingBanner() {
       const payload = (await response.json()) as ServingPayload;
       const nextServing = typeof payload.currentlyServing === "number" ? payload.currentlyServing : null;
       const nextTicketNumber = readPersistedHomepageTicket(Date.now(), {
-        operatingHours: payload.operatingHours ?? null,
-        timezone: payload.timezone ?? null,
         startNumber: payload.startNumber ?? null,
         endNumber: payload.endNumber ?? null,
       });

@@ -9,7 +9,6 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useAppHaptics } from "@/components/haptics-provider";
 import { useLanguage, type Language } from "@/contexts/language-context";
 import {
-  clearPersistedHomepageTicket,
   readPersistedHomepageTicket,
   writePersistedHomepageTicket,
   type HomepageTicketStorageContext,
@@ -56,12 +55,7 @@ export default function NewPersonalizedHomePage() {
   const ticketStorageContext = React.useMemo<HomepageTicketStorageContext | null>(
     () =>
       latestState
-        ? {
-            operatingHours: latestState.operatingHours,
-            timezone: latestState.timezone,
-            startNumber: latestState.startNumber,
-            endNumber: latestState.endNumber,
-          }
+        ? { startNumber: latestState.startNumber, endNumber: latestState.endNumber }
         : null,
     [latestState],
   );
@@ -74,17 +68,17 @@ export default function NewPersonalizedHomePage() {
     setIsOnboardingModalOpen(false);
   }, []);
 
+  // If the saved ticket goes stale (8h expiry, or the operator reset to a new
+  // drawing range), drop it from the personalized view — but do NOT force the
+  // onboarding modal back open. The user can re-enter via "Use a different
+  // ticket". This avoids the reopen loop the old gating could cause.
   React.useEffect(() => {
-    if (!ticketStorageContext || selectedTicketNumber === null) return;
+    if (selectedTicketNumber === null) return;
     const persistedTicket = readPersistedHomepageTicket(Date.now(), ticketStorageContext);
     if (persistedTicket !== null) return;
 
-    clearPersistedHomepageTicket();
     setSelectedTicketNumber(null);
     setTicketInput("");
-    setTicketInputError("");
-    setOnboardingStep("ticket");
-    setIsOnboardingModalOpen(true);
   }, [selectedTicketNumber, ticketStorageContext]);
 
   const handleLanguageSelect = React.useCallback(
@@ -96,24 +90,21 @@ export default function NewPersonalizedHomePage() {
   );
 
   const handleTicketSubmit = React.useCallback(() => {
-    if (!ticketRangeReady) {
-      setTicketInputError("Ticket lookup will be available when today's tickets are ready.");
-      trigger("uiError");
-      return;
-    }
-
     const ticketNumber = normalizeTicketNumber(ticketInput);
     if (ticketNumber === null) {
       setTicketInputError("Use a ticket like C17 or 17.");
       trigger("uiError");
       return;
     }
+    // A valid-format number is always accepted and saved, even before the
+    // operator has started the drawing — the personalized view then shows the
+    // "not in the drawing yet — check back soon" holding state.
     setSelectedTicketNumber(ticketNumber);
     writePersistedHomepageTicket(ticketNumber, new Date(), ticketStorageContext);
     setTicketInputError("");
     setIsOnboardingModalOpen(false);
     trigger("uiConfirm");
-  }, [ticketInput, ticketRangeReady, ticketStorageContext, trigger]);
+  }, [ticketInput, ticketStorageContext, trigger]);
 
   const handleTicketKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -135,6 +126,11 @@ export default function NewPersonalizedHomePage() {
     setOnboardingStep("ticket");
     setIsOnboardingModalOpen(true);
   }, [selectedTicketNumber]);
+
+  const handleDismissOnboarding = React.useCallback(() => {
+    setTicketInputError("");
+    setIsOnboardingModalOpen(false);
+  }, []);
 
   return (
     <div className="relative">
@@ -238,12 +234,21 @@ export default function NewPersonalizedHomePage() {
                 />
                 {!ticketRangeReady && !ticketInputError ? (
                   <p className="text-sm text-muted-foreground">
-                    Ticket lookup will be available when today&apos;s tickets are ready.
+                    The drawing hasn&apos;t started yet — enter your number and we&apos;ll save it for today.
                   </p>
                 ) : null}
                 {ticketInputError ? <p className="text-sm text-destructive">{ticketInputError}</p> : null}
                 <Button type="button" haptic="none" className="h-11 w-full text-base" onClick={handleTicketSubmit}>
                   <span>{t("searchButtonLabel")}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  haptic="uiToggle"
+                  className="h-9 w-full text-sm font-normal text-muted-foreground"
+                  onClick={handleDismissOnboarding}
+                >
+                  <span>I don&apos;t have a ticket — just browsing</span>
                 </Button>
               </div>
             </>
