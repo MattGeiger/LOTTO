@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.7.0] - 2026-05-26
 ### Added
 - Localized the `/new` onboarding modal: added `chooseLanguage`, `ticketFormatHint`, `drawingNotStartedHint`, and `justBrowsing` keys across all eight languages so the modal title, the ticket-format hint, the pre-drawing reassurance copy, and the "I don't have a ticket — just browsing" dismiss render in the selected language.
 - Added the "Enter a new ticket number" action to the `/new` "Pantry Has Closed For The Day" personalized state, matching the generated-numbers state (personalized view only; the public display is unaffected).
