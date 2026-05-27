@@ -1,3 +1,43 @@
+# William Temple House Digital Raffle System v1.7.0
+
+**Release Date:** May 26, 2026
+
+## Persistent Navigation Bar
+
+Introduced a single, consistent navigation system across the three client-facing surfaces, replacing the previous ad-hoc button clusters.
+
+- A persistent bottom tab bar with three destinations: **Your ticket** (`/new`), **What's in stock** (`/inventory`), and **Games** (`/arcade`).
+- Two presentations from one model: a floating capsule dock on desktop and a full-width, blurred bar on mobile, with the active destination highlighted.
+- Animated line-icons on the core bar (ticket "rip", cart hop, gamepad wiggle) with a `prefers-reduced-motion` guard; a separate **pixel-art arcade-styled variant** on the arcade index so the retro section keeps its own look.
+- Removed the now-redundant controls: the `/inventory` and `/arcade` BACK buttons and the inventory/games links in the `/new` ticket-card cluster. Game pages keep their own Back control.
+
+## Inventory Page Refinements
+
+- Condensed the dietary filters into a single multi-select dropdown — each option shows its dietary icon, selections combine, and the trigger uses an animated `package-check` icon.
+- Fixed poor contrast on the inventory count pills: the `secondary` palette token is now an adaptive neutral (light gray/dark text in light mode, dark gray/light text in dark mode), meeting WCAG AA in both themes.
+
+## Friendlier Ticket Entry on `/new`
+
+- Clients holding a physical ticket can now enter and save it **before the operator starts the drawing** — submission is no longer blocked; the personalized view shows a calm "not in the drawing yet — check back soon" holding state instead of an error.
+- Added an explicit **"I don't have a ticket — just browsing"** option that opens the page directly.
+- The **"Enter a new ticket number"** action now also appears in the "Pantry Has Closed For The Day" state, matching the active-drawing state.
+- Simplified client-side ticket persistence to a flat 8-hour window from entry time, while still clearing tickets from a superseded drawing.
+
+## Full Multilingual Support for the Ticket Modal
+
+- The `/new` onboarding modal's title, ticket-format hint, pre-drawing reassurance, and "just browsing" action now render in the selected language across all eight supported languages.
+- Fixed non-English navigation-bar labels (e.g. Russian "Что есть в наличии") rendering off-center — long labels now wrap centered with readable line spacing and keep their icons aligned.
+
+## Display QR Code Fix
+
+- The public display's QR code now follows the admin-configured display URL **live**: changing the URL in `/admin` updates the on-screen QR on the next refresh without a reload. Previously the display kept the default URL because it only read the URL once on load.
+
+## Versioning
+
+- Bumped application version to **1.7.0**.
+
+---
+
 # William Temple House Digital Raffle System v1.6.3
 
 **Release Date:** April 16, 2026
