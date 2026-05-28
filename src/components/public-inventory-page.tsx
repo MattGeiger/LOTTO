@@ -39,7 +39,6 @@ import { useLanguage } from "@/contexts/language-context";
 import { isRTL } from "@/lib/rtl-utils";
 import {
   fetchFeedPublicInventory,
-  formatFeedLimit,
   getFeedDisplayName,
   type FeedInventoryCategory,
   type FeedInventoryItem,
@@ -249,9 +248,20 @@ function InventoryLegend({
 }
 
 function InventoryCategoryTable({ category }: { category: FeedInventoryCategory }) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const categoryName = getFeedDisplayName(category, language);
-  const categoryLimit = formatFeedLimit(category.limit, category.limitType);
+  // Mirrors the sentinel logic in `formatFeedLimit` (lib): null/non-finite/≤0
+  // and the ≥100 "no-limit" sentinel all render as empty.
+  const formatLimit = (
+    limit: number | null | undefined,
+    limitType: FeedInventoryItem["limitType"],
+  ): string => {
+    if (limit == null || !Number.isFinite(limit) || limit <= 0 || limit >= 100) return "";
+    if (limitType === "person") return t("inventoryLimitPerPerson").replace("{count}", String(limit));
+    if (limitType === "household") return t("inventoryLimitPerHousehold").replace("{count}", String(limit));
+    return "";
+  };
+  const categoryLimit = formatLimit(category.limit, category.limitType);
 
   return (
     <Card className="gap-4 overflow-hidden rounded-lg py-0">
@@ -261,7 +271,7 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
             <CardTitle className="text-xl leading-tight">{categoryName}</CardTitle>
             {categoryLimit ? <p className="mt-1 text-sm text-muted-foreground">{categoryLimit}</p> : null}
           </div>
-          <Badge variant="outline">{category.items.length} items</Badge>
+          <Badge variant="outline">{category.items.length} {t("inventoryItemsLabel")}</Badge>
         </div>
       </CardHeader>
       <CardContent className="p-0">
@@ -269,17 +279,17 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
           <table className="w-full table-fixed text-sm">
             <thead>
               <tr className="border-b bg-background/70 text-left text-xs font-semibold uppercase text-muted-foreground">
-                <th className="w-[34%] px-4 py-2">Item</th>
-                <th className="w-[18%] px-4 py-2">Limit</th>
-                <th className="w-[18%] px-4 py-2">Status</th>
-                <th className="px-4 py-2">Dietary</th>
+                <th className="w-[34%] px-4 py-2">{t("inventoryColumnItem")}</th>
+                <th className="w-[18%] px-4 py-2">{t("inventoryColumnLimit")}</th>
+                <th className="w-[18%] px-4 py-2">{t("inventoryColumnStatus")}</th>
+                <th className="px-4 py-2">{t("inventoryColumnDietary")}</th>
               </tr>
             </thead>
             <tbody>
               {category.items.map((item, index) => (
                 <tr key={item.id} className={cn("border-b last:border-b-0", index % 2 === 0 && "bg-muted/25")}>
                   <td className="px-4 py-3 font-medium">{getFeedDisplayName(item, language)}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatFeedLimit(item.limit, item.limitType)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{formatLimit(item.limit, item.limitType)}</td>
                   <td className="px-4 py-3">
                     <InventoryStatusBadges item={item} />
                   </td>
@@ -295,8 +305,8 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
           {category.items.map((item) => (
             <div key={item.id} className="space-y-2 px-4 py-4">
               <div className="font-medium">{getFeedDisplayName(item, language)}</div>
-              {formatFeedLimit(item.limit, item.limitType) ? (
-                <div className="text-sm text-muted-foreground">{formatFeedLimit(item.limit, item.limitType)}</div>
+              {formatLimit(item.limit, item.limitType) ? (
+                <div className="text-sm text-muted-foreground">{formatLimit(item.limit, item.limitType)}</div>
               ) : null}
               <InventoryStatusBadges item={item} />
               <InventoryDietaryFlags item={item} />
@@ -391,14 +401,14 @@ export function PublicInventoryPage() {
           <div className="flex flex-col items-center gap-1 text-center">
             <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">{t("inventoryPageTitle")}</h1>
             {freshness ? (
-              <p className="text-sm text-muted-foreground">Updated: {freshness}</p>
+              <p className="text-sm text-muted-foreground">{t("inventoryUpdatedLabel")} {freshness}</p>
             ) : null}
           </div>
 
           {inventory ? (
             <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground">
-              <Badge variant="outline">{inventory.totals.categories} categories</Badge>
-              <Badge variant="outline">{inventory.totals.foodItems} items</Badge>
+              <Badge variant="outline">{inventory.totals.categories} {t("inventoryCategoriesLabel")}</Badge>
+              <Badge variant="outline">{inventory.totals.foodItems} {t("inventoryItemsLabel")}</Badge>
             </div>
           ) : null}
         </section>
