@@ -10,7 +10,7 @@ import { RollingText } from "@/components/animate-ui/primitives/texts/rolling";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TextScramble } from "@/components/core/text-scramble";
+import { ScrambleOnLanguageChange, T } from "@/components/core/scramble-text";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LanguageMorphText } from "@/components/language-morph-text";
 import { TicketDetailDialog } from "@/components/ticket-detail-dialog";
@@ -63,11 +63,6 @@ const formatServiceClock = (input: Date | number, language: Language): string =>
     calendar: "gregory",
   }).format(date);
 };
-
-/** Renders plain text with no animation — used as a placeholder before morph is ready. */
-function PlainText({ text, className }: { text: string; className?: string }) {
-  return <span className={className}>{text}</span>;
-}
 
 const POLL_ERROR_RETRY_MS = 30_000;
 const BURST_DURATION_MS = 2 * 60_000;
@@ -160,35 +155,6 @@ export const ReadOnlyDisplay = ({
   showHeaderLogo = true,
 }: ReadOnlyDisplayProps) => {
   const { language, t } = useLanguage();
-
-  /**
-   * Public copy uses TextScramble for explicit language changes. It stays
-   * static on initial load, polling refreshes, and regular rerenders.
-   */
-  const previousLanguageRef = React.useRef<Language | null>(null);
-  const [scrambleTrigger, setScrambleTrigger] = React.useState(false);
-  const handleScrambleComplete = React.useCallback(() => {
-    setScrambleTrigger(false);
-  }, []);
-  const ScrambleText = React.useCallback(
-    ({ text, className }: { text: string; className?: string }) => (
-      <TextScramble
-        as="span"
-        className={className}
-        duration={0.35}
-        speed={0.02}
-        trigger={scrambleTrigger}
-        onScrambleComplete={handleScrambleComplete}
-      >
-        {text}
-      </TextScramble>
-    ),
-    [handleScrambleComplete, scrambleTrigger],
-  );
-  const T =
-    languageTextAnimation === "scramble"
-      ? ScrambleText
-      : PlainText;
 
   const [state, setState] = React.useState<RaffleState | null>(null);
   const [status, setStatus] = React.useState("");
@@ -349,18 +315,6 @@ export const ReadOnlyDisplay = ({
     };
   }, []);
 
-  React.useEffect(() => {
-    if (previousLanguageRef.current === null) {
-      previousLanguageRef.current = language;
-      return;
-    }
-
-    if (previousLanguageRef.current === language) return;
-    previousLanguageRef.current = language;
-
-    if (languageTextAnimation !== "scramble") return;
-    setScrambleTrigger(true);
-  }, [language, languageTextAnimation]);
 
   React.useEffect(() => {
     document.title = `${t("foodPantryServiceFor")} ${formattedDate}`;
@@ -549,7 +503,7 @@ export const ReadOnlyDisplay = ({
   }, [clearConfettiLoop, isPersonalized, personalizedCalledAt]);
 
   return (
-    <>
+    <ScrambleOnLanguageChange enabled={languageTextAnimation === "scramble"}>
       <div
         dir={isRTL(language) ? "rtl" : "ltr"}
         lang={language}
@@ -1006,6 +960,6 @@ export const ReadOnlyDisplay = ({
           />
         </>
       ) : null}
-    </>
+    </ScrambleOnLanguageChange>
   );
 };
