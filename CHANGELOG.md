@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+### Changed
+- Localized the remaining English strings on the `/inventory` page so they render in the selected language: the freshness "Updated:" prefix, the totals badges ("X categories" / "X items"), the per-category items badge, the table column headers (Item / Limit / Status / Dietary), and the per-item / per-category limit text ("Limit N per household" / "Limit N per person"). Adds nine translation keys across all eight supported languages; the page now uses a local localized formatter with the same null/non-finite/≤0/≥100 sentinel-hiding logic as the lib's `formatFeedLimit` (which stays unchanged for its unit tests).
+
 ## [1.7.0] - 2026-05-26
 ### Added
 - Localized the `/new` onboarding modal: added `chooseLanguage`, `ticketFormatHint`, `drawingNotStartedHint`, and `justBrowsing` keys across all eight languages so the modal title, the ticket-format hint, the pre-drawing reassurance copy, and the "I don't have a ticket — just browsing" dismiss render in the selected language.
