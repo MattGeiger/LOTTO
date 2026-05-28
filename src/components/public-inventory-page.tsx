@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
+import { ScrambleOnLanguageChange, T } from "@/components/core/scramble-text";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import { PackageCheck } from "@/components/animate-ui/icons/package-check";
 import { Search } from "@/components/animate-ui/icons/search";
@@ -134,7 +135,7 @@ function InventoryIconChip({
         </Badge>
       </PopoverTrigger>
       <PopoverContent className="w-auto px-3 py-2 text-sm font-medium" side="top" role="tooltip">
-        {label}
+        <T text={label} />
       </PopoverContent>
     </Popover>
   );
@@ -196,7 +197,7 @@ function InventoryLegend({
             >
               <PackageCheck size={20} />
             </AnimateIcon>
-            <span>{t("inventoryDietaryFilterLabel")}</span>
+            <T text={t("inventoryDietaryFilterLabel")} />
             {selectedCount > 0 ? (
               <Badge variant="secondary" className="ml-0.5 px-1.5">
                 {selectedCount}
@@ -206,7 +207,7 @@ function InventoryLegend({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="center" className="w-60">
-          <DropdownMenuLabel>{t("inventoryDietaryFilterLabel")}</DropdownMenuLabel>
+          <DropdownMenuLabel><T text={t("inventoryDietaryFilterLabel")} /></DropdownMenuLabel>
           <DropdownMenuSeparator />
           {dietaryFlags.map(({ key, labelKey, icon: Icon }) => (
             <DropdownMenuCheckboxItem
@@ -217,14 +218,14 @@ function InventoryLegend({
               className="text-base"
             >
               <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
-              {t(labelKey)}
+              <T text={t(labelKey)} />
             </DropdownMenuCheckboxItem>
           ))}
           {selectedCount > 0 ? (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={onClearDietaryFlags}>
-                {t("inventoryClearFilters")}
+                <T text={t("inventoryClearFilters")} />
               </DropdownMenuItem>
             </>
           ) : null}
@@ -235,12 +236,12 @@ function InventoryLegend({
         <div className="inline-flex items-center gap-2">
           <AlertTriangle className="size-5 text-[var(--status-warning-text)]" aria-hidden="true" />
           <span aria-hidden="true">=</span>
-          <span>{t("inventoryStatusLimited")}</span>
+          <T text={t("inventoryStatusLimited")} />
         </div>
         <div className="inline-flex items-center gap-2">
           <Tag className="size-5 text-[var(--status-danger-text)]" aria-hidden="true" />
           <span aria-hidden="true">=</span>
-          <span>{t("inventoryStatusClearance")}</span>
+          <T text={t("inventoryStatusClearance")} />
         </div>
       </div>
     </div>
@@ -268,10 +269,10 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
       <CardHeader className="border-b bg-muted/45 px-4 py-4 sm:px-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <CardTitle className="text-xl leading-tight">{categoryName}</CardTitle>
-            {categoryLimit ? <p className="mt-1 text-sm text-muted-foreground">{categoryLimit}</p> : null}
+            <CardTitle className="text-xl leading-tight"><T text={categoryName} /></CardTitle>
+            {categoryLimit ? <p className="mt-1 text-sm text-muted-foreground"><T text={categoryLimit} /></p> : null}
           </div>
-          <Badge variant="outline">{category.items.length} {t("inventoryItemsLabel")}</Badge>
+          <Badge variant="outline">{category.items.length} <T text={t("inventoryItemsLabel")} /></Badge>
         </div>
       </CardHeader>
       <CardContent className="p-0">
@@ -279,9 +280,9 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
           <table className="w-full table-fixed text-sm">
             <thead>
               <tr className="border-b bg-background/70 text-left text-xs font-semibold uppercase text-muted-foreground">
-                <th className="w-[40%] px-4 py-2">{t("inventoryColumnItem")}</th>
-                <th className="w-[20%] px-4 py-2">{t("inventoryColumnLimit")}</th>
-                <th className="px-4 py-2">{t("inventoryColumnDietary")}</th>
+                <th className="w-[40%] px-4 py-2"><T text={t("inventoryColumnItem")} /></th>
+                <th className="w-[20%] px-4 py-2"><T text={t("inventoryColumnLimit")} /></th>
+                <th className="px-4 py-2"><T text={t("inventoryColumnDietary")} /></th>
               </tr>
             </thead>
             <tbody>
@@ -290,10 +291,10 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
                   <td className="px-4 py-3 font-medium">
                     <div className="flex items-center gap-2">
                       <InventoryStatusBadges item={item} />
-                      <span>{getFeedDisplayName(item, language)}</span>
+                      <T text={getFeedDisplayName(item, language)} />
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatLimit(item.limit, item.limitType)}</td>
+                  <td className="px-4 py-3 text-muted-foreground"><T text={formatLimit(item.limit, item.limitType)} /></td>
                   <td className="px-4 py-3">
                     <InventoryDietaryFlags item={item} />
                   </td>
@@ -307,10 +308,10 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
             <div key={item.id} className="space-y-2 px-4 py-4">
               <div className="flex items-center gap-2 font-medium">
                 <InventoryStatusBadges item={item} />
-                <span>{getFeedDisplayName(item, language)}</span>
+                <T text={getFeedDisplayName(item, language)} />
               </div>
               {formatLimit(item.limit, item.limitType) ? (
-                <div className="text-sm text-muted-foreground">{formatLimit(item.limit, item.limitType)}</div>
+                <div className="text-sm text-muted-foreground"><T text={formatLimit(item.limit, item.limitType)} /></div>
               ) : null}
               <InventoryDietaryFlags item={item} />
             </div>
@@ -357,6 +358,7 @@ export function PublicInventoryPage() {
   }, []);
 
   return (
+    <ScrambleOnLanguageChange>
     <main dir={isRTL(language) ? "rtl" : "ltr"} lang={language} className="relative h-screen overflow-hidden bg-background text-foreground">
       <div className="absolute left-6 right-6 top-4 z-30 flex items-center justify-between gap-5 py-2 sm:left-8 sm:right-8 lg:left-10 lg:right-10">
         <LanguageSwitcher enableHaptics />
@@ -402,16 +404,16 @@ export function PublicInventoryPage() {
       <div className="mx-auto flex h-screen min-h-0 w-full max-w-6xl flex-col px-4 pb-5 pt-24 sm:px-6 lg:px-8">
         <section className="mt-6 flex shrink-0 flex-col gap-5 sm:mt-8">
           <div className="flex flex-col items-center gap-1 text-center">
-            <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">{t("inventoryPageTitle")}</h1>
+            <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl"><T text={t("inventoryPageTitle")} /></h1>
             {freshness ? (
-              <p className="text-sm text-muted-foreground">{t("inventoryUpdatedLabel")} {freshness}</p>
+              <p className="text-sm text-muted-foreground"><T text={`${t("inventoryUpdatedLabel")} ${freshness}`} /></p>
             ) : null}
           </div>
 
           {inventory ? (
             <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground">
-              <Badge variant="outline">{inventory.totals.categories} {t("inventoryCategoriesLabel")}</Badge>
-              <Badge variant="outline">{inventory.totals.foodItems} {t("inventoryItemsLabel")}</Badge>
+              <Badge variant="outline">{inventory.totals.categories} <T text={t("inventoryCategoriesLabel")} /></Badge>
+              <Badge variant="outline">{inventory.totals.foodItems} <T text={t("inventoryItemsLabel")} /></Badge>
             </div>
           ) : null}
         </section>
@@ -473,5 +475,6 @@ export function PublicInventoryPage() {
       </div>
       <BottomTabBar />
     </main>
+    </ScrambleOnLanguageChange>
   );
 }
