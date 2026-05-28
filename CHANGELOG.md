@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.7.3] - 2026-05-26
+### Changed
+- Migrated `readonly-display.tsx` (used by `/new` and `/display`) onto the shared `ScrambleOnLanguageChange` provider and `<T>` consumer, removing its duplicate local scramble-trigger logic (`PlainText`, `ScrambleText`, the local `T`, the trigger state, and the language-change effect). Behavior is unchanged — the `languageTextAnimation` prop still toggles the effect via the provider's `enabled` flag, with the same 0.35s/0.02 timing — but the scramble-on-language-change logic now lives in one place shared with `/inventory`.
+
 ## [1.7.2] - 2026-05-26
 ### Added
 - Added a reusable `ScrambleOnLanguageChange` provider and `<T>` consumer (`src/components/core/scramble-text.tsx`) that play the TextScramble transition on an explicit language change (static on mount, rerenders, and no-op updates), generalizing the effect previously local to the personalized display.
