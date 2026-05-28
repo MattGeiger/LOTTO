@@ -153,7 +153,7 @@ describe("public inventory page", () => {
     expect(screen.getByText(/Updated: May 24/)).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Inventory results" })).toHaveAttribute("data-slot", "scroll-area");
     expect(screen.queryByText(/Updated: May 25/)).not.toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Status" })).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Status" })).not.toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Dietary" })).toBeInTheDocument();
     expect(screen.queryByRole("columnheader", { name: "Tags" })).not.toBeInTheDocument();
     expect(screen.queryByText("None listed")).not.toBeInTheDocument();
