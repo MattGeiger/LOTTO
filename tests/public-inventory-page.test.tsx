@@ -144,10 +144,10 @@ describe("public inventory page", () => {
     expect(screen.queryByRole("heading", { name: "Status" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Dietary" })).not.toBeInTheDocument();
     expect(screen.getAllByText("=").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Limited").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Limited Supply").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Clearance").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Ready to eat").length).toBeGreaterThan(0);
-    expect(screen.getAllByLabelText("Limited").length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText("Limited Supply").length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText("Clearance").length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText("Ready to eat").length).toBeGreaterThan(0);
     expect(screen.getByText(/Updated: May 24/)).toBeInTheDocument();
@@ -174,8 +174,8 @@ describe("public inventory page", () => {
     expect(screen.getAllByText("Garbanzos").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Tuna").length).toBeGreaterThan(0);
 
-    await user.click(screen.getAllByLabelText("Limitado")[0]);
-    expect(await screen.findByRole("tooltip")).toHaveTextContent("Limitado");
+    await user.click(screen.getAllByLabelText("Existencias limitadas")[0]);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Existencias limitadas");
 
     await user.type(screen.getByRole("textbox", { name: "Buscar inventario" }), "garbanzos");
 

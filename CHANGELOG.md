@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Changed
+- Renamed the `/inventory` "Limited" status label to **"Limited Supply"** (with equivalents across all eight languages) to distinguish a limited *amount of stock* from the per-household / per-person *request limit* that already lives in the Limit column. Affects both the legend chip and the icon-badge popup; the translation key (`inventoryStatusLimited`) is unchanged.
 - Collapsed the dedicated **Status** column on the `/inventory` table: the Limited and Clearance status icons now render inline to the left of each item's name (desktop table cell and mobile list row), and the desktop column widths rebalance to Item 40% / Limit 20% / Dietary (remainder). The legend still explains what each icon means; the `inventoryColumnStatus` translation key is retained for potential reuse.
 
 ## [1.7.1] - 2026-05-26
