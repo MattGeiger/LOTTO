@@ -95,23 +95,28 @@
     radial-gradient(circle at 80% 0%, oklch(0.62 0.21 255 / 0.08), transparent 28%),
     linear-gradient(145deg, oklch(1 0 0), oklch(0.96 0.02 255) 45%, oklch(0.99 0.01 255));
 
-  --gradient-card-info: linear-gradient(135deg, oklch(0.99 0.01 250), oklch(0.96 0.04 250));
-  --gradient-card-accent: linear-gradient(135deg, oklch(0.99 0.01 155), oklch(0.96 0.05 155));
+  --gradient-card-info: linear-gradient(to top, oklch(0.96 0.04 250), oklch(0.99 0.01 250));
+  --gradient-card-accent: linear-gradient(to top, oklch(0.96 0.05 155), oklch(0.99 0.01 155));
   --gradient-card-warning: linear-gradient(
-    135deg,
+    to top,
     color-mix(in oklch, var(--card), var(--status-warning-bg) 12%),
     var(--card)
   );
   --gradient-card-danger: linear-gradient(
-    135deg,
+    to top,
     color-mix(in oklch, var(--card), var(--status-danger-bg) 12%),
     var(--card)
   );
   --card-title-color: oklch(0.08 0 0);
   --card-icon-color: var(--foreground);
   /* Card feature gradients */
-  --gradient-card-blue: linear-gradient(135deg, oklch(1.0 0 0), oklch(0.97 0.02 250));
-  --gradient-card-emerald: linear-gradient(135deg, oklch(1.0 0 0), oklch(0.97 0.03 165));
+  --gradient-card-blue: linear-gradient(to top, oklch(0.97 0.02 250), oklch(1.0 0 0));
+  --gradient-card-emerald: linear-gradient(to top, oklch(0.97 0.03 165), oklch(1.0 0 0));
+  /* Saturated status fills rendered as bottom→top gradients (deeper at the base),
+     theme-aware via the referenced status tokens. Used by the /admin Live State
+     returned/unclaimed alert boxes. */
+  --gradient-status-warning: linear-gradient(to top, color-mix(in oklch, var(--status-warning-bg), var(--status-warning-border) 30%), var(--status-warning-bg));
+  --gradient-status-danger: linear-gradient(to top, color-mix(in oklch, var(--status-danger-bg), var(--status-danger-border) 30%), var(--status-danger-bg));
 
   /* Feature icon colors */
   --icon-blue: oklch(0.55 0.22 264);
@@ -212,23 +217,23 @@
     radial-gradient(circle at 80% 0%, oklch(0.55 0.18 255 / 0.1), transparent 28%),
     linear-gradient(145deg, oklch(0.147 0.004 49.25), oklch(0.18 0.01 255) 45%, oklch(0.16 0.005 260));
 
-  --gradient-card-info: linear-gradient(135deg, oklch(0.20 0.02 250), oklch(0.24 0.04 250));
-  --gradient-card-accent: linear-gradient(135deg, oklch(0.20 0.02 155), oklch(0.24 0.04 155));
+  --gradient-card-info: linear-gradient(to top, oklch(0.20 0.02 250), oklch(0.24 0.04 250));
+  --gradient-card-accent: linear-gradient(to top, oklch(0.20 0.02 155), oklch(0.24 0.04 155));
   --gradient-card-warning: linear-gradient(
-    135deg,
+    to top,
     color-mix(in oklch, var(--card), var(--status-warning-bg) 14%),
     var(--card)
   );
   --gradient-card-danger: linear-gradient(
-    135deg,
+    to top,
     color-mix(in oklch, var(--card), var(--status-danger-bg) 14%),
     var(--card)
   );
   --card-title-color: var(--card-foreground);
   --card-icon-color: var(--card-foreground);
   /* Card feature gradients (dark) */
-  --gradient-card-blue: linear-gradient(135deg, oklch(0.20 0.01 250), oklch(0.16 0.02 250));
-  --gradient-card-emerald: linear-gradient(135deg, oklch(0.20 0.01 165), oklch(0.16 0.02 165));
+  --gradient-card-blue: linear-gradient(to top, oklch(0.16 0.02 250), oklch(0.20 0.01 250));
+  --gradient-card-emerald: linear-gradient(to top, oklch(0.16 0.02 165), oklch(0.20 0.01 165));
 
   /* Feature icon colors (dark) */
   --icon-blue: oklch(0.65 0.20 264);
@@ -314,8 +319,8 @@
   --ticket-upcoming-border: oklch(0.1410 0.0050 285.8230);
   --serving-text-gradient: linear-gradient(135deg, oklch(0.62 0.21 255), oklch(0.7 0.22 255));
 
-  --gradient-card-info: linear-gradient(135deg, oklch(0.9750 0.0020 286.0000), oklch(0.9450 0.0080 286.0000));
-  --gradient-card-accent: linear-gradient(135deg, oklch(0.9750 0.0020 286.0000), oklch(0.9500 0.0200 240.0000));
+  --gradient-card-info: linear-gradient(to top, oklch(0.9450 0.0080 286.0000), oklch(0.9750 0.0020 286.0000));
+  --gradient-card-accent: linear-gradient(to top, oklch(0.9500 0.0200 240.0000), oklch(0.9750 0.0020 286.0000));
   --card-title-color: var(--foreground);
   --card-icon-color: var(--foreground);
 
@@ -397,8 +402,8 @@
   --ticket-upcoming-border: oklch(0.9850 0 0);
   --serving-text-gradient: linear-gradient(135deg, oklch(0.72 0.18 85), oklch(0.82 0.2 80));
 
-  --gradient-card-info: linear-gradient(135deg, oklch(0.2200 0.0100 286.0000), oklch(0.1800 0.0200 248.0000));
-  --gradient-card-accent: linear-gradient(135deg, oklch(0.2200 0.0100 286.0000), oklch(0.1800 0.0250 237.0000));
+  --gradient-card-info: linear-gradient(to top, oklch(0.1800 0.0200 248.0000), oklch(0.2200 0.0100 286.0000));
+  --gradient-card-accent: linear-gradient(to top, oklch(0.1800 0.0250 237.0000), oklch(0.2200 0.0100 286.0000));
   --card-title-color: var(--foreground);
   --card-icon-color: var(--foreground);
 
@@ -584,13 +589,13 @@ a, button, input, select, textarea, [role="button"] {
   }
 
   .ticket-unclaimed {
-    background: var(--status-warning-bg);
+    background: var(--gradient-status-warning);
     border-color: var(--status-warning-border);
     color: var(--status-warning-text);
   }
 
   .ticket-returned {
-    background: var(--status-danger-bg);
+    background: var(--gradient-status-danger);
     border-color: var(--status-danger-border);
     color: var(--status-danger-text);
   }
@@ -629,6 +634,14 @@ a, button, input, select, textarea, [role="button"] {
 
 .bg-gradient-card-danger {
   background: var(--gradient-card-danger);
+}
+
+.bg-gradient-status-warning {
+  background: var(--gradient-status-warning);
+}
+
+.bg-gradient-status-danger {
+  background: var(--gradient-status-danger);
 }
 
 .text-card-title {

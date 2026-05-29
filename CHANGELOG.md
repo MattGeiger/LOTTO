@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.1] - 2026-05-28
+### Changed
+- Unified all surface fill gradients to a bottom→top orientation (deeper/lower-lightness shade at the base, lighter at the top), matching the card gradient. Reoriented the `/admin` colorful gradients (`--gradient-card-info`, `-accent`, `-warning`, `-danger`, `-blue`, `-emerald`) from `135deg` to `to top` across light, dark, and both hi-viz themes.
+- Gave the previously-solid colorful status fills a matching bottom→top gradient that preserves their saturated intensity: added `--gradient-status-warning` / `--gradient-status-danger` tokens (theme-aware, deepened at the base with the status border color) and applied them to the `/admin` Live State returned/unclaimed alert boxes and the "Mark ticket as returned/unclaimed" sections. Via the shared `.ticket-returned` / `.ticket-unclaimed` classes this also gives the returned/unclaimed ticket cells and legend dots on `/` and `/display` the same gradient.
+- Documented the surface-gradient-orientation preference (bottom→top, the per-theme color-order gotcha, the `135deg`/`90deg` ban, and the deliberate exceptions) in `docs/UI_DESIGN.md`.
+
 ## [1.8.0] - 2026-05-28
 ### Added
 - Applied a frosted-glass material treatment (translucent fill + backdrop blur) to floating/overlay surfaces — bottom nav bar, the inventory dietary-filter dropdown and icon popovers, the language and theme switcher menus, and the `/new` onboarding dialog (with a lit edge highlight and dark-mode blue-teal glow shadow). Interim hand-tuned values; tokenization deferred to v2.0. Documented in `docs/UI_DESIGN.md` and `docs/V2.0_PLANNED_FEATURES.md`.

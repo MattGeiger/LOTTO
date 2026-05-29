@@ -135,6 +135,41 @@ Custom WTH tokens (status, ticket gradients, display/admin gradients) live along
 
 ---
 
+## Surface Gradient Orientation
+
+**All surface fill gradients orient bottom → top: the deeper (lower-lightness,
+more-saturated) shade sits at the base, the lighter shade at the top.** Use
+`linear-gradient(to top, <deeper>, <lighter>)`. This reads as ambient light
+falling on a physical surface and keeps every gradient in the app visually
+consistent.
+
+This applies to:
+
+- The universal card gradient (`--card-gradient`, the FEED-aligned "Prism"
+  pattern) on every `data-slot="card"`.
+- The semantic/feature card gradients (`--gradient-card-info`, `-accent`,
+  `-warning`, `-danger`, `-blue`, `-emerald`).
+- Colorful status field gradients (`--gradient-status-warning`,
+  `--gradient-status-danger`) used for `/admin` alert boxes and the
+  `.ticket-returned` / `.ticket-unclaimed` surfaces.
+
+**Do not** use diagonal (`135deg`) or left→right (`90deg`) directions for
+surface fills — those were the legacy style and have been migrated to `to top`.
+
+**Per-theme color order matters.** Because dark-mode tokens often store their
+two stops in the opposite lightness order from light mode, write each gradient
+explicitly with the deeper stop first (`to top, <deeper>, <lighter>`) rather
+than reusing a single direction keyword across themes — verify which stop is
+lower-lightness per theme.
+
+**Exceptions:** the display-board "now serving" / "served" ticket-cell
+gradients (`--ticket-serving`, `--ticket-served`) and brand text gradients
+(`--serving-text-gradient`) remain diagonal by design — they are expressive
+brand accents, not surface fills. The `hi-viz` themes flatten the card gradient
+entirely for high-contrast legibility.
+
+---
+
 ## Translucent Surface Materials ("Glass")
 
 **Design intent:** floating and overlay surfaces are treated as *frosted glass* —
