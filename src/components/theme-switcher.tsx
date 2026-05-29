@@ -142,7 +142,7 @@ export function ThemeSwitcher({ enableHaptics = false }: { enableHaptics?: boole
                 <span className="sr-only">Theme options</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="bg-popover/[45%] backdrop-blur-[6px]">
               <DropdownMenuCheckboxItem checked={!hiVizEnabled && effective === "light"} onSelect={() => setBaseTheme("light")}>
                 <Sun size={16} animation="default" animateOnView="default" animateOnHover="default" animateOnTap="default" />
                 Light

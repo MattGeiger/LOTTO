@@ -169,7 +169,7 @@ export default function NewPersonalizedHomePage() {
       />
       <Dialog open={isOnboardingModalOpen}>
         <DialogContent
-          className="max-w-md"
+          className="max-w-md bg-popover/[65%] backdrop-blur-[6px] backdrop-brightness-150 backdrop-saturate-[0.85] shadow-[inset_0_3px_0_0_rgb(255_255_255/0.5),0_24px_60px_-15px_rgb(0_0_0/0.3)] dark:bg-popover/[75%] dark:backdrop-brightness-90 dark:shadow-[inset_0_3px_0_0_rgb(255_255_255/0.12),0_24px_60px_-15px_rgb(0_150_255/0.4)]"
           onEscapeKeyDown={(event) => event.preventDefault()}
           onPointerDownOutside={(event) => event.preventDefault()}
         >
@@ -187,7 +187,7 @@ export default function NewPersonalizedHomePage() {
                     type="button"
                     variant="outline"
                     haptic="uiSelect"
-                    className="h-12 text-base"
+                    className="h-12 text-base bg-background dark:bg-background"
                     onClick={() => handleLanguageSelect(option.code)}
                   >
                     {option.label}
@@ -230,7 +230,7 @@ export default function NewPersonalizedHomePage() {
                   placeholder={t("searchTicketPlaceholder")}
                   aria-label={t("searchTicketLabel")}
                   aria-invalid={ticketInputError ? true : undefined}
-                  className="h-11 text-center text-base uppercase"
+                  className="h-11 text-center text-base uppercase bg-background dark:bg-background"
                 />
                 {!ticketRangeReady && !ticketInputError ? (
                   <p className="text-sm text-muted-foreground">{t("drawingNotStartedHint")}</p>

@@ -48,7 +48,7 @@ export function BottomTabBar() {
     >
       <ul
         className={cn(
-          "flex w-full items-stretch gap-1 border-border bg-card/85 backdrop-blur-md",
+          "flex w-full items-stretch gap-1 border-border bg-card/[45%] backdrop-blur-[6px]",
           "border-t px-2 pt-1 pb-[max(env(safe-area-inset-bottom),0.5rem)]",
           "sm:w-auto sm:rounded-full sm:border sm:p-2 sm:shadow-[var(--base-shadow-lg)]"
         )}

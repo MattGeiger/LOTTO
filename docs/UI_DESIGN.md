@@ -89,6 +89,13 @@ Custom WTH tokens (status, ticket gradients, display/admin gradients) live along
 
 ### Shadows (Refined November 2025)
 - Shadow tokens were refactored to use `--base-shadow-*` variables (OKLCH color-mix) for both light/dark themes; Tailwind utilities map to `--shadow-*` aliases.
+- **Dark-mode shadows glow, they do not darken.** `--base-shadow-color` is black
+  in light mode (`oklch(0 0 0)`) but a saturated **blue-teal** in dark mode
+  (`oklch(0.746 0.16 232.661)`, and a brighter cyan in dark `hi-viz`). On a dark
+  background a black shadow is invisible, so the convention is to treat the
+  shadow as *emitted light* — a soft colored glow that lifts a surface by
+  illuminating around it. Any new shadowed/elevated surface (including glass
+  materials) must follow this: dark mode = soft blue-teal glow, not a black drop.
 - Transparency levels were tuned (lighter 2xs/xs, stronger sm–xl) for more consistent depth across surfaces.
 - Buttons: default and secondary variants now include `shadow-sm` for clearer elevation; outline/ghost retain existing shadow treatments.
 
@@ -125,6 +132,128 @@ Custom WTH tokens (status, ticket gradients, display/admin gradients) live along
   --color-warning-foreground: var(--warning-foreground);
 }
 ```
+
+---
+
+## Translucent Surface Materials ("Glass")
+
+**Design intent:** floating and overlay surfaces are treated as *frosted glass* —
+translucent fills layered over a backdrop blur — so the UI reads as a stack of
+light-bearing materials rather than flat opaque panels. This is applied
+deliberately, surface by surface, and is converging toward a shared material
+pattern (see v2.0 planned "Surface material tokens").
+
+### Aesthetic north star
+
+The target feel is **calm, soft, milky** — diffuse frosted panels that read as a
+welcoming physical material, not cold 2D shapes and not flashy optical glass.
+Concretely this means:
+
+- **Milky, not vivid.** Favor diffusion (blur) and a soft light veil over
+  saturation. Keep `backdrop-saturate` gentle (~1.1–1.2); high saturation reads
+  "optical/wet," which is the wrong direction.
+- **Soft, not harsh.** Low-contrast edges and soft shadows. Harsh
+  high-contrast minimalism is intentionally *not* this system's job — the
+  `hi-viz` themes exist to serve high-contrast / low-vision needs.
+- **No simulated optics.** We deliberately do **not** pursue Apple "Liquid
+  Glass"-style refraction, specular highlights, or shader/SVG-displacement
+  tricks. Pure-CSS frosted glass (tint + blur + brightness + gentle saturate,
+  plus an edge highlight and soft shadow) gets ~90% of the material feel at a
+  fraction of the cost.
+
+This is mission-aligned, not decoration: most users arrive at a food pantry,
+often on modest devices. The polish says *this tool was made for you, with
+care.* That intent is overridden the instant it costs legibility.
+
+### Performance baseline (hard constraint)
+
+The app is tuned to run acceptably on a **2015 iPad Mini** (known-budget SoC,
+11+ years old). That device is the floor: if a material effect can't hold up
+there, it doesn't ship. This is the concrete reason we stay in pure-CSS
+frosted-glass territory and avoid per-frame optics — `backdrop-filter` is
+GPU-costed, so the material taxonomy stays small and effects stay cheap.
+
+### Currently glassed surfaces
+
+| Surface | Component | Recipe |
+| --- | --- | --- |
+| Bottom navigation bar | `navigation/bottom-tab-bar.tsx` | `bg-card/[45%] backdrop-blur-[6px]` |
+| Dietary-filter dropdown | `public-inventory-page.tsx` | `bg-popover/[45%] backdrop-blur-[6px]` |
+| Inventory icon popovers (Limited Supply / Clearance / dietary) | `public-inventory-page.tsx` | `bg-popover/[45%] backdrop-blur-[6px]` |
+| Language switcher menu | `language-switcher.tsx` | `bg-popover/[45%] backdrop-blur-[6px]` |
+| Theme switcher menu | `theme-switcher.tsx` | `bg-popover/[45%] backdrop-blur-[6px]` |
+| `/new` onboarding dialog | `app/new/page.tsx` | translucent `bg-popover/[…]` + `backdrop-blur-[…]` (being tuned) |
+
+The arcade bottom bar is intentionally **not** part of this system — it uses its
+own pixel-art material (`--arcade-menu-card-bg`, `backdrop-blur-sm`) to keep the
+retro section visually separate per the Arcade guardrails.
+
+### Rules
+
+- **Interactive solids stay opaque on glass.** Buttons and inputs that sit on a
+  glass surface must remain visually solid so they read as actionable. Note the
+  shadcn `outline` button and `input` are **translucent in dark mode by
+  default** (`dark:bg-input/30`) and `bg-transparent` (input, light) — on a
+  glass parent these show the blurred backdrop through the control. Force them
+  opaque with `bg-background dark:bg-background` (done for the `/new` language
+  buttons and the ticket input).
+- **Token, not hex.** Use the surface's own color token at an alpha
+  (`bg-card/[45%]`, `bg-popover/[45%]`), never a hard-coded color, so the
+  material stays theme-aware.
+- **`tailwind-merge` overrides cleanly.** Adding `bg-popover/[45%]` to a
+  component whose base class is `bg-popover` replaces the opaque fill; the
+  `backdrop-blur-[…]` utility is additive.
+
+### Edges & shadows on glass (the "material" finish)
+
+Tint + blur + brightness + saturate are the *body* of the material; two more
+cues make a translucent panel read as a physical pane catching light:
+
+- **Edge highlight** — a 1px inset top-edge highlight (`inset 0 1px 0` in a
+  near-white at low alpha; ~`white/0.5` light, ~`white/0.12` dark). This is the
+  lit rim that sells "frosted pane" over "see-through rectangle."
+- **Soft ambient shadow** — a large, diffuse, low-opacity drop shadow that lifts
+  the panel off whatever's behind it.
+
+Both are plain `box-shadow` (composed into a single declaration), so they cost
+nothing per frame — safe within the performance baseline.
+
+**The shadow obeys the dark-mode glow rule** (see Shadows, above): light mode
+uses a soft dark ambient shadow; dark mode uses a soft **blue-teal glow**
+(`rgb(0 150 255 / …)`-ish) that illuminates rather than darkens. The `/new`
+dialog currently hardcodes that blue while the look is being tuned; when this is
+tokenized (v2.0) the glow should reference the existing `--base-shadow-color`
+convention rather than a one-off literal.
+
+### The dialog contrast caveat (open problem)
+
+The `/new` dialog is a special case. Unlike the dropdowns and nav bar — which
+float over the **normal page** — a dialog renders over `DialogOverlay`, which is
+`bg-black/40 backdrop-blur-sm`. So a translucent `DialogContent` reveals an
+*already-darkened* layer beneath it: the see-through portion is both blurred
+**and** darkened by the 40% black scrim. In light mode this drags the card away
+from white, and the dark `popover-foreground` text loses contrast. Raising the
+fill alpha restores contrast but kills the glass feel — the two goals fight.
+
+**The fix direction is to stack a third effect — lighten — onto the material.**
+`backdrop-filter` composes multiple functions, so a "light glass" can brighten
+the backdrop it samples while staying translucent and blurred:
+
+```
+/* light-mode light material: translucent + blurred + lifted */
+backdrop-filter: blur(2px) brightness(1.6) saturate(1.2);
+/* Tailwind: backdrop-blur-[2px] backdrop-brightness-150 backdrop-saturate-150 */
+```
+
+`brightness(>1)` lightens the darkened overlay back toward the card color,
+preserving text contrast *with* transparency. Dark mode wants the opposite bias
+(keep it dark; light text already contrasts against the black scrim). This
+"lighten + transparency + blur" recipe is the targeted answer to the dialog
+problem and is the seed of the v2.0 material-token system below.
+
+**Current values across glass surfaces are ad-hoc per element (interim).** They
+are being tuned by eye before being promoted to shared, theme-aware tokens — do
+not treat the literal `[45%]` / `[6px]` values as canonical.
 
 ---
 

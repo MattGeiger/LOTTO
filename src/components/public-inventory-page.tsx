@@ -134,7 +134,7 @@ function InventoryIconChip({
           </button>
         </Badge>
       </PopoverTrigger>
-      <PopoverContent className="w-auto px-3 py-2 text-sm font-medium" side="top" role="tooltip">
+      <PopoverContent className="w-auto px-3 py-2 text-sm font-medium bg-popover/[45%] backdrop-blur-[6px]" side="top" role="tooltip">
         <T text={label} />
       </PopoverContent>
     </Popover>
@@ -206,7 +206,7 @@ function InventoryLegend({
             <ChevronDown className="size-4 opacity-60" aria-hidden="true" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="center" className="w-60">
+        <DropdownMenuContent align="center" className="w-60 bg-popover/[45%] backdrop-blur-[6px]">
           <DropdownMenuLabel><T text={t("inventoryDietaryFilterLabel")} /></DropdownMenuLabel>
           <DropdownMenuSeparator />
           {dietaryFlags.map(({ key, labelKey, icon: Icon }) => (
