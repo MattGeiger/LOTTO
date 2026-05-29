@@ -6,6 +6,10 @@
   --background: oklch(1.0000 0 0);
   --foreground: oklch(0.5078 0.1369 257.6669);
   --card: oklch(1.0000 0 0);
+  /* Subtle "Prism" card gradient (FEED-aligned). Translucent overlay so it
+     augments each card's own fill (opaque or bg-card/80) instead of replacing
+     it: faint brand tint at the base lifting to a light highlight at the top. */
+  --card-gradient: linear-gradient(to top, color-mix(in oklch, var(--primary) 8%, transparent), color-mix(in oklch, white 10%, transparent));
   --card-foreground: oklch(0.5078 0.1369 257.6669);
   --popover: oklch(1.0000 0 0);
   --popover-foreground: oklch(0.5078 0.1369 257.6669);
@@ -124,6 +128,8 @@
   --background: oklch(0.1470 0.0040 49.2500);
   --foreground: oklch(0.9067 0 0);
   --card: oklch(0.1470 0.0040 49.2500);
+  /* Dark: brand tint at the base deepening toward the top (matches FEED dark). */
+  --card-gradient: linear-gradient(to top, color-mix(in oklch, var(--primary) 10%, transparent), color-mix(in oklch, black 12%, transparent));
   --card-foreground: oklch(0.9067 0 0);
   --popover: oklch(0.2520 0 0);
   --popover-foreground: oklch(0.9067 0 0);
@@ -239,6 +245,8 @@
   --background: oklch(0.9850 0 0);
   --foreground: oklch(0.1410 0.0050 285.8230);
   --card: oklch(0.9850 0 0);
+  /* hi-viz keeps card surfaces flat/solid to preserve high-contrast legibility. */
+  --card-gradient: none;
   --card-foreground: oklch(0.1410 0.0050 285.8230);
   --popover: oklch(0.9850 0 0);
   --popover-foreground: oklch(0.1410 0.0050 285.8230);
@@ -320,6 +328,8 @@
   --background: oklch(0.1410 0.0050 285.8230);
   --foreground: oklch(0.9850 0 0);
   --card: oklch(0.2050 0 0);
+  /* hi-viz keeps card surfaces flat/solid to preserve high-contrast legibility. */
+  --card-gradient: none;
   --card-foreground: oklch(0.9850 0 0);
   --popover: oklch(0.2740 0.0060 286.0330);
   --popover-foreground: oklch(0.9850 0 0);
@@ -508,6 +518,18 @@ a, button, input, select, textarea, [role="button"] {
 ::selection {
   background: var(--primary);
   color: var(--primary-foreground);
+}
+
+@layer components {
+  /* Universal card gradient (FEED "Prism" pattern, adapted).
+     Every surface carrying data-slot="card" gets a subtle, theme-aware brand
+     gradient. The stops are translucent (see --card-gradient), so this overlays
+     each card's own background-color rather than replacing it — opaque cards and
+     translucent (bg-card/80) cards both keep their fill. Arcade cards use a
+     separate component without data-slot="card" and are unaffected. */
+  [data-slot="card"] {
+    background-image: var(--card-gradient);
+  }
 }
 
 @layer utilities {
