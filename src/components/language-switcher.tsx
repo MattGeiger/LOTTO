@@ -44,7 +44,7 @@ export function LanguageSwitcher({ enableHaptics = false }: { enableHaptics?: bo
           <span className="sr-only">Change language</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="bg-popover/[45%] backdrop-blur-[6px]">
         <DropdownMenuRadioGroup
           value={language}
           onValueChange={(val) => {
