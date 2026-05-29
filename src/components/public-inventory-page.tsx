@@ -409,13 +409,6 @@ export function PublicInventoryPage() {
               <p className="text-sm text-muted-foreground"><T text={`${t("inventoryUpdatedLabel")} ${freshness}`} /></p>
             ) : null}
           </div>
-
-          {inventory ? (
-            <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground">
-              <Badge variant="outline">{inventory.totals.categories} <T text={t("inventoryCategoriesLabel")} /></Badge>
-              <Badge variant="outline">{inventory.totals.foodItems} <T text={t("inventoryItemsLabel")} /></Badge>
-            </div>
-          ) : null}
         </section>
 
         {!isLoading && inventory && inventory.categories.length > 0 ? (
