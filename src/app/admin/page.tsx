@@ -2224,7 +2224,7 @@ const AdminPage = () => {
                 </div>
               </div>
               {/* Row 5: full width */}
-              <div className="space-y-1 rounded-lg border border-[var(--status-danger-border)] bg-[var(--status-danger-bg)] p-3 sm:col-span-2 lg:col-span-6">
+              <div className="space-y-1 rounded-lg border border-[var(--status-danger-border)] bg-gradient-status-danger p-3 sm:col-span-2 lg:col-span-6">
                 <p className="text-xs uppercase tracking-wide text-[var(--status-danger-text)]">Returned tickets</p>
                 <div className="flex flex-wrap gap-2">
                     {returnedTickets.length
@@ -2237,7 +2237,7 @@ const AdminPage = () => {
                 </div>
               </div>
               {/* Row 6: full width */}
-              <div className="space-y-1 rounded-lg border border-[var(--status-warning-border)] bg-[var(--status-warning-bg)] p-3 sm:col-span-2 lg:col-span-6">
+              <div className="space-y-1 rounded-lg border border-[var(--status-warning-border)] bg-gradient-status-warning p-3 sm:col-span-2 lg:col-span-6">
                 <p className="text-xs uppercase tracking-wide text-[var(--status-warning-text)]">Unclaimed tickets</p>
                 <div className="flex flex-wrap gap-2">
                     {unclaimedTickets.length
