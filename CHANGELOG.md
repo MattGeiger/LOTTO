@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.8.0] - 2026-05-28
 ### Added
 - Applied a frosted-glass material treatment (translucent fill + backdrop blur) to floating/overlay surfaces — bottom nav bar, the inventory dietary-filter dropdown and icon popovers, the language and theme switcher menus, and the `/new` onboarding dialog (with a lit edge highlight and dark-mode blue-teal glow shadow). Interim hand-tuned values; tokenization deferred to v2.0. Documented in `docs/UI_DESIGN.md` and `docs/V2.0_PLANNED_FEATURES.md`.
 - Added a universal, theme-aware "Prism" card gradient (FEED-aligned) on every `data-slot="card"` surface for cross-app brand consistency. Implemented as a translucent `--card-gradient` overlay (`color-mix` brand tint at the base lifting to a light/dark highlight at the top) so it augments each card's existing fill rather than replacing it — opaque and translucent (`bg-card/80`) cards both keep their fill. Disabled in the `hi-viz` themes to preserve high-contrast legibility; arcade cards are unaffected (separate component, no `data-slot="card"`).
