@@ -5,6 +5,12 @@
 - Applied a frosted-glass material treatment (translucent fill + backdrop blur) to floating/overlay surfaces — bottom nav bar, the inventory dietary-filter dropdown and icon popovers, the language and theme switcher menus, and the `/new` onboarding dialog (with a lit edge highlight and dark-mode blue-teal glow shadow). Interim hand-tuned values; tokenization deferred to v2.0. Documented in `docs/UI_DESIGN.md` and `docs/V2.0_PLANNED_FEATURES.md`.
 - Added a universal, theme-aware "Prism" card gradient (FEED-aligned) on every `data-slot="card"` surface for cross-app brand consistency. Implemented as a translucent `--card-gradient` overlay (`color-mix` brand tint at the base lifting to a light/dark highlight at the top) so it augments each card's existing fill rather than replacing it — opaque and translucent (`bg-card/80`) cards both keep their fill. Disabled in the `hi-viz` themes to preserve high-contrast legibility; arcade cards are unaffected (separate component, no `data-slot="card"`).
 
+### Changed
+- Restyled the `/inventory` category tables to sit cleanly on the new card gradient: removed the alternating row-fill zebra striping and the `CardHeader` (`bg-muted/45`) and column-header (`bg-background/70`) band fills, so the card gradient flows uninterrupted with only hairline `border-b` dividers for structure.
+
+### Fixed
+- Fixed the `/` and `/display` ticket-detail modal: the top control bar (language switch, search, theme switch) was `z-50` — above the dialog's `z-40` blur overlay — so it stayed sharp in the foreground when a ticket was tapped. Lowered it to `z-30` (matching `/new` and `/inventory`) so those controls blur out with the rest of the background, keeping focus on the ticket info.
+
 ## [1.7.4] - 2026-05-28
 ### Changed
 - Removed the "X categories" / "X items" totals pills from the `/inventory` page's upper section (title/freshness area). The per-category header "X items" badge is unchanged. Pruned the now-unused `inventoryCategoriesLabel` translation key from all eight languages.
