@@ -41,7 +41,7 @@ export function PublicDisplayPage() {
 
   return (
     <div className="relative">
-      <div className="absolute left-6 right-6 top-4 z-50 flex items-center justify-between gap-5 py-2 sm:left-8 sm:right-8 lg:left-10 lg:right-10">
+      <div className="absolute left-6 right-6 top-4 z-30 flex items-center justify-between gap-5 py-2 sm:left-8 sm:right-8 lg:left-10 lg:right-10">
         <LanguageSwitcher />
         <div className="flex-1 flex justify-center px-2">
           <div className="min-w-0 flex-1 max-w-[360px]">

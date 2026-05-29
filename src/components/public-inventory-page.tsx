@@ -266,7 +266,7 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
 
   return (
     <Card className="gap-4 overflow-hidden rounded-lg py-0">
-      <CardHeader className="border-b bg-muted/45 px-4 py-4 sm:px-5">
+      <CardHeader className="border-b px-4 py-4 sm:px-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <CardTitle className="text-xl leading-tight"><T text={categoryName} /></CardTitle>
@@ -279,15 +279,15 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
         <div className="hidden sm:block">
           <table className="w-full table-fixed text-sm">
             <thead>
-              <tr className="border-b bg-background/70 text-left text-xs font-semibold uppercase text-muted-foreground">
+              <tr className="border-b text-left text-xs font-semibold uppercase text-muted-foreground">
                 <th className="w-[40%] px-4 py-2"><T text={t("inventoryColumnItem")} /></th>
                 <th className="w-[20%] px-4 py-2"><T text={t("inventoryColumnLimit")} /></th>
                 <th className="px-4 py-2"><T text={t("inventoryColumnDietary")} /></th>
               </tr>
             </thead>
             <tbody>
-              {category.items.map((item, index) => (
-                <tr key={item.id} className={cn("border-b last:border-b-0", index % 2 === 0 && "bg-muted/25")}>
+              {category.items.map((item) => (
+                <tr key={item.id} className="border-b last:border-b-0">
                   <td className="px-4 py-3 font-medium">
                     <div className="flex items-center gap-2">
                       <InventoryStatusBadges item={item} />
