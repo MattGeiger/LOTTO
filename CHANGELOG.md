@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.11.0] - 2026-05-30
+### Changed
+- Re-themed the Arcade's third game from *Star Swarm* into **Zombie Attack!** — a last-stand against a shambling horde — and renamed its route, modules, CSS, and translation keys (`/arcade/star-swarm` → `/arcade/zombie-attack`, `src/arcade/game/star-swarm/*` → `zombie-attack/*`, `arcade-swarm-*` → `arcade-zombie-*`, `starSwarm*` → `zombieAttack*`). Design doc renamed `docs/STAR_SWARM.md` → `docs/ZOMBIE_ATTACK.md`.
+- Replaced the alien sprites with three **zombie builds** (skinny, ribs-exposed, fat), each with a two-frame shamble, and swapped the starfield for a **dirt-lot** background (deterministic pebbles, clods, dead grass, and rocks). The gun, shots, and bursts still follow the theme via CSS custom properties; the dirt/undead/fire/wood/sandbag tones are intentional constants.
+- Made the **play area 25% taller** (board `224 × 224` → `224 × 280`, `aspect-ratio: 224/280`) and re-tuned the responsive board sizing to fill the available height, reducing wasted space above the game on small phones.
+- Simplified the fire control to a compact **"A"** button (hold to autofire), widening the movement slider; masked text selection (`user-select: none` + `touch-action: none`) on the Play/Fire/dock surfaces so a held or dragged press never highlights a label mid-game.
+
+### Added
+- **Fence** — a wooden barrier in front of the bunkers that the horde presses on. Its health drains faster the more zombies are pressing (`alive × 2` per step); when it collapses the horde breaks through toward the bunkers. Reaching the bunker line is game over. The fence is rebuilt each wave.
+- **Flaming vehicle** — a burning truck periodically barrels straight down toward the fence. It takes 3–5 shots to destroy (by difficulty, 250 pts); if it reaches the fence it crashes through and collapses it instantly.
+- **Bomb-carrier zombies** — a few zombies each wave carry a bomb (red marker + fuse). Shooting a carrier drops its bomb in place; shooting the dropped bomb detonates a blast (~25% of the board area) that wipes out every zombie inside it.
+- **Difficulty rules:** Nightmare now has **no bunkers** (the fence remains; the bunker location is still the game-over line); Very Easy makes bunkers **bomb-proof** (eroded only by the player's own shots, never by enemy bombs).
+- Rewrote the engine unit test as `tests/arcade-zombie-attack-engine.test.ts` (11 cases): zombie scoring, carrier bomb-drop, blast AoE (with a distant zombie spared), vehicle HP, thrown-bomb life loss, horde-reaches-bunkers game over, wave-clear + fence rebuild, bomb-proof vs. eroding bunkers, no-bunker difficulty, and the shot cooldown/cap.
+
 ## [1.10.0] - 2026-05-29
 ### Added
 - Added **Star Swarm**, the Arcade's third game — a fixed-shooter in the Space Invaders lineage. Pilot a ship along the bottom of a square pixel-art board, hold FIRE to shoot, and clear a descending formation of 40 invaders (five color-tiered rows) before they reach you. Includes destructible bunkers, invader bombs (which can be shot down mid-air), a periodic bonus saucer worth 50–300 points, post-hit invulnerability blink, escalating formation speed as the swarm thins, and endless waves that ramp difficulty. Six difficulty presets (Very Easy → Nightmare) tune the march cadence and bomb frequency.

@@ -4,17 +4,17 @@ import * as React from "react";
 import Link from "next/link";
 
 import { ARCADE_PLAY_RESUMED_EVENT, ARCADE_TICKET_CALLED_EVENT } from "@/arcade/lib/events";
-import { BOARD_H, BOARD_W, FIXED_STEP_MS, SHIP_W } from "@/arcade/game/star-swarm/constants";
-import { initialWorld, nextWaveWorld, tick } from "@/arcade/game/star-swarm/engine";
-import { drawBoard } from "@/arcade/game/star-swarm/renderer";
-import type { DifficultyParams, ShooterInput, World } from "@/arcade/game/star-swarm/types";
+import { BOARD_H, BOARD_W, FIXED_STEP_MS, SHIP_W } from "@/arcade/game/zombie-attack/constants";
+import { initialWorld, nextWaveWorld, tick } from "@/arcade/game/zombie-attack/engine";
+import { drawBoard } from "@/arcade/game/zombie-attack/renderer";
+import type { DifficultyParams, ShooterInput, World } from "@/arcade/game/zombie-attack/types";
 import { ChevronArrowLeftIcon } from "@/arcade/components/icons/chevron-arrow-left-icon";
 import { Button, Card, CardContent, CardHeader, CardTitle, Slider } from "@/arcade/ui/8bit";
 import { useAppHaptics } from "@/components/haptics-provider";
 import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
 
-type SwarmModePreset = {
+type ZombieModePreset = {
   key: "veryEasy" | "easy" | "normal" | "hard" | "veryHard" | "nightmare";
   labelKey:
     | "snakeModeVeryEasy"
@@ -25,27 +25,36 @@ type SwarmModePreset = {
     | "snakeModeNightmare";
   stepBaseMs: number;
   bombIntervalMs: number;
+  bunkers: boolean;
+  bunkerBombProof: boolean;
+  vehicleHp: number;
 };
 
-const SWARM_MODE_PRESETS: readonly SwarmModePreset[] = [
-  { key: "veryEasy",  labelKey: "snakeModeVeryEasy",  stepBaseMs: 760, bombIntervalMs: 2200 },
-  { key: "easy",      labelKey: "snakeModeEasy",      stepBaseMs: 640, bombIntervalMs: 1750 },
-  { key: "normal",    labelKey: "snakeModeNormal",    stepBaseMs: 540, bombIntervalMs: 1400 },
-  { key: "hard",      labelKey: "snakeModeHard",      stepBaseMs: 450, bombIntervalMs: 1050 },
-  { key: "veryHard",  labelKey: "snakeModeVeryHard",  stepBaseMs: 370, bombIntervalMs: 780 },
-  { key: "nightmare", labelKey: "snakeModeNightmare", stepBaseMs: 290, bombIntervalMs: 560 },
+const ZOMBIE_MODE_PRESETS: readonly ZombieModePreset[] = [
+  { key: "veryEasy",  labelKey: "snakeModeVeryEasy",  stepBaseMs: 760, bombIntervalMs: 2200, bunkers: true,  bunkerBombProof: true,  vehicleHp: 3 },
+  { key: "easy",      labelKey: "snakeModeEasy",      stepBaseMs: 640, bombIntervalMs: 1750, bunkers: true,  bunkerBombProof: false, vehicleHp: 3 },
+  { key: "normal",    labelKey: "snakeModeNormal",    stepBaseMs: 540, bombIntervalMs: 1400, bunkers: true,  bunkerBombProof: false, vehicleHp: 3 },
+  { key: "hard",      labelKey: "snakeModeHard",      stepBaseMs: 450, bombIntervalMs: 1050, bunkers: true,  bunkerBombProof: false, vehicleHp: 4 },
+  { key: "veryHard",  labelKey: "snakeModeVeryHard",  stepBaseMs: 370, bombIntervalMs: 780,  bunkers: true,  bunkerBombProof: false, vehicleHp: 4 },
+  { key: "nightmare", labelKey: "snakeModeNightmare", stepBaseMs: 290, bombIntervalMs: 560,  bunkers: false, bunkerBombProof: false, vehicleHp: 5 },
 ];
 const DEFAULT_MODE_INDEX = 2;
 
 const SHIP_RANGE = Math.max(1, BOARD_W - SHIP_W);
 
-function dpFromPreset(preset: SwarmModePreset): DifficultyParams {
-  return { stepBaseMs: preset.stepBaseMs, bombIntervalMs: preset.bombIntervalMs };
+function dpFromPreset(preset: ZombieModePreset): DifficultyParams {
+  return {
+    stepBaseMs: preset.stepBaseMs,
+    bombIntervalMs: preset.bombIntervalMs,
+    bunkers: preset.bunkers,
+    bunkerBombProof: preset.bunkerBombProof,
+    vehicleHp: preset.vehicleHp,
+  };
 }
 
 type GameStatus = "READY" | "RUNNING" | "PAUSED" | "GAME_OVER";
 
-export default function StarSwarmPage() {
+export default function ZombieAttackPage() {
   const { t, language } = useLanguage();
   const isLargeTextLocale = language === "ar" || language === "fa" || language === "zh";
   const { trigger: triggerHaptic } = useAppHaptics();
@@ -57,8 +66,8 @@ export default function StarSwarmPage() {
   /* ── Difficulty ── */
   const [modeIndex, setModeIndex] = React.useState(DEFAULT_MODE_INDEX);
   const [modeSelectionIndex, setModeSelectionIndex] = React.useState(DEFAULT_MODE_INDEX);
-  const modePreset = SWARM_MODE_PRESETS[modeIndex]!;
-  const selectedModePreset = SWARM_MODE_PRESETS[modeSelectionIndex]!;
+  const modePreset = ZOMBIE_MODE_PRESETS[modeIndex]!;
+  const selectedModePreset = ZOMBIE_MODE_PRESETS[modeSelectionIndex]!;
   const dp = React.useMemo(() => dpFromPreset(modePreset), [modePreset]);
   const dpRef = React.useRef(dp);
   React.useEffect(() => { dpRef.current = dp; }, [dp]);
@@ -72,7 +81,7 @@ export default function StarSwarmPage() {
   const [sliderValue, setSliderValue] = React.useState(50);
 
   /* ── Live game refs ── */
-  const worldRef = React.useRef<World>(initialWorld());
+  const worldRef = React.useRef<World>(initialWorld(dp));
   const statusRef = React.useRef<GameStatus>("READY");
   const shipTargetRef = React.useRef<number>((BOARD_W - SHIP_W) / 2);
   const fireRef = React.useRef(false);
@@ -108,7 +117,7 @@ export default function StarSwarmPage() {
 
   /* ── Reset / restart ── */
   const resetGame = React.useCallback(() => {
-    const w = initialWorld();
+    const w = initialWorld(dpRef.current);
     worldRef.current = w;
     shipTargetRef.current = w.shipX;
     fireRef.current = false;
@@ -129,7 +138,7 @@ export default function StarSwarmPage() {
 
   /* ── Difficulty change resets the run ── */
   React.useEffect(() => {
-    const w = initialWorld();
+    const w = initialWorld(dp);
     worldRef.current = w;
     shipTargetRef.current = w.shipX;
     fireRef.current = false;
@@ -208,7 +217,7 @@ export default function StarSwarmPage() {
         syncReactState(result.world);
 
         if (result.status === "wave-cleared") {
-          worldRef.current = nextWaveWorld(result.world);
+          worldRef.current = nextWaveWorld(result.world, dpRef.current);
           shipTargetRef.current = worldRef.current.shipX;
           accumulatorRef.current = 0;
           syncReactState(worldRef.current, true);
@@ -239,7 +248,7 @@ export default function StarSwarmPage() {
         e.preventDefault();
         keysDownRef.current.add(e.key);
         if (statusRef.current === "READY") { setStatus("RUNNING"); notifyPlayResumed(); }
-      } else if (e.key === " " || e.key === "ArrowUp" || e.key === "Up") {
+      } else if (e.key === " " || e.key === "ArrowUp" || e.key === "Up" || e.key === "a" || e.key === "A") {
         e.preventDefault();
         if (statusRef.current === "READY") { setStatus("RUNNING"); notifyPlayResumed(); }
         else if (statusRef.current === "GAME_OVER") { restartRun(); }
@@ -251,7 +260,7 @@ export default function StarSwarmPage() {
     };
     const onKeyUp = (e: KeyboardEvent) => {
       keysDownRef.current.delete(e.key);
-      if (e.key === " " || e.key === "ArrowUp" || e.key === "Up") fireRef.current = false;
+      if (e.key === " " || e.key === "ArrowUp" || e.key === "Up" || e.key === "a" || e.key === "A") fireRef.current = false;
     };
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
@@ -312,7 +321,7 @@ export default function StarSwarmPage() {
     status === "RUNNING" ? "Pause game" : status === "PAUSED" ? "Resume game" : "Start game";
 
   return (
-    <div className="arcade-pixel-grid arcade-swarm-shell mx-auto max-w-6xl px-4 pb-6 pt-8 sm:px-6 sm:pt-10">
+    <div className="arcade-pixel-grid arcade-zombie-shell mx-auto max-w-6xl px-4 pb-6 pt-8 sm:px-6 sm:pt-10">
       <div className="mb-4 flex justify-start">
         <Button asChild size="sm" haptic="uiToggle" className="px-3">
           <Link href="/arcade" className="inline-flex items-center gap-2">
@@ -324,25 +333,25 @@ export default function StarSwarmPage() {
 
       <Card className="mx-auto w-full max-w-3xl">
         <CardHeader className="space-y-2">
-          <CardTitle className="text-4xl text-[var(--arcade-dot)] sm:text-5xl">
-            {t("starSwarmTitle")}
+          <CardTitle className="text-4xl text-[var(--arcade-pellet)] sm:text-5xl">
+            {t("zombieAttackTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="arcade-ui list-none space-y-2 text-lg text-[var(--arcade-text)]/90 sm:text-xl">
-            <li>* {t("starSwarmInstructionMove")}</li>
-            <li>* {t("starSwarmInstructionFire")}</li>
-            <li>* {t("starSwarmInstructionShields")}</li>
-            <li>* {t("starSwarmInstructionSaucer")}</li>
-            <li>* {t("starSwarmInstructionDefend")}</li>
+            <li>* {t("zombieAttackInstructionMove")}</li>
+            <li>* {t("zombieAttackInstructionFire")}</li>
+            <li>* {t("zombieAttackInstructionBombs")}</li>
+            <li>* {t("zombieAttackInstructionVehicle")}</li>
+            <li>* {t("zombieAttackInstructionDefend")}</li>
           </ul>
         </CardContent>
       </Card>
 
       <Card className="mx-auto mt-4 w-full max-w-3xl">
         <CardHeader className="space-y-1 pb-2">
-          <CardTitle className="text-2xl text-[var(--arcade-dot)] sm:text-3xl">
-            {t("starSwarmDifficultySettingTitle")}
+          <CardTitle className="text-2xl text-[var(--arcade-pellet)] sm:text-3xl">
+            {t("zombieAttackDifficultySettingTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-2">
@@ -350,21 +359,21 @@ export default function StarSwarmPage() {
             <div className="arcade-brick-slider-group">
               <p
                 className={cn(
-                  "arcade-brick-slider-title text-[var(--arcade-dot)]",
+                  "arcade-brick-slider-title text-[var(--arcade-pellet)]",
                   isLargeTextLocale ? "text-[22px] leading-tight sm:text-[24px]" : "text-[11px]",
                 )}
               >
-                {t("starSwarmSettingLabel")}: {t(selectedModePreset.labelKey)}
+                {t("zombieAttackSettingLabel")}: {t(selectedModePreset.labelKey)}
               </p>
               <Slider
                 className="arcade-brick-difficulty-slider"
                 min={0}
-                max={SWARM_MODE_PRESETS.length - 1}
+                max={ZOMBIE_MODE_PRESETS.length - 1}
                 step={1}
                 value={[modeSelectionIndex]}
                 onValueChange={(v) => setModeSelectionIndex(v[0] ?? DEFAULT_MODE_INDEX)}
                 onValueCommit={(v) => setModeIndex(v[0] ?? DEFAULT_MODE_INDEX)}
-                aria-label={t("starSwarmSettingLabel")}
+                aria-label={t("zombieAttackSettingLabel")}
               />
             </div>
           </div>
@@ -372,11 +381,11 @@ export default function StarSwarmPage() {
       </Card>
 
       <div className="mt-5 flex flex-wrap justify-center gap-3">
-        <Button type="button" size="lg" haptic="uiConfirm" className="min-w-44" onClick={handlePlayNow}>
+        <Button type="button" size="lg" haptic="uiConfirm" className="arcade-zombie-noselect min-w-44" onClick={handlePlayNow}>
           {t("playNow")}
         </Button>
         {status === "GAME_OVER" ? (
-          <Button type="button" variant="outline" haptic="uiDestructive" className="min-w-36" onClick={resetGame}>
+          <Button type="button" variant="outline" haptic="uiDestructive" className="arcade-zombie-noselect min-w-36" onClick={resetGame}>
             {t("reset")}
           </Button>
         ) : null}
@@ -384,7 +393,7 @@ export default function StarSwarmPage() {
 
       {status === "GAME_OVER" ? (
         <div className="mt-3 flex justify-center">
-          <p className="arcade-retro arcade-swarm-alert text-base text-[var(--arcade-neon)] sm:text-lg">
+          <p className="arcade-retro arcade-zombie-alert text-base text-[var(--arcade-neon)] sm:text-lg">
             {t("gameOver")}
           </p>
         </div>
@@ -396,46 +405,46 @@ export default function StarSwarmPage() {
 
       <section
         ref={playAreaRef}
-        className="arcade-swarm-stage mt-6"
+        className="arcade-zombie-stage mt-6"
         tabIndex={-1}
-        aria-label="Star Swarm play area"
+        aria-label="Zombie Attack play area"
       >
-        <div className="arcade-swarm-readout arcade-swarm-readout-metrics arcade-ui">
-          <p className={cn("text-[var(--arcade-dot)]", isLargeTextLocale ? "text-[26px] sm:text-[28px]" : "text-[13px]")}>
+        <div className="arcade-zombie-readout arcade-zombie-readout-metrics arcade-ui">
+          <p className={cn("text-[var(--arcade-pellet)]", isLargeTextLocale ? "text-[26px] sm:text-[28px]" : "text-[13px]")}>
             {t("score")}: {score}
           </p>
-          <p className={cn("text-[var(--arcade-dot)]", isLargeTextLocale ? "text-[26px] sm:text-[28px]" : "text-[13px]")}>
+          <p className={cn("text-[var(--arcade-pellet)]", isLargeTextLocale ? "text-[26px] sm:text-[28px]" : "text-[13px]")}>
             {t("lives")}: {lives}
           </p>
-          <p className={cn("text-[var(--arcade-dot)]", isLargeTextLocale ? "text-[26px] sm:text-[28px]" : "text-[13px]")}>
-            {t("starSwarmWaveLabel")}: {wave}
+          <p className={cn("text-[var(--arcade-pellet)]", isLargeTextLocale ? "text-[26px] sm:text-[28px]" : "text-[13px]")}>
+            {t("zombieAttackWaveLabel")}: {wave}
           </p>
         </div>
 
         <div
-          className="arcade-swarm-board pixelated"
+          className="arcade-zombie-board pixelated"
           role="img"
-          aria-label="Star Swarm play area"
+          aria-label="Zombie Attack play area"
           onClick={status === "GAME_OVER" ? restartRun : undefined}
         >
-          <canvas ref={boardCanvasRef} className="arcade-swarm-canvas pixelated" aria-hidden="true" />
+          <canvas ref={boardCanvasRef} className="arcade-zombie-canvas pixelated" aria-hidden="true" />
           {status === "GAME_OVER" ? (
-            <div className="arcade-swarm-overlay">
+            <div className="arcade-zombie-overlay">
               <p className="arcade-retro text-5xl text-[var(--arcade-neon)] sm:text-7xl">{t("gameOver")}</p>
-              <p className="arcade-ui text-3xl text-[var(--arcade-dot)] sm:text-5xl">{t("tapToPlayAgain")}</p>
+              <p className="arcade-ui text-3xl text-[var(--arcade-pellet)] sm:text-5xl">{t("tapToPlayAgain")}</p>
             </div>
           ) : null}
         </div>
       </section>
 
-      <section className="arcade-swarm-control-dock" aria-label="Game controls">
-        <div className="arcade-swarm-pad">
+      <section className="arcade-zombie-control-dock" aria-label="Game controls">
+        <div className="arcade-zombie-pad">
           <Button
             type="button"
             variant="default"
             haptic="uiConfirm"
             className={cn(
-              "arcade-swarm-center-btn arcade-ui",
+              "arcade-zombie-center-btn arcade-zombie-noselect arcade-ui",
               isLargeTextLocale ? "text-[20px] sm:text-[22px]" : "text-[13px]",
             )}
             aria-label={centerControlAriaLabel}
@@ -443,32 +452,29 @@ export default function StarSwarmPage() {
           >
             {centerControlLabel}
           </Button>
-          <div className="arcade-swarm-fire-row">
-            <div className="arcade-swarm-move-track">
+          <div className="arcade-zombie-fire-row">
+            <div className="arcade-zombie-move-track">
               <Slider
                 min={0}
                 max={100}
                 step={1}
                 value={[sliderValue]}
                 onValueChange={handleSliderChange}
-                aria-label="Move ship"
+                aria-label="Move gun"
               />
             </div>
             <Button
               type="button"
               variant="default"
               haptic="none"
-              className={cn(
-                "arcade-swarm-fire-btn arcade-ui",
-                isLargeTextLocale ? "text-[18px] sm:text-[20px]" : "text-[13px]",
-              )}
+              className="arcade-zombie-fire-btn arcade-zombie-noselect arcade-retro"
               aria-label="Fire"
               onPointerDown={(e) => { e.preventDefault(); startFiring(); }}
               onPointerUp={stopFiring}
               onPointerLeave={stopFiring}
               onPointerCancel={stopFiring}
             >
-              {t("starSwarmFire")}
+              A
             </Button>
           </div>
         </div>
