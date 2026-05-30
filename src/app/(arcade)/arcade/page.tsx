@@ -29,6 +29,12 @@ export default function ArcadeHomePage() {
       ctaLabel: "PLAY",
     },
     {
+      id: "star-swarm",
+      title: t("starSwarmTitle"),
+      href: "/arcade/star-swarm",
+      ctaLabel: "PLAY",
+    },
+    {
       id: "more",
       title: t("moreGamesComing"),
       comingSoon: true,
