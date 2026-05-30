@@ -2088,7 +2088,7 @@ const AdminPage = () => {
                     onChange={(e) =>
                       setReturnedTicket(e.target.value.replace(/\D/g, "").slice(0, 6))
                     }
-                    className="w-32 bg-background appearance-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="w-32 bg-background dark:bg-[color-mix(in_oklch,var(--input)_30%,var(--card))] appearance-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                 </div>
                 <ConfirmAction
@@ -2126,7 +2126,7 @@ const AdminPage = () => {
                     onChange={(e) =>
                       setUnclaimedTicket(e.target.value.replace(/\D/g, "").slice(0, 6))
                     }
-                    className="w-32 bg-background appearance-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="w-32 bg-background dark:bg-[color-mix(in_oklch,var(--input)_30%,var(--card))] appearance-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                 </div>
                 <ConfirmAction
@@ -2211,8 +2211,8 @@ const AdminPage = () => {
                 </p>
               </div>
               {/* Row 4: full width */}
-              <div className="space-y-1 rounded-lg border border-status-success-border bg-status-success-bg p-3 sm:col-span-2 lg:col-span-6">
-                <p className="text-xs uppercase tracking-wide text-status-success-text">Next up</p>
+              <div className="space-y-1 rounded-lg border border-status-success-border bg-gradient-status-success p-3 sm:col-span-2 lg:col-span-6">
+                <p className="text-xs uppercase tracking-wide text-status-success-text dark:text-[oklch(0.98_0.03_146)]">Next up</p>
                 <div className="flex flex-wrap gap-2">
                     {nextFive?.length
                     ? nextFive.map((ticket, idx) => (
@@ -2225,11 +2225,11 @@ const AdminPage = () => {
               </div>
               {/* Row 5: full width */}
               <div className="space-y-1 rounded-lg border border-[var(--status-danger-border)] bg-gradient-status-danger p-3 sm:col-span-2 lg:col-span-6">
-                <p className="text-xs uppercase tracking-wide text-[var(--status-danger-text)]">Returned tickets</p>
+                <p className="text-xs uppercase tracking-wide text-[var(--ticket-returned-text)]">Returned tickets</p>
                 <div className="flex flex-wrap gap-2">
                     {returnedTickets.length
                     ? returnedTickets.map((ticket, idx) => (
-                        <Badge key={ticket} variant="danger" className="animate-fade-in" style={{ animationDelay: `${idx * 50}ms` }}>
+                        <Badge key={ticket} variant="danger" className="animate-fade-in text-[var(--ticket-returned-text)]" style={{ animationDelay: `${idx * 50}ms` }}>
                           #{ticket}
                         </Badge>
                       ))
@@ -2238,11 +2238,11 @@ const AdminPage = () => {
               </div>
               {/* Row 6: full width */}
               <div className="space-y-1 rounded-lg border border-[var(--status-warning-border)] bg-gradient-status-warning p-3 sm:col-span-2 lg:col-span-6">
-                <p className="text-xs uppercase tracking-wide text-[var(--status-warning-text)]">Unclaimed tickets</p>
+                <p className="text-xs uppercase tracking-wide text-[var(--ticket-unclaimed-text)]">Unclaimed tickets</p>
                 <div className="flex flex-wrap gap-2">
                     {unclaimedTickets.length
                     ? unclaimedTickets.map((ticket, idx) => (
-                        <Badge key={ticket} variant="warning" className="animate-fade-in" style={{ animationDelay: `${idx * 50}ms` }}>
+                        <Badge key={ticket} variant="warning" className="animate-fade-in text-[var(--ticket-unclaimed-text)]" style={{ animationDelay: `${idx * 50}ms` }}>
                           #{ticket}
                         </Badge>
                       ))
