@@ -29,9 +29,9 @@ export default function ArcadeHomePage() {
       ctaLabel: "PLAY",
     },
     {
-      id: "star-swarm",
-      title: t("starSwarmTitle"),
-      href: "/arcade/star-swarm",
+      id: "zombie-attack",
+      title: t("zombieAttackTitle"),
+      href: "/arcade/zombie-attack",
       ctaLabel: "PLAY",
     },
     {

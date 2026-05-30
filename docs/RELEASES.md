@@ -1,3 +1,39 @@
+# William Temple House Digital Raffle System v1.11.0
+
+**Release Date:** May 30, 2026
+
+The Arcade's third game gets a full re-theme — *Star Swarm* becomes
+**Zombie Attack!**, a last-stand against a shambling horde — along with several
+new mechanics, a taller play area, and a streamlined fire control.
+
+## Zombie Attack!
+
+- **New look.** The aliens are now three kinds of **shambling zombies** (skinny,
+  ribs-exposed, and fat), crossing a **dirt lot** instead of a starfield. Your gun
+  defends a **fence** and four **sandbag bunkers** at the bottom of the screen.
+- **The fence.** A wooden fence stands in front of the bunkers. The horde presses
+  on it, and the more zombies there are the faster it gives way. When it
+  collapses, the horde breaks through — and reaching the bunkers is game over.
+- **Carried bombs.** Some zombies carry bombs (marked in red). Shoot a carrier and
+  it **drops its bomb**; shoot the dropped bomb to set off a **big blast** that
+  clears every zombie nearby — a satisfying chain kill.
+- **Flaming truck.** Every so often a **burning truck barrels down** toward the
+  fence. It takes several shots to stop (more on harder settings); if it reaches
+  the fence, it crashes through and takes the fence with it.
+- **Bigger play area.** The board is **25% taller**, so the game fills much more of
+  a phone screen with less wasted space up top.
+- **Simpler controls.** Firing is now a compact **"A"** button (hold to keep
+  shooting), leaving a wider slider for moving — and the on-screen buttons no
+  longer accidentally highlight their text while you play.
+- **Difficulty twists.** **Nightmare** removes the bunkers entirely (the fence
+  still stands); **Very Easy** makes the bunkers bomb-proof so only your own shots
+  wear them down. Still six settings, still eight languages, still tuned for the
+  2015 iPad Mini baseline.
+
+Design and implementation notes live in `docs/ZOMBIE_ATTACK.md`.
+
+---
+
 # William Temple House Digital Raffle System v1.10.0
 
 **Release Date:** May 29, 2026

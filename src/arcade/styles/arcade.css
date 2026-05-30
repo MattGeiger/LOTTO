@@ -104,11 +104,22 @@ html.light .arcade-scope {
 .arcade-brick-pad,
 .arcade-brick-control-dock,
 .arcade-brick-readout,
-.arcade-swarm-board,
-.arcade-swarm-pad,
-.arcade-swarm-control-dock,
-.arcade-swarm-readout {
+.arcade-zombie-board,
+.arcade-zombie-pad,
+.arcade-zombie-control-dock,
+.arcade-zombie-readout {
   direction: ltr;
+}
+
+/* Mask text selection on touch controls so a held/dragged press never
+   highlights the button label mid-game. */
+.arcade-zombie-noselect,
+.arcade-zombie-fire-btn,
+.arcade-zombie-control-dock,
+.arcade-zombie-stage {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .arcade-pixel-grid {
@@ -847,27 +858,30 @@ html.light .arcade-scope .arcade-brick-control-dock {
 
 /* ── End Brick Mayhem ── */
 
-/* ── Star Swarm ── */
+/* ── Zombie Attack! ── */
 
-.arcade-swarm-shell {
-  --arcade-board-size: clamp(216px, min(88vw, calc(100dvh - 24rem)), 420px);
+/* The board is 25% taller than wide (224×280). Bound the width by the vertical
+   budget ÷ 1.25 so the taller board fills the available height and minimises
+   wasted space above the play area on small phones. */
+.arcade-zombie-shell {
+  --arcade-board-size: clamp(220px, min(92vw, calc((100dvh - 15rem) / 1.25)), 460px);
   min-height: calc(100dvh - 4.5rem);
 }
 
 @media (min-width: 768px) {
-  .arcade-swarm-shell {
-    --arcade-board-size: clamp(360px, min(82vw, calc(100dvh - 15rem)), 620px);
+  .arcade-zombie-shell {
+    --arcade-board-size: clamp(340px, min(80vw, calc((100dvh - 13rem) / 1.25)), 520px);
   }
 }
 
-.arcade-swarm-stage {
+.arcade-zombie-stage {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
 }
 
-.arcade-swarm-readout {
+.arcade-zombie-readout {
   width: var(--arcade-board-size);
   display: flex;
   align-items: center;
@@ -880,46 +894,41 @@ html.light .arcade-scope .arcade-brick-control-dock {
   direction: ltr;
 }
 
-html.light .arcade-scope .arcade-swarm-readout {
+html.light .arcade-scope .arcade-zombie-readout {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(232, 241, 255, 0.93));
   border: 1px solid rgba(49, 93, 187, 0.5);
   text-shadow: none;
 }
 
-.arcade-swarm-readout-metrics {
+.arcade-zombie-readout-metrics {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.35rem;
 }
 
-.arcade-swarm-readout-metrics p {
+.arcade-zombie-readout-metrics p {
   white-space: nowrap;
   line-height: 1.2;
   text-align: center;
 }
 
-.arcade-swarm-board {
+.arcade-zombie-board {
   position: relative;
   width: var(--arcade-board-size);
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 224 / 280;
   overflow: hidden;
   border: 4px solid var(--arcade-wall);
   background:
-    linear-gradient(180deg, rgba(3, 5, 12, 0.97), rgba(7, 11, 22, 0.97)),
-    linear-gradient(
-      90deg,
-      rgba(255, 215, 92, 0.1) 0 2px,
-      transparent 2px calc(100% - 2px),
-      rgba(255, 215, 92, 0.1) calc(100% - 2px)
-    );
+    linear-gradient(180deg, rgba(28, 22, 13, 0.98), rgba(13, 10, 6, 0.99)),
+    radial-gradient(circle at 50% 118%, rgba(74, 56, 33, 0.4), transparent 62%);
   box-shadow:
-    inset 0 0 0 2px rgba(134, 240, 255, 0.2),
-    0 0 0 2px rgba(255, 109, 232, 0.3);
+    inset 0 0 0 2px rgba(120, 90, 50, 0.3),
+    0 0 0 2px rgba(123, 191, 74, 0.25);
   direction: ltr;
 }
 
-.arcade-swarm-canvas {
+.arcade-zombie-canvas {
   position: absolute;
   inset: 0;
   z-index: 2;
@@ -929,21 +938,16 @@ html.light .arcade-scope .arcade-swarm-readout {
   image-rendering: crisp-edges;
 }
 
-html.light .arcade-scope .arcade-swarm-board {
+html.light .arcade-scope .arcade-zombie-board {
   background:
-    linear-gradient(180deg, rgba(238, 244, 255, 0.98), rgba(216, 230, 255, 0.96)),
-    linear-gradient(
-      90deg,
-      rgba(49, 93, 187, 0.1) 0 2px,
-      transparent 2px calc(100% - 2px),
-      rgba(49, 93, 187, 0.1) calc(100% - 2px)
-    );
+    linear-gradient(180deg, rgba(216, 200, 168, 0.99), rgba(196, 178, 144, 0.98)),
+    radial-gradient(circle at 50% 118%, rgba(150, 120, 80, 0.28), transparent 62%);
   box-shadow:
-    inset 0 0 0 2px rgba(49, 93, 187, 0.2),
-    0 0 0 2px rgba(12, 24, 54, 0.12);
+    inset 0 0 0 2px rgba(120, 90, 50, 0.25),
+    0 0 0 2px rgba(90, 120, 50, 0.2);
 }
 
-.arcade-swarm-overlay {
+.arcade-zombie-overlay {
   position: absolute;
   inset: 0;
   display: flex;
@@ -958,24 +962,24 @@ html.light .arcade-scope .arcade-swarm-board {
   text-shadow: var(--arcade-type-bold-shadow), 0 0 8px rgba(255, 109, 232, 0.4);
 }
 
-.arcade-swarm-overlay .arcade-retro {
+.arcade-zombie-overlay .arcade-retro {
   text-indent: 0.64em;
 }
-.arcade-swarm-overlay .arcade-ui {
+.arcade-zombie-overlay .arcade-ui {
   text-indent: 0.32em;
 }
 
-html.light .arcade-scope .arcade-swarm-overlay {
+html.light .arcade-scope .arcade-zombie-overlay {
   background: rgba(235, 244, 255, 0.78);
   text-shadow: var(--arcade-type-bold-shadow), 0 0 7px rgba(224, 74, 162, 0.22);
 }
 
-.arcade-swarm-alert {
+.arcade-zombie-alert {
   text-shadow: none;
   letter-spacing: 0.04em;
 }
 
-.arcade-swarm-control-dock {
+.arcade-zombie-control-dock {
   position: sticky;
   bottom: 0;
   z-index: 20;
@@ -990,14 +994,14 @@ html.light .arcade-scope .arcade-swarm-overlay {
   direction: ltr;
 }
 
-html.light .arcade-scope .arcade-swarm-control-dock {
+html.light .arcade-scope .arcade-zombie-control-dock {
   background:
     linear-gradient(180deg, rgba(241, 248, 255, 0.38), rgba(220, 234, 255, 0.96) 30%),
     linear-gradient(90deg, rgba(49, 93, 187, 0.1), rgba(224, 74, 162, 0.1));
   border-top: 2px solid rgba(49, 93, 187, 0.42);
 }
 
-.arcade-swarm-pad {
+.arcade-zombie-pad {
   width: min(100%, 380px);
   margin: 0 auto;
   display: flex;
@@ -1006,63 +1010,66 @@ html.light .arcade-scope .arcade-swarm-control-dock {
   gap: 0.9rem;
 }
 
-.arcade-swarm-center-btn {
+.arcade-zombie-center-btn {
   height: clamp(1.5rem, 3.2dvh, 1.85rem);
   width: min(100%, 150px);
   margin: 0;
   line-height: 1;
 }
 
-.arcade-swarm-fire-row {
+.arcade-zombie-fire-row {
   width: 100%;
   display: flex;
   align-items: center;
   gap: 0.9rem;
 }
 
-.arcade-swarm-move-track {
+.arcade-zombie-move-track {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.arcade-swarm-move-track [data-orientation="horizontal"] {
+.arcade-zombie-move-track [data-orientation="horizontal"] {
   min-height: 24px;
 }
 
-.arcade-swarm-fire-btn {
+.arcade-zombie-fire-btn {
   flex: 0 0 auto;
   height: clamp(2.6rem, 8dvh, 3.4rem);
-  width: clamp(88px, 30vw, 120px);
+  width: clamp(2.6rem, 13vw, 3.4rem);
   margin: 0;
+  padding: 0;
+  font-size: clamp(1.05rem, 5vw, 1.5rem);
   line-height: 1;
   touch-action: none;
+  -webkit-user-select: none;
   user-select: none;
 }
 
 @media (max-height: 760px) {
-  .arcade-swarm-shell {
-    --arcade-board-size: clamp(196px, min(82vw, calc(100dvh - 21rem)), 360px);
+  .arcade-zombie-shell {
+    --arcade-board-size: clamp(196px, min(90vw, calc((100dvh - 12rem) / 1.25)), 380px);
   }
 
-  .arcade-swarm-stage {
+  .arcade-zombie-stage {
     gap: 0.3rem;
   }
 
-  .arcade-swarm-readout {
+  .arcade-zombie-readout {
     padding: 0.3rem 0.44rem;
   }
 
-  .arcade-swarm-control-dock {
+  .arcade-zombie-control-dock {
     padding-top: 0.72rem;
   }
 
-  .arcade-swarm-pad {
+  .arcade-zombie-pad {
     gap: 0.6rem;
   }
 }
 
 @media (min-width: 640px) {
-  .arcade-swarm-control-dock {
+  .arcade-zombie-control-dock {
     margin-left: 0;
     margin-right: 0;
     border: 2px solid rgba(59, 124, 255, 0.5);
@@ -1070,7 +1077,7 @@ html.light .arcade-scope .arcade-swarm-control-dock {
   }
 }
 
-/* ── End Star Swarm ── */
+/* ── End Zombie Attack! ── */
 
 @media (max-height: 760px) {
   .arcade-snake-shell {
