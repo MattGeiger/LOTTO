@@ -263,7 +263,7 @@ is acceptable (it's navigation, not gameplay integration), but observe:
 
 **Decided: the bar is hidden during active gameplay.** It renders on the arcade
 index (`/arcade`) but **not** on the game routes (`/arcade/brick-mayhem`,
-`/arcade/snake`). Under the per-page placement (below) this is automatic — the
+`/arcade/snake`, `/arcade/star-swarm`). Under the per-page placement (below) this is automatic — the
 game pages simply do not render `<BottomTabBar />`; only the arcade index does.
 
 **Resolved (arcade visual language):** the arcade index (`/arcade`) uses a
@@ -319,7 +319,7 @@ should follow once the bar is live:
 | Inventory icon | **Cart** (`shopping-cart`) | User selection (over the handoff's box suggestion) |
 | Icon system | Imperative-ref (`lucide-animated/`) | Trigger zone is the whole tab, larger than the icon; parent holds refs for mount animation |
 | Render trigger | **Active tab only, on mount** | Honors "animate on render" while respecting FEED's anti-repetition rule for persistent nav |
-| Gameplay visibility | **Hidden during active gameplay** | Renders on `/arcade` index, not on `/arcade/brick-mayhem` or `/arcade/snake`; automatic under per-page placement |
+| Gameplay visibility | **Hidden during active gameplay** | Renders on `/arcade` index, not on `/arcade/brick-mayhem`, `/arcade/snake`, or `/arcade/star-swarm`; automatic under per-page placement |
 | Shared layout | **Per-page (Option 1)** now; `(core)` later | Arcade boundary prevents full cross-destination persistence anyway; avoids refactoring the fragile `/new` route and unblocks inventory work |
 
 ---
@@ -345,8 +345,8 @@ should follow once the bar is live:
       personalized display.
 - [x] Added an arcade-styled variant (`ArcadeBottomTabBar`) on the `/arcade`
       index only — pixel-art icons + arcade styling, absent on the game routes
-      (verified by SSR: bar present on `/arcade`, absent on `/arcade/snake` and
-      `/arcade/brick-mayhem`).
+      (verified by SSR: bar present on `/arcade`, absent on `/arcade/snake`,
+      `/arcade/brick-mayhem`, and `/arcade/star-swarm`).
 - [x] Removed the `/inventory` top-level BACK button (the "Your ticket" tab is
       the return path).
 - [x] Decided to keep "Enter a new ticket number" as a standalone button on

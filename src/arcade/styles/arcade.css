@@ -103,7 +103,11 @@ html.light .arcade-scope {
 .arcade-brick-board,
 .arcade-brick-pad,
 .arcade-brick-control-dock,
-.arcade-brick-readout {
+.arcade-brick-readout,
+.arcade-swarm-board,
+.arcade-swarm-pad,
+.arcade-swarm-control-dock,
+.arcade-swarm-readout {
   direction: ltr;
 }
 
@@ -842,6 +846,231 @@ html.light .arcade-scope .arcade-brick-control-dock {
 }
 
 /* ── End Brick Mayhem ── */
+
+/* ── Star Swarm ── */
+
+.arcade-swarm-shell {
+  --arcade-board-size: clamp(216px, min(88vw, calc(100dvh - 24rem)), 420px);
+  min-height: calc(100dvh - 4.5rem);
+}
+
+@media (min-width: 768px) {
+  .arcade-swarm-shell {
+    --arcade-board-size: clamp(360px, min(82vw, calc(100dvh - 15rem)), 620px);
+  }
+}
+
+.arcade-swarm-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.arcade-swarm-readout {
+  width: var(--arcade-board-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.38rem 0.48rem;
+  background: linear-gradient(180deg, rgba(4, 7, 15, 0.88), rgba(4, 7, 15, 0.45));
+  border: 1px solid rgba(59, 124, 255, 0.45);
+  text-shadow: none;
+  direction: ltr;
+}
+
+html.light .arcade-scope .arcade-swarm-readout {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(232, 241, 255, 0.93));
+  border: 1px solid rgba(49, 93, 187, 0.5);
+  text-shadow: none;
+}
+
+.arcade-swarm-readout-metrics {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.arcade-swarm-readout-metrics p {
+  white-space: nowrap;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.arcade-swarm-board {
+  position: relative;
+  width: var(--arcade-board-size);
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border: 4px solid var(--arcade-wall);
+  background:
+    linear-gradient(180deg, rgba(3, 5, 12, 0.97), rgba(7, 11, 22, 0.97)),
+    linear-gradient(
+      90deg,
+      rgba(255, 215, 92, 0.1) 0 2px,
+      transparent 2px calc(100% - 2px),
+      rgba(255, 215, 92, 0.1) calc(100% - 2px)
+    );
+  box-shadow:
+    inset 0 0 0 2px rgba(134, 240, 255, 0.2),
+    0 0 0 2px rgba(255, 109, 232, 0.3);
+  direction: ltr;
+}
+
+.arcade-swarm-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+html.light .arcade-scope .arcade-swarm-board {
+  background:
+    linear-gradient(180deg, rgba(238, 244, 255, 0.98), rgba(216, 230, 255, 0.96)),
+    linear-gradient(
+      90deg,
+      rgba(49, 93, 187, 0.1) 0 2px,
+      transparent 2px calc(100% - 2px),
+      rgba(49, 93, 187, 0.1) calc(100% - 2px)
+    );
+  box-shadow:
+    inset 0 0 0 2px rgba(49, 93, 187, 0.2),
+    0 0 0 2px rgba(12, 24, 54, 0.12);
+}
+
+.arcade-swarm-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  background: rgba(4, 7, 15, 0.62);
+  cursor: pointer;
+  z-index: 4;
+  text-shadow: var(--arcade-type-bold-shadow), 0 0 8px rgba(255, 109, 232, 0.4);
+}
+
+.arcade-swarm-overlay .arcade-retro {
+  text-indent: 0.64em;
+}
+.arcade-swarm-overlay .arcade-ui {
+  text-indent: 0.32em;
+}
+
+html.light .arcade-scope .arcade-swarm-overlay {
+  background: rgba(235, 244, 255, 0.78);
+  text-shadow: var(--arcade-type-bold-shadow), 0 0 7px rgba(224, 74, 162, 0.22);
+}
+
+.arcade-swarm-alert {
+  text-shadow: none;
+  letter-spacing: 0.04em;
+}
+
+.arcade-swarm-control-dock {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  margin-top: auto;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+  padding: 1rem 0.5rem max(env(safe-area-inset-bottom), 0.9rem);
+  background:
+    linear-gradient(180deg, rgba(4, 7, 15, 0.1), rgba(4, 7, 15, 0.96) 28%),
+    linear-gradient(90deg, rgba(59, 124, 255, 0.12), rgba(255, 109, 232, 0.12));
+  border-top: 2px solid rgba(59, 124, 255, 0.5);
+  direction: ltr;
+}
+
+html.light .arcade-scope .arcade-swarm-control-dock {
+  background:
+    linear-gradient(180deg, rgba(241, 248, 255, 0.38), rgba(220, 234, 255, 0.96) 30%),
+    linear-gradient(90deg, rgba(49, 93, 187, 0.1), rgba(224, 74, 162, 0.1));
+  border-top: 2px solid rgba(49, 93, 187, 0.42);
+}
+
+.arcade-swarm-pad {
+  width: min(100%, 380px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.arcade-swarm-center-btn {
+  height: clamp(1.5rem, 3.2dvh, 1.85rem);
+  width: min(100%, 150px);
+  margin: 0;
+  line-height: 1;
+}
+
+.arcade-swarm-fire-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.arcade-swarm-move-track {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.arcade-swarm-move-track [data-orientation="horizontal"] {
+  min-height: 24px;
+}
+
+.arcade-swarm-fire-btn {
+  flex: 0 0 auto;
+  height: clamp(2.6rem, 8dvh, 3.4rem);
+  width: clamp(88px, 30vw, 120px);
+  margin: 0;
+  line-height: 1;
+  touch-action: none;
+  user-select: none;
+}
+
+@media (max-height: 760px) {
+  .arcade-swarm-shell {
+    --arcade-board-size: clamp(196px, min(82vw, calc(100dvh - 21rem)), 360px);
+  }
+
+  .arcade-swarm-stage {
+    gap: 0.3rem;
+  }
+
+  .arcade-swarm-readout {
+    padding: 0.3rem 0.44rem;
+  }
+
+  .arcade-swarm-control-dock {
+    padding-top: 0.72rem;
+  }
+
+  .arcade-swarm-pad {
+    gap: 0.6rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .arcade-swarm-control-dock {
+    margin-left: 0;
+    margin-right: 0;
+    border: 2px solid rgba(59, 124, 255, 0.5);
+    box-shadow: 0 0 0 2px rgba(255, 109, 232, 0.2);
+  }
+}
+
+/* ── End Star Swarm ── */
 
 @media (max-height: 760px) {
   .arcade-snake-shell {

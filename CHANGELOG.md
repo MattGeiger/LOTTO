@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.0] - 2026-05-29
+### Added
+- Added **Star Swarm**, the Arcade's third game — a fixed-shooter in the Space Invaders lineage. Pilot a ship along the bottom of a square pixel-art board, hold FIRE to shoot, and clear a descending formation of 40 invaders (five color-tiered rows) before they reach you. Includes destructible bunkers, invader bombs (which can be shot down mid-air), a periodic bonus saucer worth 50–300 points, post-hit invulnerability blink, escalating formation speed as the swarm thins, and endless waves that ramp difficulty. Six difficulty presets (Very Easy → Nightmare) tune the march cadence and bomb frequency.
+  - Built on the same pure-engine + `requestAnimationFrame` fixed-timestep architecture as Brick Mayhem (`src/arcade/game/star-swarm/`: `constants`, `types`, `sprites`, `engine`, `renderer`), with the canvas palette driven by the active arcade theme's CSS custom properties so it follows light / dark / hi-viz automatically.
+  - Mobile-first controls: a sticky bottom control dock with a thumb slider to move the ship and a large hold-to-autofire FIRE button (keyboard ←/→ + Space/↑ also supported). Pauses automatically when a raffle ticket is called, matching Snake and Brick Mayhem.
+  - Localized across all eight languages (title, five instructions, difficulty labels, FIRE, and the WAVE readout). Added to the `/arcade` game menu and documented in `docs/STAR_SWARM.md`.
+  - Covered by a deterministic engine unit test (`tests/arcade-star-swarm-engine.test.ts`): shot/invader scoring, wave-clear and next-wave progression, bomb-vs-ship life loss + invulnerability, game-over on last life and on formation breach, and the shot cooldown / on-screen shot cap.
+
 ## [1.9.0] - 2026-05-29
 ### Added
 - Added a frosted-glass treatment to the ticket-detail modal (shown when tapping a ticket cell on `/` or `/display`), matching the `/new` onboarding dialog so all dialogs share one material.

@@ -1,3 +1,37 @@
+# William Temple House Digital Raffle System v1.10.0
+
+**Release Date:** May 29, 2026
+
+The Arcade gets its **third game: Star Swarm** — a fixed-shooter in the classic
+Space Invaders lineage, thematically at home next to the Arcade's invader icon.
+It joins Snake and Brick Mayhem with the same retro pixel-art look, the same
+mobile-first control dock, and the same good-citizen behavior (it pauses the
+instant a raffle ticket is called).
+
+## Star Swarm
+
+- **The game.** Pilot a ship along the bottom of the board and clear a
+  descending formation of **40 invaders** — five color-tiered rows worth more
+  points the higher they sit — before they march down to your level.
+- **Hold to fire.** A big **FIRE** button auto-fires while held; a thumb
+  **slider** moves the ship. (On a keyboard: ←/→ to move, Space/↑ to shoot.)
+- **Shields & saucers.** Four **destructible bunkers** give you cover, a periodic
+  **bonus saucer** streaks across the top for 50–300 points, and you can even
+  **shoot incoming bombs out of the air**.
+- **Endless waves.** Clear the swarm and the next wave drops in, a little lower
+  and a little faster. The formation also speeds up as you thin it out — the last
+  few invaders are the tense ones.
+- **Six difficulty presets** (Very Easy → Nightmare) tune how fast the swarm
+  marches and how hard it rains bombs. Lose a life and your ship blinks briefly
+  invulnerable so you can recover.
+- **Everywhere, in every language.** Fully localized across all eight supported
+  languages, theme-aware (light / dark / high-contrast), and tuned to run on the
+  2015 iPad Mini performance baseline like the rest of the Arcade.
+
+Design and implementation notes live in `docs/STAR_SWARM.md`.
+
+---
+
 # William Temple House Digital Raffle System v1.9.0
 
 **Release Date:** May 29, 2026
