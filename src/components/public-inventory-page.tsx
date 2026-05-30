@@ -360,7 +360,7 @@ export function PublicInventoryPage() {
   return (
     <ScrambleOnLanguageChange>
     <main dir={isRTL(language) ? "rtl" : "ltr"} lang={language} className="relative h-screen overflow-hidden bg-background text-foreground">
-      <div className="absolute left-6 right-6 top-4 z-30 flex items-center justify-between gap-5 py-2 sm:left-8 sm:right-8 lg:left-10 lg:right-10">
+      <div dir="ltr" className="absolute left-6 right-6 top-4 z-30 flex items-center justify-between gap-5 py-2 sm:left-8 sm:right-8 lg:left-10 lg:right-10">
         <LanguageSwitcher enableHaptics />
         <div className="flex flex-1 justify-center px-2">
           <div className="min-w-0 flex-1 max-w-[360px]">

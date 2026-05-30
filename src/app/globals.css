@@ -78,12 +78,12 @@
   --status-neutral-text: oklch(0.55 0.02 250);
 
   /* WTH Custom: Ticket display states */
-  --ticket-serving: linear-gradient(135deg, oklch(0.62 0.21 255), oklch(0.7 0.22 255));
+  --ticket-serving: linear-gradient(to top, oklch(0.62 0.21 255), oklch(0.7 0.22 255));
   --ticket-serving-border: oklch(0.56 0.18 255);
   --ticket-serving-text: oklch(0.98 0 0);
-  --ticket-served: linear-gradient(135deg, oklch(0.85 0.12 160), oklch(0.88 0.12 180));
+  --ticket-served: linear-gradient(to top, oklch(0.80 0.13 170), oklch(0.91 0.08 188));
   --ticket-served-border: oklch(0.65 0.12 160);
-  --ticket-served-text: oklch(0.18 0 0);
+  --ticket-served-text: oklch(0.34 0.10 175);
   --ticket-upcoming: oklch(0.92 0.01 250);
   --ticket-upcoming-border: oklch(0.8 0.01 250);
 
@@ -117,6 +117,12 @@
      returned/unclaimed alert boxes. */
   --gradient-status-warning: linear-gradient(to top, color-mix(in oklch, var(--status-warning-bg), var(--status-warning-border) 30%), var(--status-warning-bg));
   --gradient-status-danger: linear-gradient(to top, color-mix(in oklch, var(--status-danger-bg), var(--status-danger-border) 30%), var(--status-danger-bg));
+  --gradient-status-success: linear-gradient(to top, color-mix(in oklch, var(--status-success-bg), var(--status-success-border) 30%), var(--status-success-bg));
+  /* Bright cell-number text tokens: default to the status text in light, dark
+     overrides with high-contrast colors (see .dark). Used by the display ticket
+     cells and the /admin Live State alert-box titles and number badges. */
+  --ticket-unclaimed-text: var(--status-warning-text);
+  --ticket-returned-text: var(--status-danger-text);
 
   /* Feature icon colors */
   --icon-blue: oklch(0.55 0.22 264);
@@ -201,15 +207,28 @@
   --status-neutral-text: oklch(0.7 0.02 250);
 
   /* WTH Custom: Ticket states (dark) */
-  --ticket-serving: linear-gradient(135deg, oklch(0.72 0.18 85), oklch(0.82 0.2 80));
-  --ticket-serving-border: oklch(0.65 0.16 85);
-  --ticket-serving-text: oklch(0.18 0 0);
-  --ticket-served: linear-gradient(135deg, oklch(0.35 0.08 160), oklch(0.4 0.09 180));
+  /* Now Serving (dark): powder blue at top → richer saturated blue at base, white numbers. */
+  --ticket-serving: linear-gradient(to top, oklch(0.34 0.15 260), oklch(0.54 0.18 252));
+  --ticket-serving-border: oklch(0.62 0.15 250);
+  --ticket-serving-text: oklch(1 0 0);
+  /* Called (dark): lighter green/teal at top → darker green/teal at base. */
+  --ticket-served: linear-gradient(to top, oklch(0.32 0.09 168), oklch(0.48 0.10 178));
   --ticket-served-border: oklch(0.28 0.08 160);
-  --ticket-served-text: oklch(0.9 0 0);
+  /* High-contrast soft mint (#eeffee) for called cell numbers (dark). */
+  --ticket-served-text: oklch(0.98 0.03 146);
   --ticket-upcoming: oklch(0.24 0.01 250);
   --ticket-upcoming-border: oklch(0.32 0.02 250);
-  --serving-text-gradient: linear-gradient(135deg, oklch(0.72 0.18 85), oklch(0.82 0.2 80));
+  /* Now Serving page numerals (dark): light powder blue. */
+  --serving-text-gradient: linear-gradient(135deg, oklch(0.84 0.07 245), oklch(0.90 0.05 235));
+  /* Dark overrides: unclaimed = lighter→darker gold; returned = lighter→darker rich red.
+     Shared with the /admin alert boxes in dark mode. */
+  --gradient-status-warning: linear-gradient(to top, oklch(0.42 0.10 88), oklch(0.62 0.13 88));
+  --gradient-status-danger: linear-gradient(to top, oklch(0.42 0.18 25), oklch(0.58 0.16 28));
+  --gradient-status-success: linear-gradient(to top, oklch(0.42 0.12 152), oklch(0.60 0.14 152));
+  /* High-contrast vibrant yellow (#ffffaa) for unclaimed cell numbers, dark only. */
+  --ticket-unclaimed-text: oklch(0.98 0.10 108);
+  /* High-contrast soft pink (#ffeeee) for returned cell numbers, dark only. */
+  --ticket-returned-text: oklch(0.95 0.03 19);
 
   /* WTH Custom: Gradients (dark) */
   --gradient-display-bg:
@@ -309,10 +328,10 @@
   --status-neutral-border: oklch(0.4200 0.0100 286.0000);
   --status-neutral-text: oklch(0.2000 0.0100 286.0000);
 
-  --ticket-serving: linear-gradient(135deg, oklch(0.62 0.21 255), oklch(0.7 0.22 255));
+  --ticket-serving: linear-gradient(to top, oklch(0.62 0.21 255), oklch(0.7 0.22 255));
   --ticket-serving-border: oklch(0.56 0.18 255);
   --ticket-serving-text: oklch(0.98 0 0);
-  --ticket-served: linear-gradient(135deg, oklch(0.8500 0.1200 160.0000), oklch(0.9200 0.1000 190.0000));
+  --ticket-served: linear-gradient(to top, oklch(0.8500 0.1200 160.0000), oklch(0.9200 0.1000 190.0000));
   --ticket-served-border: oklch(0.4600 0.1200 168.0000);
   --ticket-served-text: oklch(0.1410 0.0050 285.8230);
   --ticket-upcoming: oklch(0.9200 0.0040 286.0000);
@@ -327,6 +346,21 @@
   --app-font-sans: var(--font-open-sans), ui-sans-serif, sans-serif, system-ui;
   --app-font-serif: var(--font-bodoni-moda-sc), ui-serif, serif;
   --app-font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+
+  /* Flat theme: hi-viz avoids gradients for high-contrast legibility. These
+     solid fills intentionally override the gradient tokens defined above. */
+  --ticket-serving: oklch(0.66 0.21 255);
+  --ticket-served: oklch(0.88 0.11 165);
+  --serving-text-gradient: linear-gradient(oklch(0.66 0.21 255), oklch(0.66 0.21 255));
+  --gradient-card-info: oklch(0.9450 0.0080 286.0000);
+  --gradient-card-accent: oklch(0.9500 0.0200 240.0000);
+  --gradient-card-blue: var(--card);
+  --gradient-card-emerald: var(--card);
+  --gradient-card-warning: var(--status-warning-bg);
+  --gradient-card-danger: var(--status-danger-bg);
+  --gradient-status-warning: var(--status-warning-bg);
+  --gradient-status-danger: var(--status-danger-bg);
+  --gradient-status-success: var(--status-success-bg);
 }
 
 :root.dark.hi-viz {
@@ -392,15 +426,15 @@
   --status-neutral-border: oklch(0.8800 0.0100 286.0000);
   --status-neutral-text: oklch(0.9400 0.0060 286.0000);
 
-  --ticket-serving: linear-gradient(135deg, oklch(0.72 0.18 85), oklch(0.82 0.2 80));
-  --ticket-serving-border: oklch(0.65 0.16 85);
-  --ticket-serving-text: oklch(0.18 0 0);
-  --ticket-served: linear-gradient(135deg, oklch(0.3300 0.0800 165.0000), oklch(0.3800 0.1100 188.0000));
+  --ticket-serving: linear-gradient(to top, oklch(0.34 0.15 260), oklch(0.54 0.18 252));
+  --ticket-serving-border: oklch(0.62 0.15 250);
+  --ticket-serving-text: oklch(1 0 0);
+  --ticket-served: linear-gradient(to top, oklch(0.3300 0.0800 165.0000), oklch(0.3800 0.1100 188.0000));
   --ticket-served-border: oklch(0.8100 0.1300 170.0000);
   --ticket-served-text: oklch(0.9850 0 0);
   --ticket-upcoming: oklch(0.2100 0.0060 286.0000);
   --ticket-upcoming-border: oklch(0.9850 0 0);
-  --serving-text-gradient: linear-gradient(135deg, oklch(0.72 0.18 85), oklch(0.82 0.2 80));
+  --serving-text-gradient: linear-gradient(135deg, oklch(0.84 0.07 245), oklch(0.90 0.05 235));
 
   --gradient-card-info: linear-gradient(to top, oklch(0.1800 0.0200 248.0000), oklch(0.2200 0.0100 286.0000));
   --gradient-card-accent: linear-gradient(to top, oklch(0.1800 0.0250 237.0000), oklch(0.2200 0.0100 286.0000));
@@ -410,6 +444,21 @@
   --app-font-sans: var(--font-open-sans), ui-sans-serif, sans-serif, system-ui;
   --app-font-serif: var(--font-bodoni-moda-sc), ui-serif, serif;
   --app-font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+
+  /* Flat theme: hi-viz avoids gradients for high-contrast legibility. These
+     solid fills intentionally override the gradient tokens defined above. */
+  --ticket-serving: oklch(0.44 0.17 255);
+  --ticket-served: oklch(0.36 0.10 175);
+  --serving-text-gradient: linear-gradient(oklch(0.86 0.06 240), oklch(0.86 0.06 240));
+  --gradient-card-info: oklch(0.2200 0.0100 286.0000);
+  --gradient-card-accent: oklch(0.2200 0.0100 286.0000);
+  --gradient-card-blue: var(--card);
+  --gradient-card-emerald: var(--card);
+  --gradient-card-warning: var(--status-warning-bg);
+  --gradient-card-danger: var(--status-danger-bg);
+  --gradient-status-warning: var(--status-warning-bg);
+  --gradient-status-danger: var(--status-danger-bg);
+  --gradient-status-success: var(--status-success-bg);
 }
 
 @theme inline {
@@ -591,13 +640,13 @@ a, button, input, select, textarea, [role="button"] {
   .ticket-unclaimed {
     background: var(--gradient-status-warning);
     border-color: var(--status-warning-border);
-    color: var(--status-warning-text);
+    color: var(--ticket-unclaimed-text, var(--status-warning-text));
   }
 
   .ticket-returned {
     background: var(--gradient-status-danger);
     border-color: var(--status-danger-border);
-    color: var(--status-danger-text);
+    color: var(--ticket-returned-text, var(--status-danger-text));
   }
 
   /* Status badge variants */
@@ -642,6 +691,10 @@ a, button, input, select, textarea, [role="button"] {
 
 .bg-gradient-status-danger {
   background: var(--gradient-status-danger);
+}
+
+.bg-gradient-status-success {
+  background: var(--gradient-status-success);
 }
 
 .text-card-title {

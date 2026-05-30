@@ -1,10 +1,25 @@
 # Changelog
 
-## [1.8.1] - 2026-05-28
+## [1.9.0] - 2026-05-29
+### Added
+- Added a frosted-glass treatment to the ticket-detail modal (shown when tapping a ticket cell on `/` or `/display`), matching the `/new` onboarding dialog so all dialogs share one material.
+- Split a dedicated **Current Time** card out of the service card on the display board, with a new `currentTime` translation key across all eight languages.
+- Added a `--gradient-status-success` token and `.bg-gradient-status-success` utility, plus dedicated high-contrast cell-number text tokens (`--ticket-unclaimed-text` vibrant yellow `#ffffaa`, `--ticket-returned-text` soft pink `#ffeeee`) reused by both the display cells and the `/admin` Live State boxes.
+
 ### Changed
+- Reoriented the display-board "Now Serving" (`--ticket-serving`) and "Called" (`--ticket-served`) ticket-cell gradients from diagonal to bottom→top, so the whole board (including returned/unclaimed) shares one gradient direction.
+- Reworked the **dark-mode display board** color system: Now Serving is a deep→medium blue cell with white numerals; Called is green/teal with mint numerals; Unclaimed is gold with vibrant-yellow numerals; Returned is red with soft-pink numerals. The large "NOW SERVING" page numeral is light powder blue. The light-mode Called cell gained a deep-teal numeral and a more pronounced gradient.
+- Made the `hi-viz` accessibility themes **fully flat** — every fill gradient (card, feature, status, ticket-cell, and serving-text) is overridden to a solid color for high-contrast legibility, in both the light and dark hi-viz variants.
+- Reduced the title→content vertical spacing on the top display stat cards.
+- `/admin` dark mode: the mark-ticket-as-returned/unclaimed number inputs now use a solid neutral fill matching the other admin inputs (no gradient bleed-through); the Returned/Unclaimed alert-box titles and ticket-number badges use the high-contrast cell colors; the **Next up** card gained its bottom→top gradient (both modes) and a mint-green title in dark.
+- Inventory's top control bar no longer swaps the language/theme switcher placement in RTL — it now stays Language-left / Theme-right, consistent with `/`, `/display`, `/new`, and `/arcade`.
 - Unified all surface fill gradients to a bottom→top orientation (deeper/lower-lightness shade at the base, lighter at the top), matching the card gradient. Reoriented the `/admin` colorful gradients (`--gradient-card-info`, `-accent`, `-warning`, `-danger`, `-blue`, `-emerald`) from `135deg` to `to top` across light, dark, and both hi-viz themes.
 - Gave the previously-solid colorful status fills a matching bottom→top gradient that preserves their saturated intensity: added `--gradient-status-warning` / `--gradient-status-danger` tokens (theme-aware, deepened at the base with the status border color) and applied them to the `/admin` Live State returned/unclaimed alert boxes and the "Mark ticket as returned/unclaimed" sections. Via the shared `.ticket-returned` / `.ticket-unclaimed` classes this also gives the returned/unclaimed ticket cells and legend dots on `/` and `/display` the same gradient.
-- Documented the surface-gradient-orientation preference (bottom→top, the per-theme color-order gotcha, the `135deg`/`90deg` ban, and the deliberate exceptions) in `docs/UI_DESIGN.md`.
+- Documented the surface-gradient-orientation preference and the flat-hi-viz rule in `docs/UI_DESIGN.md`.
+
+### Fixed
+- Fixed the hi-viz "NOW SERVING" numeral disappearing: the flattened `--serving-text-gradient` had been set to a solid color, which is invalid for the `background-clip: text` technique (it needs a `background-image`). It is now a degenerate two-stop gradient that renders flat correctly.
+- Fixed the Current Time card's RTL alignment — the title and time now both right-align in Persian/Arabic, while the time digits stay left-to-right via an isolated inner span (which also carries the `service-time` test hook).
 
 ## [1.8.0] - 2026-05-28
 ### Added

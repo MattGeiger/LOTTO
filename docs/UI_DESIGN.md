@@ -152,6 +152,9 @@ This applies to:
 - Colorful status field gradients (`--gradient-status-warning`,
   `--gradient-status-danger`) used for `/admin` alert boxes and the
   `.ticket-returned` / `.ticket-unclaimed` surfaces.
+- Display-board ticket-cell gradients for every state — now-serving
+  (`--ticket-serving`), called (`--ticket-served`), returned, and unclaimed —
+  so the whole board reads consistently.
 
 **Do not** use diagonal (`135deg`) or left→right (`90deg`) directions for
 surface fills — those were the legacy style and have been migrated to `to top`.
@@ -162,11 +165,12 @@ explicitly with the deeper stop first (`to top, <deeper>, <lighter>`) rather
 than reusing a single direction keyword across themes — verify which stop is
 lower-lightness per theme.
 
-**Exceptions:** the display-board "now serving" / "served" ticket-cell
-gradients (`--ticket-serving`, `--ticket-served`) and brand text gradients
-(`--serving-text-gradient`) remain diagonal by design — they are expressive
-brand accents, not surface fills. The `hi-viz` themes flatten the card gradient
-entirely for high-contrast legibility.
+**Exceptions:** brand *text* gradients (`--serving-text-gradient`, the large
+"now serving" numerals) remain diagonal by design — they are expressive type
+accents, not surface fills. **The `hi-viz` themes are flat by design** — every
+surface/fill gradient (the card gradient, the semantic/feature card gradients,
+the status fills, and the ticket-cell and serving-text gradients) is overridden
+to a solid color for high-contrast legibility for visually-impaired users.
 
 ---
 

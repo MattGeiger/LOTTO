@@ -602,29 +602,36 @@ export const ReadOnlyDisplay = ({
         </div>
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-3 sm:gap-4">
-          <Card className="border-border/80 bg-card/80 text-start animate-slide-in-up" style={{ animationDelay: "100ms" }}>
-            <CardHeader className="pb-2">
+          <Card className="border-border/80 bg-card/80 text-start animate-slide-in-up gap-1" style={{ animationDelay: "100ms" }}>
+            <CardHeader className="pb-0">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-lg uppercase tracking-[0.14em] text-muted-foreground">
                   <T text={t("foodPantryServiceFor")} />
                 </CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="space-y-1">
+            <CardContent>
               <p data-testid="service-date" className="text-2xl font-semibold text-foreground"><T text={formattedDate} /></p>
-              {hasTickets ? (
-                <p
-                  data-testid="service-time"
-                  dir="ltr"
-                  className="text-left text-xl font-semibold text-foreground/90 [unicode-bidi:isolate]"
-                >
-                  {formattedServiceTime}
-                </p>
-              ) : null}
             </CardContent>
           </Card>
-          <Card className="border-border/80 bg-card/80 text-center animate-slide-in-up" style={{ animationDelay: "200ms" }}>
-            <CardHeader className="pb-2">
+          {hasTickets ? (
+            <Card className="border-border/80 bg-card/80 text-start animate-slide-in-up gap-1" style={{ animationDelay: "200ms" }}>
+              <CardHeader className="pb-0">
+                <CardTitle className="text-lg uppercase tracking-[0.14em] text-muted-foreground">
+                  <T text={t("currentTime")} />
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-semibold text-foreground">
+                  <span data-testid="service-time" dir="ltr" className="[unicode-bidi:isolate]">
+                    {formattedServiceTime}
+                  </span>
+                </p>
+              </CardContent>
+            </Card>
+          ) : null}
+          <Card className="border-border/80 bg-card/80 text-center animate-slide-in-up gap-1" style={{ animationDelay: "300ms" }}>
+            <CardHeader className="pb-0">
               <CardTitle className="text-lg uppercase tracking-[0.14em] text-muted-foreground">
                 <T text={t("ticketsIssuedToday")} />
               </CardTitle>
@@ -635,8 +642,8 @@ export const ReadOnlyDisplay = ({
               </p>
             </CardContent>
           </Card>
-          <Card className="border-border/80 bg-card/80 text-center animate-slide-in-up" style={{ animationDelay: "300ms" }}>
-            <CardHeader className="pb-2">
+          <Card className="border-border/80 bg-card/80 text-center animate-slide-in-up gap-1" style={{ animationDelay: "400ms" }}>
+            <CardHeader className="pb-0">
               <CardTitle className="text-lg uppercase tracking-[0.14em] text-muted-foreground">
                 <T text={t("totalTicketsIssued")} />
               </CardTitle>

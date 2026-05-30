@@ -1,3 +1,64 @@
+# William Temple House Digital Raffle System v1.9.0
+
+**Release Date:** May 29, 2026
+
+A large, cohesive **UX/UI pass** that makes the whole app feel like one designed
+material system — building on the frosted-glass and card-gradient work introduced
+in 1.8.0. The headline is a redesigned, color-coded display board for dark mode,
+a fully flat high-contrast accessibility theme, and a long tail of polish across
+the display, admin, and inventory surfaces.
+
+## Color-Coded Display Board (Dark Mode)
+
+The live board's ticket cells were reworked into a clear, high-contrast color
+language so clients can read their status at a glance:
+
+- **Now Serving** — a deep-to-medium **blue** cell with crisp **white** numerals.
+- **Called** — **green/teal**, with bright mint numerals.
+- **Unclaimed** — **gold**, with vibrant-yellow numerals.
+- **Returned** — **red**, with soft-pink numerals.
+- The large "NOW SERVING" number at the top of the page is a light **powder blue**.
+
+Every ticket cell, in both light and dark mode, now uses the same bottom→top
+gradient direction (deeper at the base, lighter at the top), matching the cards.
+
+## Consistent "Material" Surfaces
+
+- The **ticket-detail popup** (tapping a ticket number) is now frosted glass,
+  matching the language-entry dialog — so every modal in the app feels the same.
+- All colored fills across the app share one gradient orientation; the
+  previously-flat alert fills (returned / unclaimed) gained matching gradients.
+
+## High-Visibility Theme Is Now Fully Flat
+
+The **HI-VIZ** accessibility themes (light and dark), designed for visually
+impaired visitors, now render every surface as a **solid, flat color** with no
+gradients — maximizing contrast and readability — while still honoring the new
+color language.
+
+## Display Board Layout
+
+- The service card was split into two: **FOOD PANTRY SERVICE FOR** (the date) and
+  a dedicated **CURRENT TIME** card, fully translated across all eight languages.
+- Tightened the spacing on the top stat cards for a cleaner, denser header.
+- Right-to-left languages (Persian, Arabic) now align the Current Time card
+  correctly, with the clock digits kept in their natural left-to-right order.
+
+## Admin & Inventory Polish
+
+- **Admin (dark mode):** the "mark ticket as returned/unclaimed" inputs now match
+  the other admin fields; the returned/unclaimed titles and number badges use the
+  new high-contrast colors; and the **Next up** panel gained its gradient and a
+  legible mint title.
+- **Inventory:** the language and theme controls now stay in place (Language-left,
+  Theme-right) in right-to-left languages, matching every other page.
+
+## Versioning
+
+- Bumped application version to **1.9.0**.
+
+---
+
 # William Temple House Digital Raffle System v1.7.0
 
 **Release Date:** May 26, 2026
