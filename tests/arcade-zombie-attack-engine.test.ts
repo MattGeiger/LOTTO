@@ -56,6 +56,7 @@ function mkZombie(x: number, y: number, kind: "civilian" | "bub" = "civilian", o
     hp: kind === "bub" ? 2 : 1,
     fireTimerMs: 1e9, // bub won't fire
     aim: "down",
+    attackFrames: 0,
     dying: 0,
     ...over,
   };

@@ -872,7 +872,7 @@ html.light .arcade-scope .arcade-brick-control-dock {
 
 @media (min-width: 768px) {
   .arcade-zombie-shell {
-    --arcade-board-size: clamp(280px, min(70vw, calc((100dvh - 13rem) / 1.5)), 440px);
+    --arcade-board-size: clamp(340px, min(82vw, calc((100dvh - 9rem) / 1.5)), 600px);
   }
 }
 

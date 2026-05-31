@@ -12,6 +12,9 @@ import {
   BLAST_KILL_POINTS,
   BOARD_H,
   BOARD_W,
+  BUB_ATTACK_POSE_FRAMES,
+  BUB_FIRE_CHANCE_AIMED,
+  BUB_FIRE_CHANCE_IDLE,
   BUB_FIRE_INTERVAL_MS,
   BUB_GRENADE_DROP_CHANCE,
   BUB_HP,
@@ -23,6 +26,7 @@ import {
   DIR_REROLL_MS,
   GRENADE_BLAST_RADIUS,
   GRENADE_EXPLODE_FRAME_MS,
+  HELI_LIFT_START,
   HERO_INVULN_FRAMES,
   HERO_MAX_X,
   HERO_MIN_X,
@@ -120,6 +124,7 @@ function spawnZombie(world: World, dp: DifficultyParams, kind: "civilian" | "bub
     hp: kind === "bub" ? BUB_HP : 1,
     fireTimerMs: rand(BUB_FIRE_INTERVAL_MS * 0.5, BUB_FIRE_INTERVAL_MS),
     aim: "down",
+    attackFrames: 0,
     dying: 0,
   };
   applyDir(z, rollDir(), kind === "bub" ? zombieSpeed * 0.85 : zombieSpeed);
@@ -267,10 +272,10 @@ export function tick(prev: World, input: ShooterInput, dp: DifficultyParams): Ti
         world.ambulance = null;
       }
     }
-    // Helicopter climbs during the takeoff round.
+    // Helicopter climbs during the takeoff round (after the lift-off beat).
     if (world.round === ROUND_COUNT) {
-      const elapsed = world.roundTotalMs - world.roundMsLeft;
-      world.heliRise = HELI_TAKEOFF_RISE * Math.max(0, Math.min(1, elapsed / world.roundTotalMs));
+      const f = Math.max(0, Math.min(1, (world.roundTotalMs - world.roundMsLeft) / world.roundTotalMs));
+      world.heliRise = f <= HELI_LIFT_START ? 0 : HELI_TAKEOFF_RISE * ((f - HELI_LIFT_START) / (1 - HELI_LIFT_START));
     }
   }
 
@@ -343,14 +348,31 @@ export function tick(prev: World, input: ShooterInput, dp: DifficultyParams): Ti
     }
 
     if (z.kind === "bub") {
+      if (z.attackFrames > 0) z.attackFrames -= 1;
       z.fireTimerMs -= FIXED_DT;
       if (z.fireTimerMs <= 0 && z.y > 8) {
-        const dir = rollDir();
-        z.aim = dir;
-        const vx = dir === "down-left" ? -BUB_SHOT_SPEED * DIAG : dir === "down-right" ? BUB_SHOT_SPEED * DIAG : 0;
-        const vy = dir === "down" ? BUB_SHOT_SPEED : BUB_SHOT_SPEED * DIAG;
-        world.bubShots.push({ id: world.nextId++, x: z.x, y: z.y + 10, vx, vy });
-        z.fireTimerMs = BUB_FIRE_INTERVAL_MS * rand(0.85, 1.3);
+        z.fireTimerMs = BUB_FIRE_INTERVAL_MS * rand(0.8, 1.4);
+        // Provoked fire: if the hero sits in one of Bub's three firing cones he
+        // is likely to take an aimed shot; otherwise he mostly just shambles.
+        const hx = world.hero.x + HERO_SIZE / 2;
+        const hy = HERO_Y + HERO_SIZE / 2;
+        const ddy = hy - z.y;
+        if (ddy > 0) {
+          const ratio = (hx - z.x) / ddy;
+          let aimed: MoveDir | null = null;
+          if (ratio < -0.4 && ratio > -2.5) aimed = "down-left";
+          else if (ratio > 0.4 && ratio < 2.5) aimed = "down-right";
+          else if (ratio >= -0.4 && ratio <= 0.4) aimed = "down";
+          const chance = aimed ? BUB_FIRE_CHANCE_AIMED : BUB_FIRE_CHANCE_IDLE;
+          if (RNG() < chance) {
+            const dir = aimed ?? rollDir();
+            const vx = dir === "down-left" ? -BUB_SHOT_SPEED * DIAG : dir === "down-right" ? BUB_SHOT_SPEED * DIAG : 0;
+            const vy = dir === "down" ? BUB_SHOT_SPEED : BUB_SHOT_SPEED * DIAG;
+            world.bubShots.push({ id: world.nextId++, x: z.x, y: z.y + 10, vx, vy });
+            z.aim = dir;
+            z.attackFrames = BUB_ATTACK_POSE_FRAMES;
+          }
+        }
       }
     }
 
