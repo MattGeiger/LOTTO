@@ -1,507 +1,468 @@
-/* ── Zombie Attack! – Game engine (pure, fixed-timestep) ── */
+/* ── Zombie Attack! – Game engine (pure, fixed-timestep, v2) ── */
 
 import {
-  BLAST_FRAMES,
+  AMBULANCE_BLAST_RADIUS,
+  AMBULANCE_EXPLODE_FRAME_MS,
+  AMBULANCE_H,
+  AMBULANCE_INTERVAL_MS,
+  AMBULANCE_SCORE,
+  AMBULANCE_SPEED,
+  AMBULANCE_W,
+  ANIM_FRAME_MS,
   BLAST_KILL_POINTS,
-  BLAST_RADIUS,
   BOARD_H,
   BOARD_W,
-  BOMB_CARRIERS_PER_WAVE,
-  BOMB_H,
-  BOMB_SPEED,
-  BOMB_W,
-  BUNKER_BLOCK,
-  BUNKER_COLS,
-  BUNKER_COUNT,
-  BUNKER_ROWS,
-  BUNKER_W,
+  BUB_FIRE_INTERVAL_MS,
+  BUB_GRENADE_DROP_CHANCE,
+  BUB_HP,
+  BUB_RADIUS,
+  BUB_SCORE,
+  BUB_SHOT_SPEED,
   BUNKER_Y,
-  EXPLOSION_FRAMES,
-  FENCE_DRAIN_PER_ZOMBIE,
-  FENCE_MAX_HP,
-  FENCE_Y,
-  GROUND_BOMB_H,
-  GROUND_BOMB_SPEED,
-  GROUND_BOMB_W,
+  DEATH_FRAMES,
+  DIR_REROLL_MS,
+  GRENADE_BLAST_RADIUS,
+  GRENADE_EXPLODE_FRAME_MS,
+  HERO_INVULN_FRAMES,
+  HERO_MAX_X,
+  HERO_MIN_X,
+  HERO_MUZZLE_DX,
+  HERO_MUZZLE_DY,
+  HERO_SIZE,
+  HERO_Y,
+  HELI_TAKEOFF_RISE,
   INITIAL_LIVES,
-  INV_CELL_H,
-  INV_CELL_W,
-  INV_COLS,
-  INV_EDGE_PAD,
-  INV_ROWS,
-  INV_START_X,
-  INV_START_Y,
-  INV_STEP_MIN_FRACTION,
-  INV_STEP_X,
-  INV_STEP_Y,
-  INV_WAVE_DROP,
-  MAX_BOMBS,
   MAX_SHOTS,
-  ROW_POINTS,
-  SHIP_H,
-  SHIP_INVULN_FRAMES,
-  SHIP_W,
-  SHIP_Y,
+  MAX_ZOMBIES,
+  RESCUE_CELEBRATION_MS,
+  ROUND_COUNT,
+  ROUND_DURATIONS_MS,
   SHOT_COOLDOWN_MS,
-  SHOT_H,
   SHOT_SPEED,
-  SHOT_W,
-  VEHICLE_H,
-  VEHICLE_MAX_DELAY_MS,
-  VEHICLE_MIN_DELAY_MS,
-  VEHICLE_POINTS,
-  VEHICLE_SPEED,
-  VEHICLE_W,
+  SPAWN_MARGIN,
+  ZOMBIE_RADIUS,
+  ZOMBIE_SCORE,
+  ZOMBIE_TYPE_COUNT,
 } from "./constants";
-import { spriteSize, ZOMBIE_SPRITES } from "./sprites";
 import type {
-  BunkerBlock,
   DifficultyParams,
-  Explosion,
+  MoveDir,
+  Projectile,
   ShooterInput,
   TickResult,
   World,
   Zombie,
 } from "./types";
 
-/** Fixed delta in ms (~60fps), matching the page's FIXED_STEP_MS. */
 const FIXED_DT = 16;
+const DIAG = Math.SQRT1_2; // 0.707 — 45° component so diagonal speed == straight speed
+const GRENADE_EXPLODE_TOTAL = Math.round((GRENADE_EXPLODE_FRAME_MS * 4) / FIXED_DT);
+const AMBULANCE_EXPLODE_TOTAL = Math.round((AMBULANCE_EXPLODE_FRAME_MS * 4) / FIXED_DT);
 
-const ZOMBIE_TOTAL = INV_ROWS * INV_COLS;
-
-/** Sprite footprint of a zombie (all tiers share the same 11×8 box). */
-const INV_SPRITE = spriteSize(ZOMBIE_SPRITES[0]![0]);
-/** Offset of the sprite within its formation cell (keeps it centred). */
-const INV_OFF_X = (INV_CELL_W - INV_SPRITE.w) / 2;
-const INV_OFF_Y = (INV_CELL_H - INV_SPRITE.h) / 2;
-
-function rectsOverlap(
-  ax: number,
-  ay: number,
-  aw: number,
-  ah: number,
-  bx: number,
-  by: number,
-  bw: number,
-  bh: number,
-): boolean {
-  return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+let RNG = Math.random;
+/** Test seam: make spawns/rolls deterministic. */
+export function __setRng(fn: () => number): void {
+  RNG = fn;
+}
+export function __resetRng(): void {
+  RNG = Math.random;
 }
 
-/** Sprite-rect bounding box of a zombie in board coordinates. */
-export function zombieRect(world: World, z: Zombie): { x: number; y: number; w: number; h: number } {
+function rand(min: number, max: number): number {
+  return min + RNG() * (max - min);
+}
+
+/** Roll a stochastic movement direction: 50% down, 25% each diagonal. */
+function rollDir(): MoveDir {
+  const r = RNG();
+  if (r < 0.5) return "down";
+  return r < 0.75 ? "down-left" : "down-right";
+}
+
+function applyDir(z: Zombie, dir: MoveDir, speed: number): void {
+  z.aim = dir;
+  if (dir === "down") {
+    z.vx = 0;
+    z.vy = speed;
+  } else if (dir === "down-left") {
+    z.vx = -speed * DIAG;
+    z.vy = speed * DIAG;
+  } else {
+    z.vx = speed * DIAG;
+    z.vy = speed * DIAG;
+  }
+}
+
+/** Effective (cycle-scaled) difficulty for the current world. */
+function scaled(world: World, dp: DifficultyParams) {
+  const s = 1 + world.cycle * 0.12;
   return {
-    x: world.formX + z.col * INV_CELL_W + INV_OFF_X,
-    y: world.formY + z.row * INV_CELL_H + INV_OFF_Y,
-    w: INV_SPRITE.w,
-    h: INV_SPRITE.h,
+    zombieSpeed: dp.zombieSpeed * s,
+    spawnIntervalMs: dp.spawnIntervalMs / s,
+    bubIntervalMs: dp.bubIntervalMs / s,
   };
 }
 
-function tierForRow(row: number): 0 | 1 | 2 {
-  if (row === 0) return 0;
-  if (row <= 2) return 1;
-  return 2;
+function spawnZombie(world: World, dp: DifficultyParams, kind: "civilian" | "bub"): void {
+  const { zombieSpeed } = scaled(world, dp);
+  const x = rand(SPAWN_MARGIN, BOARD_W - SPAWN_MARGIN);
+  const z: Zombie = {
+    id: world.nextId++,
+    kind,
+    type: Math.floor(RNG() * ZOMBIE_TYPE_COUNT),
+    x,
+    y: -16,
+    vx: 0,
+    vy: zombieSpeed,
+    dirTimerMs: rand(DIR_REROLL_MS * 0.5, DIR_REROLL_MS),
+    animMs: rand(0, ANIM_FRAME_MS),
+    frame: 0,
+    hp: kind === "bub" ? BUB_HP : 1,
+    fireTimerMs: rand(BUB_FIRE_INTERVAL_MS * 0.5, BUB_FIRE_INTERVAL_MS),
+    aim: "down",
+    dying: 0,
+  };
+  applyDir(z, rollDir(), kind === "bub" ? zombieSpeed * 0.85 : zombieSpeed);
+  world.zombies.push(z);
 }
 
-function createFormation(): Zombie[] {
-  const zombies: Zombie[] = [];
-  for (let row = 0; row < INV_ROWS; row += 1) {
-    for (let col = 0; col < INV_COLS; col += 1) {
-      zombies.push({ col, row, tier: tierForRow(row), alive: true, carriesBomb: false });
-    }
-  }
-  // Mark a handful of random zombies as bomb-carriers.
-  const indices = zombies.map((_, i) => i);
-  for (let i = 0; i < BOMB_CARRIERS_PER_WAVE && indices.length > 0; i += 1) {
-    const pick = Math.floor(Math.random() * indices.length);
-    zombies[indices[pick]!]!.carriesBomb = true;
-    indices.splice(pick, 1);
-  }
-  return zombies;
-}
-
-/** Build the four sandbag bunkers — empty when the difficulty has no bunkers. */
-function createBunkers(dp: DifficultyParams): BunkerBlock[] {
-  if (!dp.bunkers) return [];
-  const blocks: BunkerBlock[] = [];
-  const gap = (BOARD_W - BUNKER_COUNT * BUNKER_W) / (BUNKER_COUNT + 1);
-  for (let b = 0; b < BUNKER_COUNT; b += 1) {
-    const originX = gap + b * (BUNKER_W + gap);
-    for (let r = 0; r < BUNKER_ROWS; r += 1) {
-      for (let c = 0; c < BUNKER_COLS; c += 1) {
-        // Round the top corners.
-        if (r === 0 && (c === 0 || c === BUNKER_COLS - 1)) continue;
-        // Carve the bottom-centre notch (a doorway).
-        if (r >= BUNKER_ROWS - 2 && c >= 2 && c <= BUNKER_COLS - 3) continue;
-        blocks.push({ x: originX + c * BUNKER_BLOCK, y: BUNKER_Y + r * BUNKER_BLOCK, alive: true });
-      }
-    }
-  }
-  return blocks;
-}
-
-function randomVehicleDelay(): number {
-  return VEHICLE_MIN_DELAY_MS + Math.random() * (VEHICLE_MAX_DELAY_MS - VEHICLE_MIN_DELAY_MS);
-}
-
-/** A fresh world for wave 1. */
+/** A fresh world for round 1 of cycle 0. */
 export function initialWorld(dp: DifficultyParams): World {
+  const integrity = dp.bunkers ? 6 : 2;
   return {
-    shipX: (BOARD_W - SHIP_W) / 2,
-    shipInvuln: 0,
-    zombies: createFormation(),
-    formX: INV_START_X,
-    formY: INV_START_Y,
-    formDir: 1,
-    animFrame: 0,
-    stepClockMs: 0,
+    hero: {
+      x: (BOARD_W - HERO_SIZE) / 2,
+      invuln: 0,
+      firing: false,
+      moveDir: 0,
+      animMs: 0,
+      frame: 0,
+      cooldownMs: 0,
+    },
     shots: [],
-    bombs: [],
-    groundBombs: [],
-    nextProjectileId: 1,
-    shotCooldownMs: 0,
-    bombClockMs: 0,
-    bunkers: createBunkers(dp),
-    fenceHp: FENCE_MAX_HP,
-    fenceMaxHp: FENCE_MAX_HP,
-    vehicle: null,
-    vehicleTimerMs: randomVehicleDelay(),
-    explosions: [],
-    wave: 1,
+    bubShots: [],
+    zombies: [],
+    grenades: [],
+    ambulance: null,
+    nextId: 1,
+    spawnTimerMs: 900,
+    bubTimerMs: dp.bubIntervalMs,
+    ambulanceTimerMs: AMBULANCE_INTERVAL_MS,
+    round: 1,
+    cycle: 0,
+    roundMsLeft: ROUND_DURATIONS_MS[0]!,
+    roundTotalMs: ROUND_DURATIONS_MS[0]!,
+    celebrationMs: 0,
+    heliRise: 0,
+    bunkers: dp.bunkers,
+    bunkerIntegrity: integrity,
+    bunkerMaxIntegrity: integrity,
     lives: INITIAL_LIVES,
     score: 0,
   };
 }
 
-/** Next wave: fresh horde/bunkers, the fence rebuilt, dropped a touch lower, score kept. */
-export function nextWaveWorld(prev: World, dp: DifficultyParams): World {
-  const dropped = Math.min(INV_START_Y + prev.wave * INV_WAVE_DROP, INV_START_Y + 4 * INV_WAVE_DROP);
-  return {
-    ...initialWorld(dp),
-    formY: dropped,
-    wave: prev.wave + 1,
-    lives: prev.lives,
-    score: prev.score,
-  };
+function dist2(ax: number, ay: number, bx: number, by: number): number {
+  const dx = ax - bx;
+  const dy = ay - by;
+  return dx * dx + dy * dy;
 }
 
-function aliveCount(world: World): number {
-  let n = 0;
-  for (const z of world.zombies) if (z.alive) n += 1;
-  return n;
-}
-
-/** Formation step cadence (ms): faster as fewer zombies remain. */
-export function stepIntervalMs(world: World, dp: DifficultyParams): number {
-  const fraction = Math.max(INV_STEP_MIN_FRACTION, aliveCount(world) / ZOMBIE_TOTAL);
-  return dp.stepBaseMs * fraction;
-}
-
-/** True if any alive zombie breaches [pad, BOARD_W-pad] after a candidate move. */
-function formationWouldBreach(world: World, dx: number): boolean {
+/** Kill every alive zombie within `radius` of (cx, cy); award blast points. */
+function blast(world: World, cx: number, cy: number, radius: number): void {
+  const r2 = radius * radius;
   for (const z of world.zombies) {
-    if (!z.alive) continue;
-    const x = world.formX + z.col * INV_CELL_W + INV_OFF_X + dx;
-    if (x < INV_EDGE_PAD || x + INV_SPRITE.w > BOARD_W - INV_EDGE_PAD) return true;
+    if (z.hp <= 0) continue;
+    if (dist2(z.x, z.y, cx, cy) <= r2) {
+      z.hp = 0;
+      z.dying = DEATH_FRAMES;
+      world.score += BLAST_KILL_POINTS;
+    }
   }
-  return false;
 }
 
-/** Lowest (max bottom Y) of any alive zombie cell. */
-function formationBottom(world: World): number {
-  let maxRow = -1;
-  for (const z of world.zombies) if (z.alive) maxRow = Math.max(maxRow, z.row);
-  if (maxRow < 0) return 0;
-  return world.formY + (maxRow + 1) * INV_CELL_H;
-}
-
-/** Pick a throwing zombie: bottom-most alive zombie in a random occupied column. */
-function pickBombSource(world: World): Zombie | null {
-  const cols: number[] = [];
-  for (let c = 0; c < INV_COLS; c += 1) {
-    if (world.zombies.some((z) => z.alive && z.col === c)) cols.push(c);
-  }
-  if (cols.length === 0) return null;
-  const col = cols[Math.floor(Math.random() * cols.length)]!;
-  let source: Zombie | null = null;
-  for (const z of world.zombies) {
-    if (z.alive && z.col === col && (!source || z.row > source.row)) source = z;
-  }
-  return source;
-}
-
-function smallBurst(x: number, y: number, life = EXPLOSION_FRAMES): Explosion {
-  return { x, y, life, maxLife: life, radius: 0 };
-}
-
-/**
- * Advance the world by one fixed step.
- * `input.shipX` is the desired gun left-edge (already clamped); `input.fire`
- * is whether the fire control is held.
- */
 export function tick(prev: World, input: ShooterInput, dp: DifficultyParams): TickResult {
   const world: World = {
     ...prev,
-    zombies: prev.zombies,
+    hero: { ...prev.hero },
     shots: [...prev.shots],
-    bombs: [...prev.bombs],
-    groundBombs: [...prev.groundBombs],
-    bunkers: prev.bunkers,
-    explosions: [...prev.explosions],
+    bubShots: [...prev.bubShots],
+    zombies: prev.zombies,
+    grenades: prev.grenades,
   };
 
   let zombieKilled = false;
-  let vehicleKilled = false;
-  let bombDetonated = false;
-  let shipHit = false;
+  let bubKilled = false;
+  let heroHit = false;
+  let grenadeDetonated = false;
+  let ambulanceDestroyed = false;
+  let roundAdvanced = false;
+  let rescued = false;
 
-  /* ── Gun ── */
-  world.shipX = Math.max(0, Math.min(BOARD_W - SHIP_W, input.shipX));
-  if (world.shipInvuln > 0) world.shipInvuln -= 1;
+  const eff = scaled(world, dp);
 
-  /* ── Player fire ── */
-  if (world.shotCooldownMs > 0) world.shotCooldownMs -= FIXED_DT;
-  if (input.fire && world.shotCooldownMs <= 0 && world.shots.length < MAX_SHOTS) {
+  /* ── Hero ── */
+  const prevX = world.hero.x;
+  world.hero.x = Math.max(HERO_MIN_X, Math.min(HERO_MAX_X, input.heroX));
+  world.hero.moveDir = world.hero.x > prevX + 0.1 ? 1 : world.hero.x < prevX - 0.1 ? -1 : 0;
+  world.hero.firing = false;
+  if (world.hero.invuln > 0) world.hero.invuln -= 1;
+  world.hero.animMs += FIXED_DT;
+  if (world.hero.animMs >= ANIM_FRAME_MS) {
+    world.hero.frame = world.hero.frame === 0 ? 1 : 0;
+    world.hero.animMs = 0;
+  }
+
+  /* ── Player fire (Uzi) ── */
+  if (world.hero.cooldownMs > 0) world.hero.cooldownMs -= FIXED_DT;
+  if (input.fire && world.hero.cooldownMs <= 0 && world.shots.length < MAX_SHOTS) {
     world.shots.push({
-      id: world.nextProjectileId++,
-      x: world.shipX + SHIP_W / 2 - SHOT_W / 2,
-      y: SHIP_Y - SHOT_H,
+      id: world.nextId++,
+      x: world.hero.x + HERO_MUZZLE_DX,
+      y: HERO_Y + HERO_MUZZLE_DY,
+      vx: 0,
       vy: -SHOT_SPEED,
     });
-    world.shotCooldownMs = SHOT_COOLDOWN_MS;
+    world.hero.cooldownMs = SHOT_COOLDOWN_MS;
+    world.hero.firing = true;
   }
 
-  /* ── Move projectiles ── */
+  /* ── Projectiles move ── */
   for (const s of world.shots) s.y += s.vy;
-  for (const b of world.bombs) b.y += b.vy;
-  for (const g of world.groundBombs) g.y += g.vy;
-  world.shots = world.shots.filter((s) => s.y + SHOT_H > 0);
-  world.bombs = world.bombs.filter((b) => b.y < BOARD_H);
-  world.groundBombs = world.groundBombs.filter((g) => g.y < BOARD_H);
-
-  /* ── Horde step ── */
-  world.stepClockMs += FIXED_DT;
-  const interval = stepIntervalMs(world, dp);
-  if (world.stepClockMs >= interval && aliveCount(world) > 0) {
-    world.stepClockMs -= interval;
-    const dx = world.formDir * INV_STEP_X;
-    const pressingFence = world.fenceHp > 0 && formationBottom(world) + INV_STEP_Y > FENCE_Y;
-    if (formationWouldBreach(world, dx)) {
-      if (!pressingFence) world.formY += INV_STEP_Y;
-      world.formDir = world.formDir === 1 ? -1 : 1;
-    } else {
-      world.formX += dx;
-    }
-    world.animFrame = world.animFrame === 0 ? 1 : 0;
-
-    // Horde pressure collapses the fence over time.
-    if (pressingFence) {
-      world.fenceHp -= aliveCount(world) * FENCE_DRAIN_PER_ZOMBIE;
-      if (world.fenceHp < 0) world.fenceHp = 0;
-    }
+  for (const b of world.bubShots) {
+    b.x += b.vx;
+    b.y += b.vy;
   }
+  world.shots = world.shots.filter((s) => s.y > -8);
+  world.bubShots = world.bubShots.filter((b) => b.y < BOARD_H + 8 && b.x > -8 && b.x < BOARD_W + 8);
 
-  /* ── Thrown bombs ── */
-  world.bombClockMs += FIXED_DT;
-  if (world.bombClockMs >= dp.bombIntervalMs && world.bombs.length < MAX_BOMBS) {
-    const source = pickBombSource(world);
-    if (source) {
-      const r = zombieRect(world, source);
-      world.bombs.push({
-        id: world.nextProjectileId++,
-        x: r.x + r.w / 2 - BOMB_W / 2,
-        y: r.y + r.h,
-        vy: BOMB_SPEED,
-      });
-    }
-    world.bombClockMs = -Math.random() * dp.bombIntervalMs * 0.5;
-  }
-
-  /* ── Flaming vehicle ── */
-  if (world.vehicle) {
-    const v = { ...world.vehicle, y: world.vehicle.y + VEHICLE_SPEED };
-    world.vehicle = v;
-    if (v.y + VEHICLE_H >= FENCE_Y) {
-      // Crashes into the fence — collapses it on impact.
-      if (world.fenceHp > 0) world.fenceHp = 0;
-      world.explosions.push({ x: v.x + VEHICLE_W / 2, y: FENCE_Y, life: BLAST_FRAMES, maxLife: BLAST_FRAMES, radius: 28 });
-      world.vehicle = null;
-      world.vehicleTimerMs = randomVehicleDelay();
-    }
+  /* ── Round timer / helicopter cycle ── */
+  if (world.celebrationMs > 0) {
+    world.celebrationMs -= FIXED_DT;
+    if (world.celebrationMs < 0) world.celebrationMs = 0;
   } else {
-    world.vehicleTimerMs -= FIXED_DT;
-    if (world.vehicleTimerMs <= 0 && aliveCount(world) > 2) {
-      world.vehicle = {
-        x: Math.floor(Math.random() * (BOARD_W - VEHICLE_W)),
-        y: -VEHICLE_H,
-        hp: dp.vehicleHp,
-        points: VEHICLE_POINTS,
-      };
+    world.roundMsLeft -= FIXED_DT;
+    if (world.roundMsLeft <= 0) {
+      roundAdvanced = true;
+      if (world.round < ROUND_COUNT) {
+        world.round += 1;
+        world.roundTotalMs = ROUND_DURATIONS_MS[world.round - 1]!;
+        world.roundMsLeft = world.roundTotalMs;
+        world.heliRise = 0;
+      } else {
+        // Extraction complete!
+        rescued = true;
+        world.cycle += 1;
+        world.score += 1000;
+        world.round = 1;
+        world.roundTotalMs = ROUND_DURATIONS_MS[0]!;
+        world.roundMsLeft = world.roundTotalMs;
+        world.heliRise = 0;
+        world.celebrationMs = RESCUE_CELEBRATION_MS;
+        world.bunkerIntegrity = world.bunkerMaxIntegrity;
+        // The chopper lifts off with the survivors — the lot clears.
+        world.zombies = [];
+        world.bubShots = [];
+        world.grenades = [];
+        world.ambulance = null;
+      }
+    }
+    // Helicopter climbs during the takeoff round.
+    if (world.round === ROUND_COUNT) {
+      const elapsed = world.roundTotalMs - world.roundMsLeft;
+      world.heliRise = HELI_TAKEOFF_RISE * Math.max(0, Math.min(1, elapsed / world.roundTotalMs));
     }
   }
 
-  /* ── Explosions ── */
-  if (world.explosions.length > 0) {
-    world.explosions = world.explosions
-      .map((e) => ({ ...e, life: e.life - 1 }))
-      .filter((e) => e.life > 0);
+  const spawning = world.celebrationMs <= 0;
+
+  /* ── Spawning ── */
+  if (spawning) {
+    const living = world.zombies.reduce((n, z) => n + (z.hp > 0 ? 1 : 0), 0);
+    world.spawnTimerMs -= FIXED_DT;
+    if (world.spawnTimerMs <= 0 && living < MAX_ZOMBIES) {
+      spawnZombie(world, dp, "civilian");
+      world.spawnTimerMs = eff.spawnIntervalMs * rand(0.8, 1.2);
+    }
+    world.bubTimerMs -= FIXED_DT;
+    if (world.bubTimerMs <= 0 && living < MAX_ZOMBIES) {
+      spawnZombie(world, dp, "bub");
+      world.bubTimerMs = eff.bubIntervalMs * rand(0.85, 1.15);
+    }
+  }
+
+  /* ── Ambulance ── */
+  if (world.ambulance) {
+    const amb = { ...world.ambulance };
+    if (amb.exploding > 0) {
+      amb.exploding -= 1;
+      world.ambulance = amb.exploding <= 0 ? null : amb;
+    } else {
+      amb.y += AMBULANCE_SPEED * (1 + world.cycle * 0.12);
+      if (amb.y > BOARD_H + AMBULANCE_H) world.ambulance = null;
+      else world.ambulance = amb;
+    }
+  } else if (spawning) {
+    world.ambulanceTimerMs -= FIXED_DT;
+    if (world.ambulanceTimerMs <= 0) {
+      world.ambulance = {
+        x: rand(SPAWN_MARGIN, BOARD_W - SPAWN_MARGIN - AMBULANCE_W),
+        y: -AMBULANCE_H,
+        hp: dp.ambulanceHp,
+        exploding: 0,
+      };
+      world.ambulanceTimerMs = AMBULANCE_INTERVAL_MS * rand(0.85, 1.15);
+    }
+  }
+
+  /* ── Zombies: move, animate, Bub fire, breach check ── */
+  let overrun = false;
+  for (const z of world.zombies) {
+    if (z.hp <= 0) {
+      if (z.dying > 0) z.dying -= 1;
+      continue;
+    }
+    z.dirTimerMs -= FIXED_DT;
+    if (z.dirTimerMs <= 0) {
+      applyDir(z, rollDir(), z.kind === "bub" ? eff.zombieSpeed * 0.85 : eff.zombieSpeed);
+      z.dirTimerMs = rand(DIR_REROLL_MS * 0.7, DIR_REROLL_MS * 1.3);
+    }
+    z.x += z.vx;
+    z.y += z.vy;
+    if (z.x < ZOMBIE_RADIUS) {
+      z.x = ZOMBIE_RADIUS;
+      z.vx = Math.abs(z.vx);
+    } else if (z.x > BOARD_W - ZOMBIE_RADIUS) {
+      z.x = BOARD_W - ZOMBIE_RADIUS;
+      z.vx = -Math.abs(z.vx);
+    }
+    z.animMs += FIXED_DT;
+    if (z.animMs >= ANIM_FRAME_MS) {
+      z.frame = z.frame === 0 ? 1 : 0;
+      z.animMs = 0;
+    }
+
+    if (z.kind === "bub") {
+      z.fireTimerMs -= FIXED_DT;
+      if (z.fireTimerMs <= 0 && z.y > 8) {
+        const dir = rollDir();
+        z.aim = dir;
+        const vx = dir === "down-left" ? -BUB_SHOT_SPEED * DIAG : dir === "down-right" ? BUB_SHOT_SPEED * DIAG : 0;
+        const vy = dir === "down" ? BUB_SHOT_SPEED : BUB_SHOT_SPEED * DIAG;
+        world.bubShots.push({ id: world.nextId++, x: z.x, y: z.y + 10, vx, vy });
+        z.fireTimerMs = BUB_FIRE_INTERVAL_MS * rand(0.85, 1.3);
+      }
+    }
+
+    // Breach: a zombie reaching the bunker line is absorbed; enough breaches lose.
+    if (z.y >= BUNKER_Y) {
+      z.hp = 0;
+      z.dying = 0; // consumed at the line (no death animation)
+      world.bunkerIntegrity -= 1;
+      if (world.bunkerIntegrity <= 0) overrun = true;
+    }
   }
 
   /* ── Collisions: player shots ── */
-  const survivingShots: typeof world.shots = [];
+  const survivingShots: Projectile[] = [];
   for (const shot of world.shots) {
     let consumed = false;
 
-    // vs zombies
-    for (const z of world.zombies) {
-      if (!z.alive) continue;
-      const r = zombieRect(world, z);
-      if (rectsOverlap(shot.x, shot.y, SHOT_W, SHOT_H, r.x, r.y, r.w, r.h)) {
-        z.alive = false;
-        world.score += ROW_POINTS[z.row] ?? 10;
-        world.explosions.push(smallBurst(r.x + r.w / 2, r.y + r.h / 2));
-        if (z.carriesBomb) {
-          // Drops its bomb in place — shoot it to detonate the area.
-          world.groundBombs.push({
-            id: world.nextProjectileId++,
-            x: r.x + r.w / 2 - GROUND_BOMB_W / 2,
-            y: r.y + r.h / 2,
-            vy: GROUND_BOMB_SPEED,
-          });
+    // vs ambulance (driving)
+    if (world.ambulance && world.ambulance.exploding <= 0) {
+      const a = world.ambulance;
+      if (shot.x >= a.x && shot.x <= a.x + AMBULANCE_W && shot.y >= a.y && shot.y <= a.y + AMBULANCE_H) {
+        a.hp -= 1;
+        if (a.hp <= 0) {
+          a.exploding = AMBULANCE_EXPLODE_TOTAL;
+          blast(world, a.x + AMBULANCE_W / 2, a.y + AMBULANCE_H / 2, AMBULANCE_BLAST_RADIUS);
+          world.score += AMBULANCE_SCORE;
+          ambulanceDestroyed = true;
         }
-        zombieKilled = true;
+        continue; // shot consumed
+      }
+    }
+
+    // vs grenades (armed)
+    let hitGrenade = false;
+    for (const g of world.grenades) {
+      if (!g.armed) continue;
+      if (dist2(shot.x, shot.y, g.x, g.y) <= 12 * 12) {
+        g.armed = false;
+        g.exploding = GRENADE_EXPLODE_TOTAL;
+        blast(world, g.x, g.y, GRENADE_BLAST_RADIUS);
+        grenadeDetonated = true;
+        hitGrenade = true;
+        break;
+      }
+    }
+    if (hitGrenade) continue;
+
+    // vs zombies (nearest alive overlap)
+    for (const z of world.zombies) {
+      if (z.hp <= 0) continue;
+      const r = z.kind === "bub" ? BUB_RADIUS : ZOMBIE_RADIUS;
+      if (dist2(shot.x, shot.y, z.x, z.y) <= r * r) {
+        z.hp -= 1;
+        if (z.hp <= 0) {
+          z.dying = DEATH_FRAMES;
+          if (z.kind === "bub") {
+            world.score += BUB_SCORE;
+            bubKilled = true;
+            if (RNG() < BUB_GRENADE_DROP_CHANCE) {
+              world.grenades.push({ id: world.nextId++, x: z.x, y: z.y, armed: true, exploding: 0 });
+            }
+          } else {
+            world.score += ZOMBIE_SCORE;
+            zombieKilled = true;
+          }
+        }
         consumed = true;
         break;
       }
     }
     if (consumed) continue;
 
-    // vs vehicle
-    if (world.vehicle && rectsOverlap(shot.x, shot.y, SHOT_W, SHOT_H, world.vehicle.x, world.vehicle.y, VEHICLE_W, VEHICLE_H)) {
-      const hp = world.vehicle.hp - 1;
-      if (hp <= 0) {
-        world.score += world.vehicle.points;
-        world.explosions.push({
-          x: world.vehicle.x + VEHICLE_W / 2,
-          y: world.vehicle.y + VEHICLE_H / 2,
-          life: BLAST_FRAMES,
-          maxLife: BLAST_FRAMES,
-          radius: 30,
-        });
-        world.vehicle = null;
-        world.vehicleTimerMs = randomVehicleDelay();
-        vehicleKilled = true;
-      } else {
-        world.vehicle = { ...world.vehicle, hp };
-        world.explosions.push(smallBurst(shot.x, shot.y, 6));
-      }
-      continue;
-    }
-
-    // vs dropped bombs → big blast
-    const gIdx = world.groundBombs.findIndex((g) =>
-      rectsOverlap(shot.x, shot.y, SHOT_W, SHOT_H, g.x, g.y, GROUND_BOMB_W, GROUND_BOMB_H),
-    );
-    if (gIdx >= 0) {
-      const g = world.groundBombs[gIdx]!;
-      const bx = g.x + GROUND_BOMB_W / 2;
-      const by = g.y + GROUND_BOMB_H / 2;
-      for (const z of world.zombies) {
-        if (!z.alive) continue;
-        const r = zombieRect(world, z);
-        const dxz = r.x + r.w / 2 - bx;
-        const dyz = r.y + r.h / 2 - by;
-        if (dxz * dxz + dyz * dyz <= BLAST_RADIUS * BLAST_RADIUS) {
-          z.alive = false;
-          world.score += BLAST_KILL_POINTS;
-          world.explosions.push(smallBurst(r.x + r.w / 2, r.y + r.h / 2, 8));
-        }
-      }
-      world.explosions.push({ x: bx, y: by, life: BLAST_FRAMES, maxLife: BLAST_FRAMES, radius: BLAST_RADIUS });
-      world.groundBombs.splice(gIdx, 1);
-      bombDetonated = true;
-      continue;
-    }
-
-    // vs bunkers (player shots always erode)
-    if (eraseBunkerHit(world, shot.x, shot.y, SHOT_W, SHOT_H)) continue;
-
     survivingShots.push(shot);
   }
   world.shots = survivingShots;
 
-  /* ── Collisions: thrown bombs ── */
-  const survivingBombs: typeof world.bombs = [];
-  for (const bomb of world.bombs) {
-    // vs player shots (mutual destruction — a satisfying skill shot)
-    const shotHitIndex = world.shots.findIndex((s) =>
-      rectsOverlap(bomb.x, bomb.y, BOMB_W, BOMB_H, s.x, s.y, SHOT_W, SHOT_H),
-    );
-    if (shotHitIndex >= 0) {
-      const s = world.shots[shotHitIndex]!;
-      world.explosions.push(smallBurst(s.x, s.y, EXPLOSION_FRAMES - 4));
-      world.shots.splice(shotHitIndex, 1);
-      continue;
-    }
-
-    // vs bunkers — Very Easy makes bunkers bomb-proof (block survives, bomb stops)
-    if (bombHitsBunker(world, bomb.x, bomb.y, BOMB_W, BOMB_H, dp.bunkerBombProof)) continue;
-
-    // vs gun
-    if (
-      world.shipInvuln <= 0 &&
-      rectsOverlap(bomb.x, bomb.y, BOMB_W, BOMB_H, world.shipX, SHIP_Y, SHIP_W, SHIP_H)
-    ) {
+  /* ── Bub bullets vs hero ── */
+  const heroCx = world.hero.x + HERO_SIZE / 2;
+  const heroCy = HERO_Y + HERO_SIZE / 2;
+  const survivingBubShots: Projectile[] = [];
+  for (const b of world.bubShots) {
+    if (world.hero.invuln <= 0 && dist2(b.x, b.y, heroCx, heroCy) <= 12 * 12) {
       world.lives -= 1;
-      world.shipInvuln = SHIP_INVULN_FRAMES;
-      world.explosions.push(smallBurst(world.shipX + SHIP_W / 2, SHIP_Y + SHIP_H / 2, EXPLOSION_FRAMES + 6));
-      shipHit = true;
+      world.hero.invuln = HERO_INVULN_FRAMES;
+      heroHit = true;
       continue;
     }
-
-    survivingBombs.push(bomb);
+    survivingBubShots.push(b);
   }
-  world.bombs = survivingBombs;
+  world.bubShots = survivingBubShots;
+
+  /* ── Grenade explosion animations ── */
+  for (const g of world.grenades) {
+    if (!g.armed && g.exploding > 0) g.exploding -= 1;
+  }
+  world.grenades = world.grenades.filter((g) => g.armed || g.exploding > 0);
+
+  /* ── Cull finished corpses ── */
+  world.zombies = world.zombies.filter((z) => z.hp > 0 || z.dying > 0);
 
   /* ── Resolve status ── */
-  let status: TickResult["status"] = "running";
-  if (world.lives <= 0) {
-    status = "game-over";
-  } else if (aliveCount(world) === 0) {
-    status = "wave-cleared";
-  } else if (formationBottom(world) >= BUNKER_Y) {
-    // The horde reached the bunkers (or where they should be) — overrun.
-    world.lives = 0;
-    status = "game-over";
-  }
+  const status: TickResult["status"] = world.lives <= 0 || overrun ? "game-over" : "running";
 
-  return { world, status, zombieKilled, vehicleKilled, bombDetonated, shipHit };
+  return {
+    world,
+    status,
+    zombieKilled,
+    bubKilled,
+    heroHit,
+    grenadeDetonated,
+    ambulanceDestroyed,
+    roundAdvanced,
+    rescued,
+  };
 }
-
-/** Knock out the first bunker block overlapping a rect. Returns true on hit. */
-function eraseBunkerHit(world: World, x: number, y: number, w: number, h: number): boolean {
-  for (const block of world.bunkers) {
-    if (!block.alive) continue;
-    if (rectsOverlap(x, y, w, h, block.x, block.y, BUNKER_BLOCK, BUNKER_BLOCK)) {
-      block.alive = false;
-      return true;
-    }
-  }
-  return false;
-}
-
-/** Bomb vs bunker: erodes unless bomb-proof (then the bomb stops but the block survives). */
-function bombHitsBunker(world: World, x: number, y: number, w: number, h: number, bombProof: boolean): boolean {
-  for (const block of world.bunkers) {
-    if (!block.alive) continue;
-    if (rectsOverlap(x, y, w, h, block.x, block.y, BUNKER_BLOCK, BUNKER_BLOCK)) {
-      if (!bombProof) block.alive = false;
-      return true;
-    }
-  }
-  return false;
-}
-
-// Geometry the renderer reuses.
-export { INV_OFF_X, INV_OFF_Y, INV_SPRITE, ZOMBIE_TOTAL };
