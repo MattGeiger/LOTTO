@@ -23,8 +23,34 @@ import zThreeDeath2 from "./assets/zombies/death/zombie-three-death-2.png";
 import zFourDeath1 from "./assets/zombies/death/zombie-four-death-1.png";
 import zFourDeath2 from "./assets/zombies/death/zombie-four-death-2.png";
 
+import zOneIdle1 from "./assets/zombies/idle/zombie-one-idle-1.png";
+import zOneIdle2 from "./assets/zombies/idle/zombie-one-idle-2.png";
+import zTwoIdle1 from "./assets/zombies/idle/zombie-two-idle-1.png";
+import zTwoIdle2 from "./assets/zombies/idle/zombie-two-idle-2.png";
+import zThreeIdle1 from "./assets/zombies/idle/zombie-three-idle-1.png";
+import zThreeIdle2 from "./assets/zombies/idle/zombie-three-idle-2.png";
+import zFourIdle1 from "./assets/zombies/idle/zombie-four-idle-1.png";
+import zFourIdle2 from "./assets/zombies/idle/zombie-four-idle-2.png";
+
+import zOneAtk1 from "./assets/zombies/attack/zombie-one-attack-1.png";
+import zOneAtk2 from "./assets/zombies/attack/zombie-one-attack-2.png";
+import zTwoAtk1 from "./assets/zombies/attack/zombie-two-attack-1.png";
+import zTwoAtk2 from "./assets/zombies/attack/zombie-two-attack-2.png";
+import zThreeAtk1 from "./assets/zombies/attack/zombie-three-attack-1.png";
+import zThreeAtk2 from "./assets/zombies/attack/zombie-three-attack-2.png";
+import zFourAtk1 from "./assets/zombies/attack/zombie-four-attack-1.png";
+import zFourAtk2 from "./assets/zombies/attack/zombie-four-attack-2.png";
+
+import zOneHurt from "./assets/zombies/hurt/zombie-one-hurt-1.png";
+import zTwoHurt from "./assets/zombies/hurt/zombie-two-hurt-1.png";
+import zThreeHurt from "./assets/zombies/hurt/zombie-three-hurt-1.png";
+import zFourHurt from "./assets/zombies/hurt/zombie-four-hurt-1.png";
+
 import bubWalk1 from "./assets/bub/walk/bub-walk-1.png";
 import bubWalk2 from "./assets/bub/walk/bub-walk-2.png";
+import bubIdle1 from "./assets/bub/idle/bub-idle-1.png";
+import bubIdle2 from "./assets/bub/idle/bub-idle-2.png";
+import bubHurt from "./assets/bub/hurt/bub-hurt-1.png";
 import bubAtkS1 from "./assets/bub/attack/bub-attack-straight-1.png";
 import bubAtkS2 from "./assets/bub/attack/bub-attack-straight-2.png";
 import bubAtkL1 from "./assets/bub/attack/bub-attack-left-1.png";
@@ -62,12 +88,24 @@ import ambEx2 from "./assets/ambulance/explosion/ambulance-explosion-2.png";
 import ambEx3 from "./assets/ambulance/explosion/ambulance-explosion-3.png";
 import ambEx4 from "./assets/ambulance/explosion/ambulance-explosion-4.png";
 
+import fenceLeft from "./assets/fence/fence-left.png";
+import fenceMiddle from "./assets/fence/fence-middle.png";
+import fenceRight from "./assets/fence/fence-right.png";
+import fenceBreachLeft from "./assets/fence/fence-breach-left.png";
+import fenceBreachMiddle from "./assets/fence/fence-breach-middle.png";
+import fenceBreachRight from "./assets/fence/fence-breach-right.png";
+
 type Img = HTMLImageElement;
 
 export type LoadedAssets = {
   zombieWalk: Img[][]; // [type 0..3][frame 0..1]
   zombieDeath: Img[][];
+  zombieIdle: Img[][];
+  zombieAttack: Img[][];
+  zombieHurt: Img[]; // [type]
   bubWalk: Img[];
+  bubIdle: Img[];
+  bubHurt: Img;
   bubAttack: { straight: Img[]; left: Img[]; right: Img[] };
   bubDeath: Img[];
   heroRun: Img[];
@@ -77,6 +115,7 @@ export type LoadedAssets = {
   grenadeExplode: Img[];
   ambulanceDrive: Img[];
   ambulanceExplode: Img[];
+  fence: { left: Img; middle: Img; right: Img; breachLeft: Img; breachMiddle: Img; breachRight: Img };
 };
 
 function load(src: string): Promise<Img> {
@@ -94,44 +133,43 @@ export async function loadAssets(): Promise<LoadedAssets> {
   const all = [
     zOneWalk1, zOneWalk2, zTwoWalk1, zTwoWalk2, zThreeWalk1, zThreeWalk2, zFourWalk1, zFourWalk2,
     zOneDeath1, zOneDeath2, zTwoDeath1, zTwoDeath2, zThreeDeath1, zThreeDeath2, zFourDeath1, zFourDeath2,
-    bubWalk1, bubWalk2, bubAtkS1, bubAtkS2, bubAtkL1, bubAtkL2, bubAtkR1, bubAtkR2, bubDeath1, bubDeath2,
+    zOneIdle1, zOneIdle2, zTwoIdle1, zTwoIdle2, zThreeIdle1, zThreeIdle2, zFourIdle1, zFourIdle2,
+    zOneAtk1, zOneAtk2, zTwoAtk1, zTwoAtk2, zThreeAtk1, zThreeAtk2, zFourAtk1, zFourAtk2,
+    zOneHurt, zTwoHurt, zThreeHurt, zFourHurt,
+    bubWalk1, bubWalk2, bubIdle1, bubIdle2, bubHurt,
+    bubAtkS1, bubAtkS2, bubAtkL1, bubAtkL2, bubAtkR1, bubAtkR2, bubDeath1, bubDeath2,
     heroRun1, heroRun2, heroStand1, heroStand2,
     heloIdle, heloRefuel, heloSpinup, heloTakeoff1, heloTakeoff2, heloTakeoff3, heloTakeoff4, heloTakeoff5, heloTakeoff6,
     grenadeImg, grenadeEx1, grenadeEx2, grenadeEx3, grenadeEx4,
     ambDrive1, ambDrive2, ambEx1, ambEx2, ambEx3, ambEx4,
+    fenceLeft, fenceMiddle, fenceRight, fenceBreachLeft, fenceBreachMiddle, fenceBreachRight,
   ];
   const loaded = await Promise.all(all.map((d) => load(src(d))));
   let i = 0;
   const next = () => loaded[i++]!;
 
-  const zombieWalk = [
-    [next(), next()], [next(), next()], [next(), next()], [next(), next()],
-  ];
-  const zombieDeath = [
-    [next(), next()], [next(), next()], [next(), next()], [next(), next()],
-  ];
+  const zombieWalk = [[next(), next()], [next(), next()], [next(), next()], [next(), next()]];
+  const zombieDeath = [[next(), next()], [next(), next()], [next(), next()], [next(), next()]];
+  const zombieIdle = [[next(), next()], [next(), next()], [next(), next()], [next(), next()]];
+  const zombieAttack = [[next(), next()], [next(), next()], [next(), next()], [next(), next()]];
+  const zombieHurt = [next(), next(), next(), next()];
   const bubWalk = [next(), next()];
-  const bubAttack = {
-    straight: [next(), next()],
-    left: [next(), next()],
-    right: [next(), next()],
-  };
+  const bubIdle = [next(), next()];
+  const bubHurtImg = next();
+  const bubAttack = { straight: [next(), next()], left: [next(), next()], right: [next(), next()] };
   const bubDeath = [next(), next()];
   const heroRun = [next(), next()];
   const heroStand = [next(), next()];
-  const helo = {
-    idle: next(),
-    refuel: next(),
-    spinup: next(),
-    takeoff: [next(), next(), next(), next(), next(), next()],
-  };
+  const helo = { idle: next(), refuel: next(), spinup: next(), takeoff: [next(), next(), next(), next(), next(), next()] };
   const grenade = next();
   const grenadeExplode = [next(), next(), next(), next()];
   const ambulanceDrive = [next(), next()];
   const ambulanceExplode = [next(), next(), next(), next()];
+  const fence = { left: next(), middle: next(), right: next(), breachLeft: next(), breachMiddle: next(), breachRight: next() };
 
   return {
-    zombieWalk, zombieDeath, bubWalk, bubAttack, bubDeath,
-    heroRun, heroStand, helo, grenade, grenadeExplode, ambulanceDrive, ambulanceExplode,
+    zombieWalk, zombieDeath, zombieIdle, zombieAttack, zombieHurt,
+    bubWalk, bubIdle, bubHurt: bubHurtImg, bubAttack, bubDeath,
+    heroRun, heroStand, helo, grenade, grenadeExplode, ambulanceDrive, ambulanceExplode, fence,
   };
 }

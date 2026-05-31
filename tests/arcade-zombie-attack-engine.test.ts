@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
-  AMBULANCE_SCORE,
+  AMBULANCE_H,
   BOARD_W,
   BUB_SCORE,
-  BUNKER_Y,
+  FENCE_MAX_HP,
+  FENCE_Y,
+  HELO_ATTACK_Y,
   HERO_SIZE,
   HERO_Y,
   INITIAL_LIVES,
@@ -14,18 +16,16 @@ import {
 import { __resetRng, __setRng, initialWorld, tick } from "@/arcade/game/zombie-attack/engine";
 import type { DifficultyParams, Projectile, World, Zombie } from "@/arcade/game/zombie-attack/types";
 
-const DP: DifficultyParams = {
-  spawnIntervalMs: 1600,
-  zombieSpeed: 0.35,
-  bubIntervalMs: 11000,
-  bunkers: true,
-  ambulanceHp: 4,
-};
-const DP_NO_BUNKERS: DifficultyParams = { ...DP, bunkers: false };
+const DP: DifficultyParams = { spawnIntervalMs: 800, zombieSpeed: 0.175, bubIntervalMs: 11000, ambulanceHp: 4 };
 
 afterEach(() => __resetRng());
 
-/** A controlled world with spawns/timers disabled so a single concern is testable. */
+/** RNG that returns the given values in order, then repeats the last. */
+function seq(...vals: number[]): () => number {
+  let i = 0;
+  return () => vals[Math.min(i++, vals.length - 1)]!;
+}
+
 function controlled(overrides: Partial<World>): World {
   return {
     ...initialWorld(DP),
@@ -50,134 +50,146 @@ function mkZombie(x: number, y: number, kind: "civilian" | "bub" = "civilian", o
     y,
     vx: 0,
     vy: 0,
-    dirTimerMs: 1e9, // no re-roll
+    dirTimerMs: 1e9,
     animMs: 0,
     frame: 0,
     hp: kind === "bub" ? 2 : 1,
-    fireTimerMs: 1e9, // bub won't fire
+    fireTimerMs: 1e9,
     aim: "down",
     attackFrames: 0,
+    hurtFrames: 0,
+    attacking: 0,
+    attackTimerMs: 1e9, // no attack unless overridden
     dying: 0,
+    reviving: 0,
     ...over,
   };
 }
 
-function mkShot(x: number, y: number): Projectile {
-  return { id: Math.floor(Math.random() * 1e6), x, y, vx: 0, vy: -SHOT_SPEED };
-}
-
+const mkShot = (x: number, y: number): Projectile => ({ id: Math.floor(Math.random() * 1e6), x, y, vx: 0, vy: -SHOT_SPEED });
 const input = (w: World, fire = false) => ({ heroX: w.hero.x, fire });
+const heroCx = (BOARD_W - HERO_SIZE) / 2 + HERO_SIZE / 2;
+const heroCy = HERO_Y + HERO_SIZE / 2;
 
-describe("Zombie Attack engine (v2)", () => {
-  it("starts a fresh run: hero centred, 3 lives, round 1, full bunker integrity", () => {
+describe("Zombie Attack engine (v3 — fence siege)", () => {
+  it("starts a fresh run: full fence, 3 lives, round 1", () => {
     const w = initialWorld(DP);
+    expect(w.fenceHp).toBe(FENCE_MAX_HP);
     expect(w.lives).toBe(INITIAL_LIVES);
     expect(w.round).toBe(1);
-    expect(w.cycle).toBe(0);
     expect(w.zombies.length).toBe(0);
-    expect(w.bunkerIntegrity).toBe(6);
-    expect(initialWorld(DP_NO_BUNKERS).bunkerIntegrity).toBe(2);
   });
 
-  it("spawns descending zombies with a stochastic, downward-biased direction", () => {
-    // RNG = 0 → rollDir 'down' (vx 0); RNG ≈ 0.6 → 'down-left' (vx < 0).
-    __setRng(() => 0);
-    const down = controlled({ spawnTimerMs: 0 });
-    const r1 = tick(down, input(down), DP).world;
-    const z1 = r1.zombies.at(-1)!;
-    expect(z1.vy).toBeGreaterThan(0);
-    expect(z1.vx).toBe(0);
+  it("resolves a civilian hit as kill / wound / revive by probability", () => {
+    // kill (0.2 < kill 0.5, 0.2 >= revive 0.1)
+    __setRng(() => 0.2);
+    const k = controlled({ zombies: [mkZombie(120, 80)], shots: [mkShot(120, 80)] });
+    const rk = tick(k, input(k), DP);
+    expect(rk.world.zombies[0]!.dying).toBeGreaterThan(0);
+    expect(rk.world.score).toBe(ZOMBIE_SCORE);
 
-    __setRng(() => 0.6);
-    const diag = controlled({ spawnTimerMs: 0 });
-    const r2 = tick(diag, input(diag), DP).world;
-    const z2 = r2.zombies.at(-1)!;
-    expect(z2.vx).toBeLessThan(0); // down-left
-    expect(z2.vy).toBeGreaterThan(0);
+    // wound (0.7 >= kill 0.5)
+    __setRng(() => 0.7);
+    const wd = controlled({ zombies: [mkZombie(120, 80)], shots: [mkShot(120, 80)] });
+    const rw = tick(wd, input(wd), DP);
+    expect(rw.world.zombies[0]!.hurtFrames).toBeGreaterThan(0);
+    expect(rw.world.zombies[0]!.dying).toBe(0);
+    expect(rw.world.score).toBe(0);
+
+    // revive (0.05 < kill 0.5 and < revive 0.1)
+    __setRng(() => 0.05);
+    const rv = controlled({ zombies: [mkZombie(120, 80)], shots: [mkShot(120, 80)] });
+    const rr = tick(rv, input(rv), DP);
+    expect(rr.world.zombies[0]!.reviving).toBeGreaterThan(0);
   });
 
-  it("a player shot kills a civilian and scores", () => {
-    const w = controlled({ zombies: [mkZombie(120, 100)], shots: [mkShot(120, 100)] });
-    const res = tick(w, input(w), DP);
-    expect(res.zombieKilled).toBe(true);
-    expect(res.world.zombies[0]!.hp).toBeLessThanOrEqual(0);
-    expect(res.world.score).toBe(ZOMBIE_SCORE);
+  it("only wounds Bub for his first two hits, then can kill + drop a grenade", () => {
+    let w = controlled({ zombies: [mkZombie(120, 80, "bub")], shots: [mkShot(120, 80)] });
+    w = tick(w, input(w), DP).world; // hit 1 → wound
+    expect(w.zombies[0]!.hp).toBe(1);
+    w = { ...w, shots: [mkShot(120, 80)] };
+    w = tick(w, input(w), DP).world; // hit 2 → wound
+    expect(w.zombies[0]!.hp).toBe(0);
+    expect(w.zombies[0]!.dying).toBe(0); // still standing
+
+    // hit 3 (depleted): kill (0.4<0.5), no revive (0.4>=0.25), grenade (0.1<0.25)
+    __setRng(seq(0.4, 0.4, 0.1));
+    const r3 = tick({ ...w, shots: [mkShot(120, 80)] }, input(w), DP);
+    expect(r3.bubKilled).toBe(true);
+    expect(r3.world.score).toBe(BUB_SCORE);
+    expect(r3.world.grenades.length).toBe(1);
   });
 
-  it("Bub takes two shots and can drop a grenade on death", () => {
-    const bub = mkZombie(120, 100, "bub");
-    const w1 = controlled({ zombies: [bub], shots: [mkShot(120, 100)] });
-    const r1 = tick(w1, input(w1), DP);
-    expect(r1.bubKilled).toBe(false);
-    expect(r1.world.zombies[0]!.hp).toBe(1);
-
-    // Second hit kills him; RNG 0 < drop-chance → drops a grenade.
-    __setRng(() => 0);
-    const r2 = tick({ ...r1.world, shots: [mkShot(r1.world.zombies[0]!.x, r1.world.zombies[0]!.y)] }, input(r1.world), DP);
-    expect(r2.bubKilled).toBe(true);
-    expect(r2.world.score).toBe(BUB_SCORE);
-    expect(r2.world.grenades.length).toBe(1);
-  });
-
-  it("shooting a dropped grenade detonates an AoE blast, sparing distant zombies", () => {
-    const near = [mkZombie(120, 118), mkZombie(138, 120), mkZombie(120, 148)];
-    const far = mkZombie(120, 200);
+  it("detonates a grenade for an instant AoE kill (no wound roll)", () => {
+    // All well above the fence line so nothing gets clamped into the blast.
+    const near = mkZombie(120, 100);
+    const far = mkZombie(120, 30);
     const w = controlled({
-      zombies: [...near, far],
-      grenades: [{ id: 99, x: 120, y: 120, armed: true, exploding: 0 }],
-      shots: [mkShot(120, 128)],
+      zombies: [near, far],
+      grenades: [{ id: 9, x: 120, y: 100, armed: true, exploding: 0 }],
+      shots: [mkShot(120, 108)],
     });
-    const res = tick(w, input(w), DP);
-    expect(res.grenadeDetonated).toBe(true);
-    for (const z of near) {
-      expect(res.world.zombies.find((q) => q.id === z.id)!.hp).toBeLessThanOrEqual(0);
-    }
-    expect(res.world.zombies.find((q) => q.id === far.id)!.hp).toBeGreaterThan(0);
+    const r = tick(w, input(w), DP);
+    expect(r.grenadeDetonated).toBe(true);
+    expect(r.world.zombies.find((z) => z.id === near.id)!.dying).toBeGreaterThan(0);
+    expect(r.world.zombies.find((z) => z.id === far.id)!.dying).toBe(0);
   });
 
-  it("destroys the ambulance after its HP is spent and scores", () => {
-    const base = controlled({ ambulance: { x: 100, y: 60, hp: 2, exploding: 0 } });
-    const r1 = tick({ ...base, shots: [mkShot(110, 70)] }, input(base), DP);
-    expect(r1.ambulanceDestroyed).toBe(false);
-    expect(r1.world.ambulance?.hp).toBe(1);
+  it("drains the fence faster the more zombies besiege it (stacked odds)", () => {
+    __setRng(() => 0.05); // always under the stacked chance
+    const one = controlled({ zombies: [mkZombie(120, FENCE_Y, "civilian", { attackTimerMs: 0 })] });
+    expect(tick(one, input(one), DP).world.fenceHp).toBe(FENCE_MAX_HP - 1);
 
-    const r2 = tick({ ...r1.world, shots: [mkShot(110, 70)] }, input(r1.world), DP);
-    expect(r2.ambulanceDestroyed).toBe(true);
-    expect(r2.world.score).toBeGreaterThanOrEqual(AMBULANCE_SCORE);
+    const three = controlled({
+      zombies: [
+        mkZombie(60, FENCE_Y, "civilian", { attackTimerMs: 0 }),
+        mkZombie(120, FENCE_Y, "civilian", { attackTimerMs: 0 }),
+        mkZombie(180, FENCE_Y, "civilian", { attackTimerMs: 0 }),
+      ],
+    });
+    expect(tick(three, input(three), DP).world.fenceHp).toBe(FENCE_MAX_HP - 3);
   });
 
-  it("a Bub bullet that hits the hero costs a life (and ends the game at zero)", () => {
-    const heroCx = (BOARD_W - HERO_SIZE) / 2 + HERO_SIZE / 2;
-    const heroCy = HERO_Y + HERO_SIZE / 2;
+  it("lets zombies advance past the breached fence toward the helo", () => {
+    const z = mkZombie(120, FENCE_Y - 4, "civilian", { vy: 3 });
+    const w = controlled({ fenceHp: 0, zombies: [z] });
+    const r = tick(w, input(w), DP);
+    expect(r.world.zombies[0]!.y).toBeGreaterThan(FENCE_Y - 4); // moved through
+  });
+
+  it("is game over when a breached zombie reaches and wrecks the helo", () => {
+    __setRng(() => 0.05); // under helo-attack chance 0.1
+    const z = mkZombie(120, HELO_ATTACK_Y, "civilian", { attackTimerMs: 0, vy: 0 });
+    const w = controlled({ fenceHp: 0, zombies: [z] });
+    expect(tick(w, input(w), DP).status).toBe("game-over");
+  });
+
+  it("mauls the hero at close range once the fence is down", () => {
+    const z = mkZombie(heroCx, heroCy, "civilian", { attackTimerMs: 0, vy: 0 });
+    const w = controlled({ fenceHp: 0, zombies: [z] });
+    const r = tick(w, input(w), DP);
+    expect(r.heroHit).toBe(true);
+    expect(r.world.lives).toBe(INITIAL_LIVES - 1);
+  });
+
+  it("blows up the ambulance against an intact fence, clearing nearby zombies", () => {
+    const z = mkZombie(120, FENCE_Y, "civilian");
+    const w = controlled({ zombies: [z], ambulance: { x: 102, y: FENCE_Y - AMBULANCE_H, hp: 4, exploding: 0 } });
+    const r = tick(w, input(w), DP);
+    expect(r.ambulanceDestroyed).toBe(true);
+    expect(r.world.zombies[0]!.dying).toBeGreaterThan(0);
+    expect(r.world.fenceHp).toBe(FENCE_MAX_HP); // fence itself is unharmed
+  });
+
+  it("is game over if the ambulance reaches the helo through a breached fence", () => {
+    const w = controlled({ fenceHp: 0, ambulance: { x: 100, y: HELO_ATTACK_Y - 8, hp: 4, exploding: 0 } });
+    expect(tick(w, input(w), DP).status).toBe("game-over");
+  });
+
+  it("a Bub bullet that hits the hero costs a life", () => {
     const w = controlled({ bubShots: [{ id: 7, x: heroCx, y: heroCy, vx: 0, vy: 0 }] });
-    const r1 = tick(w, input(w), DP);
-    expect(r1.heroHit).toBe(true);
-    expect(r1.world.lives).toBe(INITIAL_LIVES - 1);
-
-    const lethal = controlled({ lives: 1, bubShots: [{ id: 8, x: heroCx, y: heroCy, vx: 0, vy: 0 }] });
-    const r2 = tick(lethal, input(lethal), DP);
-    expect(r2.world.lives).toBe(0);
-    expect(r2.status).toBe("game-over");
-  });
-
-  it("advances rounds on the timer and extracts (rescue) after round 4", () => {
-    const r = controlled({ round: 1, roundMsLeft: 10, roundTotalMs: 28000 });
-    const adv = tick(r, input(r), DP);
-    expect(adv.roundAdvanced).toBe(true);
-    expect(adv.world.round).toBe(2);
-
-    const last = controlled({ round: 4, roundMsLeft: 10, roundTotalMs: 22000, zombies: [mkZombie(120, 80)] });
-    const rescue = tick(last, input(last), DP);
-    expect(rescue.rescued).toBe(true);
-    expect(rescue.world.cycle).toBe(1);
-    expect(rescue.world.round).toBe(1);
-    expect(rescue.world.zombies.length).toBe(0); // the lot clears on extraction
-    expect(rescue.world.celebrationMs).toBeGreaterThan(0);
-  });
-
-  it("is game over once the horde overruns the bunker line", () => {
-    const w = controlled({ bunkerIntegrity: 1, zombies: [mkZombie(120, BUNKER_Y - 0.05, "civilian", { vy: 0.5 })] });
-    const res = tick(w, input(w), DP);
-    expect(res.status).toBe("game-over");
+    const r = tick(w, input(w), DP);
+    expect(r.heroHit).toBe(true);
+    expect(r.world.lives).toBe(INITIAL_LIVES - 1);
   });
 });

@@ -26,10 +26,18 @@ export type Zombie = {
   fireTimerMs: number;
   /** Bub: current aim direction (drives the attack sprite); null = not aiming. */
   aim: MoveDir | null;
-  /** Bub: frames remaining in the firing pose (otherwise he walks/shambles). */
+  /** Bub: frames remaining in the gun-firing pose (otherwise he walks/shambles). */
   attackFrames: number;
+  /** Frames remaining showing the hurt sprite after a wound. */
+  hurtFrames: number;
+  /** Frames remaining showing a melee-lunge sprite (fence / helo / hero attack). */
+  attacking: number;
+  /** ms until the next attack roll while besieging the fence / helo / hero. */
+  attackTimerMs: number;
   /** >0 while the death animation plays (frames remaining); 0 = alive. */
   dying: number;
+  /** >0 while the "get back up" (reverse death) animation plays; then revives. */
+  reviving: number;
 };
 
 /** A bullet: player shots travel up (vx 0); Bub bullets can angle (vx, vy). */
@@ -102,11 +110,9 @@ export type World = {
   /** Px the helicopter has climbed during takeoff (round 4). */
   heliRise: number;
 
-  /** Whether bunkers are drawn this game (false on Nightmare). */
-  bunkers: boolean;
-  /** Breaches the bunker line can absorb before the pad is overrun. */
-  bunkerIntegrity: number;
-  bunkerMaxIntegrity: number;
+  /** Fence hit points; 0 = breached (zombies pour through toward the helo). */
+  fenceHp: number;
+  fenceMaxHp: number;
 
   lives: number;
   score: number;
@@ -120,8 +126,6 @@ export type DifficultyParams = {
   zombieSpeed: number;
   /** Base ms between Bub spawns. */
   bubIntervalMs: number;
-  /** Sandbag bunkers drawn (false on Nightmare). */
-  bunkers: boolean;
   /** Hits to destroy the ambulance. */
   ambulanceHp: number;
 };
