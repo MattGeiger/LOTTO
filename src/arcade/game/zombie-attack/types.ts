@@ -1,139 +1,148 @@
-/* ── Zombie Attack! – Type definitions ── */
+/* ── Zombie Attack! – Type definitions (v2) ── */
 
-export type GameResultStatus = "running" | "wave-cleared" | "game-over";
+export type GameResultStatus = "running" | "game-over";
 
-/** A single zombie in the horde grid. */
+export type MoveDir = "down" | "down-left" | "down-right";
+export type ZombieKind = "civilian" | "bub";
+
+/** A single shambling zombie (or Bub) descending the lot. */
 export type Zombie = {
-  /** Column index (0-based) within the formation. */
-  col: number;
-  /** Row index (0-based); 0 is the top (back) row. */
-  row: number;
-  /** Sprite tier (0..2): 0 skinny, 1 ribs-exposed, 2 fat. */
-  tier: 0 | 1 | 2;
-  alive: boolean;
-  /** Carries a bomb — drops it in place when shot (highlighted in the render). */
-  carriesBomb: boolean;
+  id: number;
+  kind: ZombieKind;
+  /** Civilian sprite variant 0..3 (unused for Bub). */
+  type: number;
+  /** Centre position. */
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  /** ms until the next stochastic direction re-roll. */
+  dirTimerMs: number;
+  /** Walk-animation accumulator + current frame. */
+  animMs: number;
+  frame: 0 | 1;
+  hp: number;
+  /** Bub: ms until the next 1911 shot. */
+  fireTimerMs: number;
+  /** Bub: current aim direction (drives the attack sprite); null = not aiming. */
+  aim: MoveDir | null;
+  /** >0 while the death animation plays (frames remaining); 0 = alive. */
+  dying: number;
 };
 
-/** A player shot (travels up) or a thrown zombie bomb (travels down). */
+/** A bullet: player shots travel up (vx 0); Bub bullets can angle (vx, vy). */
 export type Projectile = {
   id: number;
   x: number;
   y: number;
+  vx: number;
   vy: number;
 };
 
-/** A bomb dropped by a shot bomb-carrier. Detonates (AoE) if the player shoots it. */
-export type GroundBomb = {
+/** A live grenade dropped by Bub. Sits in place; shoot it to detonate. */
+export type Grenade = {
   id: number;
   x: number;
   y: number;
-  vy: number;
+  /** True until shot; a shot detonates it. */
+  armed: boolean;
+  /** >0 while the explosion animation plays (frames remaining). */
+  exploding: number;
 };
 
-/** One destructible block in a bunker. */
-export type BunkerBlock = {
+/** The ambulance hazard: drives down a lane; shoot it to blow it (clears zombies). */
+export type Ambulance = {
   x: number;
   y: number;
-  alive: boolean;
-};
-
-/** A short-lived explosion flash. `radius` > 0 draws an expanding blast ring. */
-export type Explosion = {
-  x: number;
-  y: number;
-  /** Remaining frames. */
-  life: number;
-  /** Starting life (for ring growth). */
-  maxLife: number;
-  /** Blast ring radius in px; 0 = a small sprite burst. */
-  radius: number;
-};
-
-/** The flaming vehicle barreling toward the fence; inactive when null. */
-export type Vehicle = {
-  x: number;
-  y: number;
-  /** Hits remaining before it's destroyed. */
   hp: number;
-  points: number;
+  /** 0 = driving; >0 = explosion-animation frames remaining. */
+  exploding: number;
 } | null;
+
+/** The hero (player). */
+export type Hero = {
+  /** Sprite-left X. */
+  x: number;
+  /** Frames of remaining invulnerability (blink) after a hit. */
+  invuln: number;
+  /** Whether the hero fired this tick (sprite selection). */
+  firing: boolean;
+  /** -1 / 0 / 1 movement this tick (sprite flip + run animation). */
+  moveDir: -1 | 0 | 1;
+  animMs: number;
+  frame: 0 | 1;
+  /** ms until the gun may fire again. */
+  cooldownMs: number;
+};
 
 /** Complete world state for one frame. */
 export type World = {
-  shipX: number;
-  /** Frames of remaining invulnerability (blink) after a hit; 0 = vulnerable. */
-  shipInvuln: number;
-
-  zombies: Zombie[];
-  /** Formation origin (top-left of the cell grid). */
-  formX: number;
-  formY: number;
-  /** Current horizontal direction of the formation: +1 right, -1 left. */
-  formDir: 1 | -1;
-  /** Animation frame toggle (0/1), flipped on each formation step. */
-  animFrame: 0 | 1;
-  /** Accumulated ms toward the next formation step. */
-  stepClockMs: number;
-
+  hero: Hero;
   shots: Projectile[];
-  bombs: Projectile[];
-  groundBombs: GroundBomb[];
-  nextProjectileId: number;
-  /** Cooldown remaining before the gun may fire again (ms). */
-  shotCooldownMs: number;
-  /** Accumulated ms toward the next thrown bomb. */
-  bombClockMs: number;
+  bubShots: Projectile[];
+  zombies: Zombie[];
+  grenades: Grenade[];
+  ambulance: Ambulance;
+  nextId: number;
 
-  bunkers: BunkerBlock[];
+  spawnTimerMs: number;
+  bubTimerMs: number;
+  ambulanceTimerMs: number;
 
-  /** Fence health; <= 0 means collapsed (zombies break through). */
-  fenceHp: number;
-  fenceMaxHp: number;
+  /** Round 1..4 within the current cycle. */
+  round: number;
+  /** Completed extractions (rescues); raises difficulty. */
+  cycle: number;
+  roundMsLeft: number;
+  roundTotalMs: number;
+  /** >0 during the post-extraction celebration flash. */
+  celebrationMs: number;
+  /** Px the helicopter has climbed during takeoff (round 4). */
+  heliRise: number;
 
-  vehicle: Vehicle;
-  /** Countdown (ms) to the next vehicle appearance. */
-  vehicleTimerMs: number;
+  /** Whether bunkers are drawn this game (false on Nightmare). */
+  bunkers: boolean;
+  /** Breaches the bunker line can absorb before the pad is overrun. */
+  bunkerIntegrity: number;
+  bunkerMaxIntegrity: number;
 
-  explosions: Explosion[];
-
-  wave: number;
   lives: number;
   score: number;
 };
 
 /** Difficulty-dependent parameters threaded through the engine. */
 export type DifficultyParams = {
-  /** Base formation step cadence (ms) at full horde. */
-  stepBaseMs: number;
-  /** Average ms between thrown bombs. */
-  bombIntervalMs: number;
-  /** Whether sandbag bunkers are present this game (false on Nightmare). */
+  /** Base ms between zombie spawns. */
+  spawnIntervalMs: number;
+  /** Base downward speed (px/frame). */
+  zombieSpeed: number;
+  /** Base ms between Bub spawns. */
+  bubIntervalMs: number;
+  /** Sandbag bunkers drawn (false on Nightmare). */
   bunkers: boolean;
-  /** Whether bunkers are immune to enemy bombs (Very Easy) — player shots still erode. */
-  bunkerBombProof: boolean;
-  /** Hits required to destroy the flaming vehicle (3 → 5 by difficulty). */
-  vehicleHp: number;
+  /** Hits to destroy the ambulance. */
+  ambulanceHp: number;
 };
 
-/** Per-frame input from the page (slider + fire button + keyboard). */
+/** Per-frame input from the page (slider/keyboard + fire control). */
 export type ShooterInput = {
-  /** Absolute target gun X (left edge), already clamped by the caller. */
-  shipX: number;
+  /** Absolute target hero left-edge X (already clamped by the caller). */
+  heroX: number;
   /** Whether the fire control is currently held/pressed. */
   fire: boolean;
 };
 
-/** Result of a single `tick`, consumed by the page for state + haptics. */
+/** Result of a single `tick`, consumed by the page for HUD + feedback. */
 export type TickResult = {
   world: World;
   status: GameResultStatus;
-  /** A zombie was destroyed this tick (for haptics/sfx). */
   zombieKilled: boolean;
-  /** The vehicle was destroyed this tick. */
-  vehicleKilled: boolean;
-  /** A dropped bomb was detonated this tick. */
-  bombDetonated: boolean;
-  /** The gun was hit (lost a life) this tick. */
-  shipHit: boolean;
+  bubKilled: boolean;
+  heroHit: boolean;
+  grenadeDetonated: boolean;
+  ambulanceDestroyed: boolean;
+  /** A round boundary was crossed this tick. */
+  roundAdvanced: boolean;
+  /** A full 4-round cycle completed (helicopter extracted) this tick. */
+  rescued: boolean;
 };

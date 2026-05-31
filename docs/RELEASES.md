@@ -1,3 +1,36 @@
+# William Temple House Digital Raffle System v1.12.0
+
+**Release Date:** May 31, 2026
+
+**Zombie Attack!** gets a big gameplay overhaul — it's now a **top-down survival
+game** with hand-drawn NES-era sprites, a helicopter rescue you have to defend
+across timed rounds, and a special soldier zombie.
+
+## Zombie Attack! — Top-Down Survival
+
+- **New view & art.** The game is now played from above, with detailed,
+  multi-colour sprites: four kinds of **civilian zombies** in street clothes, a
+  **hero** wielding an Uzi, and a military **helicopter** on a marked helipad.
+- **Shamble from above.** Zombies pour in from the top and weave downward toward
+  your **bunker line**. Most don't shoot — the danger is the sheer crowd. Hold
+  the line; if they overrun the bunkers, the pad falls.
+- **Meet Bub.** A zombie **soldier** (a nod to *Day of the Dead*) shows up now and
+  then — he takes two shots, fires back with his pistol, and may **drop a live
+  grenade** when he falls. Shoot the grenade to blow a hole in the horde.
+- **Defend the extraction.** Each game runs as a **timed rescue** in four rounds —
+  the chopper flies in, **refuels**, **boards passengers**, and **takes off**.
+  Outlast the clock each round to get them out, then a tougher cycle begins.
+- **Watch for the ambulance.** A runaway ambulance occasionally barrels through —
+  shoot it to set off a blast that clears the zombies around it.
+- **Controls & difficulty.** Slide to move, hold **A** to fire your Uzi. Six
+  difficulty settings tune the crowd size, speed, and how often Bub appears
+  (Nightmare is relentless and removes the sandbag bunkers). Eight languages, and
+  still tuned for the 2015 iPad Mini baseline.
+
+Design and implementation notes live in `docs/ZOMBIE_ATTACK.md`.
+
+---
+
 # William Temple House Digital Raffle System v1.11.0
 
 **Release Date:** May 30, 2026

@@ -1,222 +1,182 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
-  BLAST_RADIUS,
+  AMBULANCE_SCORE,
   BOARD_W,
-  BOMB_SPEED,
-  BOMB_W,
+  BUB_SCORE,
   BUNKER_Y,
-  GROUND_BOMB_H,
+  HERO_SIZE,
+  HERO_Y,
   INITIAL_LIVES,
-  INV_COLS,
-  INV_ROWS,
-  MAX_SHOTS,
-  ROW_POINTS,
-  SHIP_W,
-  SHIP_Y,
   SHOT_SPEED,
-  VEHICLE_POINTS,
+  ZOMBIE_SCORE,
 } from "@/arcade/game/zombie-attack/constants";
-import { initialWorld, nextWaveWorld, tick, zombieRect } from "@/arcade/game/zombie-attack/engine";
-import type { DifficultyParams, World, Zombie } from "@/arcade/game/zombie-attack/types";
+import { __resetRng, __setRng, initialWorld, tick } from "@/arcade/game/zombie-attack/engine";
+import type { DifficultyParams, Projectile, World, Zombie } from "@/arcade/game/zombie-attack/types";
 
 const DP: DifficultyParams = {
-  stepBaseMs: 600,
-  bombIntervalMs: 1500,
+  spawnIntervalMs: 1600,
+  zombieSpeed: 0.35,
+  bubIntervalMs: 11000,
   bunkers: true,
-  bunkerBombProof: false,
-  vehicleHp: 3,
+  ambulanceHp: 4,
 };
 const DP_NO_BUNKERS: DifficultyParams = { ...DP, bunkers: false };
-const DP_BOMBPROOF: DifficultyParams = { ...DP, bunkerBombProof: true };
 
-const ALIVE = (w: World) => w.zombies.filter((z) => z.alive).length;
+afterEach(() => __resetRng());
 
-/** A controlled world: no random bombs/vehicle interference, single concern under test. */
+/** A controlled world with spawns/timers disabled so a single concern is testable. */
 function controlled(overrides: Partial<World>): World {
   return {
     ...initialWorld(DP),
     zombies: [],
     shots: [],
-    bombs: [],
-    groundBombs: [],
-    vehicle: null,
-    explosions: [],
-    vehicleTimerMs: 9_000_000,
+    bubShots: [],
+    grenades: [],
+    ambulance: null,
+    spawnTimerMs: 1e9,
+    bubTimerMs: 1e9,
+    ambulanceTimerMs: 1e9,
     ...overrides,
   };
 }
 
-function zombieAt(col: number, row: number, carriesBomb = false): Zombie {
-  const tier = row === 0 ? 0 : row <= 2 ? 1 : 2;
-  return { col, row, tier, alive: true, carriesBomb };
+function mkZombie(x: number, y: number, kind: "civilian" | "bub" = "civilian", over: Partial<Zombie> = {}): Zombie {
+  return {
+    id: Math.floor(Math.random() * 1e6),
+    kind,
+    type: 0,
+    x,
+    y,
+    vx: 0,
+    vy: 0,
+    dirTimerMs: 1e9, // no re-roll
+    animMs: 0,
+    frame: 0,
+    hp: kind === "bub" ? 2 : 1,
+    fireTimerMs: 1e9, // bub won't fire
+    aim: "down",
+    dying: 0,
+    ...over,
+  };
 }
 
-/** Place a shot centered on a zombie so it collides on the next tick. */
-function shotOnZombie(world: World, z: Zombie) {
-  const r = zombieRect(world, z);
-  return { id: 1, x: r.x + r.w / 2, y: r.y + r.h / 2, vy: -SHOT_SPEED };
+function mkShot(x: number, y: number): Projectile {
+  return { id: Math.floor(Math.random() * 1e6), x, y, vx: 0, vy: -SHOT_SPEED };
 }
 
-describe("Zombie Attack engine", () => {
-  it("builds a full wave-1 horde with lives, fence, and bunkers", () => {
+const input = (w: World, fire = false) => ({ heroX: w.hero.x, fire });
+
+describe("Zombie Attack engine (v2)", () => {
+  it("starts a fresh run: hero centred, 3 lives, round 1, full bunker integrity", () => {
     const w = initialWorld(DP);
-    expect(ALIVE(w)).toBe(INV_ROWS * INV_COLS);
     expect(w.lives).toBe(INITIAL_LIVES);
-    expect(w.wave).toBe(1);
-    expect(w.fenceHp).toBe(w.fenceMaxHp);
-    expect(w.fenceHp).toBeGreaterThan(0);
-    expect(w.bunkers.length).toBeGreaterThan(0);
+    expect(w.round).toBe(1);
+    expect(w.cycle).toBe(0);
+    expect(w.zombies.length).toBe(0);
+    expect(w.bunkerIntegrity).toBe(6);
+    expect(initialWorld(DP_NO_BUNKERS).bunkerIntegrity).toBe(2);
   });
 
-  it("omits bunkers on a no-bunker difficulty (e.g. Nightmare)", () => {
-    expect(initialWorld(DP_NO_BUNKERS).bunkers.length).toBe(0);
+  it("spawns descending zombies with a stochastic, downward-biased direction", () => {
+    // RNG = 0 → rollDir 'down' (vx 0); RNG ≈ 0.6 → 'down-left' (vx < 0).
+    __setRng(() => 0);
+    const down = controlled({ spawnTimerMs: 0 });
+    const r1 = tick(down, input(down), DP).world;
+    const z1 = r1.zombies.at(-1)!;
+    expect(z1.vy).toBeGreaterThan(0);
+    expect(z1.vx).toBe(0);
+
+    __setRng(() => 0.6);
+    const diag = controlled({ spawnTimerMs: 0 });
+    const r2 = tick(diag, input(diag), DP).world;
+    const z2 = r2.zombies.at(-1)!;
+    expect(z2.vx).toBeLessThan(0); // down-left
+    expect(z2.vy).toBeGreaterThan(0);
   });
 
-  it("destroys a zombie hit by a player shot and awards that row's points", () => {
-    const z = zombieAt(0, 0);
-    const base = controlled({ zombies: [z] });
-    const world: World = { ...base, shots: [shotOnZombie(base, z)], nextProjectileId: 2 };
-
-    const res = tick(world, { shipX: world.shipX, fire: false }, DP);
+  it("a player shot kills a civilian and scores", () => {
+    const w = controlled({ zombies: [mkZombie(120, 100)], shots: [mkShot(120, 100)] });
+    const res = tick(w, input(w), DP);
     expect(res.zombieKilled).toBe(true);
-    expect(res.world.zombies[0]!.alive).toBe(false);
-    expect(res.world.score).toBe(ROW_POINTS[0]);
+    expect(res.world.zombies[0]!.hp).toBeLessThanOrEqual(0);
+    expect(res.world.score).toBe(ZOMBIE_SCORE);
   });
 
-  it("drops a bomb in place when a bomb-carrier is shot", () => {
-    const carrier = zombieAt(2, 0, true);
-    const base = controlled({ zombies: [carrier] });
-    const world: World = { ...base, shots: [shotOnZombie(base, carrier)], nextProjectileId: 2 };
+  it("Bub takes two shots and can drop a grenade on death", () => {
+    const bub = mkZombie(120, 100, "bub");
+    const w1 = controlled({ zombies: [bub], shots: [mkShot(120, 100)] });
+    const r1 = tick(w1, input(w1), DP);
+    expect(r1.bubKilled).toBe(false);
+    expect(r1.world.zombies[0]!.hp).toBe(1);
 
-    const res = tick(world, { shipX: world.shipX, fire: false }, DP);
-    expect(res.zombieKilled).toBe(true);
-    expect(res.world.groundBombs.length).toBe(1);
+    // Second hit kills him; RNG 0 < drop-chance → drops a grenade.
+    __setRng(() => 0);
+    const r2 = tick({ ...r1.world, shots: [mkShot(r1.world.zombies[0]!.x, r1.world.zombies[0]!.y)] }, input(r1.world), DP);
+    expect(r2.bubKilled).toBe(true);
+    expect(r2.world.score).toBe(BUB_SCORE);
+    expect(r2.world.grenades.length).toBe(1);
   });
 
-  it("detonates a dropped bomb to wipe out nearby zombies (AoE), sparing distant ones", () => {
-    // Cluster up top, the dropped bomb just below them, a lone zombie far away.
-    const near = [zombieAt(0, 0), zombieAt(0, 1), zombieAt(1, 0)];
-    const far = zombieAt(5, 4);
-    const base = controlled({ zombies: [...near, far], formX: 100, formY: 40 });
-    const gb = { id: 1, x: 117.5, y: 93.5, vy: 1 }; // centre ≈ (120, 96)
-    // Shot just below the bomb → they converge on the next tick.
-    const shot = { id: 2, x: 119, y: gb.y + GROUND_BOMB_H + 2, vy: -SHOT_SPEED };
-    const world: World = { ...base, groundBombs: [gb], shots: [shot], nextProjectileId: 3 };
-
-    const res = tick(world, { shipX: world.shipX, fire: false }, DP);
-    expect(res.bombDetonated).toBe(true);
-    expect(res.world.groundBombs.length).toBe(0);
+  it("shooting a dropped grenade detonates an AoE blast, sparing distant zombies", () => {
+    const near = [mkZombie(120, 118), mkZombie(138, 120), mkZombie(120, 148)];
+    const far = mkZombie(120, 200);
+    const w = controlled({
+      zombies: [...near, far],
+      grenades: [{ id: 99, x: 120, y: 120, armed: true, exploding: 0 }],
+      shots: [mkShot(120, 128)],
+    });
+    const res = tick(w, input(w), DP);
+    expect(res.grenadeDetonated).toBe(true);
     for (const z of near) {
-      const after = res.world.zombies.find((q) => q.col === z.col && q.row === z.row)!;
-      expect(after.alive).toBe(false);
+      expect(res.world.zombies.find((q) => q.id === z.id)!.hp).toBeLessThanOrEqual(0);
     }
-    const farAfter = res.world.zombies.find((q) => q.col === far.col && q.row === far.row)!;
-    expect(farAfter.alive).toBe(true);
-    // Sanity: the far zombie really is outside the blast radius.
-    const fr = zombieRect(base, far);
-    const dist = Math.hypot(fr.x + fr.w / 2 - 120, fr.y + fr.h / 2 - 96);
-    expect(dist).toBeGreaterThan(BLAST_RADIUS);
+    expect(res.world.zombies.find((q) => q.id === far.id)!.hp).toBeGreaterThan(0);
   });
 
-  it("takes the difficulty's vehicleHp shots to destroy the flaming vehicle", () => {
-    const decoy = zombieAt(0, 0);
-    const make = () =>
-      controlled({ zombies: [decoy], formX: 10, formY: 10, vehicle: { x: 100, y: 20, hp: DP.vehicleHp, points: VEHICLE_POINTS } });
+  it("destroys the ambulance after its HP is spent and scores", () => {
+    const base = controlled({ ambulance: { x: 100, y: 60, hp: 2, exploding: 0 } });
+    const r1 = tick({ ...base, shots: [mkShot(110, 70)] }, input(base), DP);
+    expect(r1.ambulanceDestroyed).toBe(false);
+    expect(r1.world.ambulance?.hp).toBe(1);
 
-    // One hit only chips it.
-    const hit = make();
-    const r1 = tick({ ...hit, shots: [{ id: 1, x: 108, y: 30, vy: -SHOT_SPEED }], nextProjectileId: 2 }, { shipX: hit.shipX, fire: false }, DP);
-    expect(r1.vehicleKilled).toBe(false);
-    expect(r1.world.vehicle?.hp).toBe(DP.vehicleHp - 1);
-
-    // A vehicle on its last hit is destroyed and scores.
-    const lethal = controlled({ zombies: [decoy], formX: 10, formY: 10, vehicle: { x: 100, y: 20, hp: 1, points: VEHICLE_POINTS } });
-    const r2 = tick({ ...lethal, shots: [{ id: 1, x: 108, y: 30, vy: -SHOT_SPEED }], nextProjectileId: 2 }, { shipX: lethal.shipX, fire: false }, DP);
-    expect(r2.vehicleKilled).toBe(true);
-    expect(r2.world.vehicle).toBeNull();
-    expect(r2.world.score).toBe(VEHICLE_POINTS);
+    const r2 = tick({ ...r1.world, shots: [mkShot(110, 70)] }, input(r1.world), DP);
+    expect(r2.ambulanceDestroyed).toBe(true);
+    expect(r2.world.score).toBeGreaterThanOrEqual(AMBULANCE_SCORE);
   });
 
-  it("subtracts a life (with invulnerability) when a thrown bomb hits the gun, and ends at zero", () => {
-    const decoy = zombieAt(0, 0);
-    const shipX = (BOARD_W - SHIP_W) / 2;
-    const bomb = () => ({ id: 1, x: shipX + SHIP_W / 2 - BOMB_W / 2, y: SHIP_Y, vy: BOMB_SPEED });
-
-    const hurt = controlled({ zombies: [decoy], formX: 10, formY: 10, shipX, shipInvuln: 0, bombs: [bomb()], nextProjectileId: 2 });
-    const r1 = tick(hurt, { shipX, fire: false }, DP);
-    expect(r1.shipHit).toBe(true);
+  it("a Bub bullet that hits the hero costs a life (and ends the game at zero)", () => {
+    const heroCx = (BOARD_W - HERO_SIZE) / 2 + HERO_SIZE / 2;
+    const heroCy = HERO_Y + HERO_SIZE / 2;
+    const w = controlled({ bubShots: [{ id: 7, x: heroCx, y: heroCy, vx: 0, vy: 0 }] });
+    const r1 = tick(w, input(w), DP);
+    expect(r1.heroHit).toBe(true);
     expect(r1.world.lives).toBe(INITIAL_LIVES - 1);
-    expect(r1.world.shipInvuln).toBeGreaterThan(0);
 
-    const lastLife = controlled({ zombies: [decoy], formX: 10, formY: 10, shipX, shipInvuln: 0, lives: 1, bombs: [bomb()], nextProjectileId: 2 });
-    const r2 = tick(lastLife, { shipX, fire: false }, DP);
+    const lethal = controlled({ lives: 1, bubShots: [{ id: 8, x: heroCx, y: heroCy, vx: 0, vy: 0 }] });
+    const r2 = tick(lethal, input(lethal), DP);
     expect(r2.world.lives).toBe(0);
     expect(r2.status).toBe("game-over");
   });
 
-  it("is game over when the horde reaches the bunker line", () => {
-    const z = zombieAt(0, 0);
-    const world = controlled({ zombies: [z], formY: BUNKER_Y - 16, fenceHp: 0 });
-    const res = tick(world, { shipX: world.shipX, fire: false }, DP);
+  it("advances rounds on the timer and extracts (rescue) after round 4", () => {
+    const r = controlled({ round: 1, roundMsLeft: 10, roundTotalMs: 28000 });
+    const adv = tick(r, input(r), DP);
+    expect(adv.roundAdvanced).toBe(true);
+    expect(adv.world.round).toBe(2);
+
+    const last = controlled({ round: 4, roundMsLeft: 10, roundTotalMs: 22000, zombies: [mkZombie(120, 80)] });
+    const rescue = tick(last, input(last), DP);
+    expect(rescue.rescued).toBe(true);
+    expect(rescue.world.cycle).toBe(1);
+    expect(rescue.world.round).toBe(1);
+    expect(rescue.world.zombies.length).toBe(0); // the lot clears on extraction
+    expect(rescue.world.celebrationMs).toBeGreaterThan(0);
+  });
+
+  it("is game over once the horde overruns the bunker line", () => {
+    const w = controlled({ bunkerIntegrity: 1, zombies: [mkZombie(120, BUNKER_Y - 0.05, "civilian", { vy: 0.5 })] });
+    const res = tick(w, input(w), DP);
     expect(res.status).toBe("game-over");
-    expect(res.world.lives).toBe(0);
-  });
-
-  it("clears the wave when the last zombie dies and rebuilds the fence next wave", () => {
-    const z = zombieAt(3, 0);
-    const base = controlled({ zombies: [z], fenceHp: 10 });
-    const cleared = tick({ ...base, shots: [shotOnZombie(base, z)], nextProjectileId: 2 }, { shipX: base.shipX, fire: false }, DP);
-    expect(cleared.status).toBe("wave-cleared");
-
-    const next = nextWaveWorld({ ...cleared.world, wave: 2, score: 500, lives: 2 }, DP);
-    expect(next.wave).toBe(3);
-    expect(next.score).toBe(500);
-    expect(next.lives).toBe(2);
-    expect(ALIVE(next)).toBe(INV_ROWS * INV_COLS);
-    expect(next.fenceHp).toBe(next.fenceMaxHp);
-  });
-
-  it("makes bunkers bomb-proof only on the easiest difficulty", () => {
-    const erodes = initialWorld(DP);
-    const target1 = erodes.bunkers[0]!;
-    const w1: World = { ...erodes, shots: [], bombs: [{ id: 1, x: target1.x, y: target1.y, vy: BOMB_SPEED }], vehicle: null, vehicleTimerMs: 9_000_000, nextProjectileId: 2 };
-    tick(w1, { shipX: w1.shipX, fire: false }, DP);
-    expect(target1.alive).toBe(false); // normal difficulty erodes
-
-    const proof = initialWorld(DP_BOMBPROOF);
-    const target2 = proof.bunkers[0]!;
-    const w2: World = { ...proof, shots: [], bombs: [{ id: 1, x: target2.x, y: target2.y, vy: BOMB_SPEED }], vehicle: null, vehicleTimerMs: 9_000_000, nextProjectileId: 2 };
-    const r2 = tick(w2, { shipX: w2.shipX, fire: false }, DP_BOMBPROOF);
-    expect(target2.alive).toBe(true); // bomb-proof survives
-    expect(r2.world.bombs.length).toBe(0); // ...but the bomb is still stopped
-  });
-
-  it("respects the shot cooldown and the on-screen shot cap", () => {
-    const decoy = zombieAt(0, 0);
-    const shipX = (BOARD_W - SHIP_W) / 2;
-
-    const w0 = controlled({ zombies: [decoy], formX: 10, formY: 10, shipX, shotCooldownMs: 0 });
-    const t1 = tick(w0, { shipX, fire: true }, DP);
-    expect(t1.world.shots.length).toBe(1);
-    expect(t1.world.shotCooldownMs).toBeGreaterThan(0);
-
-    const t2 = tick(t1.world, { shipX, fire: true }, DP);
-    expect(t2.world.shots.length).toBe(1); // cooldown blocks a second shot
-
-    const full = controlled({
-      zombies: [decoy],
-      formX: 10,
-      formY: 10,
-      shipX,
-      shotCooldownMs: 0,
-      shots: [
-        { id: 1, x: shipX, y: 160, vy: -SHOT_SPEED },
-        { id: 2, x: shipX + 4, y: 170, vy: -SHOT_SPEED },
-      ],
-      nextProjectileId: 3,
-    });
-    const t3 = tick(full, { shipX, fire: true }, DP);
-    expect(t3.world.shots.length).toBeLessThanOrEqual(MAX_SHOTS);
   });
 });

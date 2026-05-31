@@ -4,9 +4,17 @@ import * as React from "react";
 import Link from "next/link";
 
 import { ARCADE_PLAY_RESUMED_EVENT, ARCADE_TICKET_CALLED_EVENT } from "@/arcade/lib/events";
-import { BOARD_H, BOARD_W, FIXED_STEP_MS, SHIP_W } from "@/arcade/game/zombie-attack/constants";
-import { initialWorld, nextWaveWorld, tick } from "@/arcade/game/zombie-attack/engine";
+import {
+  BOARD_H,
+  BOARD_W,
+  FIXED_STEP_MS,
+  HERO_KEY_SPEED,
+  HERO_MAX_X,
+  HERO_MIN_X,
+} from "@/arcade/game/zombie-attack/constants";
+import { initialWorld, tick } from "@/arcade/game/zombie-attack/engine";
 import { drawBoard } from "@/arcade/game/zombie-attack/renderer";
+import { loadAssets, type LoadedAssets } from "@/arcade/game/zombie-attack/assets";
 import type { DifficultyParams, ShooterInput, World } from "@/arcade/game/zombie-attack/types";
 import { ChevronArrowLeftIcon } from "@/arcade/components/icons/chevron-arrow-left-icon";
 import { Button, Card, CardContent, CardHeader, CardTitle, Slider } from "@/arcade/ui/8bit";
@@ -23,32 +31,32 @@ type ZombieModePreset = {
     | "snakeModeHard"
     | "snakeModeVeryHard"
     | "snakeModeNightmare";
-  stepBaseMs: number;
-  bombIntervalMs: number;
+  spawnIntervalMs: number;
+  zombieSpeed: number;
+  bubIntervalMs: number;
   bunkers: boolean;
-  bunkerBombProof: boolean;
-  vehicleHp: number;
+  ambulanceHp: number;
 };
 
 const ZOMBIE_MODE_PRESETS: readonly ZombieModePreset[] = [
-  { key: "veryEasy",  labelKey: "snakeModeVeryEasy",  stepBaseMs: 760, bombIntervalMs: 2200, bunkers: true,  bunkerBombProof: true,  vehicleHp: 3 },
-  { key: "easy",      labelKey: "snakeModeEasy",      stepBaseMs: 640, bombIntervalMs: 1750, bunkers: true,  bunkerBombProof: false, vehicleHp: 3 },
-  { key: "normal",    labelKey: "snakeModeNormal",    stepBaseMs: 540, bombIntervalMs: 1400, bunkers: true,  bunkerBombProof: false, vehicleHp: 3 },
-  { key: "hard",      labelKey: "snakeModeHard",      stepBaseMs: 450, bombIntervalMs: 1050, bunkers: true,  bunkerBombProof: false, vehicleHp: 4 },
-  { key: "veryHard",  labelKey: "snakeModeVeryHard",  stepBaseMs: 370, bombIntervalMs: 780,  bunkers: true,  bunkerBombProof: false, vehicleHp: 4 },
-  { key: "nightmare", labelKey: "snakeModeNightmare", stepBaseMs: 290, bombIntervalMs: 560,  bunkers: false, bunkerBombProof: false, vehicleHp: 5 },
+  { key: "veryEasy",  labelKey: "snakeModeVeryEasy",  spawnIntervalMs: 2200, zombieSpeed: 0.28, bubIntervalMs: 16000, bunkers: true,  ambulanceHp: 3 },
+  { key: "easy",      labelKey: "snakeModeEasy",      spawnIntervalMs: 1900, zombieSpeed: 0.31, bubIntervalMs: 14000, bunkers: true,  ambulanceHp: 3 },
+  { key: "normal",    labelKey: "snakeModeNormal",    spawnIntervalMs: 1600, zombieSpeed: 0.35, bubIntervalMs: 11000, bunkers: true,  ambulanceHp: 4 },
+  { key: "hard",      labelKey: "snakeModeHard",      spawnIntervalMs: 1300, zombieSpeed: 0.40, bubIntervalMs: 9000,  bunkers: true,  ambulanceHp: 4 },
+  { key: "veryHard",  labelKey: "snakeModeVeryHard",  spawnIntervalMs: 1050, zombieSpeed: 0.46, bubIntervalMs: 7000,  bunkers: true,  ambulanceHp: 5 },
+  { key: "nightmare", labelKey: "snakeModeNightmare", spawnIntervalMs: 800,  zombieSpeed: 0.54, bubIntervalMs: 4500,  bunkers: false, ambulanceHp: 6 },
 ];
 const DEFAULT_MODE_INDEX = 2;
 
-const SHIP_RANGE = Math.max(1, BOARD_W - SHIP_W);
+const HERO_RANGE = Math.max(1, HERO_MAX_X - HERO_MIN_X);
 
-function dpFromPreset(preset: ZombieModePreset): DifficultyParams {
+function dpFromPreset(p: ZombieModePreset): DifficultyParams {
   return {
-    stepBaseMs: preset.stepBaseMs,
-    bombIntervalMs: preset.bombIntervalMs,
-    bunkers: preset.bunkers,
-    bunkerBombProof: preset.bunkerBombProof,
-    vehicleHp: preset.vehicleHp,
+    spawnIntervalMs: p.spawnIntervalMs,
+    zombieSpeed: p.zombieSpeed,
+    bubIntervalMs: p.bubIntervalMs,
+    bunkers: p.bunkers,
+    ambulanceHp: p.ambulanceHp,
   };
 }
 
@@ -59,9 +67,18 @@ export default function ZombieAttackPage() {
   const isLargeTextLocale = language === "ar" || language === "fa" || language === "zh";
   const { trigger: triggerHaptic } = useAppHaptics();
   const hapticRef = React.useRef(triggerHaptic);
+  React.useEffect(() => { hapticRef.current = triggerHaptic; }, [triggerHaptic]);
+
+  /* ── Assets ── */
+  const assetsRef = React.useRef<LoadedAssets | null>(null);
+  const [assetsReady, setAssetsReady] = React.useState(false);
   React.useEffect(() => {
-    hapticRef.current = triggerHaptic;
-  }, [triggerHaptic]);
+    let alive = true;
+    loadAssets().then((a) => {
+      if (alive) { assetsRef.current = a; setAssetsReady(true); }
+    });
+    return () => { alive = false; };
+  }, []);
 
   /* ── Difficulty ── */
   const [modeIndex, setModeIndex] = React.useState(DEFAULT_MODE_INDEX);
@@ -77,13 +94,16 @@ export default function ZombieAttackPage() {
   const [status, setStatus] = React.useState<GameStatus>("READY");
   const [score, setScore] = React.useState(0);
   const [lives, setLives] = React.useState(3);
-  const [wave, setWave] = React.useState(1);
+  const [round, setRound] = React.useState(1);
+  const [cycle, setCycle] = React.useState(0);
+  const [secondsLeft, setSecondsLeft] = React.useState(0);
+  const [celebrating, setCelebrating] = React.useState(false);
   const [sliderValue, setSliderValue] = React.useState(50);
 
   /* ── Live game refs ── */
   const worldRef = React.useRef<World>(initialWorld(dp));
   const statusRef = React.useRef<GameStatus>("READY");
-  const shipTargetRef = React.useRef<number>((BOARD_W - SHIP_W) / 2);
+  const heroTargetRef = React.useRef<number>((BOARD_W) / 2);
   const fireRef = React.useRef(false);
   const keysDownRef = React.useRef<Set<string>>(new Set());
   const rafIdRef = React.useRef<number>(0);
@@ -92,16 +112,30 @@ export default function ZombieAttackPage() {
 
   const boardCanvasRef = React.useRef<HTMLCanvasElement>(null);
   const playAreaRef = React.useRef<HTMLElement>(null);
+  const timerBarRef = React.useRef<HTMLDivElement>(null);
   const scoreRef = React.useRef(0);
   const livesRef = React.useRef(3);
-  const waveRef = React.useRef(1);
+  const roundRef = React.useRef(1);
+  const cycleRef = React.useRef(0);
+  const secondsRef = React.useRef(0);
+  const celebrateRef = React.useRef(false);
 
   React.useEffect(() => { statusRef.current = status; }, [status]);
 
   const syncReactState = React.useCallback((w: World, force = false) => {
     if (force || w.score !== scoreRef.current) { scoreRef.current = w.score; setScore(w.score); }
     if (force || w.lives !== livesRef.current) { livesRef.current = w.lives; setLives(w.lives); }
-    if (force || w.wave !== waveRef.current) { waveRef.current = w.wave; setWave(w.wave); }
+    if (force || w.round !== roundRef.current) { roundRef.current = w.round; setRound(w.round); }
+    if (force || w.cycle !== cycleRef.current) { cycleRef.current = w.cycle; setCycle(w.cycle); }
+    const secs = Math.max(0, Math.ceil(w.roundMsLeft / 1000));
+    if (force || secs !== secondsRef.current) { secondsRef.current = secs; setSecondsLeft(secs); }
+    const celeb = w.celebrationMs > 0;
+    if (force || celeb !== celebrateRef.current) { celebrateRef.current = celeb; setCelebrating(celeb); }
+    // Smooth timer bar (no React churn).
+    if (timerBarRef.current) {
+      const frac = w.roundTotalMs > 0 ? Math.max(0, Math.min(1, w.roundMsLeft / w.roundTotalMs)) : 0;
+      timerBarRef.current.style.width = `${frac * 100}%`;
+    }
   }, []);
 
   const notifyPlayResumed = React.useCallback(() => {
@@ -115,11 +149,28 @@ export default function ZombieAttackPage() {
     playArea.focus({ preventScroll: true });
   }, []);
 
+  /* ── Drawing ── */
+  const draw = React.useCallback(() => {
+    const canvas = boardCanvasRef.current;
+    const assets = assetsRef.current;
+    if (!canvas || !assets) return;
+    if (typeof navigator !== "undefined" && /\bjsdom\b/i.test(navigator.userAgent)) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    if (canvas.width !== BOARD_W || canvas.height !== BOARD_H) {
+      canvas.width = BOARD_W;
+      canvas.height = BOARD_H;
+    }
+    drawBoard(ctx, worldRef.current, assets);
+  }, []);
+
+  React.useEffect(() => { if (assetsReady) draw(); }, [draw, assetsReady]);
+
   /* ── Reset / restart ── */
   const resetGame = React.useCallback(() => {
     const w = initialWorld(dpRef.current);
     worldRef.current = w;
-    shipTargetRef.current = w.shipX;
+    heroTargetRef.current = w.hero.x;
     fireRef.current = false;
     accumulatorRef.current = 0;
     lastTimeRef.current = 0;
@@ -130,17 +181,14 @@ export default function ZombieAttackPage() {
 
   const restartRun = React.useCallback(() => {
     resetGame();
-    setTimeout(() => {
-      setStatus("RUNNING");
-      notifyPlayResumed();
-    }, 0);
+    setTimeout(() => { setStatus("RUNNING"); notifyPlayResumed(); }, 0);
   }, [resetGame, notifyPlayResumed]);
 
   /* ── Difficulty change resets the run ── */
   React.useEffect(() => {
     const w = initialWorld(dp);
     worldRef.current = w;
-    shipTargetRef.current = w.shipX;
+    heroTargetRef.current = w.hero.x;
     fireRef.current = false;
     accumulatorRef.current = 0;
     lastTimeRef.current = 0;
@@ -148,36 +196,6 @@ export default function ZombieAttackPage() {
     setSliderValue(50);
     setStatus("READY");
   }, [dp, syncReactState]);
-
-  /* ── Drawing ── */
-  const draw = React.useCallback(() => {
-    const canvas = boardCanvasRef.current;
-    if (!canvas) return;
-    if (typeof navigator !== "undefined" && /\bjsdom\b/i.test(navigator.userAgent)) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    if (canvas.width !== BOARD_W || canvas.height !== BOARD_H) {
-      canvas.width = BOARD_W;
-      canvas.height = BOARD_H;
-    }
-    drawBoard(ctx, worldRef.current, canvas);
-  }, []);
-
-  React.useEffect(() => { draw(); }, [draw]);
-
-  React.useEffect(() => {
-    const handleRedraw = () => draw();
-    const rootObserver = new MutationObserver(handleRedraw);
-    rootObserver.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class", "style"],
-    });
-    window.addEventListener("resize", handleRedraw);
-    return () => {
-      rootObserver.disconnect();
-      window.removeEventListener("resize", handleRedraw);
-    };
-  }, [draw]);
 
   /* ── Game loop ── */
   React.useEffect(() => {
@@ -187,7 +205,6 @@ export default function ZombieAttackPage() {
       accumulatorRef.current = 0;
       return;
     }
-
     const loop = (timestamp: number) => {
       if (statusRef.current !== "RUNNING") return;
       if (lastTimeRef.current === 0) {
@@ -199,30 +216,21 @@ export default function ZombieAttackPage() {
       lastTimeRef.current = timestamp;
       accumulatorRef.current += delta;
 
-      // Keyboard ship movement → shipTarget.
       const keys = keysDownRef.current;
-      const movingLeft = keys.has("ArrowLeft") || keys.has("Left");
-      const movingRight = keys.has("ArrowRight") || keys.has("Right");
-      if (movingLeft) shipTargetRef.current = Math.max(0, shipTargetRef.current - 2.4);
-      if (movingRight) shipTargetRef.current = Math.min(SHIP_RANGE, shipTargetRef.current + 2.4);
-      if (movingLeft || movingRight) {
-        setSliderValue(Math.round((shipTargetRef.current / SHIP_RANGE) * 100));
+      const left = keys.has("ArrowLeft") || keys.has("Left");
+      const right = keys.has("ArrowRight") || keys.has("Right");
+      if (left) heroTargetRef.current = Math.max(HERO_MIN_X, heroTargetRef.current - HERO_KEY_SPEED);
+      if (right) heroTargetRef.current = Math.min(HERO_MAX_X, heroTargetRef.current + HERO_KEY_SPEED);
+      if (left || right) {
+        setSliderValue(Math.round(((heroTargetRef.current - HERO_MIN_X) / HERO_RANGE) * 100));
       }
 
       while (accumulatorRef.current >= FIXED_STEP_MS) {
-        const input: ShooterInput = { shipX: shipTargetRef.current, fire: fireRef.current };
+        const input: ShooterInput = { heroX: heroTargetRef.current, fire: fireRef.current };
         const result = tick(worldRef.current, input, dpRef.current);
         worldRef.current = result.world;
         accumulatorRef.current -= FIXED_STEP_MS;
         syncReactState(result.world);
-
-        if (result.status === "wave-cleared") {
-          worldRef.current = nextWaveWorld(result.world, dpRef.current);
-          shipTargetRef.current = worldRef.current.shipX;
-          accumulatorRef.current = 0;
-          syncReactState(worldRef.current, true);
-          break;
-        }
         if (result.status === "game-over") {
           syncReactState(result.world, true);
           setStatus("GAME_OVER");
@@ -230,11 +238,9 @@ export default function ZombieAttackPage() {
           return;
         }
       }
-
       draw();
       rafIdRef.current = requestAnimationFrame(loop);
     };
-
     rafIdRef.current = requestAnimationFrame(loop);
     return () => {
       if (rafIdRef.current) { cancelAnimationFrame(rafIdRef.current); rafIdRef.current = 0; }
@@ -280,11 +286,11 @@ export default function ZombieAttackPage() {
     return () => window.removeEventListener(ARCADE_TICKET_CALLED_EVENT, onTicketCalled as EventListener);
   }, []);
 
-  /* ── Slider (ship movement) ── */
+  /* ── Slider (hero movement) ── */
   const handleSliderChange = React.useCallback(
     (value: number[]) => {
       const v = value[0] ?? 0;
-      shipTargetRef.current = (v / 100) * SHIP_RANGE;
+      heroTargetRef.current = HERO_MIN_X + (v / 100) * HERO_RANGE;
       setSliderValue(v);
       if (statusRef.current === "READY") { setStatus("RUNNING"); notifyPlayResumed(); }
     },
@@ -301,7 +307,6 @@ export default function ZombieAttackPage() {
 
   const stopFiring = React.useCallback(() => { fireRef.current = false; }, []);
 
-  /* ── Control buttons ── */
   const handlePlayNow = React.useCallback(() => {
     if (status === "READY" || status === "PAUSED") { setStatus("RUNNING"); notifyPlayResumed(); }
     else if (status === "GAME_OVER") { restartRun(); }
@@ -319,6 +324,10 @@ export default function ZombieAttackPage() {
     status === "RUNNING" ? t("pause") : status === "PAUSED" ? t("play") : t("start");
   const centerControlAriaLabel =
     status === "RUNNING" ? "Pause game" : status === "PAUSED" ? "Resume game" : "Start game";
+
+  const objectiveText = celebrating
+    ? t("zombieAttackExtractionComplete")
+    : t((["zombieAttackRound1", "zombieAttackRound2", "zombieAttackRound3", "zombieAttackRound4"] as const)[Math.min(3, Math.max(0, round - 1))]);
 
   return (
     <div className="arcade-pixel-grid arcade-zombie-shell mx-auto max-w-6xl px-4 pb-6 pt-8 sm:px-6 sm:pt-10">
@@ -341,9 +350,9 @@ export default function ZombieAttackPage() {
           <ul className="arcade-ui list-none space-y-2 text-lg text-[var(--arcade-text)]/90 sm:text-xl">
             <li>* {t("zombieAttackInstructionMove")}</li>
             <li>* {t("zombieAttackInstructionFire")}</li>
-            <li>* {t("zombieAttackInstructionBombs")}</li>
-            <li>* {t("zombieAttackInstructionVehicle")}</li>
             <li>* {t("zombieAttackInstructionDefend")}</li>
+            <li>* {t("zombieAttackInstructionBub")}</li>
+            <li>* {t("zombieAttackInstructionHeli")}</li>
           </ul>
         </CardContent>
       </Card>
@@ -381,8 +390,8 @@ export default function ZombieAttackPage() {
       </Card>
 
       <div className="mt-5 flex flex-wrap justify-center gap-3">
-        <Button type="button" size="lg" haptic="uiConfirm" className="arcade-zombie-noselect min-w-44" onClick={handlePlayNow}>
-          {t("playNow")}
+        <Button type="button" size="lg" haptic="uiConfirm" disabled={!assetsReady} className="arcade-zombie-noselect min-w-44" onClick={handlePlayNow}>
+          {assetsReady ? t("playNow") : "…"}
         </Button>
         {status === "GAME_OVER" ? (
           <Button type="button" variant="outline" haptic="uiDestructive" className="arcade-zombie-noselect min-w-36" onClick={resetGame}>
@@ -409,16 +418,27 @@ export default function ZombieAttackPage() {
         tabIndex={-1}
         aria-label="Zombie Attack play area"
       >
+        <p className={cn("arcade-zombie-objective arcade-ui", isLargeTextLocale ? "text-[16px] sm:text-[18px]" : "text-[11px]")}>
+          {objectiveText}
+        </p>
+
         <div className="arcade-zombie-readout arcade-zombie-readout-metrics arcade-ui">
-          <p className={cn("text-[var(--arcade-pellet)]", isLargeTextLocale ? "text-[26px] sm:text-[28px]" : "text-[13px]")}>
-            {t("score")}: {score}
+          <p className={cn("text-[var(--arcade-pellet)]", isLargeTextLocale ? "text-[22px] sm:text-[24px]" : "text-[12px]")}>
+            {t("zombieAttackRoundLabel")}: {round}/4
           </p>
-          <p className={cn("text-[var(--arcade-pellet)]", isLargeTextLocale ? "text-[26px] sm:text-[28px]" : "text-[13px]")}>
+          <p className={cn("text-[var(--arcade-dot)]", isLargeTextLocale ? "text-[22px] sm:text-[24px]" : "text-[12px]")}>
+            {t("zombieAttackTimeLabel")}: {secondsLeft}
+          </p>
+          <p className={cn("text-[var(--arcade-pellet)]", isLargeTextLocale ? "text-[22px] sm:text-[24px]" : "text-[12px]")}>
             {t("lives")}: {lives}
           </p>
-          <p className={cn("text-[var(--arcade-pellet)]", isLargeTextLocale ? "text-[26px] sm:text-[28px]" : "text-[13px]")}>
-            {t("zombieAttackWaveLabel")}: {wave}
+          <p className={cn("text-[var(--arcade-pellet)]", isLargeTextLocale ? "text-[22px] sm:text-[24px]" : "text-[12px]")}>
+            {t("score")}: {score}
           </p>
+        </div>
+
+        <div className="arcade-zombie-timerbar" aria-hidden="true">
+          <div ref={timerBarRef} className="arcade-zombie-timerbar-fill" style={{ width: "100%" }} />
         </div>
 
         <div
@@ -430,8 +450,16 @@ export default function ZombieAttackPage() {
           <canvas ref={boardCanvasRef} className="arcade-zombie-canvas pixelated" aria-hidden="true" />
           {status === "GAME_OVER" ? (
             <div className="arcade-zombie-overlay">
-              <p className="arcade-retro text-5xl text-[var(--arcade-neon)] sm:text-7xl">{t("gameOver")}</p>
-              <p className="arcade-ui text-3xl text-[var(--arcade-pellet)] sm:text-5xl">{t("tapToPlayAgain")}</p>
+              <p className="arcade-retro text-4xl text-[var(--arcade-neon)] sm:text-6xl">{t("gameOver")}</p>
+              <p className="arcade-ui text-2xl text-[var(--arcade-dot)] sm:text-4xl">
+                {t("score")} {score}{cycle > 0 ? ` · ×${cycle}` : ""}
+              </p>
+              <p className="arcade-ui text-2xl text-[var(--arcade-pellet)] sm:text-4xl">{t("tapToPlayAgain")}</p>
+            </div>
+          ) : null}
+          {celebrating && status !== "GAME_OVER" ? (
+            <div className="arcade-zombie-celebrate">
+              <p className="arcade-retro text-2xl text-[var(--arcade-dot)] sm:text-4xl">{t("zombieAttackExtractionComplete")}</p>
             </div>
           ) : null}
         </div>
@@ -460,7 +488,7 @@ export default function ZombieAttackPage() {
                 step={1}
                 value={[sliderValue]}
                 onValueChange={handleSliderChange}
-                aria-label="Move gun"
+                aria-label="Move hero"
               />
             </div>
             <Button

@@ -863,14 +863,16 @@ html.light .arcade-scope .arcade-brick-control-dock {
 /* The board is 25% taller than wide (224×280). Bound the width by the vertical
    budget ÷ 1.25 so the taller board fills the available height and minimises
    wasted space above the play area on small phones. */
+/* The board is a tall 2:3 (240×360). Bound the width by the vertical budget
+   ÷ 1.5 so the taller board fits and fills the height on small phones. */
 .arcade-zombie-shell {
-  --arcade-board-size: clamp(220px, min(92vw, calc((100dvh - 15rem) / 1.25)), 460px);
+  --arcade-board-size: clamp(196px, min(94vw, calc((100dvh - 16rem) / 1.5)), 380px);
   min-height: calc(100dvh - 4.5rem);
 }
 
 @media (min-width: 768px) {
   .arcade-zombie-shell {
-    --arcade-board-size: clamp(340px, min(80vw, calc((100dvh - 13rem) / 1.25)), 520px);
+    --arcade-board-size: clamp(280px, min(70vw, calc((100dvh - 13rem) / 1.5)), 440px);
   }
 }
 
@@ -903,20 +905,66 @@ html.light .arcade-scope .arcade-zombie-readout {
 .arcade-zombie-readout-metrics {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.35rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.18rem 0.6rem;
 }
 
 .arcade-zombie-readout-metrics p {
   white-space: nowrap;
-  line-height: 1.2;
+  line-height: 1.25;
   text-align: center;
+}
+
+/* Round objective banner above the board. */
+.arcade-zombie-objective {
+  width: var(--arcade-board-size);
+  text-align: center;
+  line-height: 1.2;
+  color: var(--arcade-dot);
+  text-shadow: none;
+  letter-spacing: 0.02em;
+  direction: ltr;
+}
+
+/* Slim round-timer bar. */
+.arcade-zombie-timerbar {
+  width: var(--arcade-board-size);
+  height: 6px;
+  background: rgba(4, 7, 15, 0.6);
+  border: 1px solid rgba(59, 124, 255, 0.4);
+  overflow: hidden;
+  direction: ltr;
+}
+
+html.light .arcade-scope .arcade-zombie-timerbar {
+  background: rgba(232, 241, 255, 0.8);
+  border: 1px solid rgba(49, 93, 187, 0.4);
+}
+
+.arcade-zombie-timerbar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--arcade-pellet), var(--arcade-dot));
+  transition: width 120ms linear;
+}
+
+/* Extraction-complete flash over the board. */
+.arcade-zombie-celebrate {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 4;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, rgba(116, 248, 74, 0.18), transparent 60%);
+  text-shadow: var(--arcade-type-bold-shadow);
 }
 
 .arcade-zombie-board {
   position: relative;
   width: var(--arcade-board-size);
-  aspect-ratio: 224 / 280;
+  aspect-ratio: 240 / 360;
   overflow: hidden;
   border: 4px solid var(--arcade-wall);
   background:
@@ -1048,7 +1096,7 @@ html.light .arcade-scope .arcade-zombie-control-dock {
 
 @media (max-height: 760px) {
   .arcade-zombie-shell {
-    --arcade-board-size: clamp(196px, min(90vw, calc((100dvh - 12rem) / 1.25)), 380px);
+    --arcade-board-size: clamp(170px, min(92vw, calc((100dvh - 12rem) / 1.5)), 320px);
   }
 
   .arcade-zombie-stage {

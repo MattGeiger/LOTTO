@@ -1,113 +1,113 @@
-/* ── Zombie Attack! – Numeric constants ──
+/* ── Zombie Attack! – Numeric constants (v2: top-down survival) ──
  *
- * A fixed-shooter (Space Invaders lineage) re-themed as a zombie horde defense.
- * All gameplay runs on a tall pixel-art virtual canvas; CSS scales it up with
- * `image-rendering: pixelated`. Coordinates are in virtual board pixels.
- *
- * Layout, top → bottom: zombie horde → FENCE → bunkers (sandbags) → your gun.
+ * A top-down last-stand: zombies spawn at the top and shamble DOWN toward the
+ * bunker line that protects the helipad. The player (a hero with an Uzi) paces
+ * the bottom and fires upward. Survive each timed round; the helicopter lands,
+ * refuels, boards, and takes off across a 4-round cycle. Coordinates are virtual
+ * board pixels; CSS scales the canvas up with `image-rendering: pixelated`.
  */
 
-/** Native (virtual) canvas size in pixels. Taller-than-wide (4:5). */
-export const BOARD_W = 224;
-export const BOARD_H = 280;
+/** Native (virtual) canvas size in pixels. Tall portrait. */
+export const BOARD_W = 240;
+export const BOARD_H = 360;
+
+/** Distinct civilian zombie sprite variants. */
+export const ZOMBIE_TYPE_COUNT = 4;
 
 /** Fixed timestep in milliseconds (~60 fps). Matches the other arcade games. */
 export const FIXED_STEP_MS = 16;
 
-/** Starting number of lives. */
+/** Starting lives (the hero). */
 export const INITIAL_LIVES = 3;
 
-/* ── Player gun ── */
-export const SHIP_W = 16;
-export const SHIP_H = 8;
-/** Gun top-edge Y — parked near the bottom of the board. */
-export const SHIP_Y = BOARD_H - SHIP_H - 8;
-/** Keyboard move speed (px per frame while an arrow is held). */
-export const SHIP_KEY_SPEED = 2.4;
-/** Frames of invulnerability (blink) after the gun is hit. */
-export const SHIP_INVULN_FRAMES = 90;
+/* ── Sprite draw sizes (source PNGs are 32×32; helicopter 128×128) ── */
+export const ZOMBIE_SIZE = 32;
+export const BUB_SIZE = 32;
+export const HERO_SIZE = 32;
+export const GRENADE_SIZE = 22;
+export const AMBULANCE_W = 36;
+export const AMBULANCE_H = 36;
+export const HELI_SIZE = 116;
 
-/* ── Player shots ── */
-export const SHOT_W = 2;
-export const SHOT_H = 6;
-export const SHOT_SPEED = 4.2;
-/** Max simultaneous player shots on screen. */
-export const MAX_SHOTS = 2;
-/** Cooldown between shots (ms). */
-export const SHOT_COOLDOWN_MS = 320;
+/* ── Hero (bottom, moves left↔right, fires up) ── */
+export const HERO_Y = BOARD_H - 60; // sprite top
+export const HERO_MIN_X = 2;
+export const HERO_MAX_X = BOARD_W - HERO_SIZE - 2;
+export const HERO_KEY_SPEED = 2.8;
+export const HERO_INVULN_FRAMES = 80;
+/** Muzzle offset from the hero sprite (where shots spawn). */
+export const HERO_MUZZLE_DX = HERO_SIZE / 2;
+export const HERO_MUZZLE_DY = 4;
 
-/* ── Zombie horde (formation) ── */
-export const INV_ROWS = 5;
-export const INV_COLS = 8;
-/** Per-zombie cell (sprites are centred inside this cell). */
-export const INV_CELL_W = 18;
-export const INV_CELL_H = 16;
-/** Drawn sprite size (must be <= cell). */
-export const INV_SPRITE_W = 12;
-export const INV_SPRITE_H = 8;
-/** Formation starting offsets (top-left of the cell grid) for wave 1. */
-export const INV_START_X = (BOARD_W - INV_COLS * INV_CELL_W) / 2;
-export const INV_START_Y = 24;
-/** Each wave drops the formation start down by this much (capped by engine). */
-export const INV_WAVE_DROP = 8;
-/** Horizontal step distance per move (px). */
-export const INV_STEP_X = 4;
-/** Vertical drop when the formation reverses at a wall (px). */
-export const INV_STEP_Y = 8;
-/** Side padding the formation must respect before reversing. */
-export const INV_EDGE_PAD = 6;
-/** The formation move cadence (ms) scales between base and base*MIN_FRACTION. */
-export const INV_STEP_MIN_FRACTION = 0.26;
-/** How many zombies in a fresh wave carry a bomb (highlighted). */
-export const BOMB_CARRIERS_PER_WAVE = 3;
+/* ── Player shots (Uzi — rapid, several on screen) ── */
+export const SHOT_W = 3;
+export const SHOT_H = 7;
+export const SHOT_SPEED = 4.6;
+export const MAX_SHOTS = 3;
+export const SHOT_COOLDOWN_MS = 150;
 
-/* ── Thrown bombs (a horde member lobs one at your gun) ── */
-export const BOMB_W = 2;
-export const BOMB_H = 6;
-export const BOMB_SPEED = 1.9;
-export const MAX_BOMBS = 4;
+/* ── Zombies (individual stochastic descent) ── */
+export const ZOMBIE_RADIUS = 10; // collision radius (sprite body is ~20px wide)
+export const ZOMBIE_SCORE = 20;
+/** Per-step direction re-roll cadence. */
+export const DIR_REROLL_MS = 520;
+/** Movement weights: straight down vs. the two 45° diagonals. */
+export const DIR_DOWN_WEIGHT = 0.5;
+export const DIR_DIAG_WEIGHT = 0.25; // each side
+/** Walk animation frame cadence (ms). */
+export const ANIM_FRAME_MS = 220;
+/** Death animation duration (frames at 60fps) before the corpse is removed. */
+export const DEATH_FRAMES = 26;
+/** Spawn x stays this far from the walls. */
+export const SPAWN_MARGIN = 18;
+/** Hard cap on living zombies on screen. */
+export const MAX_ZOMBIES = 24;
 
-/* ── Dropped bombs (from a shot bomb-carrier) + blast ── */
-export const GROUND_BOMB_W = 5;
-export const GROUND_BOMB_H = 5;
-/** Dropped bombs drift down slowly, giving you time to detonate them. */
-export const GROUND_BOMB_SPEED = 1.0;
-/** Blast radius (px) covering ~25% of the board area when detonated. */
-export const BLAST_RADIUS = Math.round(Math.sqrt((0.25 * BOARD_W * BOARD_H) / Math.PI));
-/** Frames the blast ring is drawn. */
-export const BLAST_FRAMES = 16;
-/** Points per zombie caught in a blast. */
+/* ── Bub (zombie soldier — Day of the Dead homage) ── */
+export const BUB_HP = 2;
+export const BUB_RADIUS = 12;
+export const BUB_SCORE = 150;
+/** Bub fires his 1911 on this cadence. */
+export const BUB_FIRE_INTERVAL_MS = 1700;
+export const BUB_SHOT_SPEED = 2.7;
+export const BUB_SHOT_SIZE = 4;
+/** Chance Bub drops a live grenade where he falls. */
+export const BUB_GRENADE_DROP_CHANCE = 0.5;
+
+/* ── Grenade (dropped by Bub; shoot it to detonate) ── */
+export const GRENADE_BLAST_RADIUS = 54;
+export const GRENADE_EXPLODE_FRAME_MS = 70; // per explosion frame (4 frames)
 export const BLAST_KILL_POINTS = 25;
 
-/* ── Scoring (closer-to-the-fence rows are worth less; back rows more) ── */
-export const ROW_POINTS: readonly number[] = [40, 30, 20, 10, 10];
+/* ── Ambulance (periodic shootable hazard that explodes, clearing zombies) ── */
+export const AMBULANCE_SPEED = 0.5;
+export const AMBULANCE_SCORE = 200;
+export const AMBULANCE_BLAST_RADIUS = 60;
+export const AMBULANCE_INTERVAL_MS = 23_000;
+export const AMBULANCE_EXPLODE_FRAME_MS = 90; // per explosion frame (4 frames)
 
-/* ── Fence (collapses under horde pressure; in front of the bunkers) ── */
-export const BUNKER_Y = SHIP_Y - 34;
-/** Fence sits just above the bunker line. Reaching the bunker line = game over. */
-export const FENCE_Y = BUNKER_Y - 16;
+/* ── Defensive line + helipad ── */
+/** Decorative fence line. */
+export const FENCE_Y = 196;
 export const FENCE_H = 6;
-/** Fence health. Pressure drains it by (alive zombies × drain) per horde step. */
-export const FENCE_MAX_HP = 900;
-export const FENCE_DRAIN_PER_ZOMBIE = 2;
+/** Bunker / barricade line. A zombie reaching this Y overruns the pad → game over. */
+export const BUNKER_Y = 212;
+export const BUNKER_H = 12;
+/** Helipad centre + radius (drawn under the helicopter). */
+export const HELIPAD_X = BOARD_W / 2;
+export const HELIPAD_Y = 300;
+export const HELIPAD_R = 58;
+/** Helicopter rest position (sprite centre) and its takeoff climb. */
+export const HELI_CENTER_X = BOARD_W / 2;
+export const HELI_REST_Y = 296;
+export const HELI_TAKEOFF_RISE = 360; // px the helicopter climbs across the takeoff round
 
-/* ── Flaming vehicle (descends top→bottom toward the fence) ── */
-export const VEHICLE_W = 18;
-export const VEHICLE_H = 16;
-export const VEHICLE_SPEED = 0.55;
-export const VEHICLE_POINTS = 250;
-/** Min/max delay between vehicle appearances (ms). */
-export const VEHICLE_MIN_DELAY_MS = 16_000;
-export const VEHICLE_MAX_DELAY_MS = 30_000;
+/* ── Rounds (timed survival cycle) ── */
+export const ROUND_COUNT = 4;
+/** Per-round duration (ms): land, refuel, board, takeoff. */
+export const ROUND_DURATIONS_MS: readonly number[] = [28_000, 34_000, 34_000, 22_000];
+/** Brief celebration window after a successful extraction (ms). */
+export const RESCUE_CELEBRATION_MS = 3200;
 
-/* ── Bunkers (destructible sandbag walls) ── */
-export const BUNKER_COUNT = 4;
-/** Each bunker is a grid of destructible blocks. */
-export const BUNKER_COLS = 6;
-export const BUNKER_ROWS = 4;
-export const BUNKER_BLOCK = 4;
-export const BUNKER_W = BUNKER_COLS * BUNKER_BLOCK;
-export const BUNKER_H = BUNKER_ROWS * BUNKER_BLOCK;
-
-/** Explosion flash duration (frames) for a killed zombie. */
+/* ── Explosions (generic small burst) ── */
 export const EXPLOSION_FRAMES = 12;

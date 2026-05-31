@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.12.0] - 2026-05-31
+### Changed
+- Overhauled **Zombie Attack!** from a side-to-side shooter into a **top-down survival** game on a taller 240×360 board (`aspect-ratio: 240/360`). The renderer now blits preloaded **NES-era PNG sprites** (`drawImage`, nearest-neighbour) instead of string-bitmaps; sprite assets live in `src/arcade/game/zombie-attack/assets/` and are statically imported + preloaded (`assets.ts`). The old `sprites.ts` was removed.
+- Zombies now **spawn at the top and shamble downward**, each picking a **stochastic per-step direction** (50% straight down, 25% each 45° diagonal). Most zombies no longer shoot — the threat is sheer numbers reaching the bunker line.
+- The player is now a **top-down hero with an Uzi** (rapid fire, up to 3 tracers on screen). Civilian zombies are four varied **street-clothes sprites** (NES-era, not Atari-flat).
+
+### Added
+- **Bub** — a zombie soldier (Day of the Dead homage) in fatigues + helmet: takes **2 shots**, fires a 1911 in a stochastic down/down-left/down-right spread (Bub bullets cost the hero a life), and has a **50% chance to drop a live grenade** on death. Shoot the dropped grenade to detonate an **AoE blast** that clears nearby zombies. Bub spawns occasionally (more often on Nightmare).
+- **Helicopter + helipad** at bottom-centre, driving a **time-based 4-round cycle**: (1) clear the pad / chopper inbound, (2) refueling, (3) boarding, (4) takeoff. Survive each round's clock to advance; completing round 4 **extracts the chopper** (a rescue), clears the lot, and loops the cycle at higher difficulty. The helicopter animates per round (idle → refuel → spinup → takeoff frames, climbing away on lift-off).
+- **Ambulance** hazard that drives down a lane; shoot it (3–6 hits by difficulty) to blow it up, clearing nearby zombies.
+- A **bunker-integrity** buffer: each zombie that reaches the bunker line is absorbed; once the line is overrun the pad falls (game over). Integrity is repaired on each extraction. Lives are still lost to Bub's bullets; 0 lives also ends the run.
+- HUD for the new loop: a **round-objective banner**, a 2×2 ROUND / TIME / LIVES / SCORE readout, and a slim **round-timer bar**. Difficulty presets now tune spawn rate, descent speed, Bub frequency, bunkers, and ambulance toughness (Nightmare keeps the bunker death-line but draws no sandbags). Localized across all eight languages; engine test rewritten as `tests/arcade-zombie-attack-engine.test.ts` (9 cases). Docs updated in `docs/ZOMBIE_ATTACK.md`.
+
 ## [1.11.0] - 2026-05-30
 ### Changed
 - Re-themed the Arcade's third game from *Star Swarm* into **Zombie Attack!** — a last-stand against a shambling horde — and renamed its route, modules, CSS, and translation keys (`/arcade/star-swarm` → `/arcade/zombie-attack`, `src/arcade/game/star-swarm/*` → `zombie-attack/*`, `arcade-swarm-*` → `arcade-zombie-*`, `starSwarm*` → `zombieAttack*`). Design doc renamed `docs/STAR_SWARM.md` → `docs/ZOMBIE_ATTACK.md`.
