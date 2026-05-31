@@ -1,8 +1,8 @@
 /* ── Zombie Attack! – Canvas renderer (v2, image-based) ──
  *
  * Blits preloaded NES-era PNG sprites with `drawImage` (nearest-neighbour). The
- * dirt lot, helipad, fence, and bunker line are drawn procedurally. The HUD
- * (round / timer / lives / score) is rendered by React outside the canvas.
+ * dirt lot, helipad, fence, and bunker line are drawn procedurally (and adapt to
+ * light / dark mode). The HUD is rendered by React outside the canvas.
  */
 
 import {
@@ -20,6 +20,8 @@ import {
   HELIPAD_X,
   HELIPAD_Y,
   HELI_CENTER_X,
+  HELI_INBOUND_RISE,
+  HELI_LIFT_START,
   HELI_REST_Y,
   HELI_SIZE,
   HELI_TAKEOFF_RISE,
@@ -32,15 +34,37 @@ import {
 import type { LoadedAssets } from "./assets";
 import type { World, Zombie } from "./types";
 
-const DIRT_BASE = "#1c160d";
-const DIRT_PEBBLE = "#5a4631";
-const DIRT_CLOD = "#2e2317";
-const DEAD_GRASS = "#6b7a2e";
+type Palette = {
+  dirtBase: string;
+  pebble: string;
+  clod: string;
+  grass: string;
+  sandbag: string;
+  sandbagDark: string;
+  rubble: string;
+};
+
+const DARK_PAL: Palette = {
+  dirtBase: "#1c160d",
+  pebble: "#5a4631",
+  clod: "#2e2317",
+  grass: "#6b7a2e",
+  sandbag: "#c2a35a",
+  sandbagDark: "#7c5a2e",
+  rubble: "#4a4036",
+};
+const LIGHT_PAL: Palette = {
+  dirtBase: "#cbb98e",
+  pebble: "#a98f63",
+  clod: "#8a734a",
+  grass: "#7c8a3a",
+  sandbag: "#9c7e3e",
+  sandbagDark: "#6f4f24",
+  rubble: "#8a7d6a",
+};
+
 const PAD_ASPHALT = "#2b2b30";
 const PAD_RING = "#d8c24a";
-const SANDBAG = "#c2a35a";
-const SANDBAG_DARK = "#7c5a2e";
-const RUBBLE = "#4a4036";
 const FENCE_WIRE = "#9aa0a8";
 const SHOT_COLOR = "#ffe24a";
 const BUB_SHOT_COLOR = "#ff5a3c";
@@ -59,26 +83,31 @@ const TERRAIN: { x: number; y: number; kind: number }[] = (() => {
   }));
 })();
 
+/** Two-frame rotor alternation, time-based so it spins independent of game state. */
+function rotor<T>(a: T, b: T): T {
+  return Math.floor(Date.now() / 130) % 2 === 0 ? a : b;
+}
+
 function drawImg(ctx: CanvasRenderingContext2D, img: HTMLImageElement | undefined, cx: number, cy: number, size: number): void {
   if (!img || !img.width) return;
   ctx.drawImage(img, Math.round(cx - size / 2), Math.round(cy - size / 2), size, size);
 }
 
-function drawDirt(ctx: CanvasRenderingContext2D): void {
-  ctx.fillStyle = DIRT_BASE;
+function drawDirt(ctx: CanvasRenderingContext2D, pal: Palette): void {
+  ctx.fillStyle = pal.dirtBase;
   ctx.fillRect(0, 0, BOARD_W, BOARD_H);
   for (const t of TERRAIN) {
     if (t.kind <= 4) {
       ctx.globalAlpha = 0.5;
-      ctx.fillStyle = DIRT_PEBBLE;
+      ctx.fillStyle = pal.pebble;
       ctx.fillRect(t.x, t.y, 1, 1);
     } else if (t.kind <= 7) {
       ctx.globalAlpha = 0.5;
-      ctx.fillStyle = DIRT_CLOD;
+      ctx.fillStyle = pal.clod;
       ctx.fillRect(t.x, t.y, 2, 1);
     } else {
       ctx.globalAlpha = 0.45;
-      ctx.fillStyle = DEAD_GRASS;
+      ctx.fillStyle = pal.grass;
       ctx.fillRect(t.x, t.y, 1, 2);
     }
   }
@@ -95,30 +124,52 @@ function drawHelipad(ctx: CanvasRenderingContext2D): void {
   ctx.beginPath();
   ctx.arc(HELIPAD_X, HELIPAD_Y, HELIPAD_R - 4, 0, Math.PI * 2);
   ctx.stroke();
-  // "H"
   ctx.fillStyle = PAD_RING;
   ctx.fillRect(HELIPAD_X - 14, HELIPAD_Y - 16, 5, 32);
   ctx.fillRect(HELIPAD_X + 9, HELIPAD_Y - 16, 5, 32);
   ctx.fillRect(HELIPAD_X - 14, HELIPAD_Y - 3, 28, 6);
 }
 
+/**
+ * Helicopter sprite + Y by round/phase:
+ *  - R1 inbound: in-flight (takeoff-1/2) descending, then a touchdown sequence
+ *    (takeoff-5,4,3 → spinup → idle).
+ *  - R2 refuel: refuel pose. R3 spin-up: alternate spinup/takeoff-2.
+ *  - R4 takeoff: in-flight on pad, lift-off (3,4), ascent (6,5), then in-flight
+ *    climbing away. Celebration: in-flight, gone.
+ */
 function heliVisual(world: World, assets: LoadedAssets): { img: HTMLImageElement; cy: number } {
+  const tk = assets.helo.takeoff; // [0..5] = takeoff-1..6
+  const inFlight = () => rotor(tk[0]!, tk[1]!);
   const total = world.roundTotalMs || 1;
-  const elapsed = total - world.roundMsLeft;
+  const f = Math.max(0, Math.min(1, (total - world.roundMsLeft) / total));
+
   if (world.celebrationMs > 0) {
-    return { img: assets.helo.takeoff[5]!, cy: HELI_REST_Y - HELI_TAKEOFF_RISE - 40 };
+    return { img: inFlight(), cy: HELI_REST_Y - HELI_TAKEOFF_RISE - 40 };
   }
+
   if (world.round === 1) {
-    return { img: assets.helo.idle, cy: HELI_REST_Y - 170 * (world.roundMsLeft / total) };
+    if (f < 0.7) {
+      const cy = HELI_REST_Y - HELI_INBOUND_RISE * (1 - f / 0.7);
+      return { img: inFlight(), cy };
+    }
+    const seq = [tk[4]!, tk[3]!, tk[2]!, assets.helo.spinup, assets.helo.idle];
+    const idx = Math.min(seq.length - 1, Math.floor(((f - 0.7) / 0.3) * seq.length));
+    return { img: seq[idx]!, cy: HELI_REST_Y };
   }
+
   if (world.round === 2) return { img: assets.helo.refuel, cy: HELI_REST_Y };
-  if (world.round === 3) return { img: assets.helo.spinup, cy: HELI_REST_Y };
-  const fi = Math.min(5, Math.max(0, Math.floor((elapsed / total) * 6)));
-  return { img: assets.helo.takeoff[fi]!, cy: HELI_REST_Y - world.heliRise };
+  if (world.round === 3) return { img: rotor(assets.helo.spinup, tk[1]!), cy: HELI_REST_Y };
+
+  // Round 4 — takeoff.
+  const cy = HELI_REST_Y - world.heliRise;
+  if (f < HELI_LIFT_START) return { img: inFlight(), cy };
+  if (f < 0.5) return { img: f < 0.425 ? tk[2]! : tk[3]!, cy }; // lift-off: 3, 4
+  if (f < 0.65) return { img: f < 0.575 ? tk[5]! : tk[4]!, cy }; // ascent: 6, 5
+  return { img: inFlight(), cy };
 }
 
-function drawDefenseLine(ctx: CanvasRenderingContext2D, world: World): void {
-  // Fence (chain-link-ish posts + wire).
+function drawDefenseLine(ctx: CanvasRenderingContext2D, world: World, pal: Palette): void {
   ctx.strokeStyle = FENCE_WIRE;
   ctx.lineWidth = 1;
   ctx.globalAlpha = 0.7;
@@ -135,16 +186,15 @@ function drawDefenseLine(ctx: CanvasRenderingContext2D, world: World): void {
   ctx.globalAlpha = 1;
 
   if (!world.bunkers) return;
-  // Sandbag bunker line; segments turn to rubble as integrity drops.
   const segs = 10;
   const intactSegs = Math.ceil((world.bunkerIntegrity / world.bunkerMaxIntegrity) * segs);
   const segW = BOARD_W / segs;
   for (let i = 0; i < segs; i += 1) {
     const x = i * segW;
     const intact = i < intactSegs;
-    ctx.fillStyle = intact ? SANDBAG : RUBBLE;
+    ctx.fillStyle = intact ? pal.sandbag : pal.rubble;
     ctx.fillRect(x + 1, BUNKER_Y - 4, segW - 2, 8);
-    ctx.fillStyle = intact ? SANDBAG_DARK : RUBBLE;
+    ctx.fillStyle = intact ? pal.sandbagDark : pal.rubble;
     ctx.fillRect(x + 1, BUNKER_Y + 2, segW - 2, 2);
   }
 }
@@ -152,8 +202,11 @@ function drawDefenseLine(ctx: CanvasRenderingContext2D, world: World): void {
 function zombieSprite(z: Zombie, assets: LoadedAssets): HTMLImageElement {
   if (z.kind === "bub") {
     if (z.hp <= 0) return assets.bubDeath[z.dying > DEATH_FRAMES / 2 ? 0 : 1]!;
-    const set = z.aim === "down-left" ? assets.bubAttack.left : z.aim === "down-right" ? assets.bubAttack.right : assets.bubAttack.straight;
-    return set[z.frame]!;
+    if (z.attackFrames > 0) {
+      const set = z.aim === "down-left" ? assets.bubAttack.left : z.aim === "down-right" ? assets.bubAttack.right : assets.bubAttack.straight;
+      return set[z.frame]!;
+    }
+    return assets.bubWalk[z.frame]!;
   }
   if (z.hp <= 0) return assets.zombieDeath[z.type]![z.dying > DEATH_FRAMES / 2 ? 0 : 1]!;
   return assets.zombieWalk[z.type]![z.frame]!;
@@ -164,16 +217,16 @@ export function drawBoard(ctx: CanvasRenderingContext2D, world: World, assets: L
   if (typeof navigator !== "undefined" && /\bjsdom\b/i.test(navigator.userAgent)) return;
 
   ctx.imageSmoothingEnabled = false;
+  const light = typeof document !== "undefined" && document.documentElement.classList.contains("light");
+  const pal = light ? LIGHT_PAL : DARK_PAL;
 
-  drawDirt(ctx);
+  drawDirt(ctx, pal);
   drawHelipad(ctx);
 
-  // ── Helicopter ──
   const heli = heliVisual(world, assets);
   drawImg(ctx, heli.img, HELI_CENTER_X, heli.cy, HELI_SIZE);
 
-  // ── Defense line ──
-  drawDefenseLine(ctx, world);
+  drawDefenseLine(ctx, world, pal);
 
   // ── Ambulance ──
   if (world.ambulance) {

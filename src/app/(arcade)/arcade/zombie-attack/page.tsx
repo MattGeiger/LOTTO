@@ -166,6 +166,18 @@ export default function ZombieAttackPage() {
 
   React.useEffect(() => { if (assetsReady) draw(); }, [draw, assetsReady]);
 
+  // Repaint a static board on theme change / resize (during play the loop handles it).
+  React.useEffect(() => {
+    const handleRedraw = () => draw();
+    const rootObserver = new MutationObserver(handleRedraw);
+    rootObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "style"] });
+    window.addEventListener("resize", handleRedraw);
+    return () => {
+      rootObserver.disconnect();
+      window.removeEventListener("resize", handleRedraw);
+    };
+  }, [draw]);
+
   /* ── Reset / restart ── */
   const resetGame = React.useCallback(() => {
     const w = initialWorld(dpRef.current);

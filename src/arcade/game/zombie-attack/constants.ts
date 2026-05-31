@@ -67,8 +67,14 @@ export const MAX_ZOMBIES = 24;
 export const BUB_HP = 2;
 export const BUB_RADIUS = 12;
 export const BUB_SCORE = 150;
-/** Bub fires his 1911 on this cadence. */
-export const BUB_FIRE_INTERVAL_MS = 1700;
+/** Bub mostly shambles; he only re-evaluates firing this often. */
+export const BUB_FIRE_INTERVAL_MS = 3800;
+/** Chance Bub fires when the hero is in his line of sight (a firing cone). */
+export const BUB_FIRE_CHANCE_AIMED = 0.8;
+/** Chance Bub fires a random shot when the hero is NOT lined up. */
+export const BUB_FIRE_CHANCE_IDLE = 0.12;
+/** Frames Bub holds the firing pose after a shot (otherwise he walks). */
+export const BUB_ATTACK_POSE_FRAMES = 22;
 export const BUB_SHOT_SPEED = 2.7;
 export const BUB_SHOT_SIZE = 4;
 /** Chance Bub drops a live grenade where he falls. */
@@ -101,6 +107,9 @@ export const HELIPAD_R = 58;
 export const HELI_CENTER_X = BOARD_W / 2;
 export const HELI_REST_Y = 296;
 export const HELI_TAKEOFF_RISE = 360; // px the helicopter climbs across the takeoff round
+export const HELI_INBOUND_RISE = 232; // px above rest the helicopter starts on its inbound approach
+/** Fraction of round 4 spent on the pad (rotors up) before lift-off begins. */
+export const HELI_LIFT_START = 0.35;
 
 /* ── Rounds (timed survival cycle) ── */
 export const ROUND_COUNT = 4;

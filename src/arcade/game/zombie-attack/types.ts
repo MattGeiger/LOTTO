@@ -26,6 +26,8 @@ export type Zombie = {
   fireTimerMs: number;
   /** Bub: current aim direction (drives the attack sprite); null = not aiming. */
   aim: MoveDir | null;
+  /** Bub: frames remaining in the firing pose (otherwise he walks/shambles). */
+  attackFrames: number;
   /** >0 while the death animation plays (frames remaining); 0 = alive. */
   dying: number;
 };

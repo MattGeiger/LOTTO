@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.12.1] - 2026-05-31
+### Changed
+- **Zombie Attack! polish.** Gave the helicopter a full per-phase animation: an
+  in-flight rotor (takeoff-1/2) on the inbound approach, a touchdown sequence
+  (takeoff-5 → 4 → 3 → spin-up → idle) on landing, a spin-up alternation
+  (spin-up / takeoff-2) while boarding, and a takeoff sequence (in-flight →
+  lift-off 3/4 → ascent 6/5 → in-flight, climbing away) that the chopper flies
+  out on. Lift-off now holds on the pad briefly before the climb.
+- Made the play area **much larger on desktop** (board cap raised, bound by the
+  vertical budget so the tall board fills the screen).
+- **Light mode** now draws a **light dirt lot** (and lighter sandbags/terrain) so
+  the action reads clearly; the board repaints on theme change.
+- **Bub** now mostly **shambles like the other zombies** and only fires
+  occasionally — and he's **provoked by line of sight**: standing directly below
+  him draws a straight shot, standing at ~45° draws an angled shot, and he rarely
+  fires when you're not lined up. He only shows the firing pose right after a shot.
+
 ## [1.12.0] - 2026-05-31
 ### Changed
 - Overhauled **Zombie Attack!** from a side-to-side shooter into a **top-down survival** game on a taller 240×360 board (`aspect-ratio: 240/360`). The renderer now blits preloaded **NES-era PNG sprites** (`drawImage`, nearest-neighbour) instead of string-bitmaps; sprite assets live in `src/arcade/game/zombie-attack/assets/` and are statically imported + preloaded (`assets.ts`). The old `sprites.ts` was removed.
