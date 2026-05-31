@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.13.0] - 2026-05-31
+### Changed
+- **Zombie Attack! — fence siege.** The fence is now a solid sprite barrier with
+  **10 HP** instead of a sandbag count. Zombies that reach it go **idle and besiege
+  it**, each with a `(zombies-at-the-fence × 10%)` chance per turn to land a hit —
+  so the odds **stack with the crowd**. Once breached, the fence sprite tears open
+  from the centre (`fence-breach-*` tiles) and zombies **pour through toward the
+  helo**. The helicopter now correctly draws **over** the fence (layer fix), and
+  the **hero is repositioned up by the fence** for a tighter last stand.
+- **Probabilistic kills.** A civilian hit is now 50% kill / 50% wound (hurt
+  animation), and a killed civilian has a **10% chance to get back up** (death
+  animation in reverse). **Bub** takes his first two hits as wounds, then each
+  further hit has a 50% kill chance, a **25% revive** chance, and a 25% grenade
+  drop.
+- **Baseline (Normal) tuning:** doubled the zombie spawn rate and halved their
+  move speed across all difficulty presets (other settings scale from Normal;
+  per-difficulty tuning comes next).
+
+### Added
+- **Melee siege threats:** breached zombies **maul the hero at close range** (a
+  life per turn, with invulnerability between hits) and **wreck the helo** if they
+  reach it (10%/turn → game over — the helo has no health). The ambulance now
+  **explodes on impact with the fence** (clearing nearby zombies) and is an
+  instant **game over if it reaches the helo** through a breach.
+- Idle / attack / hurt zombie sprites and the six fence sprites wired in; engine
+  test rewritten for the siege (`tests/arcade-zombie-attack-engine.test.ts`, 11
+  deterministic cases via the RNG seam).
+
 ## [1.12.1] - 2026-05-31
 ### Changed
 - **Zombie Attack! polish.** Gave the helicopter a full per-phase animation: an

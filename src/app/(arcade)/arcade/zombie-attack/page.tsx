@@ -34,17 +34,17 @@ type ZombieModePreset = {
   spawnIntervalMs: number;
   zombieSpeed: number;
   bubIntervalMs: number;
-  bunkers: boolean;
   ambulanceHp: number;
 };
 
+// Normal is the tuned baseline (2× the old spawn rate, ½ the old speed).
 const ZOMBIE_MODE_PRESETS: readonly ZombieModePreset[] = [
-  { key: "veryEasy",  labelKey: "snakeModeVeryEasy",  spawnIntervalMs: 2200, zombieSpeed: 0.28, bubIntervalMs: 16000, bunkers: true,  ambulanceHp: 3 },
-  { key: "easy",      labelKey: "snakeModeEasy",      spawnIntervalMs: 1900, zombieSpeed: 0.31, bubIntervalMs: 14000, bunkers: true,  ambulanceHp: 3 },
-  { key: "normal",    labelKey: "snakeModeNormal",    spawnIntervalMs: 1600, zombieSpeed: 0.35, bubIntervalMs: 11000, bunkers: true,  ambulanceHp: 4 },
-  { key: "hard",      labelKey: "snakeModeHard",      spawnIntervalMs: 1300, zombieSpeed: 0.40, bubIntervalMs: 9000,  bunkers: true,  ambulanceHp: 4 },
-  { key: "veryHard",  labelKey: "snakeModeVeryHard",  spawnIntervalMs: 1050, zombieSpeed: 0.46, bubIntervalMs: 7000,  bunkers: true,  ambulanceHp: 5 },
-  { key: "nightmare", labelKey: "snakeModeNightmare", spawnIntervalMs: 800,  zombieSpeed: 0.54, bubIntervalMs: 4500,  bunkers: false, ambulanceHp: 6 },
+  { key: "veryEasy",  labelKey: "snakeModeVeryEasy",  spawnIntervalMs: 1100, zombieSpeed: 0.14,  bubIntervalMs: 16000, ambulanceHp: 3 },
+  { key: "easy",      labelKey: "snakeModeEasy",      spawnIntervalMs: 950,  zombieSpeed: 0.155, bubIntervalMs: 14000, ambulanceHp: 3 },
+  { key: "normal",    labelKey: "snakeModeNormal",    spawnIntervalMs: 800,  zombieSpeed: 0.175, bubIntervalMs: 11000, ambulanceHp: 4 },
+  { key: "hard",      labelKey: "snakeModeHard",      spawnIntervalMs: 650,  zombieSpeed: 0.20,  bubIntervalMs: 9000,  ambulanceHp: 4 },
+  { key: "veryHard",  labelKey: "snakeModeVeryHard",  spawnIntervalMs: 525,  zombieSpeed: 0.23,  bubIntervalMs: 7000,  ambulanceHp: 5 },
+  { key: "nightmare", labelKey: "snakeModeNightmare", spawnIntervalMs: 400,  zombieSpeed: 0.27,  bubIntervalMs: 4500,  ambulanceHp: 6 },
 ];
 const DEFAULT_MODE_INDEX = 2;
 
@@ -55,7 +55,6 @@ function dpFromPreset(p: ZombieModePreset): DifficultyParams {
     spawnIntervalMs: p.spawnIntervalMs,
     zombieSpeed: p.zombieSpeed,
     bubIntervalMs: p.bubIntervalMs,
-    bunkers: p.bunkers,
     ambulanceHp: p.ambulanceHp,
   };
 }

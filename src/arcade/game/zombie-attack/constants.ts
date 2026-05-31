@@ -29,8 +29,8 @@ export const AMBULANCE_W = 36;
 export const AMBULANCE_H = 36;
 export const HELI_SIZE = 116;
 
-/* ── Hero (bottom, moves left↔right, fires up) ── */
-export const HERO_Y = BOARD_H - 60; // sprite top
+/* ── Hero (just behind the fence, moves left↔right, fires up) ── */
+export const HERO_Y = 196; // sprite top — close to the fence line
 export const HERO_MIN_X = 2;
 export const HERO_MAX_X = BOARD_W - HERO_SIZE - 2;
 export const HERO_KEY_SPEED = 2.8;
@@ -38,6 +38,8 @@ export const HERO_INVULN_FRAMES = 80;
 /** Muzzle offset from the hero sprite (where shots spawn). */
 export const HERO_MUZZLE_DX = HERO_SIZE / 2;
 export const HERO_MUZZLE_DY = 4;
+/** A breached zombie within this distance of the hero mauls them (100% / turn). */
+export const HERO_CLOSE_RANGE = 24;
 
 /* ── Player shots (Uzi — rapid, several on screen) ── */
 export const SHOT_W = 3;
@@ -61,7 +63,25 @@ export const DEATH_FRAMES = 26;
 /** Spawn x stays this far from the walls. */
 export const SPAWN_MARGIN = 18;
 /** Hard cap on living zombies on screen. */
-export const MAX_ZOMBIES = 24;
+export const MAX_ZOMBIES = 30;
+
+/* ── Probabilistic hits ── */
+/** A civilian hit: chance it's a kill (else it's only a wound). */
+export const ZOMBIE_KILL_CHANCE = 0.5;
+/** A killed civilian: chance it gets back up (death animation in reverse). */
+export const ZOMBIE_REVIVE_CHANCE = 0.1;
+/** Once Bub's HP is gone, chance a further hit kills him (else another wound). */
+export const BUB_KILL_CHANCE = 0.5;
+/** A killed Bub: chance he gets back up. */
+export const BUB_REVIVE_CHANCE = 0.25;
+/** Frames the hurt sprite shows after a wound. */
+export const HURT_FRAMES = 16;
+/** Frames the "get back up" (reverse death) animation plays before reviving. */
+export const REVIVE_FRAMES = 30;
+/** Frames a melee/attack lunge sprite shows. */
+export const ATTACK_ANIM_FRAMES = 18;
+/** Attack-roll cadence ("per turn") for fence / helo / hero melee (ms). */
+export const ATTACK_INTERVAL_MS = 1000;
 
 /* ── Bub (zombie soldier — Day of the Dead homage) ── */
 export const BUB_HP = 2;
@@ -78,7 +98,7 @@ export const BUB_ATTACK_POSE_FRAMES = 22;
 export const BUB_SHOT_SPEED = 2.7;
 export const BUB_SHOT_SIZE = 4;
 /** Chance Bub drops a live grenade where he falls. */
-export const BUB_GRENADE_DROP_CHANCE = 0.5;
+export const BUB_GRENADE_DROP_CHANCE = 0.25;
 
 /* ── Grenade (dropped by Bub; shoot it to detonate) ── */
 export const GRENADE_BLAST_RADIUS = 54;
@@ -92,22 +112,27 @@ export const AMBULANCE_BLAST_RADIUS = 60;
 export const AMBULANCE_INTERVAL_MS = 23_000;
 export const AMBULANCE_EXPLODE_FRAME_MS = 90; // per explosion frame (4 frames)
 
-/* ── Defensive line + helipad ── */
-/** Decorative fence line. */
-export const FENCE_Y = 196;
-export const FENCE_H = 6;
-/** Bunker / barricade line. A zombie reaching this Y overruns the pad → game over. */
-export const BUNKER_Y = 212;
-export const BUNKER_H = 12;
+/* ── Fence (solid siege barrier) + helipad ── */
+/** Fence line Y (sprite centre). Zombies stop here and besiege it. */
+export const FENCE_Y = 168;
+/** Fence sprite tile size (square). */
+export const FENCE_TILE = 30;
+/** Fence hit points; each zombie at the fence has (count × chance) to hit/turn. */
+export const FENCE_MAX_HP = 10;
+/** Per-zombie fence-attack chance, scaled by the crowd size at the fence. */
+export const FENCE_ATTACK_CHANCE_PER_ZOMBIE = 0.1;
 /** Helipad centre + radius (drawn under the helicopter). */
 export const HELIPAD_X = BOARD_W / 2;
-export const HELIPAD_Y = 300;
-export const HELIPAD_R = 58;
+export const HELIPAD_Y = 304;
+export const HELIPAD_R = 56;
 /** Helicopter rest position (sprite centre) and its takeoff climb. */
 export const HELI_CENTER_X = BOARD_W / 2;
-export const HELI_REST_Y = 296;
-export const HELI_TAKEOFF_RISE = 360; // px the helicopter climbs across the takeoff round
-export const HELI_INBOUND_RISE = 232; // px above rest the helicopter starts on its inbound approach
+export const HELI_REST_Y = 300;
+export const HELI_TAKEOFF_RISE = 380; // px the helicopter climbs across the takeoff round
+export const HELI_INBOUND_RISE = 250; // px above rest the helicopter starts on its inbound approach
+/** A breached zombie at/below this Y is "at the helo" — 10%/turn to wreck it (game over). */
+export const HELO_ATTACK_Y = 250;
+export const HELO_ATTACK_CHANCE = 0.1;
 /** Fraction of round 4 spent on the pad (rotors up) before lift-off begins. */
 export const HELI_LIFT_START = 0.35;
 
