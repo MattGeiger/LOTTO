@@ -56,8 +56,10 @@ export const DIR_REROLL_MS = 520;
 /** Movement weights: straight down vs. the two 45° diagonals. */
 export const DIR_DOWN_WEIGHT = 0.5;
 export const DIR_DIAG_WEIGHT = 0.25; // each side
-/** Walk animation frame cadence (ms). */
+/** Walk animation frame cadence (ms) — used by the hero. */
 export const ANIM_FRAME_MS = 220;
+/** Zombie walk/idle frame cadence (ms) — slower, to match their halved gait. */
+export const ZOMBIE_ANIM_FRAME_MS = 440;
 /** Death animation duration (frames at 60fps) before the corpse is removed. */
 export const DEATH_FRAMES = 26;
 /** Spawn x stays this far from the walls. */

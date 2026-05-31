@@ -9,6 +9,7 @@ import {
   AMBULANCE_SPEED,
   AMBULANCE_W,
   ANIM_FRAME_MS,
+  ZOMBIE_ANIM_FRAME_MS,
   ATTACK_ANIM_FRAMES,
   ATTACK_INTERVAL_MS,
   BLAST_KILL_POINTS,
@@ -130,7 +131,7 @@ function spawnZombie(world: World, dp: DifficultyParams, kind: "civilian" | "bub
     vx: 0,
     vy: zombieSpeed,
     dirTimerMs: rand(DIR_REROLL_MS * 0.5, DIR_REROLL_MS),
-    animMs: rand(0, ANIM_FRAME_MS),
+    animMs: rand(0, ZOMBIE_ANIM_FRAME_MS),
     frame: 0,
     hp: kind === "bub" ? BUB_HP : 1,
     fireTimerMs: rand(BUB_FIRE_INTERVAL_MS * 0.5, BUB_FIRE_INTERVAL_MS),
@@ -349,7 +350,7 @@ export function tick(prev: World, input: ShooterInput, dp: DifficultyParams): Ti
     if (z.hurtFrames > 0) z.hurtFrames -= 1;
     if (z.attacking > 0) z.attacking -= 1;
     z.animMs += FIXED_DT;
-    if (z.animMs >= ANIM_FRAME_MS) { z.frame = z.frame === 0 ? 1 : 0; z.animMs = 0; }
+    if (z.animMs >= ZOMBIE_ANIM_FRAME_MS) { z.frame = z.frame === 0 ? 1 : 0; z.animMs = 0; }
     z.attackTimerMs -= FIXED_DT;
     const canAttack = z.attackTimerMs <= 0;
     if (canAttack) z.attackTimerMs = ATTACK_INTERVAL_MS;

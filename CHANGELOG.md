@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.13.1] - 2026-05-31
+### Changed
+- Slowed the zombie walk/idle animation cadence (220ms → 440ms) so their stride matches the halved movement speed from 1.13.0. The hero's animation cadence is unchanged.
+
 ## [1.13.0] - 2026-05-31
 ### Changed
 - **Zombie Attack! — fence siege.** The fence is now a solid sprite barrier with
