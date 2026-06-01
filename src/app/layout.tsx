@@ -43,9 +43,12 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LOTTO: Line Order Transparency & Ticketing Organizer",
+  title: {
+    default: "William Temple House App",
+    template: "%s | William Temple House App",
+  },
   description:
-    "A fun, fair, and simple queue management system designed for chance-based or sequential ticketing. Set custom ticket ranges, keep clients informed, entertained, and engaged. Supports large displays and mobile devices. Includes multilingual support, visual themes, and even video games.",
+    "See your place in line, check what's in stock, and play a few retro games while you wait at William Temple House.",
 };
 
 export default function RootLayout({

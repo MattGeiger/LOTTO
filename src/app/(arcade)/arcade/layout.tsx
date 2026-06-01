@@ -16,8 +16,8 @@ const arcadeDisplay = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Arcade | WTH Digital Raffle",
-  description: "Retro arcade game menu with live queue awareness.",
+  title: "Arcade",
+  description: "Retro arcade games while you wait",
 };
 
 export default function ArcadeLayout({
