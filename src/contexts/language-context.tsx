@@ -186,7 +186,7 @@ const translations: Record<Language, Record<string, string>> = {
     brickMayhemEffectWidePaddle: "PADDLE x2",
     brickMayhemEffectTriplePoints: "POINTS x3",
     // Zombie Attack!
-    zombieAttackTitle: "Zombie Attack!",
+    zombieAttackTitle: "Day of the Dead",
     zombieAttackDifficultySettingTitle: "DIFFICULTY SETTING",
     zombieAttackSettingLabel: "SETTING",
     zombieAttackInstructionMove: "USE THE SLIDER TO MOVE",
@@ -353,7 +353,7 @@ const translations: Record<Language, Record<string, string>> = {
     brickMayhemEffectWidePaddle: "挡板 x2",
     brickMayhemEffectTriplePoints: "分数 x3",
     // Zombie Attack!
-    zombieAttackTitle: "僵尸来袭！",
+    zombieAttackTitle: "活死人之日",
     zombieAttackDifficultySettingTitle: "难度设置",
     zombieAttackSettingLabel: "设置",
     zombieAttackInstructionMove: "用滑块移动",
@@ -522,7 +522,7 @@ const translations: Record<Language, Record<string, string>> = {
     brickMayhemEffectWidePaddle: "PALA x2",
     brickMayhemEffectTriplePoints: "PUNTOS x3",
     // Zombie Attack!
-    zombieAttackTitle: "¡Zombie Attack!",
+    zombieAttackTitle: "Day of the Dead",
     zombieAttackDifficultySettingTitle: "AJUSTE DE DIFICULTAD",
     zombieAttackSettingLabel: "AJUSTE",
     zombieAttackInstructionMove: "USA EL DESLIZADOR PARA MOVERTE",
@@ -691,7 +691,7 @@ const translations: Record<Language, Record<string, string>> = {
     brickMayhemEffectWidePaddle: "ПЛАТФОРМА x2",
     brickMayhemEffectTriplePoints: "ОЧКИ x3",
     // Zombie Attack!
-    zombieAttackTitle: "Zombie Attack!",
+    zombieAttackTitle: "Day of the Dead",
     zombieAttackDifficultySettingTitle: "НАСТРОЙКА СЛОЖНОСТИ",
     zombieAttackSettingLabel: "РЕЖИМ",
     zombieAttackInstructionMove: "ДВИГАЙТЕ ПОЛЗУНОК",
@@ -860,7 +860,7 @@ const translations: Record<Language, Record<string, string>> = {
     brickMayhemEffectWidePaddle: "ПЛАТФОРМА x2",
     brickMayhemEffectTriplePoints: "ОЧКИ x3",
     // Zombie Attack!
-    zombieAttackTitle: "Zombie Attack!",
+    zombieAttackTitle: "Day of the Dead",
     zombieAttackDifficultySettingTitle: "НАЛАШТУВАННЯ СКЛАДНОСТІ",
     zombieAttackSettingLabel: "РЕЖИМ",
     zombieAttackInstructionMove: "РУХАЙТЕ ПОВЗУНОК",
@@ -1029,7 +1029,7 @@ const translations: Record<Language, Record<string, string>> = {
     brickMayhemEffectWidePaddle: "THANH ĐỠ x2",
     brickMayhemEffectTriplePoints: "ĐIỂM x3",
     // Zombie Attack!
-    zombieAttackTitle: "Zombie Attack!",
+    zombieAttackTitle: "Day of the Dead",
     zombieAttackDifficultySettingTitle: "CÀI ĐẶT ĐỘ KHÓ",
     zombieAttackSettingLabel: "CHẾ ĐỘ",
     zombieAttackInstructionMove: "DÙNG THANH TRƯỢT ĐỂ DI CHUYỂN",
@@ -1198,7 +1198,7 @@ const translations: Record<Language, Record<string, string>> = {
     brickMayhemEffectWidePaddle: "راکت x2",
     brickMayhemEffectTriplePoints: "امتیاز x3",
     // Zombie Attack!
-    zombieAttackTitle: "حمله زامبی‌ها!",
+    zombieAttackTitle: "روز مردگان",
     zombieAttackDifficultySettingTitle: "تنظیم سختی",
     zombieAttackSettingLabel: "حالت",
     zombieAttackInstructionMove: "از نوار لغزنده برای حرکت استفاده کنید",
@@ -1367,7 +1367,7 @@ const translations: Record<Language, Record<string, string>> = {
     brickMayhemEffectWidePaddle: "المضرب x2",
     brickMayhemEffectTriplePoints: "النقاط x3",
     // Zombie Attack!
-    zombieAttackTitle: "هجوم الزومبي!",
+    zombieAttackTitle: "يوم الموتى",
     zombieAttackDifficultySettingTitle: "إعداد الصعوبة",
     zombieAttackSettingLabel: "الإعداد",
     zombieAttackInstructionMove: "استخدم شريط التمرير للتحرك",

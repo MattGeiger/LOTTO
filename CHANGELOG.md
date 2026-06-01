@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.14.2] - 2026-05-31
+### Changed
+- Renamed the game's display title from *Zombie Attack!* to **"Day of the Dead"** — a tribute to George A. Romero's 1985 film (the namesake of the Bub soldier zombie). Updated the title across all eight languages (localized for Chinese / Persian / Arabic) and the play-area labels. The internal slug (route `/arcade/zombie-attack`, modules, CSS, and translation keys) is unchanged.
+
 ## [1.14.1] - 2026-05-31
 ### Added
 - **Zombie Attack! evacuation reward:** completing an extraction now grants bonus lives, scaled by difficulty — Very Easy / Easy / Normal **+1**, Hard / Very Hard **+2**, Nightmare **+3**.

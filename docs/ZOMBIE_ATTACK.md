@@ -1,4 +1,10 @@
-# Zombie Attack! - Game Design Document (v2: top-down survival)
+# Day of the Dead - Game Design Document (top-down survival)
+
+> **Title:** the game is presented to players as **"Day of the Dead"** — a tribute
+> to George A. Romero's 1985 film (the namesake of the **Bub** soldier zombie).
+> Its internal slug stays `zombie-attack` (route `/arcade/zombie-attack`, module
+> `src/arcade/game/zombie-attack/`, `arcade-zombie-*` CSS, `zombieAttack*` i18n
+> keys) since that describes the genre and avoids churn.
 
 ## Status
 - **Implemented and shipped (v1.12.0).** Top-down survival rework of the v1.11.0
