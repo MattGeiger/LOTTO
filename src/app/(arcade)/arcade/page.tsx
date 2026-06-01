@@ -29,12 +29,6 @@ export default function ArcadeHomePage() {
       ctaLabel: "PLAY",
     },
     {
-      id: "zombie-attack",
-      title: t("zombieAttackTitle"),
-      href: "/arcade/zombie-attack",
-      ctaLabel: "PLAY",
-    },
-    {
       id: "more",
       title: t("moreGamesComing"),
       comingSoon: true,

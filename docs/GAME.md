@@ -175,6 +175,10 @@ public/
 - Completed (v1.14.4): Day of the Dead visual copy alignment — player bullets render orange (`#FFAA00`), the extraction victory overlay renders `EXTRACTION COMPLETE!` in green (`#00FF00`), and the difficulty title / `SETTING: ...` row now match the instruction-list text color.
 - Completed (v1.14.5): Day of the Dead HUD color follow-up — `ROUND`, `LIVES`, and `SCORE` now match the `SETTING: ...` / instruction-list text color instead of the green pellet color.
 - Completed (v1.15.0): Arcade Top 10 Scores — Snake, Brick Mayhem, and Day of the Dead show per-game/per-difficulty leaderboards before start and at game over, with a 30-second 3-initial entry flow for qualifying scores. Persistence uses an isolated Arcade Neon database via `ARCADE_DATABASE_URL`, not the core LOTTO `DATABASE_URL`.
+- Completed (v1.15.1): Day of the Dead production visibility hold — the game
+  code, route file, assets, tests, and docs remain intact, but the Arcade index no
+  longer links to it and production `/arcade/zombie-attack` requests redirect to
+  `/arcade`. Non-production environments keep the route available for development.
 
 ## Accessibility Issue: Snake Reflex Controls (Implemented - 2026-02-16)
 - Problem statement: current Snake pace can be too demanding for players with slower reflexes, and pellet placement near walls can make early rounds punishing.

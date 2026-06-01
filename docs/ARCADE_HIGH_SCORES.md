@@ -4,6 +4,8 @@
 - Implemented for v1.15.0 as an Arcade-only feature.
 - Supports Snake, Brick Mayhem, and Day of the Dead.
 - Rankings are scoped by game and difficulty setting.
+- Day of the Dead remains wired for high scores but is hidden from production
+  Arcade navigation as of v1.15.1.
 
 ## Data Boundary
 Arcade high scores must use a separate Neon project/database from the core LOTTO
