@@ -4,17 +4,22 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/state", "/api/state/:path*"],
+  matcher: ["/admin/:path*", "/api/state", "/api/state/:path*", "/arcade/zombie-attack/:path*"],
 };
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const isZombieAttack = pathname.startsWith("/arcade/zombie-attack");
   const isAdmin = pathname.startsWith("/admin");
   const isApiState = pathname.startsWith("/api/state");
   const isWriteApi =
     isApiState && !["GET", "HEAD", "OPTIONS"].includes(request.method.toUpperCase());
   const isLocalDevelopment = process.env.NODE_ENV === "development" && !process.env.VERCEL;
   const authBypass = process.env.AUTH_BYPASS === "true" || isLocalDevelopment;
+
+  if (isZombieAttack && process.env.NODE_ENV === "production") {
+    return NextResponse.redirect(new URL("/arcade", request.url));
+  }
 
   if (process.env.AUTH_BYPASS === "true" && process.env.NODE_ENV === "production") {
     throw new Error(

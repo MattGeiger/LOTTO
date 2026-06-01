@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.15.1] - 2026-06-01
+### Changed
+- **Arcade production visibility:** Day of the Dead is preserved in the codebase
+  but hidden from the Arcade menu and redirected from `/arcade/zombie-attack` in
+  production. Snake and Brick Mayhem remain publicly linked.
+- **Docs and tests:** updated Arcade current-state docs and added coverage for
+  the hidden production route and public game menu.
+
 ## [1.15.0] - 2026-06-01
 ### Added
 - **Arcade Top 10 Scores:** Snake, Brick Mayhem, and Day of the Dead now show per-game/per-difficulty leaderboards before start and at game over.

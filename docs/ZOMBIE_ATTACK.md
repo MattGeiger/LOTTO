@@ -5,6 +5,9 @@
 > Its internal slug stays `zombie-attack` (route `/arcade/zombie-attack`, module
 > `src/arcade/game/zombie-attack/`, `arcade-zombie-*` CSS, `zombieAttack*` i18n
 > keys) since that describes the genre and avoids churn.
+> As of v1.15.1, Day of the Dead is intentionally hidden from the Arcade menu and
+> production requests to `/arcade/zombie-attack` redirect to `/arcade`; the route
+> and game code remain intact for development and future reactivation.
 
 ## Status
 - **Implemented and shipped (v1.12.0).** Top-down survival rework of the v1.11.0
@@ -18,6 +21,8 @@
   (`tests/arcade-zombie-attack-engine.test.ts`, 9 cases).
 - Arcade Top 10 Scores integration is implemented via the shared Arcade
   leaderboard UI and isolated `ARCADE_DATABASE_URL` persistence.
+- Production visibility is currently disabled; the game is not linked from the
+  Arcade index and direct production access redirects to `/arcade`.
 
 ## Concept
 
