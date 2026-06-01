@@ -95,6 +95,10 @@ import fenceBreachLeft from "./assets/fence/fence-breach-left.png";
 import fenceBreachMiddle from "./assets/fence/fence-breach-middle.png";
 import fenceBreachRight from "./assets/fence/fence-breach-right.png";
 
+import bgDark from "./assets/backgrounds/dark.png";
+import bgLight from "./assets/backgrounds/light.png";
+import bgVictory from "./assets/backgrounds/victory.png";
+
 type Img = HTMLImageElement;
 
 export type LoadedAssets = {
@@ -116,6 +120,7 @@ export type LoadedAssets = {
   ambulanceDrive: Img[];
   ambulanceExplode: Img[];
   fence: { left: Img; middle: Img; right: Img; breachLeft: Img; breachMiddle: Img; breachRight: Img };
+  backgrounds: { dark: Img; light: Img; victory: Img };
 };
 
 function load(src: string): Promise<Img> {
@@ -143,6 +148,7 @@ export async function loadAssets(): Promise<LoadedAssets> {
     grenadeImg, grenadeEx1, grenadeEx2, grenadeEx3, grenadeEx4,
     ambDrive1, ambDrive2, ambEx1, ambEx2, ambEx3, ambEx4,
     fenceLeft, fenceMiddle, fenceRight, fenceBreachLeft, fenceBreachMiddle, fenceBreachRight,
+    bgDark, bgLight, bgVictory,
   ];
   const loaded = await Promise.all(all.map((d) => load(src(d))));
   let i = 0;
@@ -166,10 +172,11 @@ export async function loadAssets(): Promise<LoadedAssets> {
   const ambulanceDrive = [next(), next()];
   const ambulanceExplode = [next(), next(), next(), next()];
   const fence = { left: next(), middle: next(), right: next(), breachLeft: next(), breachMiddle: next(), breachRight: next() };
+  const backgrounds = { dark: next(), light: next(), victory: next() };
 
   return {
     zombieWalk, zombieDeath, zombieIdle, zombieAttack, zombieHurt,
     bubWalk, bubIdle, bubHurt: bubHurtImg, bubAttack, bubDeath,
-    heroRun, heroStand, helo, grenade, grenadeExplode, ambulanceDrive, ambulanceExplode, fence,
+    heroRun, heroStand, helo, grenade, grenadeExplode, ambulanceDrive, ambulanceExplode, fence, backgrounds,
   };
 }

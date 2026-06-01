@@ -1,9 +1,10 @@
 /* ── Zombie Attack! – Canvas renderer (v3, image-based fence siege) ──
  *
  * Blits preloaded NES-era PNG sprites with `drawImage` (nearest-neighbour). The
- * dirt lot + helipad are procedural (theme-aware); the chain-link fence is a row
- * of sprite tiles that swap to breach tiles from the centre as it weakens. The
- * helicopter draws over the fence (it's flying above it). HUD is React-rendered.
+ * ground + helipad come from a theme-aware background image; the chain-link fence
+ * is a row of sprite tiles that tear open from the centre as it weakens. The
+ * helicopter draws over the fence (it's flying above it). On a successful
+ * extraction a fixed victory image fills the board. HUD is React-rendered.
  */
 
 import {
@@ -17,9 +18,6 @@ import {
   FENCE_TILE,
   FENCE_Y,
   GRENADE_SIZE,
-  HELIPAD_R,
-  HELIPAD_X,
-  HELIPAD_Y,
   HELI_CENTER_X,
   HELI_INBOUND_RISE,
   HELI_LIFT_START,
@@ -36,28 +34,8 @@ import {
 import type { LoadedAssets } from "./assets";
 import type { World, Zombie } from "./types";
 
-type Palette = { dirtBase: string; pebble: string; clod: string; grass: string };
-const DARK_PAL: Palette = { dirtBase: "#1c160d", pebble: "#5a4631", clod: "#2e2317", grass: "#6b7a2e" };
-const LIGHT_PAL: Palette = { dirtBase: "#cbb98e", pebble: "#a98f63", clod: "#8a734a", grass: "#7c8a3a" };
-
-const PAD_ASPHALT = "#2b2b30";
-const PAD_RING = "#d8c24a";
 const SHOT_COLOR = "#ffe24a";
 const BUB_SHOT_COLOR = "#ff5a3c";
-
-/** Deterministic dirt-lot scatter so the ground never flickers between frames. */
-const TERRAIN: { x: number; y: number; kind: number }[] = (() => {
-  let seed = 1977;
-  const r = () => {
-    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-    return seed / 0x7fffffff;
-  };
-  return Array.from({ length: 120 }, () => ({
-    x: Math.floor(r() * BOARD_W),
-    y: Math.floor(r() * BOARD_H),
-    kind: Math.floor(r() * 10),
-  }));
-})();
 
 function rotor<T>(a: T, b: T): T {
   return Math.floor(Date.now() / 130) % 2 === 0 ? a : b;
@@ -66,43 +44,6 @@ function rotor<T>(a: T, b: T): T {
 function drawImg(ctx: CanvasRenderingContext2D, img: HTMLImageElement | undefined, cx: number, cy: number, size: number): void {
   if (!img || !img.width) return;
   ctx.drawImage(img, Math.round(cx - size / 2), Math.round(cy - size / 2), size, size);
-}
-
-function drawDirt(ctx: CanvasRenderingContext2D, pal: Palette): void {
-  ctx.fillStyle = pal.dirtBase;
-  ctx.fillRect(0, 0, BOARD_W, BOARD_H);
-  for (const t of TERRAIN) {
-    if (t.kind <= 4) {
-      ctx.globalAlpha = 0.5;
-      ctx.fillStyle = pal.pebble;
-      ctx.fillRect(t.x, t.y, 1, 1);
-    } else if (t.kind <= 7) {
-      ctx.globalAlpha = 0.5;
-      ctx.fillStyle = pal.clod;
-      ctx.fillRect(t.x, t.y, 2, 1);
-    } else {
-      ctx.globalAlpha = 0.45;
-      ctx.fillStyle = pal.grass;
-      ctx.fillRect(t.x, t.y, 1, 2);
-    }
-  }
-  ctx.globalAlpha = 1;
-}
-
-function drawHelipad(ctx: CanvasRenderingContext2D): void {
-  ctx.fillStyle = PAD_ASPHALT;
-  ctx.beginPath();
-  ctx.arc(HELIPAD_X, HELIPAD_Y, HELIPAD_R, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = PAD_RING;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(HELIPAD_X, HELIPAD_Y, HELIPAD_R - 4, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.fillStyle = PAD_RING;
-  ctx.fillRect(HELIPAD_X - 14, HELIPAD_Y - 16, 5, 32);
-  ctx.fillRect(HELIPAD_X + 9, HELIPAD_Y - 16, 5, 32);
-  ctx.fillRect(HELIPAD_X - 14, HELIPAD_Y - 3, 28, 6);
 }
 
 /** Chain-link fence: end posts + middle tiles; the centre tears open as HP drops. */
@@ -181,12 +122,19 @@ export function drawBoard(ctx: CanvasRenderingContext2D, world: World, assets: L
   if (typeof navigator !== "undefined" && /\bjsdom\b/i.test(navigator.userAgent)) return;
 
   ctx.imageSmoothingEnabled = false;
+
+  // Victory cutscene: a clean fixed background so the celebration text reads
+  // (no fence/horde to clutter it).
+  if (world.celebrationMs > 0) {
+    ctx.drawImage(assets.backgrounds.victory, 0, 0, BOARD_W, BOARD_H);
+    return;
+  }
+
   const light = typeof document !== "undefined" && document.documentElement.classList.contains("light");
-  const pal = light ? LIGHT_PAL : DARK_PAL;
   const fenceUp = world.fenceHp > 0;
 
-  drawDirt(ctx, pal);
-  drawHelipad(ctx);
+  // Ground + helipad come from the background art (theme-aware).
+  ctx.drawImage(light ? assets.backgrounds.light : assets.backgrounds.dark, 0, 0, BOARD_W, BOARD_H);
   drawFence(ctx, world, assets);
 
   // ── Ambulance ──
