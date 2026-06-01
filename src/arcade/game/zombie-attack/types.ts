@@ -132,6 +132,8 @@ export type DifficultyParams = {
   reviveChance: number;
   /** Multiplier applied to all score gains. */
   scoreMultiplier: number;
+  /** Lives granted on each successful extraction (rescue). */
+  rescueLifeBonus: number;
   /** Chance Bub drops a grenade on death. */
   bubGrenadeChance: number;
   /** Whether a protective fence exists this game (false on Nightmare). */
