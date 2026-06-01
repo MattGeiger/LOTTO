@@ -35,16 +35,21 @@ type ZombieModePreset = {
   zombieSpeed: number;
   bubIntervalMs: number;
   ambulanceHp: number;
+  reviveChance: number;
+  scoreMultiplier: number;
+  bubGrenadeChance: number;
+  fence: boolean;
 };
 
-// Normal is the tuned baseline (2× the old spawn rate, ½ the old speed).
+// Normal is the baseline; others are defined relative to it. The zombie walk
+// animation tracks zombieSpeed in the engine, so 2×-speed tiers also animate 2× faster.
 const ZOMBIE_MODE_PRESETS: readonly ZombieModePreset[] = [
-  { key: "veryEasy",  labelKey: "snakeModeVeryEasy",  spawnIntervalMs: 1100, zombieSpeed: 0.14,  bubIntervalMs: 16000, ambulanceHp: 3 },
-  { key: "easy",      labelKey: "snakeModeEasy",      spawnIntervalMs: 950,  zombieSpeed: 0.155, bubIntervalMs: 14000, ambulanceHp: 3 },
-  { key: "normal",    labelKey: "snakeModeNormal",    spawnIntervalMs: 800,  zombieSpeed: 0.175, bubIntervalMs: 11000, ambulanceHp: 4 },
-  { key: "hard",      labelKey: "snakeModeHard",      spawnIntervalMs: 650,  zombieSpeed: 0.20,  bubIntervalMs: 9000,  ambulanceHp: 4 },
-  { key: "veryHard",  labelKey: "snakeModeVeryHard",  spawnIntervalMs: 525,  zombieSpeed: 0.23,  bubIntervalMs: 7000,  ambulanceHp: 5 },
-  { key: "nightmare", labelKey: "snakeModeNightmare", spawnIntervalMs: 400,  zombieSpeed: 0.27,  bubIntervalMs: 4500,  ambulanceHp: 6 },
+  { key: "veryEasy",  labelKey: "snakeModeVeryEasy",  spawnIntervalMs: 1600, zombieSpeed: 0.175, bubIntervalMs: 11000, ambulanceHp: 3, reviveChance: 0,    scoreMultiplier: 0.5,  bubGrenadeChance: 0.25, fence: true },
+  { key: "easy",      labelKey: "snakeModeEasy",      spawnIntervalMs: 1600, zombieSpeed: 0.175, bubIntervalMs: 11000, ambulanceHp: 3, reviveChance: 0.1,  scoreMultiplier: 0.75, bubGrenadeChance: 0.25, fence: true },
+  { key: "normal",    labelKey: "snakeModeNormal",    spawnIntervalMs: 800,  zombieSpeed: 0.175, bubIntervalMs: 11000, ambulanceHp: 4, reviveChance: 0.1,  scoreMultiplier: 1,    bubGrenadeChance: 0.25, fence: true },
+  { key: "hard",      labelKey: "snakeModeHard",      spawnIntervalMs: 800,  zombieSpeed: 0.35,  bubIntervalMs: 11000, ambulanceHp: 4, reviveChance: 0.1,  scoreMultiplier: 2,    bubGrenadeChance: 0.25, fence: true },
+  { key: "veryHard",  labelKey: "snakeModeVeryHard",  spawnIntervalMs: 800,  zombieSpeed: 0.35,  bubIntervalMs: 2750,  ambulanceHp: 5, reviveChance: 0.1,  scoreMultiplier: 3,    bubGrenadeChance: 0.25, fence: true },
+  { key: "nightmare", labelKey: "snakeModeNightmare", spawnIntervalMs: 800,  zombieSpeed: 0.35,  bubIntervalMs: 2750,  ambulanceHp: 6, reviveChance: 0.1,  scoreMultiplier: 4,    bubGrenadeChance: 0,    fence: false },
 ];
 const DEFAULT_MODE_INDEX = 2;
 
@@ -56,6 +61,10 @@ function dpFromPreset(p: ZombieModePreset): DifficultyParams {
     zombieSpeed: p.zombieSpeed,
     bubIntervalMs: p.bubIntervalMs,
     ambulanceHp: p.ambulanceHp,
+    reviveChance: p.reviveChance,
+    scoreMultiplier: p.scoreMultiplier,
+    bubGrenadeChance: p.bubGrenadeChance,
+    fence: p.fence,
   };
 }
 

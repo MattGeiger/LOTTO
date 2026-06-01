@@ -107,6 +107,7 @@ function drawHelipad(ctx: CanvasRenderingContext2D): void {
 
 /** Chain-link fence: end posts + middle tiles; the centre tears open as HP drops. */
 function drawFence(ctx: CanvasRenderingContext2D, world: World, assets: LoadedAssets): void {
+  if (world.fenceMaxHp <= 0) return; // no fence this game (Nightmare)
   const f = assets.fence;
   const tiles = Math.round(BOARD_W / FENCE_TILE);
   const mid = tiles - 2;
@@ -200,13 +201,15 @@ export function drawBoard(ctx: CanvasRenderingContext2D, world: World, assets: L
     }
   }
 
-  // ── Zombies (downed/reviving first, then the living on top) ──
+  // ── Zombies: downed/reviving first (behind), then the living. The living are
+  // drawn newest-first so freshly-spawned zombies sit BEHIND the older ones. ──
   const sizeOf = (z: Zombie) => (z.kind === "bub" ? BUB_SIZE : ZOMBIE_SIZE);
   for (const z of world.zombies) {
     if (z.dying === 0 && z.reviving === 0) continue;
     drawImg(ctx, zombieSprite(z, assets, false), z.x, z.y, sizeOf(z));
   }
-  for (const z of world.zombies) {
+  for (let i = world.zombies.length - 1; i >= 0; i -= 1) {
+    const z = world.zombies[i]!;
     if (z.dying !== 0 || z.reviving !== 0) continue;
     drawImg(ctx, zombieSprite(z, assets, fenceUp && z.y >= FENCE_Y - 1), z.x, z.y, sizeOf(z));
   }

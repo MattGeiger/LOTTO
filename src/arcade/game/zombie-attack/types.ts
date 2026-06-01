@@ -128,6 +128,14 @@ export type DifficultyParams = {
   bubIntervalMs: number;
   /** Hits to destroy the ambulance. */
   ambulanceHp: number;
+  /** Chance a killed civilian gets back up (0 disables revives). */
+  reviveChance: number;
+  /** Multiplier applied to all score gains. */
+  scoreMultiplier: number;
+  /** Chance Bub drops a grenade on death. */
+  bubGrenadeChance: number;
+  /** Whether a protective fence exists this game (false on Nightmare). */
+  fence: boolean;
 };
 
 /** Per-frame input from the page (slider/keyboard + fire control). */
