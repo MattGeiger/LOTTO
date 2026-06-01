@@ -34,7 +34,7 @@ import {
 import type { LoadedAssets } from "./assets";
 import type { World, Zombie } from "./types";
 
-const SHOT_COLOR = "#ffe24a";
+const SHOT_COLOR = "#FFAA00";
 const BUB_SHOT_COLOR = "#ff5a3c";
 
 function rotor<T>(a: T, b: T): T {
