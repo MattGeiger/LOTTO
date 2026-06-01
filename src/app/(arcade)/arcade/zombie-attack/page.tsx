@@ -438,7 +438,7 @@ export default function ZombieAttackPage() {
         ref={playAreaRef}
         className="arcade-zombie-stage mt-6"
         tabIndex={-1}
-        aria-label="Zombie Attack play area"
+        aria-label="Day of the Dead play area"
       >
         <p className={cn("arcade-zombie-objective arcade-ui", isLargeTextLocale ? "text-[16px] sm:text-[18px]" : "text-[11px]")}>
           {objectiveText}
@@ -466,7 +466,7 @@ export default function ZombieAttackPage() {
         <div
           className="arcade-zombie-board pixelated"
           role="img"
-          aria-label="Zombie Attack play area"
+          aria-label="Day of the Dead play area"
           onClick={status === "GAME_OVER" ? restartRun : undefined}
         >
           <canvas ref={boardCanvasRef} className="arcade-zombie-canvas pixelated" aria-hidden="true" />
