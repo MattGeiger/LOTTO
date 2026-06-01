@@ -17,6 +17,7 @@ import { drawBoard } from "@/arcade/game/zombie-attack/renderer";
 import { loadAssets, type LoadedAssets } from "@/arcade/game/zombie-attack/assets";
 import type { DifficultyParams, ShooterInput, World } from "@/arcade/game/zombie-attack/types";
 import { ChevronArrowLeftIcon } from "@/arcade/components/icons/chevron-arrow-left-icon";
+import { ArcadeHighScores } from "@/arcade/components/arcade-high-scores";
 import { Button, Card, CardContent, CardHeader, CardTitle, Slider } from "@/arcade/ui/8bit";
 import { useAppHaptics } from "@/components/haptics-provider";
 import { useLanguage } from "@/contexts/language-context";
@@ -485,6 +486,13 @@ export default function ZombieAttackPage() {
             </div>
           ) : null}
         </div>
+
+        <ArcadeHighScores
+          game="zombie-attack"
+          difficulty={modePreset.key}
+          score={score}
+          status={status}
+        />
       </section>
 
       <section className="arcade-zombie-control-dock" aria-label="Game controls">

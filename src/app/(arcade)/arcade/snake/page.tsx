@@ -10,6 +10,7 @@ import {
   ChevronArrowRightIcon,
   ChevronArrowUpIcon,
 } from "@/arcade/components/icons/chevron-arrow-left-icon";
+import { ArcadeHighScores } from "@/arcade/components/arcade-high-scores";
 import { Button, Card, CardContent, CardHeader, CardTitle, Slider } from "@/arcade/ui/8bit";
 import { useAppHaptics } from "@/components/haptics-provider";
 import { useLanguage } from "@/contexts/language-context";
@@ -685,6 +686,13 @@ export default function SnakePage() {
             </div>
           ) : null}
         </div>
+
+        <ArcadeHighScores
+          game="snake"
+          difficulty={modePreset.key}
+          score={score}
+          status={status}
+        />
 
       </section>
 

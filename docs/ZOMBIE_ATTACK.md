@@ -16,6 +16,8 @@
   4-round cycle.
 - 6-tier difficulty; all eight languages; deterministic engine unit test
   (`tests/arcade-zombie-attack-engine.test.ts`, 9 cases).
+- Arcade Top 10 Scores integration is implemented via the shared Arcade
+  leaderboard UI and isolated `ARCADE_DATABASE_URL` persistence.
 
 ## Concept
 
@@ -186,7 +188,6 @@ Nightmare draws no sandbags, but the bunker *location* is still the death line
 ## Open Questions / Deferred
 - Sound effects (deferred — visual-only on the web path, like the other games).
 - Per-cycle set-dressing or special "boss" waves.
-- High-score / longest-survival persistence (Arcade v2.0 work).
 
 ---
 

@@ -18,6 +18,10 @@ vi.mock("web-haptics/react", () => ({
   }),
 }));
 
+vi.mock("@/arcade/components/arcade-high-scores", () => ({
+  ArcadeHighScores: () => null,
+}));
+
 function renderWithProviders(ui: ReactNode) {
   return render(
     <HapticsProvider>

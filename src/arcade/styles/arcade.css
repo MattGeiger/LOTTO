@@ -518,6 +518,127 @@ html.light .arcade-scope .arcade-serving-value.arcade-serving-value-estimated {
   animation: arcade-blink 1200ms step-end infinite;
 }
 
+.arcade-high-scores {
+  width: var(--arcade-board-size);
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.55rem 0.6rem;
+  background: linear-gradient(180deg, rgba(4, 7, 15, 0.9), rgba(4, 7, 15, 0.55));
+  border: 1px solid rgba(59, 124, 255, 0.48);
+  text-shadow: none;
+  direction: ltr;
+}
+
+html.light .arcade-scope .arcade-high-scores {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(232, 241, 255, 0.93));
+  border-color: rgba(49, 93, 187, 0.5);
+}
+
+.arcade-high-scores-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--arcade-dot);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  text-align: center;
+  text-shadow: none;
+}
+
+.arcade-high-scores-list {
+  display: grid;
+  gap: 0.18rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.62rem;
+  line-height: 1.2;
+}
+
+.arcade-high-scores-row {
+  display: grid;
+  grid-template-columns: 2.2ch minmax(3ch, 1fr) minmax(6ch, auto);
+  gap: 0.45rem;
+  align-items: center;
+  color: var(--arcade-text);
+}
+
+.arcade-high-scores-rank {
+  color: var(--arcade-dot);
+  text-align: right;
+}
+
+.arcade-high-scores-initials {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arcade-high-scores-score {
+  color: var(--arcade-pellet);
+  text-align: right;
+}
+
+.arcade-high-scores-message,
+.arcade-high-scores-timer,
+.arcade-high-scores-error {
+  margin: 0;
+  color: var(--arcade-text);
+  font-size: 0.62rem;
+  line-height: 1.25;
+  text-align: center;
+  text-shadow: none;
+}
+
+.arcade-high-scores-error {
+  color: var(--arcade-neon);
+}
+
+.arcade-high-scores-entry {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.arcade-high-scores-entry-title {
+  margin: 0;
+  color: var(--arcade-dot);
+  font-size: 0.68rem;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.arcade-high-scores-entry-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.arcade-high-scores-input {
+  width: 100%;
+  min-width: 0;
+  height: 2.25rem;
+  border: 2px solid var(--arcade-wall);
+  border-radius: 0;
+  background: rgba(4, 7, 15, 0.86);
+  color: var(--arcade-text);
+  padding: 0.25rem 0.45rem;
+  font-size: 1rem;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+  outline: none;
+}
+
+html.light .arcade-scope .arcade-high-scores-input {
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.arcade-high-scores-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--arcade-dot);
+}
+
 .pixelated {
   image-rendering: pixelated;
   image-rendering: crisp-edges;

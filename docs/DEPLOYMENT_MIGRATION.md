@@ -8,11 +8,17 @@ Goal: run the same stack locally and on Vercel using Neon Postgres, NextAuth v5 
    - Create a project in Neon (free tier OK).
    - Copy the connection string (`postgresql://...sslmode=require`).
    - Run schema once in Neon SQL editor using `schema.sql` at the repo root. It creates raffle tables, snapshots, indexes, and NextAuth tables.
+   - For Arcade high scores, create a separate Neon project/database and run
+     `schema.arcade.sql` there. Use its least-privilege runtime role connection
+     string as `ARCADE_DATABASE_URL`; do not point Arcade at the core
+     `DATABASE_URL`.
 
 2) Update env for local (Docker reads `.env.local` via `env_file`)
    - Add/edit `.env.local`:
      ```
      DATABASE_URL=postgresql://postgres:postgres@db:5432/neondb?sslmode=disable
+     # Optional: separate Arcade leaderboard database.
+     # ARCADE_DATABASE_URL=postgresql://arcade_scores_runtime:pass@host/db?sslmode=require
      EMAIL_FROM=login@localhost
      EMAIL_SERVER_HOST=maildev
      EMAIL_SERVER_PORT=1025
@@ -52,12 +58,14 @@ Goal: run the same stack locally and on Vercel using Neon Postgres, NextAuth v5 
    - `/admin` accessible post-login; non-allowed domains rejected.
 
 7) Vercel notes
-   - Set envs in Vercel: `DATABASE_URL`, `AUTH_SECRET`, `AUTH_TRUST_HOST=true`, `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL_DOMAIN`.
+  - Set envs in Vercel: `DATABASE_URL`, `ARCADE_DATABASE_URL`, `AUTH_SECRET`, `AUTH_TRUST_HOST=true`, `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL_DOMAIN`.
    - Same auth config works on Vercel; Neon free tier is sufficient. Production will fail fast without `DATABASE_URL`.
    - Next.js 16 renamed `middleware` → `proxy`; file lives at `src/proxy.ts` with the same matcher guarding `/admin` and `/api/state` and runs on the Node.js runtime by default (no Edge support).
 
 ### Status
-- Schema captured in `schema.sql`; adapter uses `DATABASE_URL` exclusively.
+- Core schema captured in `schema.sql`; adapter uses `DATABASE_URL` exclusively.
+- Arcade leaderboard schema captured in `schema.arcade.sql`; public high-score
+  writes use `ARCADE_DATABASE_URL` only.
 - Vercel production deployed on `williamtemple.app` with Neon Postgres, Resend magic links, and admin routes protected (auth bypass off).
 - Populate `.env.local` / `.env.production` before deployment. Local MailDev remains the default mailer without RESEND.
 - Production env on Vercel uses: `DATABASE_URL` (Neon), `AUTH_SECRET`, `AUTH_TRUST_HOST=true`, `RESEND_API_KEY`, `EMAIL_FROM=noreply@williamtemple.app`, `ADMIN_EMAIL_DOMAIN=williamtemple.org`, `AUTH_BYPASS=false`, `NODE_ENV=production`.

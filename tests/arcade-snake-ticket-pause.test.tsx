@@ -21,11 +21,15 @@ describe("Snake ticket-called pause behavior", () => {
       disconnect() {}
     }
     vi.stubGlobal("ResizeObserver", ResizeObserverMock);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ scores: [] }), { status: 200 }),
+    ));
     vi.spyOn(window, "setInterval").mockImplementation(() => 0 as unknown as number);
     vi.spyOn(window, "clearInterval").mockImplementation(() => undefined);
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 

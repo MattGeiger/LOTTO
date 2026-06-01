@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.15.0] - 2026-06-01
+### Added
+- **Arcade Top 10 Scores:** Snake, Brick Mayhem, and Day of the Dead now show per-game/per-difficulty leaderboards before start and at game over.
+- **High-score entry:** qualifying game-over scores get a 30-second, 3-initial entry flow with multilingual letter support and no profanity denylist.
+- **Isolated Arcade database:** added `schema.arcade.sql`, `ARCADE_DATABASE_URL`, an Arcade-only high-score store, and public `/api/arcade/high-scores` GET/POST routes. The leaderboard database is separate from the core LOTTO queue/auth `DATABASE_URL`.
+- **Docs and tests:** added `docs/ARCADE_HIGH_SCORES.md`, deployment notes for the separate Neon project, and unit/API/component/page coverage for leaderboard validation and UI integration.
+
+### Fixed
+- Cleaned up the existing `tests/state-manager-db.test.ts` `prefer-const` lint blocker so full lint can pass.
+
 ## [1.14.5] - 2026-05-31
 ### Changed
 - **Day of the Dead HUD color follow-up:** `ROUND`, `LIVES`, and `SCORE` now match the `SETTING: ...` / instruction-list text color instead of the green pellet color.
