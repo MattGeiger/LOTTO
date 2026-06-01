@@ -23,6 +23,7 @@ import { spawnBrickFragments, tickFragments } from "@/arcade/game/brick-mayhem/p
 import { drawBoard } from "@/arcade/game/brick-mayhem/renderer";
 import type { DifficultyParams, World } from "@/arcade/game/brick-mayhem/types";
 import { ChevronArrowLeftIcon } from "@/arcade/components/icons/chevron-arrow-left-icon";
+import { ArcadeHighScores } from "@/arcade/components/arcade-high-scores";
 import { Button, Card, CardContent, CardHeader, CardTitle, Slider } from "@/arcade/ui/8bit";
 import { useAppHaptics } from "@/components/haptics-provider";
 import { useLanguage } from "@/contexts/language-context";
@@ -630,6 +631,13 @@ export default function BrickMayhemPage() {
             </div>
           ) : null}
         </div>
+
+        <ArcadeHighScores
+          game="brick-mayhem"
+          difficulty={modePreset.key}
+          score={score}
+          status={status}
+        />
       </section>
 
       <section className="arcade-brick-control-dock" aria-label="Game controls">

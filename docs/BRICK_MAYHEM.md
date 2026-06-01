@@ -11,6 +11,8 @@
 - Pixel-grid rendering (ball/paddle/fragments snapped to integer pixels at draw time).
 - Desktop viewport scaling (board grows to fill available space on 768px+ screens).
 - Brick color-hit effect system (speed modifiers, multiball, clone paddle, timed paddle/points buffs) is implemented.
+- Arcade Top 10 Scores integration is implemented via the shared Arcade
+  leaderboard UI and isolated `ARCADE_DATABASE_URL` persistence.
 
 ## Concept
 
@@ -189,7 +191,9 @@ Brick Mayhem follows the same Arcade integration patterns established by Snake:
 - **Play-resumed event:** Dispatches `ARCADE_PLAY_RESUMED_EVENT` on start/resume to dismiss the ticket-called overlay.
 - **Haptics:** Uses the shared semantic haptics layer for direct button-style controls only. Primary play/pause/reset buttons use explicit UI intents, while the difficulty slider and continuous paddle slider remain intentionally haptic-free. Brick destruction, paddle bounce, level clear, and ball-loss feedback remain visual-only on the web path.
 - **Styling:** Uses Arcade-scoped CSS classes (`arcade-brick-*`) and shared Arcade CSS custom properties. No global theme changes.
-- **Data boundary:** All game state is local client state. No raffle API dependency.
+- **Data boundary:** Gameplay state is local client state. Shared high scores use
+  `/api/arcade/high-scores` backed by the isolated Arcade database; there is no
+  raffle API or `/api/state` dependency.
 - **Translations:** Instruction and readout keys are defined for all 8 supported locales under `brickMayhem*` prefixes.
 
 ---
