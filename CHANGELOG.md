@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.14.5] - 2026-05-31
+### Changed
+- **Day of the Dead HUD color follow-up:** `ROUND`, `LIVES`, and `SCORE` now match the `SETTING: ...` / instruction-list text color instead of the green pellet color.
+- **Docs:** updated the Day of the Dead design doc and Arcade current-state notes for the HUD color behavior.
+
 ## [1.14.4] - 2026-05-31
 ### Changed
 - **Day of the Dead visual polish:** player bullets now render `#FFAA00`; the extraction victory overlay text (`EXTRACTION COMPLETE!`) now renders `#00FF00`; and the "DIFFICULTY SETTING" / `SETTING: ...` text now matches the instruction-list color.

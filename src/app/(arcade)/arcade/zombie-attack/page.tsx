@@ -445,16 +445,16 @@ export default function ZombieAttackPage() {
         </p>
 
         <div className="arcade-zombie-readout arcade-zombie-readout-metrics arcade-ui">
-          <p className={cn("text-[var(--arcade-pellet)]", isLargeTextLocale ? "text-[22px] sm:text-[24px]" : "text-[12px]")}>
+          <p className={cn("text-[var(--arcade-text)]/90", isLargeTextLocale ? "text-[22px] sm:text-[24px]" : "text-[12px]")}>
             {t("zombieAttackRoundLabel")}: {round}/4
           </p>
           <p className={cn("text-[var(--arcade-dot)]", isLargeTextLocale ? "text-[22px] sm:text-[24px]" : "text-[12px]")}>
             {t("zombieAttackTimeLabel")}: {secondsLeft}
           </p>
-          <p className={cn("text-[var(--arcade-pellet)]", isLargeTextLocale ? "text-[22px] sm:text-[24px]" : "text-[12px]")}>
+          <p className={cn("text-[var(--arcade-text)]/90", isLargeTextLocale ? "text-[22px] sm:text-[24px]" : "text-[12px]")}>
             {t("lives")}: {lives}
           </p>
-          <p className={cn("text-[var(--arcade-pellet)]", isLargeTextLocale ? "text-[22px] sm:text-[24px]" : "text-[12px]")}>
+          <p className={cn("text-[var(--arcade-text)]/90", isLargeTextLocale ? "text-[22px] sm:text-[24px]" : "text-[12px]")}>
             {t("score")}: {score}
           </p>
         </div>

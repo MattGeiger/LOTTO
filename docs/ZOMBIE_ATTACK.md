@@ -97,8 +97,9 @@ All input is in the control dock; the play area stays unobstructed.
 - **Keyboard:** ←/→ move, **A** / Space / ↑ fire, **P** pause.
 - The visible instruction list reads: "USE SLIDER TO MOVE", "HOLD A TO FIRE",
   "PROTECT THE FENCE FROM ZOMBIES", "SHOOT AMBULANCES AND GRENADES FOR A BLAST",
-  and "SURVIVE EACH ROUND TO EXTRACT THE CHOPPER". The difficulty title and
-  `SETTING: ...` row use the same text color as this instruction list.
+  and "SURVIVE EACH ROUND TO EXTRACT THE CHOPPER". The difficulty title,
+  `SETTING: ...` row, and the `ROUND`, `LIVES`, and `SCORE` HUD rows use the
+  same text color as this instruction list.
 
 ---
 
