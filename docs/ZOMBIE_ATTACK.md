@@ -40,7 +40,7 @@ retro pixel-art system, the sticky control dock, and the page conventions.
 - Each zombie, every ~0.5s, **re-rolls a stochastic direction**: 50% straight
   down, 25% down-left, 25% down-right (45° diagonals, constant downward speed).
 - The hero moves left↔right along the bottom and fires the Uzi **upward**
-  (rapid, up to 3 tracers on screen).
+  (rapid, up to 3 orange `#FFAA00` tracers on screen).
 - Each zombie that reaches the **bunker line** is absorbed and chips the line's
   **integrity**; when integrity hits zero the pad is overrun → **game over**.
 - The hero also has **3 lives**, lost to **Bub's bullets**; 0 lives → game over.
@@ -95,6 +95,10 @@ All input is in the control dock; the play area stays unobstructed.
 - **Fire button "A"** (compact) — hold to autofire. `touch-action: none` +
   `user-select: none` keep a held/dragged press from scrolling or selecting text.
 - **Keyboard:** ←/→ move, **A** / Space / ↑ fire, **P** pause.
+- The visible instruction list reads: "USE SLIDER TO MOVE", "HOLD A TO FIRE",
+  "PROTECT THE FENCE FROM ZOMBIES", "SHOOT AMBULANCES AND GRENADES FOR A BLAST",
+  and "SURVIVE EACH ROUND TO EXTRACT THE CHOPPER". The difficulty title and
+  `SETTING: ...` row use the same text color as this instruction list.
 
 ---
 
@@ -169,13 +173,13 @@ Nightmare draws no sandbags, but the bunker *location* is still the death line
 | Board | 240 × 360, top-down, `aspect-ratio 240/360` |
 | Game loop | `requestAnimationFrame`, ~16ms fixed timestep |
 | Hero | 32px, bottom lane; 3 lives; 80-frame post-hit invulnerability |
-| Uzi | 3px×7 tracers, speed 4.6, max 3, 150ms cooldown |
+| Uzi | `#FFAA00` 3px×7 tracers, speed 4.6, max 3, 150ms cooldown |
 | Zombie descent | re-roll every ~0.52s: 50% down / 25% / 25% diagonals (45°) |
 | Civilian | 1 HP, 20 pts, 4 sprite variants |
 | Bub | 2 HP, 150 pts, 1911 spread fire, 50% grenade-drop |
 | Grenade blast | radius ≈ √(0.25·W·H/π) ≈ 54px; 25 pts per zombie |
 | Ambulance | 3–6 HP, 200 pts, blast radius 60px |
-| Rounds | 4 timed rounds (28 / 34 / 34 / 22 s); extraction loops the cycle |
+| Rounds | 4 timed rounds (28 / 34 / 34 / 22 s); extraction loops the cycle with `EXTRACTION COMPLETE!` in `#00FF00` |
 | Loss | bunker line overrun (integrity 0), or 0 lives |
 
 ## Open Questions / Deferred

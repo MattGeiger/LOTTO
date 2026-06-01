@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.14.4] - 2026-05-31
+### Changed
+- **Day of the Dead visual polish:** player bullets now render `#FFAA00`; the extraction victory overlay text (`EXTRACTION COMPLETE!`) now renders `#00FF00`; and the "DIFFICULTY SETTING" / `SETTING: ...` text now matches the instruction-list color.
+- **Docs:** updated the Day of the Dead design doc and Arcade current-state notes to capture the bullet, victory-text, and settings-text color behavior.
+
 ## [1.14.3] - 2026-05-31
 ### Changed
 - **Day of the Dead instructions** refreshed (all eight languages): "HOLD A TO FIRE", "STOP ZOMBIES AT THE FENCE" (was the stale "bunker line"), and "SHOOT ROGUE AMBULANCES AND BUB'S GRENADES FOR A BLAST".

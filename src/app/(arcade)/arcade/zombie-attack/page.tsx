@@ -381,7 +381,7 @@ export default function ZombieAttackPage() {
 
       <Card className="mx-auto mt-4 w-full max-w-3xl">
         <CardHeader className="space-y-1 pb-2">
-          <CardTitle className="text-2xl text-[var(--arcade-pellet)] sm:text-3xl">
+          <CardTitle className="text-2xl text-[var(--arcade-text)]/90 sm:text-3xl">
             {t("zombieAttackDifficultySettingTitle")}
           </CardTitle>
         </CardHeader>
@@ -390,7 +390,7 @@ export default function ZombieAttackPage() {
             <div className="arcade-brick-slider-group">
               <p
                 className={cn(
-                  "arcade-brick-slider-title text-[var(--arcade-pellet)]",
+                  "arcade-brick-slider-title text-[var(--arcade-text)]/90",
                   isLargeTextLocale ? "text-[22px] leading-tight sm:text-[24px]" : "text-[11px]",
                 )}
               >
@@ -481,7 +481,7 @@ export default function ZombieAttackPage() {
           ) : null}
           {celebrating && status !== "GAME_OVER" ? (
             <div className="arcade-zombie-celebrate">
-              <p className="arcade-retro text-2xl text-[var(--arcade-dot)] sm:text-4xl">{t("zombieAttackExtractionComplete")}</p>
+              <p className="arcade-retro text-2xl text-[#00FF00] sm:text-4xl">{t("zombieAttackExtractionComplete")}</p>
             </div>
           ) : null}
         </div>
