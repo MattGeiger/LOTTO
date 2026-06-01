@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.14.3] - 2026-05-31
+### Changed
+- **Day of the Dead instructions** refreshed (all eight languages): "HOLD A TO FIRE", "STOP ZOMBIES AT THE FENCE" (was the stale "bunker line"), and "SHOOT ROGUE AMBULANCES AND BUB'S GRENADES FOR A BLAST".
+- **Page metadata audit.** Unified the app brand to **"William Temple House App"** via a root title template (replacing the old `WTH Digital Raffle` / `LOTTO:` strings), and gave the main routes tailored, friendlier titles + descriptions: Home, **Arcade** ("Retro arcade games while you wait"), **Display**, **What's in Stock** (`/inventory`), **Your Ticket** (`/new`), and **Admin**. So tabs now read e.g. "Arcade | William Temple House App".
+
 ## [1.14.2] - 2026-05-31
 ### Changed
 - Renamed the game's display title from *Zombie Attack!* to **"Day of the Dead"** — a tribute to George A. Romero's 1985 film (the namesake of the Bub soldier zombie). Updated the title across all eight languages (localized for Chinese / Persian / Arabic) and the play-area labels. The internal slug (route `/arcade/zombie-attack`, modules, CSS, and translation keys) is unchanged.
