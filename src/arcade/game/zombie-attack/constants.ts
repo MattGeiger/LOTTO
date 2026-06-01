@@ -58,8 +58,11 @@ export const DIR_DOWN_WEIGHT = 0.5;
 export const DIR_DIAG_WEIGHT = 0.25; // each side
 /** Walk animation frame cadence (ms) — used by the hero. */
 export const ANIM_FRAME_MS = 220;
-/** Zombie walk/idle frame cadence (ms) — slower, to match their halved gait. */
+/** Zombie walk/idle frame cadence (ms) at the reference speed below. The engine
+ *  scales this with the actual move speed so faster zombies animate faster. */
 export const ZOMBIE_ANIM_FRAME_MS = 440;
+/** Reference move speed that ZOMBIE_ANIM_FRAME_MS is tuned to (Normal baseline). */
+export const ZOMBIE_ANIM_REF_SPEED = 0.175;
 /** Death animation duration (frames at 60fps) before the corpse is removed. */
 export const DEATH_FRAMES = 26;
 /** Spawn x stays this far from the walls. */
@@ -70,8 +73,6 @@ export const MAX_ZOMBIES = 30;
 /* ── Probabilistic hits ── */
 /** A civilian hit: chance it's a kill (else it's only a wound). */
 export const ZOMBIE_KILL_CHANCE = 0.5;
-/** A killed civilian: chance it gets back up (death animation in reverse). */
-export const ZOMBIE_REVIVE_CHANCE = 0.1;
 /** Once Bub's HP is gone, chance a further hit kills him (else another wound). */
 export const BUB_KILL_CHANCE = 0.5;
 /** A killed Bub: chance he gets back up. */
@@ -99,8 +100,6 @@ export const BUB_FIRE_CHANCE_IDLE = 0.12;
 export const BUB_ATTACK_POSE_FRAMES = 22;
 export const BUB_SHOT_SPEED = 2.7;
 export const BUB_SHOT_SIZE = 4;
-/** Chance Bub drops a live grenade where he falls. */
-export const BUB_GRENADE_DROP_CHANCE = 0.25;
 
 /* ── Grenade (dropped by Bub; shoot it to detonate) ── */
 export const GRENADE_BLAST_RADIUS = 54;

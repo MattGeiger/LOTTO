@@ -16,7 +16,16 @@ import {
 import { __resetRng, __setRng, initialWorld, tick } from "@/arcade/game/zombie-attack/engine";
 import type { DifficultyParams, Projectile, World, Zombie } from "@/arcade/game/zombie-attack/types";
 
-const DP: DifficultyParams = { spawnIntervalMs: 800, zombieSpeed: 0.175, bubIntervalMs: 11000, ambulanceHp: 4 };
+const DP: DifficultyParams = {
+  spawnIntervalMs: 800,
+  zombieSpeed: 0.175,
+  bubIntervalMs: 11000,
+  ambulanceHp: 4,
+  reviveChance: 0.1,
+  scoreMultiplier: 1,
+  bubGrenadeChance: 0.25,
+  fence: true,
+};
 
 afterEach(() => __resetRng());
 
@@ -191,5 +200,37 @@ describe("Zombie Attack engine (v3 — fence siege)", () => {
     const r = tick(w, input(w), DP);
     expect(r.heroHit).toBe(true);
     expect(r.world.lives).toBe(INITIAL_LIVES - 1);
+  });
+
+  it("scales score by the difficulty multiplier", () => {
+    __setRng(() => 0.2); // civilian kill, no revive
+    const w = controlled({ zombies: [mkZombie(120, 80)], shots: [mkShot(120, 80)] });
+    expect(tick(w, input(w), { ...DP, scoreMultiplier: 2 }).world.score).toBe(ZOMBIE_SCORE * 2);
+  });
+
+  it("never revives a killed civilian when reviveChance is 0 (Very Easy)", () => {
+    __setRng(() => 0.05); // would revive at 0.1, but reviveChance is 0
+    const w = controlled({ zombies: [mkZombie(120, 80)], shots: [mkShot(120, 80)] });
+    const r = tick(w, input(w), { ...DP, reviveChance: 0 });
+    expect(r.world.zombies[0]!.reviving).toBe(0);
+    expect(r.world.zombies[0]!.dying).toBeGreaterThan(0);
+  });
+
+  it("drops no grenade when bubGrenadeChance is 0 (Nightmare)", () => {
+    const dpN: DifficultyParams = { ...DP, bubGrenadeChance: 0 };
+    let w = controlled({ zombies: [mkZombie(120, 80, "bub")], shots: [mkShot(120, 80)] });
+    w = tick(w, input(w), dpN).world; // wound
+    w = { ...w, shots: [mkShot(120, 80)] };
+    w = tick(w, input(w), dpN).world; // wound → hp 0
+    __setRng(seq(0.4, 0.9, 0.1)); // kill, no revive, grenade-roll 0.1 (< 0 → none)
+    const r = tick({ ...w, shots: [mkShot(120, 80)] }, input(w), dpN);
+    expect(r.bubKilled).toBe(true);
+    expect(r.world.grenades.length).toBe(0);
+  });
+
+  it("has no fence on a no-fence difficulty (Nightmare)", () => {
+    const w = initialWorld({ ...DP, fence: false });
+    expect(w.fenceHp).toBe(0);
+    expect(w.fenceMaxHp).toBe(0);
   });
 });

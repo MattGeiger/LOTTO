@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.14.0] - 2026-05-31
+### Changed
+- **Zombie Attack! render order:** the living zombies now draw newest-first, so freshly-spawned zombies sit **behind** older ones (matching the top-down depth).
+
+### Added
+- **Per-difficulty parameters** (defined relative to the Normal baseline):
+  - **Very Easy:** ½ spawn rate, civilians never revive, ×0.5 score.
+  - **Easy:** ½ spawn rate, ×0.75 score.
+  - **Normal:** the baseline.
+  - **Hard:** 2× zombie speed (the walk animation now tracks speed, so they animate 2× faster too), ×2 score.
+  - **Very Hard:** 2× speed, 4× Bub spawns, ×3 score.
+  - **Nightmare:** 2× speed, 4× Bub spawns, Bub never drops a grenade, **no protective fence**, ×4 score.
+  - The zombie walk/idle animation cadence is now derived from the actual move speed (per-difficulty and per-cycle), so faster zombies always animate faster.
+
 ## [1.13.1] - 2026-05-31
 ### Changed
 - Slowed the zombie walk/idle animation cadence (220ms → 440ms) so their stride matches the halved movement speed from 1.13.0. The hero's animation cadence is unchanged.

@@ -19,7 +19,6 @@ import {
   BUB_FIRE_CHANCE_AIMED,
   BUB_FIRE_CHANCE_IDLE,
   BUB_FIRE_INTERVAL_MS,
-  BUB_GRENADE_DROP_CHANCE,
   BUB_HP,
   BUB_KILL_CHANCE,
   BUB_RADIUS,
@@ -56,9 +55,9 @@ import {
   SHOT_COOLDOWN_MS,
   SHOT_SPEED,
   SPAWN_MARGIN,
+  ZOMBIE_ANIM_REF_SPEED,
   ZOMBIE_KILL_CHANCE,
   ZOMBIE_RADIUS,
-  ZOMBIE_REVIVE_CHANCE,
   ZOMBIE_SCORE,
   ZOMBIE_TYPE_COUNT,
 } from "./constants";
@@ -166,8 +165,8 @@ export function initialWorld(dp: DifficultyParams): World {
     roundTotalMs: ROUND_DURATIONS_MS[0]!,
     celebrationMs: 0,
     heliRise: 0,
-    fenceHp: FENCE_MAX_HP,
-    fenceMaxHp: FENCE_MAX_HP,
+    fenceHp: dp.fence ? FENCE_MAX_HP : 0,
+    fenceMaxHp: dp.fence ? FENCE_MAX_HP : 0,
     lives: INITIAL_LIVES,
     score: 0,
   };
@@ -180,13 +179,13 @@ function dist2(ax: number, ay: number, bx: number, by: number): number {
 }
 
 /** A grenade/ambulance blast kills outright (no wound/revive roll). */
-function blast(world: World, cx: number, cy: number, radius: number): void {
+function blast(world: World, cx: number, cy: number, radius: number, scoreMul: number): void {
   const r2 = radius * radius;
   for (const z of world.zombies) {
     if (z.dying !== 0 || z.reviving > 0) continue;
     if (dist2(z.x, z.y, cx, cy) <= r2) {
       z.dying = DEATH_FRAMES;
-      world.score += BLAST_KILL_POINTS;
+      world.score += Math.round(BLAST_KILL_POINTS * scoreMul);
     }
   }
 }
@@ -211,6 +210,9 @@ export function tick(prev: World, input: ShooterInput, dp: DifficultyParams): Ti
   let heloWrecked = false;
 
   const eff = scaled(world, dp);
+  const sm = dp.scoreMultiplier;
+  // Walk/idle animation cadence tracks the actual move speed (faster = snappier).
+  const zAnimMs = Math.max(100, (ZOMBIE_ANIM_FRAME_MS * ZOMBIE_ANIM_REF_SPEED) / eff.zombieSpeed);
 
   /* ── Hero ── */
   const prevX = world.hero.x;
@@ -254,7 +256,7 @@ export function tick(prev: World, input: ShooterInput, dp: DifficultyParams): Ti
       } else {
         rescued = true;
         world.cycle += 1;
-        world.score += 1000;
+        world.score += Math.round(1000 * sm);
         world.round = 1;
         world.roundTotalMs = ROUND_DURATIONS_MS[0]!;
         world.roundMsLeft = world.roundTotalMs;
@@ -302,7 +304,7 @@ export function tick(prev: World, input: ShooterInput, dp: DifficultyParams): Ti
         // Crashes the fence: blows up on impact, clearing nearby zombies.
         amb.exploding = AMBULANCE_EXPLODE_TOTAL;
         amb.y = FENCE_Y - AMBULANCE_H / 2;
-        blast(world, amb.x + AMBULANCE_W / 2, FENCE_Y, AMBULANCE_BLAST_RADIUS);
+        blast(world, amb.x + AMBULANCE_W / 2, FENCE_Y, AMBULANCE_BLAST_RADIUS, sm);
         ambulanceDestroyed = true;
         world.ambulance = amb;
       } else if (world.fenceHp <= 0 && amb.y + AMBULANCE_H / 2 >= HELO_ATTACK_Y) {
@@ -350,7 +352,7 @@ export function tick(prev: World, input: ShooterInput, dp: DifficultyParams): Ti
     if (z.hurtFrames > 0) z.hurtFrames -= 1;
     if (z.attacking > 0) z.attacking -= 1;
     z.animMs += FIXED_DT;
-    if (z.animMs >= ZOMBIE_ANIM_FRAME_MS) { z.frame = z.frame === 0 ? 1 : 0; z.animMs = 0; }
+    if (z.animMs >= zAnimMs) { z.frame = z.frame === 0 ? 1 : 0; z.animMs = 0; }
     z.attackTimerMs -= FIXED_DT;
     const canAttack = z.attackTimerMs <= 0;
     if (canAttack) z.attackTimerMs = ATTACK_INTERVAL_MS;
@@ -428,8 +430,8 @@ export function tick(prev: World, input: ShooterInput, dp: DifficultyParams): Ti
         a.hp -= 1;
         if (a.hp <= 0) {
           a.exploding = AMBULANCE_EXPLODE_TOTAL;
-          blast(world, a.x + AMBULANCE_W / 2, a.y + AMBULANCE_H / 2, AMBULANCE_BLAST_RADIUS);
-          world.score += AMBULANCE_SCORE;
+          blast(world, a.x + AMBULANCE_W / 2, a.y + AMBULANCE_H / 2, AMBULANCE_BLAST_RADIUS, sm);
+          world.score += Math.round(AMBULANCE_SCORE * sm);
           ambulanceDestroyed = true;
         }
         continue;
@@ -442,7 +444,7 @@ export function tick(prev: World, input: ShooterInput, dp: DifficultyParams): Ti
       if (dist2(shot.x, shot.y, g.x, g.y) <= 12 * 12) {
         g.armed = false;
         g.exploding = GRENADE_EXPLODE_TOTAL;
-        blast(world, g.x, g.y, GRENADE_BLAST_RADIUS);
+        blast(world, g.x, g.y, GRENADE_BLAST_RADIUS, sm);
         grenadeDetonated = true;
         hitGrenade = true;
         break;
@@ -465,9 +467,9 @@ export function tick(prev: World, input: ShooterInput, dp: DifficultyParams): Ti
             z.reviving = REVIVE_FRAMES;
           } else {
             z.dying = DEATH_FRAMES;
-            world.score += BUB_SCORE;
+            world.score += Math.round(BUB_SCORE * sm);
             bubKilled = true;
-            if (RNG() < BUB_GRENADE_DROP_CHANCE) {
+            if (RNG() < dp.bubGrenadeChance) {
               world.grenades.push({ id: world.nextId++, x: z.x, y: z.y, armed: true, exploding: 0 });
             }
           }
@@ -475,11 +477,11 @@ export function tick(prev: World, input: ShooterInput, dp: DifficultyParams): Ti
           z.hurtFrames = HURT_FRAMES; // depleted but survived
         }
       } else if (RNG() < ZOMBIE_KILL_CHANCE) {
-        if (RNG() < ZOMBIE_REVIVE_CHANCE) {
+        if (RNG() < dp.reviveChance) {
           z.reviving = REVIVE_FRAMES;
         } else {
           z.dying = DEATH_FRAMES;
-          world.score += ZOMBIE_SCORE;
+          world.score += Math.round(ZOMBIE_SCORE * sm);
           zombieKilled = true;
         }
       } else {
