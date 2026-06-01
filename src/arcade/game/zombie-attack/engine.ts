@@ -256,6 +256,7 @@ export function tick(prev: World, input: ShooterInput, dp: DifficultyParams): Ti
       } else {
         rescued = true;
         world.cycle += 1;
+        world.lives += dp.rescueLifeBonus;
         world.score += Math.round(1000 * sm);
         world.round = 1;
         world.roundTotalMs = ROUND_DURATIONS_MS[0]!;

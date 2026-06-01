@@ -25,6 +25,7 @@ const DP: DifficultyParams = {
   scoreMultiplier: 1,
   bubGrenadeChance: 0.25,
   fence: true,
+  rescueLifeBonus: 1,
 };
 
 afterEach(() => __resetRng());
@@ -232,5 +233,13 @@ describe("Zombie Attack engine (v3 — fence siege)", () => {
     const w = initialWorld({ ...DP, fence: false });
     expect(w.fenceHp).toBe(0);
     expect(w.fenceMaxHp).toBe(0);
+  });
+
+  it("grants the difficulty's life bonus on a successful extraction", () => {
+    const w = controlled({ round: 4, roundMsLeft: 10, roundTotalMs: 22000 });
+    const r = tick(w, input(w), { ...DP, rescueLifeBonus: 2 });
+    expect(r.rescued).toBe(true);
+    expect(r.world.round).toBe(1);
+    expect(r.world.lives).toBe(INITIAL_LIVES + 2);
   });
 });

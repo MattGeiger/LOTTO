@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.14.1] - 2026-05-31
+### Added
+- **Zombie Attack! evacuation reward:** completing an extraction now grants bonus lives, scaled by difficulty — Very Easy / Easy / Normal **+1**, Hard / Very Hard **+2**, Nightmare **+3**.
+
 ## [1.14.0] - 2026-05-31
 ### Changed
 - **Zombie Attack! render order:** the living zombies now draw newest-first, so freshly-spawned zombies sit **behind** older ones (matching the top-down depth).
