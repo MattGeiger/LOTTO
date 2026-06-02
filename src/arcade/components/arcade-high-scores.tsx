@@ -21,6 +21,8 @@ type ArcadeHighScoresProps = {
   score: number;
   status: "READY" | "RUNNING" | "PAUSED" | "GAME_OVER";
   className?: string;
+  /** "overlay" renders the compact, transparent variant for the cabinet screen. */
+  variant?: "panel" | "overlay";
 };
 
 type HighScoresResponse = {
@@ -40,6 +42,7 @@ export function ArcadeHighScores({
   score,
   status,
   className,
+  variant = "panel",
 }: ArcadeHighScoresProps) {
   const { t } = useLanguage();
   const visible = status === "READY" || status === "GAME_OVER";
@@ -144,6 +147,7 @@ export function ArcadeHighScores({
       className={cn(
         "arcade-high-scores arcade-ui",
         status === "GAME_OVER" && "arcade-high-scores-game-over",
+        variant === "overlay" && "arcade-high-scores-overlay",
         className,
       )}
       data-testid="arcade-high-scores"

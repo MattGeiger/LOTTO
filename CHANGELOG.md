@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.15.3] - 2026-06-01
+### Changed
+- **Arcade cabinet leaderboard:** the Top 10 now renders directly on the play
+  area as an arcade-cabinet screen — an attract-mode high-score table at READY
+  and a unified GAME OVER screen (score + initials entry + Top 10 + replay) at
+  game over — instead of a separate panel beneath the board. Applied
+  consistently to Snake, Brick Mayhem, and Day of the Dead.
+- **Restart safety / a11y:** replaced tap-anywhere-to-restart with an explicit
+  "TAP HERE TO PLAY AGAIN" button so the initials input is usable without
+  accidentally restarting the run (keyboard restart unchanged), and removed
+  `role="img"` from the boards so the entry field stays reachable to assistive
+  tech.
+
 ## [1.15.2] - 2026-06-01
 ### Changed
 - **Arcade leaderboard prominence:** enlarged the shared Top 10 Scores panel,

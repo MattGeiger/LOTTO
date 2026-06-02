@@ -670,29 +670,39 @@ export default function SnakePage() {
           </p>
         </div>
 
-        <div
-          className="arcade-snake-board pixelated"
-          role="img"
-          aria-label="Snake board movement demo"
-          onClick={status === "GAME_OVER" ? restartRun : undefined}
-        >
+        <div className="arcade-snake-board pixelated">
           <canvas ref={boardCanvasRef} className="arcade-snake-canvas pixelated" aria-hidden="true" />
-          {status === "GAME_OVER" ? (
-            <div className="arcade-snake-overlay">
-              <p className="arcade-retro text-5xl text-[var(--arcade-neon)] sm:text-7xl">{t("gameOver")}</p>
-              <p className="arcade-ui text-3xl text-[var(--arcade-dot)] sm:text-5xl">
-                {t("tapToPlayAgain")}
-              </p>
+          {status === "READY" || status === "GAME_OVER" ? (
+            <div
+              className={cn("arcade-cabinet-screen", status === "GAME_OVER" && "arcade-cabinet-screen-over")}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="arcade-cabinet-screen-inner">
+                {status === "GAME_OVER" ? (
+                  <div className="arcade-cabinet-header">
+                    <p className="arcade-retro arcade-cabinet-title">{t("gameOver")}</p>
+                    <p className="arcade-ui arcade-cabinet-score">{t("score")} {score}</p>
+                  </div>
+                ) : null}
+                <ArcadeHighScores
+                  game="snake"
+                  difficulty={modePreset.key}
+                  score={score}
+                  status={status}
+                  variant="overlay"
+                />
+                {status === "GAME_OVER" ? (
+                  <button type="button" className="arcade-cabinet-replay arcade-ui" onClick={restartRun}>
+                    {t("tapToPlayAgain")}
+                  </button>
+                ) : null}
+                {status === "READY" ? (
+                  <p className="arcade-cabinet-hint arcade-ui arcade-blink">{t("playNow")}</p>
+                ) : null}
+              </div>
             </div>
           ) : null}
         </div>
-
-        <ArcadeHighScores
-          game="snake"
-          difficulty={modePreset.key}
-          score={score}
-          status={status}
-        />
 
       </section>
 
