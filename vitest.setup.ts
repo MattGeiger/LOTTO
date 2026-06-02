@@ -6,7 +6,7 @@ if (typeof globalThis.IntersectionObserver === "undefined") {
     readonly root: Element | null = null;
     readonly rootMargin: string = "0px";
     readonly thresholds: ReadonlyArray<number> = [0];
-    constructor(_cb: IntersectionObserverCallback, _options?: IntersectionObserverInit) {}
+    constructor() {}
     observe() {}
     unobserve() {}
     disconnect() {}

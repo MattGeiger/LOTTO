@@ -61,6 +61,8 @@ no profanity denylist.
 ## UI Behavior
 - `TOP 10 SCORES` appears before a game starts and at `GAME OVER`.
 - Active gameplay keeps the board unobstructed.
+- The leaderboard is intentionally prominent: the #1 score renders as a larger
+  champion row, and newly saved scores are highlighted after game over.
 - A qualifying final score opens a 30-second initials entry flow.
 - Mixed-difficulty runs are allowed; a score is submitted under the difficulty
   setting active at `GAME OVER`.

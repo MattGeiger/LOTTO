@@ -50,6 +50,7 @@ export function ArcadeHighScores({
   const [secondsLeft, setSecondsLeft] = React.useState(30);
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
+  const [savedEntryId, setSavedEntryId] = React.useState<string | null>(null);
   const [rejected, setRejected] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const entrySessionKey = `${game}:${difficulty}:${score}:${status}`;
@@ -83,6 +84,7 @@ export function ArcadeHighScores({
     setSecondsLeft(30);
     setSaving(false);
     setSaved(false);
+    setSavedEntryId(null);
     setRejected(false);
     setSubmitError(null);
   }, [entrySessionKey]);
@@ -128,6 +130,7 @@ export function ArcadeHighScores({
       if (!response.ok) throw new Error(body.error || "Unable to save high score.");
       setScores(Array.isArray(body.scores) ? body.scores : []);
       setSaved(Boolean(body.accepted));
+      setSavedEntryId(body.entry?.id ?? null);
       setRejected(!body.accepted);
     } catch {
       setSubmitError(t("arcadeHighScoreSaveError"));
@@ -137,7 +140,14 @@ export function ArcadeHighScores({
   };
 
   return (
-    <div className={cn("arcade-high-scores arcade-ui", className)} data-testid="arcade-high-scores">
+    <div
+      className={cn(
+        "arcade-high-scores arcade-ui",
+        status === "GAME_OVER" && "arcade-high-scores-game-over",
+        className,
+      )}
+      data-testid="arcade-high-scores"
+    >
       <div className="arcade-high-scores-heading">
         <h2>{t("arcadeHighScoresTitle")}</h2>
       </div>
@@ -151,7 +161,14 @@ export function ArcadeHighScores({
       ) : (
         <ol className="arcade-high-scores-list" aria-label={t("arcadeHighScoresTitle")}>
           {scores.map((entry, index) => (
-            <li key={entry.id} className="arcade-high-scores-row">
+            <li
+              key={entry.id}
+              className={cn(
+                "arcade-high-scores-row",
+                index === 0 && "arcade-high-scores-row-champion",
+                savedEntryId === entry.id && "arcade-high-scores-row-saved",
+              )}
+            >
               <span className="arcade-high-scores-rank">{index + 1}</span>
               <span className="arcade-high-scores-initials" dir="auto">{entry.initials}</span>
               <span className="arcade-high-scores-score">{entry.score}</span>
@@ -198,7 +215,7 @@ export function ArcadeHighScores({
       ) : null}
 
       {status === "GAME_OVER" && saved ? (
-        <p className="arcade-high-scores-message text-[var(--arcade-pellet)]">
+        <p className="arcade-high-scores-message arcade-high-scores-saved-message">
           {t("arcadeHighScoreSaved")}
         </p>
       ) : null}

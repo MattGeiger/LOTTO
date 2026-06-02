@@ -179,6 +179,9 @@ public/
   code, route file, assets, tests, and docs remain intact, but the Arcade index no
   longer links to it and production `/arcade/zombie-attack` requests redirect to
   `/arcade`. Non-production environments keep the route available for development.
+- Completed (v1.15.2): Arcade leaderboard prominence — the shared Top 10 Scores
+  panel now has larger cabinet-style typography, a featured #1 champion row, and
+  a highlighted saved-score row after game over.
 
 ## Accessibility Issue: Snake Reflex Controls (Implemented - 2026-02-16)
 - Problem statement: current Snake pace can be too demanding for players with slower reflexes, and pellet placement near walls can make early rounds punishing.
