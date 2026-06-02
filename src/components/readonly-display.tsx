@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrambleOnLanguageChange, T } from "@/components/core/scramble-text";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { LanguageMorphText } from "@/components/language-morph-text";
 import { TicketDetailDialog } from "@/components/ticket-detail-dialog";
 import { useLanguage, type Language } from "@/contexts/language-context";
 import { formatDate } from "@/lib/date-format";
@@ -68,6 +67,7 @@ const POLL_ERROR_RETRY_MS = 30_000;
 const BURST_DURATION_MS = 2 * 60_000;
 const CALLED_ALERT_DURATION_MS = 10_000;
 const CALLED_CONFETTI_INTERVAL_MS = 2_000;
+const EMPTY_GENERATED_ORDER: number[] = [];
 
 type ConfettiAnimationOptions = {
   spread?: number;
@@ -335,7 +335,7 @@ export const ReadOnlyDisplay = ({
 
   const startNumber = state?.startNumber ?? 0;
   const endNumber = state?.endNumber ?? 0;
-  const generatedOrder = state?.generatedOrder ?? [];
+  const generatedOrder = state?.generatedOrder ?? EMPTY_GENERATED_ORDER;
   const currentlyServing = state?.currentlyServing ?? null;
 
   const currentIndex =

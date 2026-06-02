@@ -49,6 +49,7 @@ describe("ArcadeHighScores", () => {
 
     expect(await screen.findByText("MNG")).toBeInTheDocument();
     expect(screen.getByText("120")).toBeInTheDocument();
+    expect(screen.getByText("MNG").closest("li")).toHaveClass("arcade-high-scores-row-champion");
   });
 
   it("opens a timed initials entry after a qualifying game-over score", async () => {
@@ -85,6 +86,7 @@ describe("ArcadeHighScores", () => {
     await waitFor(() => {
       expect(screen.getByText("SCORE SAVED")).toBeInTheDocument();
     });
+    expect(screen.getByText("MNG").closest("li")).toHaveClass("arcade-high-scores-row-saved");
     expect(fetch).toHaveBeenLastCalledWith("/api/arcade/high-scores", expect.objectContaining({
       method: "POST",
     }));

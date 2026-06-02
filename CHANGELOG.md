@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.15.2] - 2026-06-01
+### Changed
+- **Arcade leaderboard prominence:** enlarged the shared Top 10 Scores panel,
+  featured the #1 score as a cabinet-style champion row, and highlighted newly
+  saved scores at game over so high scores read as bragging rights rather than
+  small status text.
+- **Lint cleanup:** removed the remaining ESLint warnings by clearing stale
+  imports/mock parameters and tightening admin/display hook dependencies.
+
 ## [1.15.1] - 2026-06-01
 ### Changed
 - **Arcade production visibility:** Day of the Dead is preserved in the codebase

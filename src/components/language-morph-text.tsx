@@ -5,7 +5,9 @@ import * as React from "react";
 import { TextScramble, type TextScrambleProps } from "@/components/core/text-scramble";
 import { cn } from "@/lib/utils";
 
-type LanguageMorphTextProps = Omit<TextScrambleProps<"span">, "as" | "children"> & {
+type TextScrambleSpanProps = Omit<TextScrambleProps<"span">, "as" | "children">;
+
+type LanguageMorphTextProps = TextScrambleSpanProps & {
   text: string | string[];
   loop?: boolean;
   holdDelay?: number;
@@ -19,23 +21,37 @@ type LanguageMorphTextProps = Omit<TextScrambleProps<"span">, "as" | "children">
   transition?: unknown;
 };
 
+const MORPH_COMPATIBILITY_PROP_KEYS = [
+  "loop",
+  "holdDelay",
+  "motionMode",
+  "wordWrap",
+  "characterClassName",
+  "characterStagger",
+  "initial",
+  "animate",
+  "exit",
+  "transition",
+] as const satisfies readonly (keyof LanguageMorphTextProps)[];
+
+const stripMorphCompatibilityProps = (
+  props: Omit<LanguageMorphTextProps, "text" | "className">,
+): TextScrambleSpanProps => {
+  const scrambleProps = { ...props };
+  for (const key of MORPH_COMPATIBILITY_PROP_KEYS) {
+    delete scrambleProps[key];
+  }
+  return scrambleProps as TextScrambleSpanProps;
+};
+
 export function LanguageMorphText({
   text,
   className,
-  loop: _loop,
-  holdDelay: _holdDelay,
-  motionMode: _motionMode,
-  wordWrap: _wordWrap,
-  characterClassName: _characterClassName,
-  characterStagger: _characterStagger,
-  initial: _initial,
-  animate: _animate,
-  exit: _exit,
-  transition: _transition,
   ...props
 }: LanguageMorphTextProps) {
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const currentText = Array.isArray(text) ? text[currentIndex] ?? "" : text;
+  const scrambleProps = stripMorphCompatibilityProps(props);
 
   React.useEffect(() => {
     if (!Array.isArray(text)) return;
@@ -46,7 +62,7 @@ export function LanguageMorphText({
     <TextScramble
       as="span"
       className={cn("inline-block overflow-visible align-baseline", className)}
-      {...props}
+      {...scrambleProps}
     >
       {currentText}
     </TextScramble>

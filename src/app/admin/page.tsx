@@ -87,6 +87,7 @@ type Snapshot = {
 const SNAPSHOT_RENDER_PAGE_SIZE = 100;
 const DRAW_SNAPSHOT_REFRESH_DELAY_MS = 1500;
 const ARCHIVE_ICON_RESET_DELAY_MS = 260;
+const EMPTY_GENERATED_ORDER: number[] = [];
 
 type DrawNavigationPayload = Extract<
   ActionPayload,
@@ -528,17 +529,20 @@ const RangeGenerationControls = React.memo(function RangeGenerationControls({
     });
   }, [state?.startNumber, state?.endNumber]);
 
-  const hasActiveRange = !!state && !(state.startNumber === 0 && state.endNumber === 0);
+  const rangeStartNumber = state?.startNumber ?? 0;
+  const rangeEndNumber = state?.endNumber ?? 0;
+  const rangeGeneratedOrder = state?.generatedOrder ?? EMPTY_GENERATED_ORDER;
+  const hasActiveRange = !!state && !(rangeStartNumber === 0 && rangeEndNumber === 0);
 
   const serverUndrawnCount = React.useMemo(() => {
-    if (!state || !hasActiveRange) return 0;
-    const drawnSet = new Set(state.generatedOrder);
+    if (!hasActiveRange) return 0;
+    const drawnSet = new Set(rangeGeneratedOrder);
     let count = 0;
-    for (let ticket = state.startNumber; ticket <= state.endNumber; ticket += 1) {
+    for (let ticket = rangeStartNumber; ticket <= rangeEndNumber; ticket += 1) {
       if (!drawnSet.has(ticket)) count += 1;
     }
     return count;
-  }, [hasActiveRange, state?.generatedOrder, state?.startNumber, state?.endNumber]);
+  }, [hasActiveRange, rangeEndNumber, rangeGeneratedOrder, rangeStartNumber]);
 
   const parsedStartNumber = Number(rangeForm.startNumber);
   const parsedEndNumber = Number(rangeForm.endNumber);
@@ -558,7 +562,7 @@ const RangeGenerationControls = React.memo(function RangeGenerationControls({
     pendingNonDrawAction === null;
 
   const previewUndrawnCount = React.useMemo(() => {
-    if (!state || !hasActiveRange) {
+    if (!hasActiveRange) {
       if (
         Number.isInteger(parsedStartNumber) &&
         Number.isInteger(parsedEndNumber) &&
@@ -572,22 +576,21 @@ const RangeGenerationControls = React.memo(function RangeGenerationControls({
       return serverUndrawnCount;
     }
     const previewEnd =
-      Number.isInteger(parsedEndNumber) && parsedEndNumber > state.endNumber
+      Number.isInteger(parsedEndNumber) && parsedEndNumber > rangeEndNumber
         ? parsedEndNumber
-        : state.endNumber;
-    if (previewEnd === state.endNumber) {
+        : rangeEndNumber;
+    if (previewEnd === rangeEndNumber) {
       return serverUndrawnCount;
     }
     // O(1): all tickets beyond current end are necessarily undrawn.
-    return serverUndrawnCount + (previewEnd - state.endNumber);
+    return serverUndrawnCount + (previewEnd - rangeEndNumber);
   }, [
     hasActiveRange,
     hasDrawStarted,
     parsedEndNumber,
     parsedStartNumber,
+    rangeEndNumber,
     serverUndrawnCount,
-    state?.endNumber,
-    state,
   ]);
 
   const handleGenerateConfirm = async () => {
@@ -1633,16 +1636,19 @@ const AdminPage = () => {
     () => new Set(state?.generatedOrder ?? []),
     [state?.generatedOrder],
   );
+  const stateStartNumber = state?.startNumber ?? 0;
+  const stateEndNumber = state?.endNumber ?? 0;
+  const hasServerRange = !!state && !(stateStartNumber === 0 && stateEndNumber === 0);
 
   // Server-derived undrawn count (stable between mutations — does NOT depend on form keystrokes)
   const serverUndrawnCount = React.useMemo(() => {
-    if (!state || (state.startNumber === 0 && state.endNumber === 0)) return 0;
+    if (!hasServerRange) return 0;
     let count = 0;
-    for (let i = state.startNumber; i <= state.endNumber; i++) {
+    for (let i = stateStartNumber; i <= stateEndNumber; i++) {
       if (!drawnSet.has(i)) count++;
     }
     return count;
-  }, [state?.startNumber, state?.endNumber, drawnSet]);
+  }, [drawnSet, hasServerRange, stateEndNumber, stateStartNumber]);
 
   const undrawnCount = serverUndrawnCount;
 

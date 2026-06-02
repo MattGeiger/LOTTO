@@ -8,16 +8,14 @@ import { UserInputError } from "@/lib/user-input-error";
 let mockQueryResults: unknown[];
 
 // Tagged template function that simulates neon's sql``
-const mockSql = vi.fn(async (_strings: TemplateStringsArray, ..._values: unknown[]) => {
+const mockSql = vi.fn(async () => {
   return mockQueryResults.shift() ?? [];
 }) as unknown as ReturnType<typeof import("@neondatabase/serverless").neon>;
 
 // Attach .transaction to the mock sql function
 const mockTransactionFn = vi.fn(async (callback: (tx: unknown) => unknown[]) => {
   // tx is a tagged template too — simulate it but don't execute real SQL
-  const mockTx = vi.fn((_strings: TemplateStringsArray, ..._values: unknown[]) =>
-    Promise.resolve([]),
-  );
+  const mockTx = vi.fn(() => Promise.resolve([]));
   const statements = callback(mockTx);
   await Promise.all(statements as Promise<unknown>[]);
   return [];
