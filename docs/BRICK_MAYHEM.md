@@ -203,7 +203,7 @@ Brick Mayhem follows the same Arcade integration patterns established by Snake:
 ### Complete
 - [x] Route directory: `src/app/(arcade)/arcade/brick-mayhem/page.tsx`
 - [x] Page shell: back button, instructions card, play now/reset buttons, score/lives/level readout, board, control dock
-- [x] CSS classes: `arcade-brick-shell`, `arcade-brick-stage`, `arcade-brick-readout`, `arcade-brick-board`, `arcade-brick-canvas`, `arcade-brick-overlay`, `arcade-brick-control-dock`, `arcade-brick-pad`, `arcade-brick-slider-track`, `arcade-brick-control-btn` (with light/dark mode, responsive, and RTL variants)
+- [x] CSS classes: `arcade-brick-shell`, `arcade-brick-stage`, `arcade-brick-readout`, `arcade-brick-board`, `arcade-brick-canvas`, `arcade-cabinet-screen` (shared on-board leaderboard; replaced the former `arcade-brick-overlay` in v1.15.3), `arcade-brick-control-dock`, `arcade-brick-pad`, `arcade-brick-slider-track`, `arcade-brick-control-btn` (with light/dark mode, responsive, and RTL variants)
 - [x] Board aspect ratio: `192 / 160` (6:5 landscape)
 - [x] Translations: `brickMayhemTitle` + 5 instruction keys + `lives` + `level` across all 8 locales
 - [x] Arcade menu: entry points to `/arcade/brick-mayhem`
@@ -231,7 +231,8 @@ Brick Mayhem follows the same Arcade integration patterns established by Snake:
 - [x] Brick shatter fragment effect: destroyed bricks split into 4 quarter-sized pieces with outward velocity, gravity (0.18 px/tick²), and linear opacity fade over 90 ticks (~1.5s)
 - [x] Pixel-grid rendering: ball, paddle, and fragment positions snapped to integer pixels via `Math.round()` at draw time
 - [x] Desktop viewport scaling: `@media (min-width: 768px)` raises board size cap from 420px to 780px, using `calc((100dvh - 13.5rem) * 1.2)` to fill available height
-- [x] GAME OVER overlay text centering fix: `text-indent` compensates for trailing `letter-spacing` on `.arcade-retro` and `.arcade-ui` (applied to both Snake and Brick Mayhem overlays)
+- [x] GAME OVER overlay text centering fix: `text-indent` compensates for trailing `letter-spacing` on `.arcade-retro` and `.arcade-ui` (the standalone game-over overlays were later removed in v1.15.3 in favor of the shared cabinet screen)
+- [x] On-board cabinet leaderboard (v1.15.3): the shared `ArcadeHighScores` (`variant="overlay"`) renders on the board as the READY attract table and the unified GAME OVER screen (score + initials entry + Top 10 + explicit replay button), replacing the panel below the board. Because Brick returns to READY between lives/levels, a `hasLaunched` flag gates the attract table to the pristine first serve so the playfield stays clear between serves (v1.15.4).
 - [x] Instruction text updated across all 8 locales (paddle → slider, strike → hit, clear bricks to make a path → clear a path to the top)
 - [x] Live score/readout sync fix (score now updates immediately on brick hits)
 - [x] Row-color/effect metadata centralized in `src/arcade/game/brick-mayhem/effects.ts` and consumed by renderer/particles/engine
