@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.15.4] - 2026-06-01
+### Added
+- **Pride-month leaderboard seed:** `seed.arcade-high-scores.sql` preloads the
+  arcade Top 10 with a tribute roster of civil rights icons and LGBTQ+, queer,
+  trans, Two-Spirit, and nonbinary activists across every game and difficulty.
+  Idempotent: it clears and re-seeds only its own marked rows and never touches
+  live player scores.
+
+### Changed
+- **Brick Mayhem cabinet polish:** the on-board Top 10 now shows only on the
+  pristine first serve and at game over. Between lives and levels (which also
+  return to READY) the playfield stays clear so players can aim the next serve.
+- **CSS cleanup:** removed the now-unused per-game `.arcade-{snake,brick,zombie}-overlay`
+  game-over overlay styles, superseded by the shared cabinet screen.
+
 ## [1.15.3] - 2026-06-01
 ### Changed
 - **Arcade cabinet leaderboard:** the Top 10 now renders directly on the play

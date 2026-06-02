@@ -73,6 +73,26 @@ describe("ArcadeHighScores", () => {
     expect(screen.getByRole("button", { name: "SAVE" })).toBeDisabled();
   });
 
+  it("adds the overlay variant class only when requested", async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ scores: [] }), { status: 200 }));
+
+    const view = renderPanel();
+    expect(await screen.findByTestId("arcade-high-scores")).not.toHaveClass("arcade-high-scores-overlay");
+
+    view.rerender(
+      <LanguageProvider>
+        <ArcadeHighScores
+          game="snake"
+          difficulty="normal"
+          score={120}
+          status="READY"
+          variant="overlay"
+        />
+      </LanguageProvider>,
+    );
+    expect(screen.getByTestId("arcade-high-scores")).toHaveClass("arcade-high-scores-overlay");
+  });
+
   it("saves multilingual initials and refreshes the leaderboard", async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce(new Response(JSON.stringify({ scores: [] }), { status: 200 }))
