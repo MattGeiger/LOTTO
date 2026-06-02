@@ -464,35 +464,46 @@ export default function ZombieAttackPage() {
           <div ref={timerBarRef} className="arcade-zombie-timerbar-fill" style={{ width: "100%" }} />
         </div>
 
-        <div
-          className="arcade-zombie-board pixelated"
-          role="img"
-          aria-label="Day of the Dead play area"
-          onClick={status === "GAME_OVER" ? restartRun : undefined}
-        >
+        <div className="arcade-zombie-board pixelated">
           <canvas ref={boardCanvasRef} className="arcade-zombie-canvas pixelated" aria-hidden="true" />
-          {status === "GAME_OVER" ? (
-            <div className="arcade-zombie-overlay">
-              <p className="arcade-retro text-4xl text-[var(--arcade-neon)] sm:text-6xl">{t("gameOver")}</p>
-              <p className="arcade-ui text-2xl text-[var(--arcade-dot)] sm:text-4xl">
-                {t("score")} {score}{cycle > 0 ? ` · ×${cycle}` : ""}
-              </p>
-              <p className="arcade-ui text-2xl text-[var(--arcade-pellet)] sm:text-4xl">{t("tapToPlayAgain")}</p>
-            </div>
-          ) : null}
           {celebrating && status !== "GAME_OVER" ? (
             <div className="arcade-zombie-celebrate">
               <p className="arcade-retro text-2xl text-[#00FF00] sm:text-4xl">{t("zombieAttackExtractionComplete")}</p>
             </div>
           ) : null}
+          {status === "READY" || status === "GAME_OVER" ? (
+            <div
+              className={cn("arcade-cabinet-screen", status === "GAME_OVER" && "arcade-cabinet-screen-over")}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="arcade-cabinet-screen-inner">
+                {status === "GAME_OVER" ? (
+                  <div className="arcade-cabinet-header">
+                    <p className="arcade-retro arcade-cabinet-title">{t("gameOver")}</p>
+                    <p className="arcade-ui arcade-cabinet-score">
+                      {t("score")} {score}{cycle > 0 ? ` · ×${cycle}` : ""}
+                    </p>
+                  </div>
+                ) : null}
+                <ArcadeHighScores
+                  game="zombie-attack"
+                  difficulty={modePreset.key}
+                  score={score}
+                  status={status}
+                  variant="overlay"
+                />
+                {status === "GAME_OVER" ? (
+                  <button type="button" className="arcade-cabinet-replay arcade-ui" onClick={restartRun}>
+                    {t("tapToPlayAgain")}
+                  </button>
+                ) : null}
+                {status === "READY" ? (
+                  <p className="arcade-cabinet-hint arcade-ui arcade-blink">{t("playNow")}</p>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </div>
-
-        <ArcadeHighScores
-          game="zombie-attack"
-          difficulty={modePreset.key}
-          score={score}
-          status={status}
-        />
       </section>
 
       <section className="arcade-zombie-control-dock" aria-label="Game controls">
