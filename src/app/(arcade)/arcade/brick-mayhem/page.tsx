@@ -94,6 +94,10 @@ export default function BrickMayhemPage() {
   const [lives, setLives] = React.useState(3);
   const [level, setLevel] = React.useState(0);
   const [sliderValue, setSliderValue] = React.useState(50);
+  // True once the run has started at least once. Brick returns to READY between
+  // lives and levels, so this gates the on-board attract leaderboard to the
+  // pristine first serve only (the full Top 10 otherwise reserved for GAME_OVER).
+  const [hasLaunched, setHasLaunched] = React.useState(false);
 
   /* ── Refs for live game state (updated synchronously between frames) ── */
   const worldRef = React.useRef<World>(initialWorld(dp));
@@ -114,6 +118,11 @@ export default function BrickMayhemPage() {
   /* ── Keep statusRef in sync ── */
   React.useEffect(() => {
     statusRef.current = status;
+  }, [status]);
+
+  /* ── Remember once the run has started (gates the attract leaderboard) ── */
+  React.useEffect(() => {
+    if (status === "RUNNING") setHasLaunched(true);
   }, [status]);
 
   /* ── Sync React state from world ── */
@@ -156,6 +165,7 @@ export default function BrickMayhemPage() {
     fragmentsRef.current = [];
     syncReactState(w, true);
     setSliderValue(50);
+    setHasLaunched(false);
     setStatus("READY");
   }, [syncReactState]);
 
@@ -204,6 +214,7 @@ export default function BrickMayhemPage() {
     fragmentsRef.current = [];
     syncReactState(w, true);
     setSliderValue(50);
+    setHasLaunched(false);
     setStatus("READY");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dp]);
@@ -615,7 +626,7 @@ export default function BrickMayhemPage() {
             className="arcade-brick-canvas pixelated"
             aria-hidden="true"
           />
-          {status === "READY" || status === "GAME_OVER" ? (
+          {status === "GAME_OVER" || (status === "READY" && !hasLaunched) ? (
             <div
               className={cn("arcade-cabinet-screen", status === "GAME_OVER" && "arcade-cabinet-screen-over")}
               onClick={(e) => e.stopPropagation()}
