@@ -5,6 +5,7 @@ import path from "node:path";
 import {
   defaultState,
   formatTimestamp,
+  type DisplayLanguageRotation,
   type Mode,
   type OperatingHours,
   type RaffleState,
@@ -13,7 +14,13 @@ import { createDbStateManager } from "./state-manager-db";
 import { UserInputError } from "./user-input-error";
 
 export { defaultState } from "./state-types";
-export type { Mode, RaffleState, OperatingHours, DayOfWeek } from "./state-types";
+export type {
+  Mode,
+  RaffleState,
+  OperatingHours,
+  DayOfWeek,
+  DisplayLanguageRotation,
+} from "./state-types";
 
 const buildRange = (start: number, end: number) =>
   Array.from({ length: end - start + 1 }, (_, index) => start + index);
@@ -176,6 +183,7 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
       displayUrl: current.displayUrl ?? null,
       operatingHours: current.operatingHours ?? defaultState.operatingHours,
       timezone: current.timezone ?? defaultState.timezone,
+      displayLanguageRotation: current.displayLanguageRotation ?? null,
     });
   };
 
@@ -486,6 +494,7 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
       calledAt: {},
       operatingHours: current.operatingHours ?? defaultState.operatingHours,
       timezone: current.timezone ?? defaultState.timezone,
+      displayLanguageRotation: current.displayLanguageRotation ?? null,
     });
   };
 
@@ -566,6 +575,11 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
     return persist({ ...current, operatingHours: hours, timezone });
   };
 
+  const setDisplayLanguageRotation = async (config: DisplayLanguageRotation | null) => {
+    const current = await safeReadState();
+    return persist({ ...current, displayLanguageRotation: config });
+  };
+
   const getDisplayUrl = async () => {
     const current = await safeReadState();
     return current.displayUrl || null;
@@ -590,6 +604,7 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
     setDisplayUrl,
     getDisplayUrl,
     setOperatingHours,
+    setDisplayLanguageRotation,
   };
 };
 

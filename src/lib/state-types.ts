@@ -1,3 +1,5 @@
+import type { Language } from "@/lib/languages";
+
 export type Mode = "random" | "sequential";
 
 export type DayOfWeek =
@@ -19,6 +21,14 @@ export type OperatingHours = {
 
 export type TicketStatus = "returned" | "unclaimed";
 
+export type DisplayLanguageRotation = {
+  enabled: boolean;
+  /** Selected language codes, stored in canonical LANGUAGE_OPTIONS order. */
+  languages: Language[];
+  /** How long each language is shown, in seconds (the Admin UI edits minutes). */
+  intervalSeconds: number;
+};
+
 export type RaffleState = {
   startNumber: number;
   endNumber: number;
@@ -32,6 +42,7 @@ export type RaffleState = {
   displayUrl: string | null;
   operatingHours: OperatingHours | null;
   timezone: string;
+  displayLanguageRotation: DisplayLanguageRotation | null;
 };
 
 export const defaultState: RaffleState = {
@@ -55,6 +66,7 @@ export const defaultState: RaffleState = {
     saturday: { isOpen: false, openTime: "10:00:00", closeTime: "14:00:00" },
   },
   timezone: "America/Los_Angeles",
+  displayLanguageRotation: null,
 };
 
 export const formatTimestamp = (timestamp: number) => {

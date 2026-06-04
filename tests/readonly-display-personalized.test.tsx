@@ -55,6 +55,7 @@ const baseState: RaffleState = {
   displayUrl: null,
   operatingHours: null,
   timezone: "America/Los_Angeles",
+  displayLanguageRotation: null,
 };
 
 function renderPersonalizedDisplay(props?: Partial<ComponentProps<typeof ReadOnlyDisplay>>) {

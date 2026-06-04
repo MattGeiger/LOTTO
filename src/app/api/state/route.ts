@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { stateManager, type Mode } from "@/lib/state-manager";
+import { LANGUAGE_CODES } from "@/lib/languages";
 import { isUserInputError } from "@/lib/user-input-error";
 
 export const runtime = "nodejs";
@@ -39,6 +40,14 @@ const httpUrlSchema = z
     },
     { message: "URL must use https:// or http:// scheme" },
   );
+
+const displayLanguageRotationSchema = z
+  .object({
+    enabled: z.boolean(),
+    languages: z.array(z.enum(LANGUAGE_CODES)).min(1).max(LANGUAGE_CODES.length),
+    intervalSeconds: z.number().int().min(5).max(3600),
+  })
+  .nullable();
 
 const actionSchema = z.discriminatedUnion("action", [
   z.object({
@@ -111,6 +120,10 @@ const actionSchema = z.discriminatedUnion("action", [
       (value) => VALID_TIMEZONES.has(value) || value === "UTC",
       { message: "Must be a valid IANA timezone identifier" },
     ),
+  }),
+  z.object({
+    action: z.literal("setDisplayLanguageRotation"),
+    config: displayLanguageRotationSchema,
   }),
 ]);
 
@@ -224,6 +237,10 @@ export async function POST(request: Request) {
       }
       case "setOperatingHours":
         return NextResponse.json(await stateManager.setOperatingHours(payload.hours, payload.timezone));
+      case "setDisplayLanguageRotation":
+        return NextResponse.json(
+          await stateManager.setDisplayLanguageRotation(payload.config),
+        );
       default:
         return NextResponse.json({ error: "Unsupported action" }, { status: 400 });
     }

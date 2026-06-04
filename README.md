@@ -3,8 +3,8 @@
 Next.js (App Router) app with ShadCN-inspired UI, JSON persistence, and atomic backups to digitize the pantry raffle flow.
 
 ## Features
-- Staff dashboard (`/admin`) to set ranges, toggle random vs sequential, append tickets, update “now serving,” mark returned/unclaimed tickets, and reset with confirmations.
-- Public display (`/display`) with airport-style grid, status legend, ticket detail messaging (called/returned/unclaimed), and QR code sharing, using adaptive polling with visibility pause and operating-hours backoff.
+- Staff dashboard (`/admin`) to set ranges, toggle random vs sequential, append tickets, update “now serving,” mark returned/unclaimed tickets, configure display language rotation, and reset with confirmations.
+- Public display (`/display`) with airport-style grid, status legend, ticket detail messaging (called/returned/unclaimed), and QR code sharing, using adaptive polling with visibility pause and operating-hours backoff. Supports an optional admin-configured **language rotation** that cycles the board through selected languages on a timer (scramble transition, RTL-aware) so non-English speakers can read it without tapping anything.
 - Personalized homepage (`/`) serves the personalization track while preserving the board visual language (QR panel and top-bar search removed, centered WTH branding added, redundant board-row logo removed so `NOW SERVING` sits centered, and a load-time language picker modal shown on entry). Promoted from the former `/new` preview to the default homepage in v1.16.0.
 - Public inventory lookup (`/inventory`) fetches FEED's unauthenticated public inventory endpoint without credentials, showing in-stock pantry items grouped by category with limits, status tags, dietary flags, freshness, and selected-language item/category names where FEED provides translations.
 - Arcade preview is available at `/arcade` with one playable game (`Snake`) in v1.5.0.

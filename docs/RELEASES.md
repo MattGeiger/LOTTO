@@ -1,3 +1,27 @@
+# William Temple House Digital Raffle System v1.17.0
+
+**Release Date:** June 4, 2026
+
+The public **Display** board can now greet everyone in their own language. Staff
+can turn on **language rotation** and pick which languages the board cycles
+through — a polite, inclusive touch for clients who don't read English and can't
+tap a passive screen to change it.
+
+## Rotating language mode
+
+- **Set it in Admin.** A new "Rotate display languages" control lets you flip
+  rotation on, choose any of the eight supported languages, and set how many
+  minutes each one shows.
+- **Hands-free on the big screen.** The `/display` board automatically cycles
+  through the chosen languages on your timer, smoothly transitioning each change
+  and flipping to right-to-left for Arabic and Farsi.
+- **Stays out of the way.** Rotation only affects the large-format board — the
+  personalized homepage still lets each client pick their own language.
+
+Design and implementation notes live in `docs/DISPLAY_LANGUAGE_ROTATION.md`.
+
+---
+
 # William Temple House Digital Raffle System v1.16.0
 
 **Release Date:** June 3, 2026
