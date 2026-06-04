@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { defaultState } from "@/lib/state-types";
+import { defaultState, type DisplayLanguageRotation } from "@/lib/state-types";
 import { UserInputError } from "@/lib/user-input-error";
 
 // --- Mock the neon SQL client ---
@@ -546,6 +546,56 @@ describe("createDbStateManager", () => {
       const result = await manager.setOperatingHours(hours, "America/New_York");
       expect(result.operatingHours).toEqual(hours);
       expect(result.timezone).toBe("America/New_York");
+    });
+  });
+
+  describe("setDisplayLanguageRotation", () => {
+    it("persists a rotation config", async () => {
+      const config: DisplayLanguageRotation = {
+        enabled: true,
+        languages: ["en", "es", "ar"],
+        intervalSeconds: 120,
+      };
+      queueStateRow(activeState());
+      const result = await manager.setDisplayLanguageRotation(config);
+      expect(result.displayLanguageRotation).toEqual(config);
+    });
+
+    it("clears the rotation config with null", async () => {
+      const existing: DisplayLanguageRotation = {
+        enabled: true,
+        languages: ["en"],
+        intervalSeconds: 60,
+      };
+      queueStateRow(activeState({ displayLanguageRotation: existing }));
+      const result = await manager.setDisplayLanguageRotation(null);
+      expect(result.displayLanguageRotation).toBeNull();
+    });
+
+    it("preserves the rotation config across reset", async () => {
+      const config: DisplayLanguageRotation = {
+        enabled: true,
+        languages: ["es"],
+        intervalSeconds: 90,
+      };
+      queueStateRow(activeState({ displayLanguageRotation: config }));
+      const result = await manager.resetState();
+      expect(result.displayLanguageRotation).toEqual(config);
+    });
+
+    it("preserves the rotation config across generate", async () => {
+      const config: DisplayLanguageRotation = {
+        enabled: true,
+        languages: ["ar"],
+        intervalSeconds: 90,
+      };
+      queueStateRow(activeState({ orderLocked: false, displayLanguageRotation: config }));
+      const result = await manager.generateState({
+        startNumber: 1,
+        endNumber: 5,
+        mode: "sequential",
+      });
+      expect(result.displayLanguageRotation).toEqual(config);
     });
   });
 

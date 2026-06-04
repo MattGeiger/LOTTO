@@ -8,6 +8,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useAppHaptics } from "@/components/haptics-provider";
 import { useLanguage, type Language } from "@/contexts/language-context";
+import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import {
   readPersistedHomepageTicket,
   writePersistedHomepageTicket,
@@ -18,17 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
-
-const languageOptions: Array<{ code: Language; label: string }> = [
-  { code: "en", label: "English" },
-  { code: "zh", label: "中文" },
-  { code: "es", label: "Español" },
-  { code: "ru", label: "Русский" },
-  { code: "uk", label: "Українська" },
-  { code: "vi", label: "Tiếng Việt" },
-  { code: "fa", label: "فارسی" },
-  { code: "ar", label: "العربية" },
-];
 
 const normalizeTicketNumber = (rawInput: string): number | null => {
   const normalized = rawInput.trim().toUpperCase();
@@ -193,7 +183,7 @@ export function PersonalizedHomePage() {
                 </DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-3">
-                {languageOptions.map((option) => (
+                {LANGUAGE_OPTIONS.map((option) => (
                   <Button
                     key={option.code}
                     type="button"

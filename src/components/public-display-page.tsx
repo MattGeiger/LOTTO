@@ -9,6 +9,8 @@ import { Search } from "@/components/animate-ui/icons/search";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
+import { useDisplayLanguageRotation } from "@/hooks/use-display-language-rotation";
+import type { RaffleState } from "@/lib/state-types";
 
 export function PublicDisplayPage() {
   const [searchValue, setSearchValue] = React.useState("");
@@ -17,6 +19,12 @@ export function PublicDisplayPage() {
   );
   const searchTriggerRef = React.useRef(0);
   const { t } = useLanguage();
+  const [latestState, setLatestState] = React.useState<RaffleState | null>(null);
+  const rotation = latestState?.displayLanguageRotation ?? null;
+
+  // Auto-rotate the board language when the agency has enabled it (scoped to
+  // this board via the non-persisting LanguageProvider in display/page.tsx).
+  useDisplayLanguageRotation(rotation);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const digitsOnly = event.target.value.replace(/\D/g, "");
@@ -42,7 +50,12 @@ export function PublicDisplayPage() {
   return (
     <div className="relative">
       <div className="absolute left-6 right-6 top-4 z-30 flex items-center justify-between gap-5 py-2 sm:left-8 sm:right-8 lg:left-10 lg:right-10">
-        <LanguageSwitcher />
+        {/* While language rotation is active the board drives the language
+            automatically, so the manual switcher is hidden (space preserved to
+            keep the search box centered). */}
+        <div className={rotation?.enabled ? "invisible" : undefined}>
+          <LanguageSwitcher />
+        </div>
         <div className="flex-1 flex justify-center px-2">
           <div className="min-w-0 flex-1 max-w-[360px]">
             <label htmlFor="ticket-search" className="sr-only">
@@ -85,7 +98,7 @@ export function PublicDisplayPage() {
         </div>
         <ThemeSwitcher />
       </div>
-      <ReadOnlyDisplay ticketSearchRequest={searchSubmission ?? undefined} />
+      <ReadOnlyDisplay ticketSearchRequest={searchSubmission ?? undefined} onStateChange={setLatestState} />
     </div>
   );
 }

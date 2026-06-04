@@ -41,6 +41,7 @@ vi.mock("@/lib/state-manager", () => ({
     redo: vi.fn().mockResolvedValue(mockState),
     setDisplayUrl: vi.fn().mockResolvedValue(mockState),
     setOperatingHours: vi.fn().mockResolvedValue(mockState),
+    setDisplayLanguageRotation: vi.fn().mockResolvedValue(mockState),
   },
 }));
 
@@ -281,9 +282,63 @@ describe("API /api/state", () => {
         "America/New_York",
       );
     });
+
+    it("routes setDisplayLanguageRotation action", async () => {
+      const { stateManager } = await import("@/lib/state-manager");
+      const { POST } = await import("@/app/api/state/route");
+      const config = { enabled: true, languages: ["en", "es", "ar"], intervalSeconds: 120 };
+      const response = await POST(
+        makePostRequest({ action: "setDisplayLanguageRotation", config }),
+      );
+      expect(response.status).toBe(200);
+      expect(stateManager.setDisplayLanguageRotation).toHaveBeenCalledWith(config);
+    });
+
+    it("accepts a null setDisplayLanguageRotation config (disable)", async () => {
+      const { stateManager } = await import("@/lib/state-manager");
+      const { POST } = await import("@/app/api/state/route");
+      const response = await POST(
+        makePostRequest({ action: "setDisplayLanguageRotation", config: null }),
+      );
+      expect(response.status).toBe(200);
+      expect(stateManager.setDisplayLanguageRotation).toHaveBeenCalledWith(null);
+    });
   });
 
   describe("POST — validation errors", () => {
+    it("rejects setDisplayLanguageRotation with an invalid language code", async () => {
+      const { POST } = await import("@/app/api/state/route");
+      const response = await POST(
+        makePostRequest({
+          action: "setDisplayLanguageRotation",
+          config: { enabled: true, languages: ["en", "xx"], intervalSeconds: 120 },
+        }),
+      );
+      expect(response.status).toBe(400);
+    });
+
+    it("rejects setDisplayLanguageRotation with an out-of-range interval", async () => {
+      const { POST } = await import("@/app/api/state/route");
+      const response = await POST(
+        makePostRequest({
+          action: "setDisplayLanguageRotation",
+          config: { enabled: true, languages: ["en"], intervalSeconds: 99_999 },
+        }),
+      );
+      expect(response.status).toBe(400);
+    });
+
+    it("rejects setDisplayLanguageRotation with no languages", async () => {
+      const { POST } = await import("@/app/api/state/route");
+      const response = await POST(
+        makePostRequest({
+          action: "setDisplayLanguageRotation",
+          config: { enabled: true, languages: [], intervalSeconds: 120 },
+        }),
+      );
+      expect(response.status).toBe(400);
+    });
+
     it("rejects invalid action payload with 400", async () => {
       const { POST } = await import("@/app/api/state/route");
       const response = await POST(

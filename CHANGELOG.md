@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.17.0] - 2026-06-04
+### Added
+- **Rotating language mode for the Display board:** the Admin page gains a
+  "Rotate display languages" control (enable toggle, language multi-select, and a
+  minutes-per-language interval). When enabled, the large-format `/display` board
+  automatically cycles its UI through the selected languages on the configured
+  timer so non-English-speaking clients can read it without interacting — an
+  inclusive, equity-minded default. Languages rotate in canonical order; each
+  switch reuses the board's existing scramble transition and flips RTL for
+  Arabic/Farsi.
+  - **State:** new nullable `displayLanguageRotation` (`{ enabled, languages,
+    intervalSeconds }`) on `RaffleState` with a `setDisplayLanguageRotation`
+    action (Zod-validated language enum + bounded interval), persisted by both
+    state managers and preserved across draw reset/generate. Back-compatible via
+    the existing `{ ...defaultState, ...payload }` merge (no migration).
+  - **Display scope:** `/display` is now wrapped in a non-persisting
+    `LanguageProvider` (`persist={false}`) so rotation drives the board language
+    without writing the shared `display-language` preference or affecting the `/`
+    homepage. New `useDisplayLanguageRotation` hook (mounted only by
+    `PublicDisplayPage`) runs the timer; the manual language switcher is hidden
+    while rotation is active.
+  - **Shared list:** added `src/lib/languages.ts` (`LANGUAGE_CODES` /
+    `LANGUAGE_OPTIONS`), reused by the onboarding modal, the Admin editor, and the
+    rotation Zod schema.
+- **Docs/tests:** added `docs/DISPLAY_LANGUAGE_ROTATION.md`; coverage for the
+  rotation hook (timer cycling), the Admin editor, the API action validation, and
+  state-manager persistence/preservation.
+
 ## [1.16.0] - 2026-06-03
 ### Changed
 - **Personalized homepage promoted to `/`:** the language + ticket onboarding

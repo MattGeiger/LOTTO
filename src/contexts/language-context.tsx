@@ -2,7 +2,9 @@
 
 import React from "react";
 
-export type Language = "en" | "zh" | "es" | "ru" | "uk" | "vi" | "fa" | "ar";
+import { isLanguageCode, type Language } from "@/lib/languages";
+
+export type { Language };
 
 type LanguageContextType = {
   language: Language;
@@ -12,22 +14,36 @@ type LanguageContextType = {
 
 const LanguageContext = React.createContext<LanguageContextType | undefined>(undefined);
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
+export function LanguageProvider({
+  children,
+  persist = true,
+}: {
+  children: React.ReactNode;
+  /**
+   * When false, language changes update in-memory state but are NOT written to
+   * `localStorage`. Used by the `/display` board so auto-rotation never clobbers
+   * the shared `display-language` preference or bleeds into other routes.
+   */
+  persist?: boolean;
+}) {
   const [language, setLanguageState] = React.useState<Language>("en");
 
   React.useEffect(() => {
     const stored = typeof window !== "undefined" ? localStorage.getItem("display-language") : null;
-    if (stored && ["en", "zh", "es", "ru", "uk", "vi", "fa", "ar"].includes(stored)) {
-      setLanguageState(stored as Language);
+    if (stored && isLanguageCode(stored)) {
+      setLanguageState(stored);
     }
   }, []);
 
-  const setLanguage = React.useCallback((lang: Language) => {
-    setLanguageState(lang);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("display-language", lang);
-    }
-  }, []);
+  const setLanguage = React.useCallback(
+    (lang: Language) => {
+      setLanguageState(lang);
+      if (persist && typeof window !== "undefined") {
+        localStorage.setItem("display-language", lang);
+      }
+    },
+    [persist],
+  );
 
   const t = React.useCallback(
     (key: string) => translations[language]?.[key] ?? translations.en[key] ?? key,

@@ -109,6 +109,7 @@ const raffleState: RaffleState = {
   displayUrl: null,
   operatingHours: null,
   timezone: "America/Los_Angeles",
+  displayLanguageRotation: null,
 };
 
 function renderWithLanguage(ui: React.ReactNode) {

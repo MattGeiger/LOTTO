@@ -5,6 +5,7 @@ import { neon } from "@neondatabase/serverless";
 import {
   defaultState,
   formatTimestamp,
+  type DisplayLanguageRotation,
   type Mode,
   type OperatingHours,
   type RaffleState,
@@ -193,6 +194,7 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
       displayUrl: current.displayUrl ?? null,
       operatingHours: current.operatingHours ?? defaultState.operatingHours,
       timezone: current.timezone ?? defaultState.timezone,
+      displayLanguageRotation: current.displayLanguageRotation ?? null,
     });
   };
 
@@ -499,6 +501,7 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
       calledAt: {},
       operatingHours: current.operatingHours ?? defaultState.operatingHours,
       timezone: current.timezone ?? defaultState.timezone,
+      displayLanguageRotation: current.displayLanguageRotation ?? null,
     });
   };
 
@@ -565,6 +568,11 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
     return persist({ ...current, operatingHours: hours, timezone });
   };
 
+  const setDisplayLanguageRotation = async (config: DisplayLanguageRotation | null) => {
+    const current = await safeReadState();
+    return persist({ ...current, displayLanguageRotation: config });
+  };
+
   return {
     loadState,
     generateState,
@@ -583,6 +591,7 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
     redo,
     setDisplayUrl,
     setOperatingHours,
+    setDisplayLanguageRotation,
     cleanupOldSnapshots,
   };
 };

@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   DatabaseZap,
   History,
+  Languages,
   Loader2,
   MonitorCheck,
   ScanQrCode,
@@ -30,6 +31,7 @@ import { AdminAnimatedIcon } from "@/components/admin-animated-icon";
 
 import { ConfirmAction } from "@/components/confirm-action";
 import { OperatingHoursEditor } from "@/components/operating-hours-editor";
+import { DisplayLanguageRotationEditor } from "@/components/display-language-rotation-editor";
 import { ArchiveIcon, type ArchiveIconHandle } from "@/components/lucide-animated/archive";
 import {
   AlertDialog,
@@ -58,7 +60,13 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeSwitcher } from "@/components/theme-switcher";
-import { defaultState, type Mode, type OperatingHours, type RaffleState } from "@/lib/state-types";
+import {
+  defaultState,
+  type DisplayLanguageRotation,
+  type Mode,
+  type OperatingHours,
+  type RaffleState,
+} from "@/lib/state-types";
 import { formatWaitTime } from "@/lib/time-format";
 import { shouldWarnTimezoneMismatch } from "@/lib/timezone-utils";
 import { SessionExpiredError, showSessionExpiredToast } from "@/lib/session-expired";
@@ -77,6 +85,7 @@ type ActionPayload =
   | { action: "restoreSnapshot"; id: string }
   | { action: "setDisplayUrl"; url: string | null }
   | { action: "setOperatingHours"; hours: OperatingHours; timezone: string }
+  | { action: "setDisplayLanguageRotation"; config: DisplayLanguageRotation | null }
   | { action: "generateBatch"; startNumber: number; endNumber: number; batchSize: number };
 
 type Snapshot = {
@@ -400,6 +409,14 @@ const applySetOperatingHoursOptimistic = (
   timezone,
 });
 
+const applySetDisplayLanguageRotationOptimistic = (
+  state: RaffleState,
+  config: DisplayLanguageRotation | null,
+): RaffleState => ({
+  ...state,
+  displayLanguageRotation: config,
+});
+
 const buildOptimisticPatch = (
   id: string,
   payload: ActionPayload,
@@ -456,6 +473,12 @@ const buildOptimisticPatch = (
         kind: payload.action,
         apply: (state) =>
           applySetOperatingHoursOptimistic(state, payload.hours, payload.timezone),
+      };
+    case "setDisplayLanguageRotation":
+      return {
+        id,
+        kind: payload.action,
+        apply: (state) => applySetDisplayLanguageRotationOptimistic(state, payload.config),
       };
     case "generate":
       if (payload.mode !== "sequential") return null;
@@ -945,6 +968,8 @@ const AdminPage = () => {
   const [canRedo, setCanRedo] = React.useState(false);
   const [pendingHours, setPendingHours] = React.useState<OperatingHours | null>(null);
   const [pendingTimezone, setPendingTimezone] = React.useState<string>("America/Los_Angeles");
+  const [pendingRotation, setPendingRotation] =
+    React.useState<DisplayLanguageRotation | null>(null);
   const [timezoneMismatchOpen, setTimezoneMismatchOpen] = React.useState(false);
   const browserOriginRef = React.useRef<string | null>(null);
   const stateRef = React.useRef<RaffleState | null>(null);
@@ -1140,6 +1165,10 @@ const AdminPage = () => {
       setPendingTimezone(state.timezone);
     }
   }, [state?.operatingHours, state?.timezone]);
+
+  React.useEffect(() => {
+    setPendingRotation(state?.displayLanguageRotation ?? null);
+  }, [state?.displayLanguageRotation]);
 
   const postAction = React.useCallback(async (payload: ActionPayload) => {
     const response = await fetch("/api/state", {
@@ -1439,6 +1468,18 @@ const AdminPage = () => {
     setTimezoneMismatchOpen(false);
     await saveOperatingHours();
   };
+
+  const handleSaveRotation = React.useCallback(async () => {
+    const config = pendingRotation;
+    if (config?.enabled && config.languages.length === 0) {
+      toast.error("Select at least one language to rotate.");
+      return;
+    }
+    // Store null when no languages are selected ("off"); otherwise persist the
+    // config (enabled or not) so the agency's selection is remembered.
+    const next = config && config.languages.length > 0 ? config : null;
+    await sendAction({ action: "setDisplayLanguageRotation", config: next });
+  }, [pendingRotation, sendAction]);
 
   const handleCleanup = async (days: number) => {
     setCleanupMessage(null);
@@ -2538,6 +2579,36 @@ const AdminPage = () => {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-6">
+          <Card className="bg-card space-y-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Languages className="size-4 text-muted-foreground" />
+                Rotate display languages
+              </CardTitle>
+              <CardDescription>
+                Cycle the public board (<code>/display</code>) through several languages so
+                non-English speakers can follow along without tapping anything.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <DisplayLanguageRotationEditor
+                value={pendingRotation}
+                onChange={setPendingRotation}
+                disabled={loading || nonDrawActionPending}
+              />
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleSaveRotation}
+                disabled={loading || nonDrawActionPending}
+              >
+                Save language rotation
+              </Button>
             </CardContent>
           </Card>
         </div>
