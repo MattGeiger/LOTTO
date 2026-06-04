@@ -40,7 +40,7 @@ Three destinations, in this fixed order:
 
 | # | Label             | Route      | Icon            | Icon source                          |
 |---|-------------------|------------|-----------------|--------------------------------------|
-| 1 | Your ticket       | `/new`     | `ticket`        | New imperative-ref icon (ticket-rip) |
+| 1 | Your ticket       | `/`        | `ticket`        | New imperative-ref icon (ticket-rip) |
 | 2 | What's in stock   | `/inventory` | `shopping-cart` | New imperative-ref icon (cart-hop)   |
 | 3 | Games             | `/arcade`  | `gamepad-2`     | New imperative-ref icon (controller) |
 
@@ -49,8 +49,8 @@ Three destinations, in this fixed order:
 label.
 
 ### Route notes
-- `/new` and `/inventory` are top-level App Router routes (`src/app/new/`,
-  `src/app/inventory/`).
+- `/` (homepage) and `/inventory` are top-level App Router routes
+  (`src/app/page.tsx`, `src/app/inventory/`).
 - `/arcade` lives in the `(arcade)` route group
   (`src/app/(arcade)/arcade/page.tsx`). Linking to it from the nav crosses the
   core↔arcade boundary — see [Arcade Guardrails](#arcade-guardrails).
@@ -238,11 +238,11 @@ remounts the bar, so the session guard is needed under both options.)
 ### Determining the active tab
 The bar needs to know the current route to set the active state. In the App
 Router, use `usePathname()` and match each item's `href`:
-- `/new` → tab 1
+- `/` → tab 1
 - `/inventory` → tab 2
 - `/arcade` (and `/arcade/*` subroutes) → tab 3
 
-Each `nav-items.ts` entry should carry a matcher (exact for `/new`,
+Each `nav-items.ts` entry should carry a matcher (exact for `/`,
 `/inventory`; prefix for `/arcade`) so deep arcade routes still light the Games
 tab.
 

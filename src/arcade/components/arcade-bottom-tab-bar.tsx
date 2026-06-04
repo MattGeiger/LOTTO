@@ -22,7 +22,7 @@ type ArcadeNavItem = {
 // Same three destinations and shared `nav*` labels as the core bar, but with
 // arcade pixel icons and arcade styling. See docs/NAVIGATION.md.
 const ARCADE_NAV_ITEMS: ArcadeNavItem[] = [
-  { id: "ticket", labelKey: "navTicket", href: "/new", Icon: ReceiptIcon, isActive: (p) => p === "/new" },
+  { id: "ticket", labelKey: "navTicket", href: "/", Icon: ReceiptIcon, isActive: (p) => p === "/" },
   {
     id: "inventory",
     labelKey: "navInventory",

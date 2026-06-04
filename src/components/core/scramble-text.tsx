@@ -26,7 +26,7 @@ type ScrambleOnLanguageChangeProps = {
  * Provider that scrambles any descendant `<T text="…"/>` whenever the active
  * language changes. Stays static on initial mount, on regular rerenders, and
  * on no-op language updates — only an *explicit* language change fires the
- * animation. Mirrors the behavior the personalized display uses on `/new`.
+ * animation. Mirrors the behavior the personalized display uses on the homepage.
  */
 export function ScrambleOnLanguageChange({
   enabled = true,

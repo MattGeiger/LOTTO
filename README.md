@@ -4,8 +4,8 @@ Next.js (App Router) app with ShadCN-inspired UI, JSON persistence, and atomic b
 
 ## Features
 - Staff dashboard (`/admin`) to set ranges, toggle random vs sequential, append tickets, update “now serving,” mark returned/unclaimed tickets, and reset with confirmations.
-- Public display (`/` and `/display`) with airport-style grid, status legend, ticket detail messaging (called/returned/unclaimed), and QR code sharing, using adaptive polling with visibility pause and operating-hours backoff.
-- Personalized homepage preview (`/new`) serves the v2.0 personalization track while preserving the current board visual language (QR panel and top-bar search removed, centered WTH branding added, redundant board-row logo removed so `NOW SERVING` sits centered, and a load-time language picker modal shown on entry with a title that cycles through supported languages every 5 seconds). This preview route is slated for future promotion to the default homepage.
+- Public display (`/display`) with airport-style grid, status legend, ticket detail messaging (called/returned/unclaimed), and QR code sharing, using adaptive polling with visibility pause and operating-hours backoff.
+- Personalized homepage (`/`) serves the personalization track while preserving the board visual language (QR panel and top-bar search removed, centered WTH branding added, redundant board-row logo removed so `NOW SERVING` sits centered, and a load-time language picker modal shown on entry). Promoted from the former `/new` preview to the default homepage in v1.16.0.
 - Public inventory lookup (`/inventory`) fetches FEED's unauthenticated public inventory endpoint without credentials, showing in-stock pantry items grouped by category with limits, status tags, dietary flags, freshness, and selected-language item/category names where FEED provides translations.
 - Arcade preview is available at `/arcade` with one playable game (`Snake`) in v1.5.0.
 - Multilingual display UI with language switcher (English, 中文, Español, Русский, Українська, Tiếng Việt, فارسی, العربية) and automatic RTL direction for Farsi/Arabic.
@@ -14,9 +14,8 @@ Next.js (App Router) app with ShadCN-inspired UI, JSON persistence, and atomic b
 - Tests written with Vitest + Testing Library for the state manager and grid highlighting.
 
 ## Local URLs
-- Display: http://localhost:3000/
-- Display alias: http://localhost:3000/display
-- Personalized homepage: http://localhost:3000/new
+- Personalized homepage: http://localhost:3000/
+- Public board: http://localhost:3000/display
 - Inventory lookup: http://localhost:3000/inventory
 - Arcade preview: http://localhost:3000/arcade
 - Admin: http://localhost:3000/admin
@@ -51,7 +50,7 @@ NODE_ENV=production
 - `npm run lint` — run ESLint.
 
 ## Read-only board options
-- Built-in: `/` is the default QR-enabled public board, `/display` is the live alias, `/new` is the homepage-personalization preview variant, and `/arcade` is the Arcade preview surface (Snake launch game).
+- Built-in: `/` is the personalized homepage (language + ticket onboarding), `/display` is the QR-enabled public board, and `/arcade` is the Arcade preview surface (Snake launch game).
 - FEED inventory: `/inventory` reads `NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL` when set, otherwise defaults to `https://feed.williamtemple.app/api/public/inventory.json`.
 - Optional standalone: `npm run readonly` on port `4000`, still polling `data/state.json` for legacy/edge hosting.
 - Configure standalone via env vars:
@@ -132,9 +131,8 @@ NODE_ENV=production
 ## Routing and domains (deployment)
 - Production domain: `williamtemple.app` (custom domain in Vercel).
 - Planned routes:
-  - `/` → public read-only board route (QR-enabled operational experience).
-  - `/display` → public read-only board alias (same behavior as `/`).
-  - `/new` → homepage personalization preview surface (maintains existing look-and-feel direction while iterating, with future promotion planned).
+  - `/` → personalized homepage (language + ticket onboarding); promoted from the former `/new` preview in v1.16.0.
+  - `/display` → public read-only board (QR-enabled operational experience).
   - `/arcade` → Arcade preview menu (currently one launch game: Snake).
   - `/login` → magic-link entry; after sign-in, redirect to the staff landing page (current homepage content).
   - `/admin` → staff dashboard (unchanged), linked from the staff landing page after login.
@@ -188,7 +186,7 @@ Local options:
   ```bash
   docker compose up --build
   ```
-- App listens on `http://localhost:3000` (public board `/`, alias `/display`, personalized homepage preview `/new`, Arcade preview `/arcade`, staff dashboard `/admin`, staff intro `/staff`).
+- App listens on `http://localhost:3000` (personalized homepage `/`, public board `/display`, Arcade preview `/arcade`, staff dashboard `/admin`, staff intro `/staff`).
 - Stored state lives in your host `./data` directory so it survives container restarts.
 
 ## Tech

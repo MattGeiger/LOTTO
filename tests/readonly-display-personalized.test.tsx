@@ -102,7 +102,7 @@ describe("ReadOnlyDisplay personalized variant", () => {
     expect(screen.getByTestId("service-time")).toHaveTextContent(/\S/);
     expect(screen.getByRole("button", { name: "Enter a new ticket number" })).toBeInTheDocument();
     // The inventory and games links moved out of the ticket card into the
-    // bottom tab bar (rendered by the /new page, not by ReadOnlyDisplay).
+    // bottom tab bar (rendered by the personalized homepage, not by ReadOnlyDisplay).
     expect(screen.queryByRole("link", { name: "PLAY GAMES" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "See what's in stock" })).not.toBeInTheDocument();
   });

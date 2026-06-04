@@ -9,7 +9,7 @@ names.
 
 This document captures the data contract and the LOTTO integration shape.
 Runtime integration is implemented as a standalone public inventory lookup at
-`/inventory`, linked from the personalized homepage prototype at `/new`.
+`/inventory`, linked from the personalized homepage at `/`.
 
 ## Pattern Alignment
 
@@ -364,8 +364,8 @@ Focused tests should cover:
 
 ## Open Decisions
 
-1. Whether `/inventory` should also be linked from `/` and `/display`, or only
-   from `/new` for the initial client-facing test.
+1. Whether `/inventory` should also be linked from `/display`, or only from the
+   homepage (`/`) for the initial client-facing test.
 2. Whether to poll inventory periodically while the page is visible or refresh
    only on page load plus manual retry/refresh.
 3. Whether to include FEED category icons in LOTTO UI immediately or treat them
