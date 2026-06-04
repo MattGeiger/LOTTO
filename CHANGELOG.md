@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.17.2] - 2026-06-04
+### Changed
+- **Admin "Rotate display languages" card:** bottom-left aligned the "Save
+  language rotation" button so it lines up with the "Save operating hours" button
+  in the adjacent card.
+
 ## [1.17.1] - 2026-06-04
 ### Fixed
 - **Display QR default target:** the QR code on the `/display` board now falls
