@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { DashboardIcon } from "@/arcade/components/icons/dashboard-icon";
 import { GamingIcon } from "@/arcade/components/icons/gaming-icon";
 import { ReceiptIcon } from "@/arcade/components/icons/receipt-icon";
 import { ShoppingCartIcon } from "@/arcade/components/icons/shopping-cart-icon";
@@ -19,10 +20,17 @@ type ArcadeNavItem = {
   isActive: (pathname: string) => boolean;
 };
 
-// Same three destinations and shared `nav*` labels as the core bar, but with
+// Same public destinations and shared `nav*` labels as the core bar, but with
 // arcade pixel icons and arcade styling. See docs/NAVIGATION.md.
 const ARCADE_NAV_ITEMS: ArcadeNavItem[] = [
   { id: "ticket", labelKey: "navTicket", href: "/", Icon: ReceiptIcon, isActive: (p) => p === "/" },
+  {
+    id: "dashboard",
+    labelKey: "navDashboard",
+    href: "/display",
+    Icon: DashboardIcon,
+    isActive: (p) => p === "/display",
+  },
   {
     id: "inventory",
     labelKey: "navInventory",

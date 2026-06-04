@@ -251,8 +251,9 @@ describe("public inventory page", () => {
 
     renderWithLanguage(<NewPage />);
 
-    // Inventory and games are now reached through the persistent bottom tab
-    // bar; the ticket-change action remains an in-page button.
+    // Dashboard, inventory, and games are reached through the persistent bottom
+    // tab bar; the ticket-change action remains an in-page button.
+    expect(await screen.findByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/display");
     const inventoryTab = await screen.findByRole("link", { name: "What's in stock" });
     expect(inventoryTab).toHaveAttribute("href", "/inventory");
     expect(screen.getByRole("link", { name: "Games" })).toHaveAttribute("href", "/arcade");
@@ -276,6 +277,7 @@ describe("public inventory page", () => {
 
     renderWithLanguage(<NewPage />);
 
+    expect(await screen.findByRole("link", { name: "Panel" })).toHaveAttribute("href", "/display");
     const inventoryTab = await screen.findByRole("link", { name: "Qué hay disponible" });
     expect(inventoryTab).toHaveAttribute("href", "/inventory");
     expect(screen.queryByRole("link", { name: "Ver qué hay disponible" })).not.toBeInTheDocument();
