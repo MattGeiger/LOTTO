@@ -4,7 +4,7 @@ import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import InventoryPage from "@/app/inventory/page";
-import NewPage from "@/app/new/page";
+import { PersonalizedHomePage as NewPage } from "@/components/personalized-home-page";
 import { LanguageProvider } from "@/contexts/language-context";
 import type { FeedPublicInventory } from "@/lib/feed-public-inventory";
 import { HOMEPAGE_TICKET_STORAGE_KEY } from "@/lib/home-ticket-storage";
@@ -236,7 +236,7 @@ describe("public inventory page", () => {
     expect(screen.getAllByText("Rice").length).toBeGreaterThan(0);
   });
 
-  it("adds an inventory entry point to /new", async () => {
+  it("adds an inventory entry point to the personalized homepage", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(raffleState), { status: 200 })));
     window.localStorage.setItem(
       HOMEPAGE_TICKET_STORAGE_KEY,
@@ -260,7 +260,7 @@ describe("public inventory page", () => {
     expect(screen.queryByRole("link", { name: /PLAY GAMES/i })).not.toBeInTheDocument();
   });
 
-  it("localizes the /new inventory entry point", async () => {
+  it("localizes the personalized homepage inventory entry point", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(raffleState), { status: 200 })));
     window.localStorage.setItem("display-language", "es");
     window.localStorage.setItem(

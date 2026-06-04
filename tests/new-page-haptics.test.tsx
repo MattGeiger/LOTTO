@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import HomePage from "@/app/new/page";
+import { PersonalizedHomePage as HomePage } from "@/components/personalized-home-page";
 import { HapticsProvider } from "@/components/haptics-provider";
 import { LanguageProvider } from "@/contexts/language-context";
 import { APP_HAPTIC_INPUT_BY_INTENT } from "@/lib/haptics";

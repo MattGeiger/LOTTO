@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import HomePage from "@/app/new/page";
+import { PersonalizedHomePage as HomePage } from "@/components/personalized-home-page";
 import { LanguageProvider } from "@/contexts/language-context";
 import { EIGHT_HOURS_MS, HOMEPAGE_TICKET_STORAGE_KEY } from "@/lib/home-ticket-storage";
 import type { RaffleState } from "@/lib/state-types";
@@ -188,5 +188,41 @@ describe("homepage ticket persistence", () => {
     expect(parsed.ticketNumber).toBe(24);
     // No active range at save time → no rangeKey stored.
     expect(parsed.rangeKey).toBeUndefined();
+  });
+
+  it("dismisses onboarding from the ticket step via the close button without saving", async () => {
+    const user = userEvent.setup();
+    renderHomePage();
+
+    await user.click(await screen.findByRole("button", { name: "English" }));
+    // The close (X) on the ticket step is the "just looking" escape hatch.
+    await user.click(await screen.findByRole("button", { name: "Close" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+    // Browsing path persists no ticket.
+    expect(window.localStorage.getItem(HOMEPAGE_TICKET_STORAGE_KEY)).toBeNull();
+  });
+
+  it("dismisses onboarding from the ticket step with the Escape key", async () => {
+    const user = userEvent.setup();
+    renderHomePage();
+
+    await user.click(await screen.findByRole("button", { name: "English" }));
+    await screen.findByRole("textbox", { name: "Enter your ticket number" });
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  });
+
+  it("keeps the language step a focused gate with no dismiss affordance", async () => {
+    renderHomePage();
+
+    expect(await screen.findByText("Choose your language")).toBeInTheDocument();
+    // No close affordance on step 1 — the user must pick a language to proceed.
+    expect(screen.queryByRole("button", { name: "Close" })).not.toBeInTheDocument();
   });
 });

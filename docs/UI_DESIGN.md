@@ -221,7 +221,7 @@ GPU-costed, so the material taxonomy stays small and effects stay cheap.
 | Inventory icon popovers (Limited Supply / Clearance / dietary) | `public-inventory-page.tsx` | `bg-popover/[45%] backdrop-blur-[6px]` |
 | Language switcher menu | `language-switcher.tsx` | `bg-popover/[45%] backdrop-blur-[6px]` |
 | Theme switcher menu | `theme-switcher.tsx` | `bg-popover/[45%] backdrop-blur-[6px]` |
-| `/new` onboarding dialog | `app/new/page.tsx` | translucent `bg-popover/[…]` + `backdrop-blur-[…]` (being tuned) |
+| Homepage onboarding dialog | `components/personalized-home-page.tsx` | translucent `bg-popover/[…]` + `backdrop-blur-[…]` (being tuned) |
 
 The arcade bottom bar is intentionally **not** part of this system — it uses its
 own pixel-art material (`--arcade-menu-card-bg`, `backdrop-blur-sm`) to keep the

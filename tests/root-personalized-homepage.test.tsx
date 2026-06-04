@@ -49,17 +49,18 @@ function renderRootPage() {
   );
 }
 
-describe("root route public display", () => {
-  it("renders public-board search controls at root", async () => {
+describe("root route personalized homepage", () => {
+  it("renders the personalized onboarding modal at root", async () => {
     renderRootPage();
 
-    expect(await screen.findByLabelText("Search ticket number")).toBeInTheDocument();
-    expect(screen.getByTestId("search-icon")).toBeInTheDocument();
+    // The homepage now opens the language + ticket onboarding on mount
+    // (promoted from the former /new preview); the public board lives at /display.
+    expect(await screen.findByText("Choose your language")).toBeInTheDocument();
   });
 
-  it("does not render personalized onboarding modal at root", () => {
+  it("does not render the public-board search controls at root", () => {
     renderRootPage();
 
-    expect(screen.queryByText("Choose your language")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Search ticket number")).not.toBeInTheDocument();
   });
 });

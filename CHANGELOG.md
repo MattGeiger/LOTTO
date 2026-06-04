@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.16.0] - 2026-06-03
+### Changed
+- **Personalized homepage promoted to `/`:** the language + ticket onboarding
+  experience (formerly the `/new` preview) is now the default homepage,
+  fulfilling the long-planned promotion tracked in
+  `docs/V2.0_PLANNED_FEATURES.md`. The searchable public board now lives solely
+  at `/display`, and the **Your ticket** bottom-nav tab (core and arcade bars)
+  points to `/`. The view moved into a reusable
+  `src/components/personalized-home-page.tsx` (`PersonalizedHomePage`) wrapped by
+  the server route `src/app/page.tsx`, mirroring how `/display` wraps
+  `PublicDisplayPage`.
+- **Friendlier "just looking" escape hatch:** the onboarding modal's dismiss
+  action is now the concise **"I'm just looking"** rendered as a prominent
+  secondary button (was a long, muted ghost link), shortened across all eight
+  languages. The ticket step now adds a close (X) and supports Escape /
+  tap-outside dismissal, while the language step stays a focused gate (no
+  dismissal until a language is chosen).
+- **Tests:** repointed the homepage suites to
+  `@/components/personalized-home-page` and added coverage for the ticket-step
+  close/Escape dismissal and the language-step gate.
+
+### Removed
+- **`/new` route:** retired now that its experience is the homepage —
+  `src/app/new/page.tsx` and `src/app/new/layout.tsx` are deleted and `/new` no
+  longer resolves. Operators should confirm the board's configured display/QR
+  URL no longer targets `/new`, and repoint any kiosk that showed the board at
+  `/` to `/display`.
+
 ## [1.15.4] - 2026-06-01
 ### Added
 - **Pride-month leaderboard seed:** `seed.arcade-high-scores.sql` preloads the

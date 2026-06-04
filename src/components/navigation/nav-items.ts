@@ -33,9 +33,9 @@ export const navItems: NavItem[] = [
   {
     id: "ticket",
     labelKey: "navTicket",
-    href: "/new",
+    href: "/",
     icon: TicketIcon,
-    isActive: (pathname) => pathname === "/new",
+    isActive: (pathname) => pathname === "/",
   },
   {
     id: "inventory",

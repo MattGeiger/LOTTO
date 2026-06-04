@@ -1,3 +1,31 @@
+# William Temple House Digital Raffle System v1.16.0
+
+**Release Date:** June 3, 2026
+
+The personalized homepage graduates from preview to the **front door**. Opening
+the app now greets each guest with the language picker and ticket lookup, while
+the live "who's being served" board moves to its own dedicated address.
+
+## Personalized homepage is now the home screen
+
+- **One welcoming entry point.** The language + ticket onboarding (previously the
+  `/new` preview) is now what you see at the site root. Returning guests with a
+  saved ticket skip straight to their personalized status.
+- **The public board lives at `/display`.** The full searchable board is
+  unchanged — it just has its own address now. Point lobby and TV displays at
+  `/display`.
+- **"Your ticket"** in the bottom navigation now takes you to the home screen.
+
+## Easier "just looking"
+
+- The no-ticket option is now a clear, prominent **"I'm just looking"** button,
+  and once you've chosen a language you can close the welcome dialog with an
+  **X**, the **Escape** key, or by tapping outside it.
+
+Design and implementation notes live in `docs/V2.0_PLANNED_FEATURES.md`.
+
+---
+
 # William Temple House Digital Raffle System v1.12.0
 
 **Release Date:** May 31, 2026

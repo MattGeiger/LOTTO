@@ -509,8 +509,9 @@ export const ReadOnlyDisplay = ({
         lang={language}
         className={cn(
           "min-h-screen w-full bg-gradient-display px-6 pt-14 text-foreground sm:px-8 lg:px-10",
-          // Extra bottom clearance on /new so the fixed bottom tab bar does not
-          // cover the ticket card; the public display has no bar.
+          // Extra bottom clearance on the personalized homepage so the fixed
+          // bottom tab bar does not cover the ticket card; the public display
+          // has no bar.
           isPersonalized ? "pb-28" : "pb-8",
         )}
       >

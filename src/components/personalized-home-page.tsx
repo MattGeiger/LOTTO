@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { ReadOnlyDisplay } from "@/components/readonly-display";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -41,7 +41,7 @@ const normalizeTicketNumber = (rawInput: string): number | null => {
 const hasActiveTicketRange = (state: RaffleState | null): boolean =>
   !!state && state.startNumber > 0 && state.endNumber >= state.startNumber;
 
-export default function NewPersonalizedHomePage() {
+export function PersonalizedHomePage() {
   const { setLanguage, t } = useLanguage();
   const { trigger } = useAppHaptics();
   const [onboardingStep, setOnboardingStep] = React.useState<"language" | "ticket">("language");
@@ -167,11 +167,23 @@ export default function NewPersonalizedHomePage() {
         showQrCode={false}
         showHeaderLogo={false}
       />
-      <Dialog open={isOnboardingModalOpen}>
+      <Dialog
+        open={isOnboardingModalOpen}
+        // Step 1 (language) is a focused gate — only an explicit selection moves
+        // forward. Step 2 (ticket) can be dismissed (X / Escape / tap-outside),
+        // which routes through the same "just looking" handler.
+        onOpenChange={(open) => {
+          if (!open && onboardingStep === "ticket") handleDismissOnboarding();
+        }}
+      >
         <DialogContent
           className="max-w-md bg-popover/[65%] backdrop-blur-[6px] backdrop-brightness-150 backdrop-saturate-[0.85] shadow-[inset_0_3px_0_0_rgb(255_255_255/0.5),0_24px_60px_-15px_rgb(0_0_0/0.3)] dark:bg-popover/[75%] dark:backdrop-brightness-90 dark:shadow-[inset_0_3px_0_0_rgb(255_255_255/0.12),0_24px_60px_-15px_rgb(0_150_255/0.4)]"
-          onEscapeKeyDown={(event) => event.preventDefault()}
-          onPointerDownOutside={(event) => event.preventDefault()}
+          onEscapeKeyDown={(event) => {
+            if (onboardingStep === "language") event.preventDefault();
+          }}
+          onPointerDownOutside={(event) => {
+            if (onboardingStep === "language") event.preventDefault();
+          }}
         >
           {onboardingStep === "language" ? (
             <>
@@ -212,6 +224,17 @@ export default function NewPersonalizedHomePage() {
                 <DialogTitle className="px-10 text-center text-2xl">
                   <span>{t("searchTicketLabel")}</span>
                 </DialogTitle>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  haptic="uiToggle"
+                  className="absolute right-0 top-0 h-8 w-8 rounded-full"
+                  onClick={handleDismissOnboarding}
+                  aria-label={t("close")}
+                >
+                  <X className="size-4" />
+                </Button>
               </DialogHeader>
               <div className="space-y-3">
                 <Input
@@ -241,9 +264,9 @@ export default function NewPersonalizedHomePage() {
                 </Button>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="secondary"
                   haptic="uiToggle"
-                  className="h-9 w-full text-sm font-normal text-muted-foreground"
+                  className="h-11 w-full text-base"
                   onClick={handleDismissOnboarding}
                 >
                   <span>{t("justBrowsing")}</span>
