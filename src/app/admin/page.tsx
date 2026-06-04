@@ -2590,7 +2590,7 @@ const AdminPage = () => {
               </CardTitle>
               <CardDescription>
                 Cycle the public board (<code>/display</code>) through several languages so
-                non-English speakers can follow along without tapping anything.
+                non-English speakers have equal access to queue information.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col gap-4">
