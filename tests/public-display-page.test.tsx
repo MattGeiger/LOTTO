@@ -20,6 +20,10 @@ vi.mock("@/components/theme-switcher", () => ({
   ThemeSwitcher: () => <div data-testid="theme-switcher" />,
 }));
 
+vi.mock("@/components/navigation/bottom-tab-bar", () => ({
+  BottomTabBar: () => <nav data-testid="bottom-tab-bar" />,
+}));
+
 const useDisplayLanguageRotationMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/hooks/use-display-language-rotation", () => ({
@@ -103,6 +107,7 @@ describe("PublicDisplayPage", () => {
     expect(getSearchInput()).toBeInTheDocument();
     expect(screen.getByTestId("language-switcher")).toBeInTheDocument();
     expect(screen.getByTestId("theme-switcher")).toBeInTheDocument();
+    expect(screen.getByTestId("bottom-tab-bar")).toBeInTheDocument();
   });
 
   it("renders the ReadOnlyDisplay component", () => {

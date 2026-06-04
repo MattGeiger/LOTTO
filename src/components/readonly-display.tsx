@@ -504,6 +504,14 @@ export const ReadOnlyDisplay = ({
     clearConfettiLoop();
   }, [clearConfettiLoop, isPersonalized, personalizedCalledAt]);
 
+  const nowServingValueClassName = isPersonalized
+    ? "text-[96px]"
+    : "text-[clamp(4.5rem,10vh,96px)]";
+  const noTicketMessageClassName = cn(
+    "block w-full text-center font-extrabold leading-snug text-foreground",
+    isPersonalized ? "text-3xl" : "text-2xl sm:text-3xl [@media(max-height:760px)]:text-2xl",
+  );
+
   return (
     <ScrambleOnLanguageChange enabled={languageTextAnimation === "scramble"}>
       <div
@@ -511,17 +519,17 @@ export const ReadOnlyDisplay = ({
         lang={language}
         className={cn(
           "min-h-screen w-full bg-gradient-display px-6 pt-14 text-foreground sm:px-8 lg:px-10",
-          // Extra bottom clearance on the personalized homepage so the fixed
-          // bottom tab bar does not cover the ticket card; the public display
-          // has no bar.
-          isPersonalized ? "pb-28" : "pb-8",
+          // Extra scroll clearance so the fixed bottom tab bar does not trap
+          // the ticket grid/card behind the dock.
+          isPersonalized ? "pb-28" : "pb-32",
         )}
       >
         <div className="mx-auto flex w-full flex-col gap-4">
         {/* Logo + Now Serving Row */}
         <div
           className={cn(
-            "mt-10 grid grid-cols-1 gap-4 sm:mt-12 sm:items-center sm:gap-6",
+            "grid grid-cols-1 gap-4 sm:items-center sm:gap-6",
+            isPersonalized ? "mt-10 sm:mt-12" : "mt-6 sm:mt-8",
             showHeaderLogo && showQrCode
               ? "sm:grid-cols-[minmax(280px,320px)_1fr_minmax(280px,320px)]"
               : showHeaderLogo
@@ -559,7 +567,10 @@ export const ReadOnlyDisplay = ({
               </p>
               {!animateServingValue ? (
                 <span
-                  className="inline-block overflow-visible bg-gradient-serving-text bg-clip-text pb-[0.08em] text-[96px] font-extrabold leading-[1.28] text-transparent"
+                  className={cn(
+                    "inline-block overflow-visible bg-gradient-serving-text bg-clip-text pb-[0.08em] font-extrabold leading-[1.28] text-transparent",
+                    nowServingValueClassName,
+                  )}
                   aria-label="Currently serving ticket number"
                 >
                   {nowServingDisplayText}
@@ -567,7 +578,10 @@ export const ReadOnlyDisplay = ({
               ) : currentlyServing === null ? (
                 <MorphingText
                   text={nowServingDisplayText}
-                  className="inline-block overflow-visible pb-[0.08em] text-[96px] font-extrabold leading-[1.28]"
+                  className={cn(
+                    "inline-block overflow-visible pb-[0.08em] font-extrabold leading-[1.28]",
+                    nowServingValueClassName,
+                  )}
                   characterClassName="bg-gradient-serving-text bg-clip-text text-transparent"
                   characterStagger={0.08}
                   wordWrap="word"
@@ -580,7 +594,10 @@ export const ReadOnlyDisplay = ({
               ) : (
                 <RollingText
                   text={nowServingDisplayText}
-                  className="inline-block overflow-visible pb-[0.08em] text-[96px] font-extrabold leading-[1.28]"
+                  className={cn(
+                    "inline-block overflow-visible pb-[0.08em] font-extrabold leading-[1.28]",
+                    nowServingValueClassName,
+                  )}
                   characterClassName="bg-gradient-serving-text bg-clip-text text-transparent"
                   transition={{ duration: 0.75, ease: "easeOut", delay: 0.15 }}
                   aria-label="Currently serving ticket number"
@@ -675,12 +692,17 @@ export const ReadOnlyDisplay = ({
           </CardHeader>
           <CardContent className="space-y-4">
             {!hasTickets && (
-              <div className="flex flex-col items-center gap-4 rounded-xl bg-muted/20 px-3 py-6">
+              <div
+                className={cn(
+                  "flex flex-col items-center gap-4 rounded-xl bg-muted/20 px-3",
+                  isPersonalized ? "py-6" : "py-4",
+                )}
+              >
                 {!isPantryOpen ? (
                   <>
                     {pantryStatus === "before_opening" && (
                       <>
-                        <span className="block w-full text-center text-3xl font-extrabold leading-snug text-foreground">
+                        <span className={noTicketMessageClassName}>
                           <T text={t("pantryNotOpenYet")} />
                         </span>
                         {todayHours && (
@@ -694,7 +716,7 @@ export const ReadOnlyDisplay = ({
 
                     {pantryStatus === "after_closing" && (
                       <>
-                        <span className="block w-full text-center text-3xl font-extrabold leading-snug text-foreground">
+                        <span className={noTicketMessageClassName}>
                           <T text={t("pantryClosedForDay")} />
                         </span>
                         {nextOpenDay && (
@@ -708,7 +730,7 @@ export const ReadOnlyDisplay = ({
 
                     {pantryStatus === "not_operating_today" && (
                       <>
-                        <span className="block w-full text-center text-3xl font-extrabold leading-snug text-foreground">
+                        <span className={noTicketMessageClassName}>
                           <T text={t("pantryClosed")} />
                         </span>
                         {nextOpenDay && (
@@ -756,13 +778,13 @@ export const ReadOnlyDisplay = ({
                   </>
                 ) : (
                   <>
-                    <span className="block w-full text-center text-3xl font-extrabold leading-snug text-foreground">
+                    <span className={noTicketMessageClassName}>
                       <T text={t("welcome")} />
                     </span>
-                    <span className="block w-full text-center text-3xl font-extrabold leading-snug text-foreground">
+                    <span className={noTicketMessageClassName}>
                       <T text={t("raffleNotStarted")} />
                     </span>
-                    <span className="block w-full text-center text-3xl font-extrabold leading-snug text-foreground">
+                    <span className={noTicketMessageClassName}>
                       <T text={t("checkBackSoon")} />
                     </span>
                   </>

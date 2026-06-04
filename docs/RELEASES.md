@@ -1,3 +1,27 @@
+# William Temple House Digital Raffle System v1.17.3
+
+**Release Date:** June 4, 2026
+
+The public navigation now gives the live board a first-class entry point:
+**Dashboard** links directly to `/display`, placed between **Your ticket** and
+**What's in stock**.
+
+## Dashboard tab in public navigation
+
+- **New destination:** the bottom nav now reads **Your ticket**, **Dashboard**,
+  **What's in stock**, and **Games**.
+- **Direct board access:** **Dashboard** links to `/display`, the large public
+  raffle board.
+- **Consistent chrome:** `/display` now renders the same fixed bottom nav as the
+  other core public pages, with scroll clearance and a lower desktop dock offset
+  for the dense board layout.
+- **Arcade separation preserved:** the Arcade index mirrors the same four public
+  destinations with its own pixel-art dashboard icon and arcade-styled bar.
+
+Design and implementation notes live in `docs/NAVIGATION.md`.
+
+---
+
 # William Temple House Digital Raffle System v1.17.1
 
 **Release Date:** June 4, 2026

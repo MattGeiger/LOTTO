@@ -2,9 +2,10 @@ import type { ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from "r
 
 import { CartIcon } from "@/components/lucide-animated/cart";
 import { Gamepad2Icon } from "@/components/lucide-animated/gamepad-2";
+import { LayoutDashboardIcon } from "@/components/lucide-animated/layout-dashboard";
 import { TicketIcon } from "@/components/lucide-animated/ticket";
 
-// Shared imperative handle exposed by every nav icon. All three icons in
+// Shared imperative handle exposed by every nav icon. Core nav icons in
 // `@/components/lucide-animated` implement this exact shape, so they are
 // structurally assignable to `NavIconComponent` without a cast.
 export type NavIconHandle = {
@@ -16,7 +17,7 @@ export type NavIconComponent = ForwardRefExoticComponent<
   HTMLAttributes<HTMLDivElement> & { size?: number } & RefAttributes<NavIconHandle>
 >;
 
-export type NavItemId = "ticket" | "inventory" | "games";
+export type NavItemId = "ticket" | "dashboard" | "inventory" | "games";
 
 export type NavItem = {
   id: NavItemId;
@@ -28,7 +29,7 @@ export type NavItem = {
   isActive: (pathname: string) => boolean;
 };
 
-// Fixed order: Your ticket · What's in stock · Games. See docs/NAVIGATION.md.
+// Fixed order: Your ticket · Dashboard · What's in stock · Games. See docs/NAVIGATION.md.
 export const navItems: NavItem[] = [
   {
     id: "ticket",
@@ -36,6 +37,13 @@ export const navItems: NavItem[] = [
     href: "/",
     icon: TicketIcon,
     isActive: (pathname) => pathname === "/",
+  },
+  {
+    id: "dashboard",
+    labelKey: "navDashboard",
+    href: "/display",
+    icon: LayoutDashboardIcon,
+    isActive: (pathname) => pathname === "/display",
   },
   {
     id: "inventory",

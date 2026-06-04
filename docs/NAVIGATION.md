@@ -1,17 +1,16 @@
 # Navigation System
 
-**Status:** Design direction approved; implementation pending.
-**Scope:** Persistent bottom tab bar across the three top-level public surfaces.
-**Last updated:** 2026-05-25
+**Status:** Shipped; current public navigation source of truth.
+**Scope:** Persistent bottom tab bar across the four top-level public surfaces.
+**Last updated:** 2026-06-04
 
 ---
 
 ## Purpose
 
-Replace the ad-hoc button cluster (currently stacked at the bottom of the ticket
-page) with a single persistent navigation system shared across all three
-top-level destinations. One nav model, two presentations (desktop dock + mobile
-tab bar).
+Replace the ad-hoc button cluster with a single persistent navigation system
+shared across all four top-level public destinations. One nav model, two
+presentations (desktop dock + mobile tab bar).
 
 This document captures the agreed design direction so implementation stays
 consistent. It is the source of truth for the nav bar; update it alongside any
@@ -36,21 +35,23 @@ Two inputs informed this direction:
 
 ## Information Architecture
 
-Three destinations, in this fixed order:
+Four destinations, in this fixed order:
 
-| # | Label             | Route      | Icon            | Icon source                          |
-|---|-------------------|------------|-----------------|--------------------------------------|
-| 1 | Your ticket       | `/`        | `ticket`        | New imperative-ref icon (ticket-rip) |
-| 2 | What's in stock   | `/inventory` | `shopping-cart` | New imperative-ref icon (cart-hop)   |
-| 3 | Games             | `/arcade`  | `gamepad-2`     | New imperative-ref icon (controller) |
+| # | Label             | Route        | Icon               | Icon source |
+|---|-------------------|--------------|--------------------|-------------|
+| 1 | Your ticket       | `/`          | `ticket`           | Imperative-ref icon (ticket-rip) |
+| 2 | Dashboard         | `/display`   | `layout-dashboard` | Local animate-ui icon wrapped by the nav imperative-ref adapter |
+| 3 | What's in stock   | `/inventory` | `shopping-cart`    | Imperative-ref icon (cart-hop) |
+| 4 | Games             | `/arcade`    | `gamepad-2`        | Imperative-ref icon (controller) |
 
-**Labels are friendly, not formal.** Keep "Your ticket" / "What's in stock" /
-"Games". Do **not** shorten "What's in stock" to "Inventory" in the visible
-label.
+**Labels are friendly, not formal.** Keep "Your ticket" / "Dashboard" /
+"What's in stock" / "Games". Do **not** shorten "What's in stock" to
+"Inventory" in the visible label.
 
 ### Route notes
-- `/` (homepage) and `/inventory` are top-level App Router routes
-  (`src/app/page.tsx`, `src/app/inventory/`).
+- `/` is the personalized homepage (`src/app/page.tsx`).
+- `/display` is the large public display board (`src/app/display/`).
+- `/inventory` is the public stock browser (`src/app/inventory/`).
 - `/arcade` lives in the `(arcade)` route group
   (`src/app/(arcade)/arcade/page.tsx`). Linking to it from the nav crosses the
   core↔arcade boundary — see [Arcade Guardrails](#arcade-guardrails).
@@ -61,6 +62,8 @@ label.
 
 ### Desktop — floating capsule dock
 - Centered horizontally, fixed ~36px from the bottom of the viewport.
+- Exception: `/display` lowers the desktop dock closer to the viewport bottom so
+  the dense public board remains readable in the initial viewport.
 - Sits *above* page content; always visible regardless of scroll.
 - Full-pill shape, subtle vertical gradient, layered shadow, hairline lit edge.
 
@@ -117,8 +120,11 @@ imperative-ref icon already in LOTTO. New nav icons follow it exactly:
 flag (suppresses self-hover when a parent holds the ref), `motion` elements
 bound to a single `useAnimation()` control with `normal` / `animate` variants.
 
-All three nav icons are new files under `src/components/lucide-animated/`:
-`ticket.tsx`, `cart.tsx` (or `shopping-cart.tsx`), `gamepad-2.tsx`.
+Core nav icons live under `src/components/lucide-animated/`: `ticket.tsx`,
+`cart.tsx`, `layout-dashboard.tsx`, and `gamepad-2.tsx`. The Dashboard icon
+uses `src/components/animate-ui/icons/layout-dashboard.tsx` as its native
+animate-ui implementation, then wraps it in the imperative-ref adapter so the
+tab bar can drive it the same way as the other icons.
 
 > **Geometry rule:** copy the resting SVG geometry verbatim from
 > `node_modules/lucide-react/dist/esm/icons/<name>.js` (`__iconNode`) so each
@@ -131,7 +137,8 @@ Each icon's motion is a *signal of interactivity*, themed to the destination:
 
 | Icon | Resting | Animated intent |
 |------|---------|-----------------|
-| **Ticket** (`/new`) | Standard Lucide ticket with perforation line | **Tears in two.** Split at the perforation; translate the two halves apart by a small delta (e.g. ±1.5–2px on X) with a slight opposing rotation, then spring back to `normal`. Borrow the spring tuning from `archive.tsx` (`type: "spring", stiffness: 200, damping: 25`). |
+| **Ticket** (`/`) | Standard Lucide ticket with perforation line | **Tears in two.** Split at the perforation; translate the two halves apart by a small delta (e.g. ±1.5–2px on X) with a slight opposing rotation, then spring back to `normal`. Borrow the spring tuning from `archive.tsx` (`type: "spring", stiffness: 200, damping: 25`). |
+| **Dashboard** (`/display`) | Standard Lucide layout-dashboard tile geometry | **Tiles pulse in sequence.** The four dashboard tiles scale/fade with a short stagger, then settle back to the Lucide resting shape. |
 | **Cart** (`/inventory`) | Standard Lucide shopping-cart | **Scale + hop.** `scale: 1 → 1.1` with a one-shot `y` bounce (`[0, -5, 0]`), `ease: "easeInOut"`, ~0.3–0.4s. (Matches the CartIcon reference in the brief.) |
 | **Gamepad-2** (`/arcade`) | Standard Lucide gamepad-2 | **Controller wiggle + control fade.** The body gently translates back and forth (small X oscillation); the d-pad and face buttons fade out then fade back in (`opacity` + light spring), staggered. Compose a transform loop on a `motion.g` for the body with per-element `opacity` variants for the controls. |
 
@@ -155,13 +162,13 @@ to avoid repetitive distraction (ICON_ANIMATIONS.md Rule 3 exception). The nav
 bar is likewise persistent, so we adopt a measured middle ground:
 
 > **On first mount, only the icon for the currently-active route animates.**
-> The other two tabs stay at rest until hovered/tapped. Client-side tab
-> navigation between the three pages does **not** replay the mount animation.
+> The other tabs stay at rest until hovered/tapped. Client-side tab navigation
+> between the public pages does **not** replay the mount animation.
 
 This honors the "animate on render" request (the active destination gets a
 subtle entrance) while respecting FEED's anti-repetition principle (the bar
-doesn't erupt into three simultaneous animations on every load, and route
-changes don't re-trigger it).
+doesn't erupt into simultaneous animations on every load, and route changes
+don't re-trigger it).
 
 **Implementation note:** the parent tab-bar component holds a ref to each icon.
 On initial mount it calls `startAnimation()` on the active icon's ref only,
@@ -174,57 +181,66 @@ stuck-state pitfall that `animate`-prop native icons have.
 
 ## Component Architecture
 
-### Proposed structure
+### Current structure
 ```
 src/components/
   navigation/
     bottom-tab-bar.tsx      # presentational: renders tabs, owns icon refs,
                             # active-on-mount effect, hover/tap → ref calls
-    nav-items.ts            # the three-item config (label, href, icon, matcher)
+    nav-items.ts            # the four-item config (label, href, icon, matcher)
+  animate-ui/
+    icons/
+      layout-dashboard.tsx  # native animate-ui Dashboard icon
   lucide-animated/
     ticket.tsx              # new imperative-ref icon (ticket-rip)
+    layout-dashboard.tsx    # imperative-ref adapter around animate-ui icon
     cart.tsx                # new imperative-ref icon (cart-hop)
     gamepad-2.tsx           # new imperative-ref icon (controller)
+src/arcade/
+  components/
+    arcade-bottom-tab-bar.tsx
+    icons/
+      dashboard-icon.tsx
 ```
 
 ### Placement — there is no shared `(core)` layout yet
-LOTTO's three destinations do **not** currently share a layout wrapper:
+LOTTO's public destinations do **not** currently share one layout wrapper:
 - `src/app/layout.tsx` — root (global providers)
 - `src/app/(arcade)/arcade/layout.tsx` — arcade-only
-- `/new` and `/inventory` have no intermediate layout.
+- `/`, `/display`, and `/inventory` have no intermediate layout.
 
 The README's open question ("does a shared Layout exist? the tab bar should
-live there") therefore resolves to: **no — one must be introduced.**
+live there") therefore resolves to: **no — one must be introduced before the
+core pages can share a layout-level bar.**
 
-**Key structural fact:** the three destinations do not share a route subtree.
-`/new` and `/inventory` are top-level; `/arcade` lives in the `(arcade)` group
-with its own layout (deliberately walled off per the guardrails). A Next.js
-layout only persists across navigation *within its own segment*, so a
-`(core)/layout.tsx` covering `/new` + `/inventory` would still **remount** the
-bar when the user crosses into `/arcade`. A shared layout can wrap at most two
-of the three destinations — never all three — unless arcade is merged into
-core, which the guardrails forbid. This mutes the main architectural payoff of
-introducing `(core)` now.
+**Key structural fact:** the public destinations do not share a route subtree.
+`/`, `/display`, and `/inventory` are top-level; `/arcade` lives in the
+`(arcade)` group with its own layout (deliberately walled off per the
+guardrails). A Next.js layout only persists across navigation *within its own
+segment*, so a `(core)/layout.tsx` covering the three core public pages would
+still **remount** the bar when the user crosses into `/arcade`. A shared layout
+can wrap the core public pages, but never Arcade, unless Arcade is merged into
+core, which the guardrails forbid.
 
 Options:
 
 1. **Render the bar from each destination page** — import `<BottomTabBar />`
-   into `/new`, `/inventory`, and the arcade *index* page (not the game pages).
-   Lowest blast radius, respects the arcade boundary, satisfies
-   hide-during-gameplay for free, leaves the fragile `/new` route untouched.
-2. **Introduce a `(core)` route group + layout** for `/new` and `/inventory`
+   into `/`, `/display`, and `/inventory`, and render the arcade-styled variant
+   on the arcade *index* page (not the game pages). Lowest blast radius,
+   respects the arcade boundary, and satisfies hide-during-gameplay for free.
+2. **Introduce a `(core)` route group + layout** for `/`, `/display`, and
+   `/inventory`
    (aligns with the `AGENTS.md` future direction of `src/app/(core)/*`), and
    add the bar to the arcade index separately. More structural; requires moving
-   `/new` + `/inventory` directories; only buys persistence for the
-   `/new`↔`/inventory` pair (see the structural fact above).
+   the core route directories; only buys persistence among core routes (see the
+   structural fact above).
 
 **Recommendation: Option 1 (per-page) for the `/inventory` build-out.** Because
 the arcade boundary prevents true cross-destination persistence regardless,
-`(core)` would be a routing refactor for a partial benefit — and it would touch
-`/new`, the most fragile route, while blocking the near-term inventory work.
-Extract to `(core)/layout.tsx` later, as a deliberate routing pass, once all
-three destinations consume the bar identically and we're already moving core
-routes into `(core)` per the roadmap.
+`(core)` would be a routing refactor for a partial benefit and should be kept
+for a deliberate route-organization pass.
+Extract to `(core)/layout.tsx` later, as a deliberate routing pass, once the
+core public routes are already moving into `(core)` per the roadmap.
 
 **Per-page mount caveat (motion):** per-page rendering remounts the bar on every
 navigation, so the active-tab-only mount animation would otherwise replay on
@@ -239,12 +255,13 @@ remounts the bar, so the session guard is needed under both options.)
 The bar needs to know the current route to set the active state. In the App
 Router, use `usePathname()` and match each item's `href`:
 - `/` → tab 1
-- `/inventory` → tab 2
-- `/arcade` (and `/arcade/*` subroutes) → tab 3
+- `/display` → tab 2
+- `/inventory` → tab 3
+- `/arcade` (and `/arcade/*` subroutes) → tab 4
 
 Each `nav-items.ts` entry should carry a matcher (exact for `/`,
-`/inventory`; prefix for `/arcade`) so deep arcade routes still light the Games
-tab.
+`/display`, and `/inventory`; prefix for `/arcade`) so deep arcade routes still
+light the Games tab.
 
 ---
 
@@ -256,9 +273,10 @@ is acceptable (it's navigation, not gameplay integration), but observe:
 
 - The bar must **not** pull arcade gameplay state/components into `/` or
   `src/components/readonly-display.tsx`.
-- Keep nav components under `src/components/navigation/` (core), and the icons
-  under the shared `src/components/lucide-animated/`. Do not place nav code
-  under `src/arcade/*`.
+- Keep the core nav model and core icons under `src/components/navigation/`,
+  `src/components/lucide-animated/`, and `src/components/animate-ui/icons/`.
+- Keep the arcade-styled nav presentation and pixel icons under `src/arcade/*`
+  so Arcade preserves its separate visual language.
 - When the bar renders on an arcade page, it is a thin link surface only.
 
 **Decided: the bar is hidden during active gameplay.** It renders on the arcade
@@ -271,14 +289,15 @@ deliberately distinct **8-bit pixel-art** UI (`@/arcade/ui/8bit`, `arcade-retro`
 `arcade-pixel-grid`), so the core glass bar would clash and brush the guardrail
 ("separated in code *and UX*; don't reuse raffle UI for Arcade"). Decision:
 **option (a) — a separate arcade-styled variant.**
-`src/arcade/components/arcade-bottom-tab-bar.tsx` reuses the same three
+`src/arcade/components/arcade-bottom-tab-bar.tsx` reuses the same four
 destinations and `nav*` labels but renders pixel-art icons
-(`src/arcade/components/icons/{receipt,shopping-cart,gaming}-icon.tsx`) and
-arcade styling (arcade CSS variables, control-dock border/neon-shadow pattern),
-inheriting the arcade font and vars from the enclosing `.arcade-scope`. It is
-rendered only on the `/arcade` index (per-page), never on the game routes —
-those keep their own Back control. The core `BottomTabBar` is **not** reused on
-arcade, keeping the two sections visually and structurally separate.
+(`src/arcade/components/icons/{receipt,dashboard,shopping-cart,gaming}-icon.tsx`)
+and arcade styling (arcade CSS variables, control-dock border/neon-shadow
+pattern), inheriting the arcade font and vars from the enclosing
+`.arcade-scope`. It is rendered only on the `/arcade` index (per-page), never on
+the game routes — those keep their own Back control. The core `BottomTabBar` is
+**not** reused on arcade, keeping the two sections visually and structurally
+separate.
 
 ---
 
@@ -317,10 +336,11 @@ should follow once the bar is live:
 |----------|--------|-----------|
 | Nav pattern | Bottom tab bar (Option B) | Works desktop + mobile from one model; keeps centered marquee header; always visible |
 | Inventory icon | **Cart** (`shopping-cart`) | User selection (over the handoff's box suggestion) |
+| Dashboard tab | **Route `/display` with `layout-dashboard` icon** | Gives clients and staff a direct public-board entry point between ticket lookup and inventory |
 | Icon system | Imperative-ref (`lucide-animated/`) | Trigger zone is the whole tab, larger than the icon; parent holds refs for mount animation |
 | Render trigger | **Active tab only, on mount** | Honors "animate on render" while respecting FEED's anti-repetition rule for persistent nav |
 | Gameplay visibility | **Hidden during active gameplay** | Renders on `/arcade` index, not on `/arcade/brick-mayhem`, `/arcade/snake`, or `/arcade/zombie-attack`; automatic under per-page placement |
-| Shared layout | **Per-page (Option 1)** now; `(core)` later | Arcade boundary prevents full cross-destination persistence anyway; avoids refactoring the fragile `/new` route and unblocks inventory work |
+| Shared layout | **Per-page (Option 1)** now; `(core)` later | Arcade boundary prevents full cross-destination persistence anyway; avoids route-group churn while the public surfaces are still evolving |
 
 ---
 
@@ -328,6 +348,8 @@ should follow once the bar is live:
 
 - [x] Create `ticket.tsx`, `cart.tsx`, `gamepad-2.tsx` in `lucide-animated/`
       (geometry verbatim from `lucide-react`; animations per design intent).
+- [x] Add Dashboard (`/display`) using a local animate-ui
+      `layout-dashboard` icon wrapped by an imperative-ref adapter.
 - [x] Build `nav-items.ts` (label, href, icon, route matcher).
 - [x] Build `bottom-tab-bar.tsx`: desktop dock + mobile bar presentations,
       `usePathname()` active detection, icon refs, active-on-mount effect
@@ -335,14 +357,16 @@ should follow once the bar is live:
       hover/tap → ref calls.
 - [x] Wire `prefers-reduced-motion` guard.
 - [x] Render the bar on `/inventory` first (Option 1). Verified: SSR renders the
-      nav landmark, active-tab marker, all three tab routes, and localized
+      nav landmark, active-tab marker, all four tab routes, and localized
       labels (HTTP 200, `tsc`/ESLint clean). **Animation motion still needs a
       human glance in-browser** — especially the ticket clip-path rip.
-- [x] Extended the bar to `/new`: removed the old "See what's in stock" and
+- [x] Extended the bar to `/`: removed the old "See what's in stock" and
       "PLAY GAMES" buttons from the personalized ticket-card cluster (now in the
       bar) plus the orphaned arcade frame/font helpers, kept "Enter a new ticket
       number" as a standalone button, and added bottom clearance on the
       personalized display.
+- [x] Extended the bar to `/display` with bottom clearance so the fixed bar does
+      not cover the public board.
 - [x] Added an arcade-styled variant (`ArcadeBottomTabBar`) on the `/arcade`
       index only — pixel-art icons + arcade styling, absent on the game routes
       (verified by SSR: bar present on `/arcade`, absent on `/arcade/snake`,
@@ -350,5 +374,5 @@ should follow once the bar is live:
 - [x] Removed the `/inventory` top-level BACK button (the "Your ticket" tab is
       the return path).
 - [x] Decided to keep "Enter a new ticket number" as a standalone button on
-      `/new` rather than relocating it into the YOUR TICKET card.
+      `/` rather than relocating it into the YOUR TICKET card.
 - [x] Update `CHANGELOG.md`.

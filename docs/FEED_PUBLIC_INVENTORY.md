@@ -325,11 +325,13 @@ Inventory lookup should remain separate from raffle/display features:
 - Do not integrate inventory into Arcade routes.
 - A link from the public board top bar to `/inventory` is acceptable if it uses
   existing public navigation patterns and does not disrupt queue lookup.
-- `/new` now includes a `See what's in stock` entry point to `/inventory` in
-  the existing personalized-card action stack, between `Enter a new ticket
-  number` and `PLAY GAMES`, because the earlier personalized-homepage blockers
-  have been resolved:
-  - Translated public text on `/new` now uses TextScramble instead of the
+- The public bottom navigation now owns top-level client movement:
+  **Your ticket** (`/`), **Dashboard** (`/display`), **What's in stock**
+  (`/inventory`), and **Games** (`/arcade`). Do not reintroduce separate
+  inventory/arcade action buttons inside the personalized ticket-card action
+  stack.
+- The earlier personalized-homepage blockers have been resolved:
+  - Translated public text on `/` now uses TextScramble instead of the
     retired aggressive morph effect.
   - Ticket selection is pantry-day/range aware and can be changed through the
     personalized ticket card.

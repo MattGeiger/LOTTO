@@ -27,6 +27,7 @@ export function BottomTabBar() {
   const { language, t } = useLanguage();
   const iconRefs = React.useRef<Record<string, NavIconHandle | null>>({});
   const reducedMotionRef = React.useRef(false);
+  const isDisplayRoute = pathname === "/display";
 
   // Active-tab-only, once-per-page-load mount animation.
   React.useEffect(() => {
@@ -44,7 +45,12 @@ export function BottomTabBar() {
     <nav
       aria-label={t("navPrimaryLabel")}
       dir={isRTL(language) ? "rtl" : "ltr"}
-      className="fixed inset-x-0 bottom-0 z-40 flex justify-center sm:bottom-9 sm:px-4"
+      className={cn(
+        "fixed inset-x-0 bottom-0 z-40 flex justify-center sm:px-4",
+        // The public board has dense below-the-fold content; keep its dock low
+        // so the initial viewport remains readable.
+        isDisplayRoute ? "sm:bottom-2" : "sm:bottom-9",
+      )}
     >
       <ul
         className={cn(

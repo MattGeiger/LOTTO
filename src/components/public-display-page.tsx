@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ReadOnlyDisplay } from "@/components/readonly-display";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { Search } from "@/components/animate-ui/icons/search";
@@ -98,6 +99,7 @@ export function PublicDisplayPage() {
         <ThemeSwitcher />
       </div>
       <ReadOnlyDisplay ticketSearchRequest={searchSubmission ?? undefined} onStateChange={setLatestState} />
+      <BottomTabBar />
     </div>
   );
 }

@@ -13,6 +13,7 @@ describe("ArcadeHomePage", () => {
     );
 
     expect(screen.getAllByRole("link", { name: "PLAY" })).toHaveLength(2);
+    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/display");
     expect(screen.getByRole("link", { name: "Games" })).toHaveAttribute("href", "/arcade");
     expect(screen.getByText("BRICK MAYHEM")).toBeInTheDocument();
     expect(screen.queryByText("Day of the Dead")).not.toBeInTheDocument();
