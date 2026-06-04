@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PublicDisplayPage } from "@/components/public-display-page";
+import type { RaffleState } from "@/lib/state-types";
 
 // --- Mocks ---------------------------------------------------------------
 
@@ -19,14 +20,30 @@ vi.mock("@/components/theme-switcher", () => ({
   ThemeSwitcher: () => <div data-testid="theme-switcher" />,
 }));
 
+const useDisplayLanguageRotationMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@/hooks/use-display-language-rotation", () => ({
+  useDisplayLanguageRotation: useDisplayLanguageRotationMock,
+}));
+
 vi.mock("@/components/language-switcher", () => ({
-  LanguageSwitcher: () => <div data-testid="language-switcher" />,
+  LanguageSwitcher: ({
+    onLanguageChange,
+  }: {
+    onLanguageChange?: (language: "vi") => void;
+  }) => (
+    <button type="button" data-testid="language-switcher" onClick={() => onLanguageChange?.("vi")}>
+      Language switcher
+    </button>
+  ),
 }));
 
 let capturedSearchRequest: unknown = undefined;
+let capturedOnStateChange: ((state: RaffleState) => void) | undefined = undefined;
 vi.mock("@/components/readonly-display", () => ({
   ReadOnlyDisplay: (props: Record<string, unknown>) => {
     capturedSearchRequest = props.ticketSearchRequest;
+    capturedOnStateChange = props.onStateChange as typeof capturedOnStateChange;
     return <div data-testid="readonly-display" />;
   },
 }));
@@ -64,11 +81,21 @@ function getSearchInput() {
   return screen.getByLabelText("Search ticket number") as HTMLInputElement;
 }
 
+const stateWithRotationEnabled = {
+  displayLanguageRotation: {
+    enabled: true,
+    languages: ["en", "es"],
+    intervalSeconds: 120,
+  },
+} as RaffleState;
+
 // --- Tests ----------------------------------------------------------------
 
 describe("PublicDisplayPage", () => {
   beforeEach(() => {
     capturedSearchRequest = undefined;
+    capturedOnStateChange = undefined;
+    useDisplayLanguageRotationMock.mockClear();
   });
 
   it("renders search input, language switcher, and theme switcher", () => {
@@ -81,6 +108,37 @@ describe("PublicDisplayPage", () => {
   it("renders the ReadOnlyDisplay component", () => {
     renderPage();
     expect(screen.getByTestId("readonly-display")).toBeInTheDocument();
+  });
+
+  it("keeps the language switcher visible when admin rotation is enabled", () => {
+    renderPage();
+
+    act(() => {
+      capturedOnStateChange?.(stateWithRotationEnabled);
+    });
+
+    expect(screen.getByTestId("language-switcher")).toBeVisible();
+    expect(screen.getByTestId("language-switcher").parentElement).not.toHaveClass("invisible");
+  });
+
+  it("pauses display rotation for the browser session after a manual language choice", async () => {
+    renderPage();
+
+    act(() => {
+      capturedOnStateChange?.(stateWithRotationEnabled);
+    });
+    expect(useDisplayLanguageRotationMock).toHaveBeenLastCalledWith(
+      stateWithRotationEnabled.displayLanguageRotation,
+      { paused: false },
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId("language-switcher"));
+
+    expect(useDisplayLanguageRotationMock).toHaveBeenLastCalledWith(
+      stateWithRotationEnabled.displayLanguageRotation,
+      { paused: true },
+    );
   });
 
   it("filters non-digit characters from input", async () => {

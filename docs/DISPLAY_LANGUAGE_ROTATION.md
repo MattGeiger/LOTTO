@@ -59,6 +59,9 @@ type DisplayLanguageRotation = {
   not restart the cycle. A single language is a static pick (no timer). When
   rotation is disabled, cleared, or has no languages, an already-open board
   returns to English.
+- The display's `LanguageSwitcher` remains visible during rotation. If someone
+  manually chooses a language in that browser session, automatic rotation pauses
+  for that session and the manual choice stays in place until reload.
 - Each `setLanguage` automatically triggers the board's existing
   `ScrambleOnLanguageChange` transition and the `isRTL` direction flip — so
   rotating into Arabic/Farsi flips the board to right-to-left for free.
@@ -78,8 +81,9 @@ that shared preference or affecting other routes:
 - The rotation hook is mounted **only by `PublicDisplayPage`**, so the
   personalized homepage (`/`) — where each client picks their own language in the
   onboarding modal — is unaffected.
-- While rotation is active, the board's manual `LanguageSwitcher` is hidden
-  (space preserved) since auto-rotation would override a manual pick.
+- The board's manual `LanguageSwitcher` stays available even while rotation is
+  active. A manual pick pauses automatic rotation for that browser session only;
+  it does not change the Admin setting or write the shared preference.
 
 ## Operational note
 

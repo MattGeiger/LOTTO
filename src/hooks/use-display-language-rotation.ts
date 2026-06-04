@@ -18,7 +18,15 @@ import type { DisplayLanguageRotation } from "@/lib/state-types";
  * client their own language is content/accessibility, not decoration. Only the
  * scramble transition (governed elsewhere) is motion.
  */
-export function useDisplayLanguageRotation(config: DisplayLanguageRotation | null) {
+type DisplayLanguageRotationOptions = {
+  /** Session-local manual override: stop rotation without resetting language. */
+  paused?: boolean;
+};
+
+export function useDisplayLanguageRotation(
+  config: DisplayLanguageRotation | null,
+  { paused = false }: DisplayLanguageRotationOptions = {},
+) {
   const { setLanguage } = useLanguage();
 
   const enabled = config?.enabled ?? false;
@@ -27,9 +35,11 @@ export function useDisplayLanguageRotation(config: DisplayLanguageRotation | nul
 
   // Stable signature so the timer only (re)starts when the config actually
   // changes — not on every poll, which hands back a fresh object each time.
-  const signature = `${enabled}|${languages.join(",")}|${intervalSeconds}`;
+  const signature = `${paused}|${enabled}|${languages.join(",")}|${intervalSeconds}`;
 
   React.useEffect(() => {
+    if (paused) return;
+
     if (!enabled || languages.length === 0) {
       setLanguage("en");
       return;

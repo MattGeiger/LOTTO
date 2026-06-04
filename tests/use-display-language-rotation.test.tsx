@@ -1,4 +1,5 @@
-import { act, render } from "@testing-library/react";
+import * as React from "react";
+import { act, fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LanguageProvider, useLanguage } from "@/contexts/language-context";
@@ -16,6 +17,27 @@ function renderHarness(config: DisplayLanguageRotation | null) {
     <LanguageProvider persist={false}>
       <Harness config={config} />
     </LanguageProvider>,
+  );
+}
+
+function ManualPauseHarness({ config }: { config: DisplayLanguageRotation | null }) {
+  const [paused, setPaused] = React.useState(false);
+  const { language, setLanguage } = useLanguage();
+  useDisplayLanguageRotation(config, { paused });
+
+  return (
+    <>
+      <span data-testid="lang">{language}</span>
+      <button
+        type="button"
+        onClick={() => {
+          setLanguage("vi");
+          setPaused(true);
+        }}
+      >
+        Manual Vietnamese
+      </button>
+    </>
   );
 }
 
@@ -140,5 +162,30 @@ describe("useDisplayLanguageRotation", () => {
       vi.advanceTimersByTime(60_000);
     });
     expect(getByTestId("lang").textContent).toBe("en");
+  });
+
+  it("stops rotating without resetting language when paused by a manual session choice", () => {
+    const { getByTestId, getByRole } = render(
+      <LanguageProvider persist={false}>
+        <ManualPauseHarness
+          config={{
+            enabled: true,
+            languages: ["es", "ar"],
+            intervalSeconds: 60,
+          }}
+        />
+      </LanguageProvider>,
+    );
+    expect(getByTestId("lang").textContent).toBe("es");
+
+    act(() => {
+      fireEvent.click(getByRole("button", { name: "Manual Vietnamese" }));
+    });
+    expect(getByTestId("lang").textContent).toBe("vi");
+
+    act(() => {
+      vi.advanceTimersByTime(180_000);
+    });
+    expect(getByTestId("lang").textContent).toBe("vi");
   });
 });

@@ -5,6 +5,10 @@
 - **Admin "Rotate display languages" interval:** replaced the freeform minutes
   input with a dropdown from 1 to 10 minutes per language, with the interval
   label folded into each option.
+- **Display language switcher during rotation:** the `/display` language
+  switcher now stays visible while Admin rotation is enabled. A manual language
+  choice pauses automatic rotation for that browser session without changing the
+  saved Admin setting.
 - **Display language rotation validation:** direct API writes now reject
   duplicate languages and intervals outside 1-10 minutes, and normalize language
   order before persistence.
