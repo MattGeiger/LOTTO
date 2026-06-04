@@ -2593,7 +2593,7 @@ const AdminPage = () => {
                 non-English speakers can follow along without tapping anything.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-1 flex-col gap-4">
               <DisplayLanguageRotationEditor
                 value={pendingRotation}
                 onChange={setPendingRotation}
@@ -2602,6 +2602,7 @@ const AdminPage = () => {
               <Button
                 variant="default"
                 size="sm"
+                className="mt-auto self-start"
                 onClick={handleSaveRotation}
                 disabled={loading || nonDrawActionPending}
               >
