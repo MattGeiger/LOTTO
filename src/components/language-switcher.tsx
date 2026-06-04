@@ -27,7 +27,12 @@ const languageNames: Record<Language, string> = {
 
 export const LANGUAGE_SWITCHER_TRIGGER_ID = "language-switcher-trigger";
 
-export function LanguageSwitcher({ enableHaptics = false }: { enableHaptics?: boolean }) {
+type LanguageSwitcherProps = {
+  enableHaptics?: boolean;
+  onLanguageChange?: (language: Language) => void;
+};
+
+export function LanguageSwitcher({ enableHaptics = false, onLanguageChange }: LanguageSwitcherProps) {
   const { language, setLanguage } = useLanguage();
   const { trigger } = useAppHaptics();
 
@@ -51,7 +56,9 @@ export function LanguageSwitcher({ enableHaptics = false }: { enableHaptics?: bo
             if (val === language) {
               return;
             }
-            setLanguage(val as Language);
+            const nextLanguage = val as Language;
+            setLanguage(nextLanguage);
+            onLanguageChange?.(nextLanguage);
             if (enableHaptics) {
               trigger("uiSelect");
             }
