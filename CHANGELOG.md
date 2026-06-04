@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.17.1] - 2026-06-04
+### Fixed
+- **Display QR default target:** the QR code on the `/display` board now falls
+  back to the site homepage (`/`, the personalized onboarding) instead of the
+  board's own URL, so scanning sends clients somewhere useful rather than back to
+  the screen they are already looking at. A custom Admin display URL still
+  overrides the default.
+
+### Changed
+- **Admin "Rotate display languages" card** now follows the established admin UX
+  patterns: the enable toggle reuses the bordered control treatment from "Order
+  mode" with a non-redundant label (no longer repeating the card title and
+  description), the language picker uses plain checkboxes (not bordered chips),
+  and the card sits in the settings grid beside "Set operating hours" instead of
+  a standalone full-width row.
+
 ## [1.17.0] - 2026-06-04
 ### Added
 - **Rotating language mode for the Display board:** the Admin page gains a

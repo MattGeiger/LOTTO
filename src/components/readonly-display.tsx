@@ -324,8 +324,10 @@ export const ReadOnlyDisplay = ({
     if (!showQrCode) return;
     // The QR target comes from the live polled state, so an admin change to the
     // display URL propagates to the QR on the next poll without a reload. Falls
-    // back to the display's own URL until a custom URL is configured.
-    const target = state?.displayUrl || (typeof window !== "undefined" ? window.location.href : "");
+    // back to the site homepage (origin, i.e. "/") rather than the board's own
+    // URL, so scanning sends clients to the personalized onboarding instead of
+    // back to the board they are already looking at.
+    const target = state?.displayUrl || (typeof window !== "undefined" ? `${window.location.origin}/` : "");
     const canvas = qrCanvasRef.current;
     if (!canvas) return;
     QRCode.toCanvas(canvas, target, { width: 150, margin: 1 }).catch(() => {

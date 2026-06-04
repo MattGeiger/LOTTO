@@ -2581,9 +2581,7 @@ const AdminPage = () => {
               </AlertDialog>
             </CardContent>
           </Card>
-        </div>
 
-        <div className="grid gap-6">
           <Card className="bg-card space-y-4">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
