@@ -294,6 +294,24 @@ describe("API /api/state", () => {
       expect(stateManager.setDisplayLanguageRotation).toHaveBeenCalledWith(config);
     });
 
+    it("normalizes setDisplayLanguageRotation languages into canonical order", async () => {
+      const { stateManager } = await import("@/lib/state-manager");
+      const { POST } = await import("@/app/api/state/route");
+      const response = await POST(
+        makePostRequest({
+          action: "setDisplayLanguageRotation",
+          config: { enabled: true, languages: ["ar", "en", "es"], intervalSeconds: 120 },
+        }),
+      );
+
+      expect(response.status).toBe(200);
+      expect(stateManager.setDisplayLanguageRotation).toHaveBeenCalledWith({
+        enabled: true,
+        languages: ["en", "es", "ar"],
+        intervalSeconds: 120,
+      });
+    });
+
     it("accepts a null setDisplayLanguageRotation config (disable)", async () => {
       const { stateManager } = await import("@/lib/state-manager");
       const { POST } = await import("@/app/api/state/route");
@@ -323,6 +341,28 @@ describe("API /api/state", () => {
         makePostRequest({
           action: "setDisplayLanguageRotation",
           config: { enabled: true, languages: ["en"], intervalSeconds: 99_999 },
+        }),
+      );
+      expect(response.status).toBe(400);
+    });
+
+    it("rejects setDisplayLanguageRotation with an interval below one minute", async () => {
+      const { POST } = await import("@/app/api/state/route");
+      const response = await POST(
+        makePostRequest({
+          action: "setDisplayLanguageRotation",
+          config: { enabled: true, languages: ["en"], intervalSeconds: 59 },
+        }),
+      );
+      expect(response.status).toBe(400);
+    });
+
+    it("rejects setDisplayLanguageRotation with duplicate languages", async () => {
+      const { POST } = await import("@/app/api/state/route");
+      const response = await POST(
+        makePostRequest({
+          action: "setDisplayLanguageRotation",
+          config: { enabled: true, languages: ["en", "en"], intervalSeconds: 120 },
         }),
       );
       expect(response.status).toBe(400);

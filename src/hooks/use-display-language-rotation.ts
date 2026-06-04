@@ -30,7 +30,10 @@ export function useDisplayLanguageRotation(config: DisplayLanguageRotation | nul
   const signature = `${enabled}|${languages.join(",")}|${intervalSeconds}`;
 
   React.useEffect(() => {
-    if (!enabled || languages.length === 0) return;
+    if (!enabled || languages.length === 0) {
+      setLanguage("en");
+      return;
+    }
 
     let index = 0;
     // Start the cycle at the first selected language immediately.

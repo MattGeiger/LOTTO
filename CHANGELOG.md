@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+### Changed
+- **Admin "Rotate display languages" interval:** replaced the freeform minutes
+  input with a dropdown from 1 to 10 minutes per language, with the interval
+  label folded into each option.
+- **Display language rotation validation:** direct API writes now reject
+  duplicate languages and intervals outside 1-10 minutes, and normalize language
+  order before persistence.
+
+### Fixed
+- **Display language rotation disable behavior:** an already-open `/display`
+  board now returns to English when rotation is disabled or cleared.
+
 ## [1.17.2] - 2026-06-04
 ### Changed
 - **Admin "Rotate display languages" card:** bottom-left aligned the "Save

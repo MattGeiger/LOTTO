@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { stateManager, type Mode } from "@/lib/state-manager";
-import { LANGUAGE_CODES } from "@/lib/languages";
+import { LANGUAGE_CODES, LANGUAGE_OPTIONS } from "@/lib/languages";
 import { isUserInputError } from "@/lib/user-input-error";
 
 export const runtime = "nodejs";
@@ -45,7 +45,23 @@ const displayLanguageRotationSchema = z
   .object({
     enabled: z.boolean(),
     languages: z.array(z.enum(LANGUAGE_CODES)).min(1).max(LANGUAGE_CODES.length),
-    intervalSeconds: z.number().int().min(5).max(3600),
+    intervalSeconds: z.number().int().min(60).max(600),
+  })
+  .superRefine((config, ctx) => {
+    if (new Set(config.languages).size !== config.languages.length) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["languages"],
+        message: "Languages must be unique",
+      });
+    }
+  })
+  .transform((config) => {
+    const selected = new Set(config.languages);
+    return {
+      ...config,
+      languages: LANGUAGE_OPTIONS.map((option) => option.code).filter((code) => selected.has(code)),
+    };
   })
   .nullable();
 
