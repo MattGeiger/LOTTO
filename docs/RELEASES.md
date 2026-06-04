@@ -1,3 +1,15 @@
+# William Temple House Digital Raffle System v1.17.1
+
+**Release Date:** June 4, 2026
+
+A small follow-up to the language-rotation release: the QR code on the public
+board now sends people to the app's home screen — where they can choose a
+language and find their ticket — instead of back to the board itself. The new
+"Rotate display languages" control in Admin was also tidied to match the rest of
+the dashboard.
+
+---
+
 # William Temple House Digital Raffle System v1.17.0
 
 **Release Date:** June 4, 2026

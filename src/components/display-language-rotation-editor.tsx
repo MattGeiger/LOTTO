@@ -60,43 +60,42 @@ export function DisplayLanguageRotationEditor({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-0.5">
-          <Label htmlFor="rotation-enabled">Rotate display languages</Label>
+      {/* Enable toggle — mirrors the "Order mode" toggle pattern elsewhere in admin. */}
+      <div className="flex items-center justify-between rounded-lg border border-border bg-gradient-card-info p-3">
+        <div>
+          <p className="text-sm font-semibold text-foreground">Enable rotation</p>
           <p className="text-xs text-muted-foreground">
-            Cycle the public board through the selected languages so non-English speakers can
-            read it without needing to tap anything.
+            Off shows one language; on cycles through your selection.
           </p>
         </div>
         <Switch
-          id="rotation-enabled"
           checked={enabled}
           onCheckedChange={(checked) => emit({ enabled: Boolean(checked) })}
+          aria-label="Enable language rotation"
           disabled={disabled}
         />
       </div>
 
       <div className="space-y-2">
         <Label className={controlsDisabled ? "text-muted-foreground" : undefined}>Languages</Label>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2">
           {LANGUAGE_OPTIONS.map((option) => (
-            <label
-              key={option.code}
-              className="flex items-center gap-2 rounded-md border border-border/60 px-2 py-1.5 text-sm"
-            >
+            <label key={option.code} className="flex items-center gap-2 p-1 text-sm font-medium">
               <Checkbox
                 checked={selected.includes(option.code)}
                 onCheckedChange={(checked) => toggleLanguage(option.code, Boolean(checked))}
                 disabled={controlsDisabled}
-                aria-label={option.label}
               />
-              <span>{option.label}</span>
+              {option.label}
             </label>
           ))}
         </div>
+        {enabled && selected.length === 0 ? (
+          <p className="text-sm text-destructive">Select at least one language to rotate.</p>
+        ) : null}
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex items-end gap-3">
         <div className="space-y-2">
           <Label
             htmlFor="rotation-minutes"
@@ -122,10 +121,6 @@ export function DisplayLanguageRotationEditor({
           </p>
         ) : null}
       </div>
-
-      {enabled && selected.length === 0 ? (
-        <p className="text-sm text-destructive">Select at least one language to rotate.</p>
-      ) : null}
     </div>
   );
 }
