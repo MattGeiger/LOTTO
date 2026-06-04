@@ -17,8 +17,9 @@ In **Admin → "Rotate display languages"**:
 - **Enable** toggle.
 - **Languages** — any subset of the eight supported languages (English, 中文,
   Español, Русский, Українська, Tiếng Việt, فارسی, العربية).
-- **Minutes per language** — a single shared interval (1–30) applied to each
-  selected language. The board shows a "Full cycle" hint (selected × minutes).
+- **Interval dropdown** — a single shared interval (1–10 minutes) applied to
+  each selected language. The board shows a "Full cycle" hint (selected ×
+  minutes).
 
 The result is a cartesian split of **(X languages) × (Y minutes each)**, rotated
 in canonical order.
@@ -39,9 +40,9 @@ type DisplayLanguageRotation = {
   with existing persisted state via the `{ ...defaultState, ...payload }` merge
   in both state managers — no migration.
 - Set through the `setDisplayLanguageRotation` action (`src/app/api/state/route.ts`),
-  Zod-validated: `languages` is an enum of the 8 codes (1–8 items),
-  `intervalSeconds` is an integer in `[5, 3600]`. The Admin UI sends `null` when
-  no languages are selected.
+  Zod-validated: `languages` is a unique enum subset of the 8 codes (1–8 items)
+  and normalized into canonical order, `intervalSeconds` is an integer in
+  `[60, 600]`. The Admin UI sends `null` when no languages are selected.
 - Persisted by `setDisplayLanguageRotation` in `src/lib/state-manager.ts` and
   `src/lib/state-manager-db.ts`, and **preserved across draw reset/generate**
   (like `operatingHours`).
@@ -55,7 +56,9 @@ type DisplayLanguageRotation = {
   cycles `setLanguage` over `config.languages` every `intervalSeconds`, starting
   at the first language. It keys its timer on a stable signature
   (`enabled|languages|intervalSeconds`) so polls that don't change the config do
-  not restart the cycle. A single language is a static pick (no timer).
+  not restart the cycle. A single language is a static pick (no timer). When
+  rotation is disabled, cleared, or has no languages, an already-open board
+  returns to English.
 - Each `setLanguage` automatically triggers the board's existing
   `ScrambleOnLanguageChange` transition and the `isRTL` direction flip — so
   rotating into Arabic/Farsi flips the board to right-to-left for free.

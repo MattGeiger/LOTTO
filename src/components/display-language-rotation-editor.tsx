@@ -3,15 +3,25 @@
 import React from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { LANGUAGE_OPTIONS, type Language } from "@/lib/languages";
 import type { DisplayLanguageRotation } from "@/lib/state-types";
 
 export const ROTATION_MIN_MINUTES = 1;
-export const ROTATION_MAX_MINUTES = 30;
+export const ROTATION_MAX_MINUTES = 10;
 const DEFAULT_INTERVAL_MINUTES = 2;
+const ROTATION_MINUTE_OPTIONS = Array.from(
+  { length: ROTATION_MAX_MINUTES - ROTATION_MIN_MINUTES + 1 },
+  (_, index) => ROTATION_MIN_MINUTES + index,
+);
 
 type DisplayLanguageRotationEditorProps = {
   value: DisplayLanguageRotation | null;
@@ -35,7 +45,7 @@ export function DisplayLanguageRotationEditor({
     onChange({
       enabled: next.enabled ?? enabled,
       languages: next.languages ?? selected,
-      intervalSeconds: next.intervalSeconds ?? value?.intervalSeconds ?? DEFAULT_INTERVAL_MINUTES * 60,
+      intervalSeconds: next.intervalSeconds ?? intervalMinutes * 60,
     });
   };
 
@@ -96,24 +106,22 @@ export function DisplayLanguageRotationEditor({
       </div>
 
       <div className="flex items-end gap-3">
-        <div className="space-y-2">
-          <Label
-            htmlFor="rotation-minutes"
-            className={controlsDisabled ? "text-muted-foreground" : undefined}
-          >
-            Minutes per language
-          </Label>
-          <Input
-            id="rotation-minutes"
-            type="number"
-            min={ROTATION_MIN_MINUTES}
-            max={ROTATION_MAX_MINUTES}
-            value={intervalMinutes}
-            onChange={(event) => handleMinutesChange(event.target.value)}
-            disabled={controlsDisabled}
-            className="h-9 w-24 bg-background"
-          />
-        </div>
+        <Select
+          value={String(intervalMinutes)}
+          onValueChange={handleMinutesChange}
+          disabled={controlsDisabled}
+        >
+          <SelectTrigger aria-label="Minutes per language" className="h-9 w-56 bg-background">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {ROTATION_MINUTE_OPTIONS.map((minutes) => (
+              <SelectItem key={minutes} value={String(minutes)}>
+                {minutes} minute{minutes === 1 ? "" : "s"} per language
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {enabled && selected.length > 0 ? (
           <p className="pb-2 text-xs text-muted-foreground">
             Full cycle: {cycleMinutes} min for {selected.length} language

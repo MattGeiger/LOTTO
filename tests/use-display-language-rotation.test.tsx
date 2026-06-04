@@ -115,4 +115,30 @@ describe("useDisplayLanguageRotation", () => {
     });
     expect(getByTestId("lang").textContent).toBe("uk");
   });
+
+  it("switches back to English when rotation is disabled", () => {
+    const { getByTestId, rerender } = renderHarness({
+      enabled: true,
+      languages: ["es", "ar"],
+      intervalSeconds: 60,
+    });
+    expect(getByTestId("lang").textContent).toBe("es");
+
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+    expect(getByTestId("lang").textContent).toBe("ar");
+
+    rerender(
+      <LanguageProvider persist={false}>
+        <Harness config={{ enabled: false, languages: ["es", "ar"], intervalSeconds: 60 }} />
+      </LanguageProvider>,
+    );
+    expect(getByTestId("lang").textContent).toBe("en");
+
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+    expect(getByTestId("lang").textContent).toBe("en");
+  });
 });
