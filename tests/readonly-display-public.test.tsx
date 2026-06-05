@@ -91,6 +91,8 @@ function renderPublicDisplay(props?: Partial<ComponentProps<typeof ReadOnlyDispl
 
 describe("ReadOnlyDisplay (public variant)", () => {
   beforeEach(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
     installFetch();
   });
 
@@ -122,6 +124,19 @@ describe("ReadOnlyDisplay (public variant)", () => {
     expect(screen.getByText("12")).toBeInTheDocument();
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(screen.getByText("18")).toBeInTheDocument();
+  });
+
+  it("keeps ticket grid layout LTR for RTL languages", async () => {
+    window.localStorage.setItem("display-language", "ar");
+    renderPublicDisplay();
+
+    expect(await screen.findByText("ترتيب السحب")).toBeInTheDocument();
+    expect(screen.getByTestId("ticket-grid")).toHaveAttribute("dir", "ltr");
+    expect(screen.getByRole("button", { name: "12" })).toHaveAttribute("dir", "ltr");
+    expect(screen.getByTestId("ticket-status-key")).toHaveAttribute("dir", "ltr");
+    expect(screen.getByText("لم يُنادى").closest("[dir='rtl']")).toContainElement(
+      screen.getByText("لم يُنادى"),
+    );
   });
 
   it("shows 'Pending' when no ticket is currently being served", async () => {

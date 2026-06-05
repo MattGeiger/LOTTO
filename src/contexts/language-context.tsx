@@ -9,10 +9,16 @@ export type { Language };
 type LanguageContextType = {
   language: Language;
   setLanguage: (lang: Language) => void;
+  setTransientLanguage: (lang: Language) => void;
+  hasSessionLanguageOverride: boolean;
+  isLanguageHydrated: boolean;
   t: (key: string) => string;
 };
 
 const LanguageContext = React.createContext<LanguageContextType | undefined>(undefined);
+
+export const DISPLAY_LANGUAGE_STORAGE_KEY = "display-language";
+export const DISPLAY_LANGUAGE_SESSION_STORAGE_KEY = "display-language-session";
 
 export function LanguageProvider({
   children,
@@ -27,30 +33,67 @@ export function LanguageProvider({
   persist?: boolean;
 }) {
   const [language, setLanguageState] = React.useState<Language>("en");
+  const [hasSessionLanguageOverride, setHasSessionLanguageOverride] = React.useState(false);
+  const [isLanguageHydrated, setIsLanguageHydrated] = React.useState(false);
 
   React.useEffect(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem("display-language") : null;
+    if (typeof window === "undefined") {
+      setIsLanguageHydrated(true);
+      return;
+    }
+
+    const sessionStored = window.sessionStorage.getItem(DISPLAY_LANGUAGE_SESSION_STORAGE_KEY);
+    if (sessionStored && isLanguageCode(sessionStored)) {
+      setLanguageState(sessionStored);
+      setHasSessionLanguageOverride(true);
+      setIsLanguageHydrated(true);
+      return;
+    }
+
+    const stored = window.localStorage.getItem(DISPLAY_LANGUAGE_STORAGE_KEY);
     if (stored && isLanguageCode(stored)) {
       setLanguageState(stored);
     }
+    setIsLanguageHydrated(true);
   }, []);
 
   const setLanguage = React.useCallback(
     (lang: Language) => {
       setLanguageState(lang);
-      if (persist && typeof window !== "undefined") {
-        localStorage.setItem("display-language", lang);
+      setHasSessionLanguageOverride(true);
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem(DISPLAY_LANGUAGE_SESSION_STORAGE_KEY, lang);
+        if (persist) {
+          window.localStorage.setItem(DISPLAY_LANGUAGE_STORAGE_KEY, lang);
+        }
       }
     },
     [persist],
   );
+
+  const setTransientLanguage = React.useCallback((lang: Language) => {
+    setLanguageState(lang);
+  }, []);
 
   const t = React.useCallback(
     (key: string) => translations[language]?.[key] ?? translations.en[key] ?? key,
     [language],
   );
 
-  return <LanguageContext.Provider value={{ language, setLanguage, t }}>{children}</LanguageContext.Provider>;
+  return (
+    <LanguageContext.Provider
+      value={{
+        language,
+        setLanguage,
+        setTransientLanguage,
+        hasSessionLanguageOverride,
+        isLanguageHydrated,
+        t,
+      }}
+    >
+      {children}
+    </LanguageContext.Provider>
+  );
 }
 
 export function useLanguage() {
@@ -67,6 +110,8 @@ const translations: Record<Language, Record<string, string>> = {
     arcadeEstimatedWaitLabel: "ESTIMATED WAIT",
     arcadeTicketCalledTitle: "TICKET CALLED!",
     arcadePleaseCheckIn: "PLEASE CHECK-IN",
+    ticketCalledTitle: "Ticket Called!",
+    ticketCalledCheckIn: "Please Check-in",
     waiting: "Pending",
     foodPantryServiceFor: "Food Pantry Service For",
     currentTime: "Current Time",
@@ -249,6 +294,8 @@ const translations: Record<Language, Record<string, string>> = {
     arcadeEstimatedWaitLabel: "预计等待",
     arcadeTicketCalledTitle: "号码已叫到！",
     arcadePleaseCheckIn: "请签到",
+    ticketCalledTitle: "号码已叫到！",
+    ticketCalledCheckIn: "请签到",
     waiting: "请等候",
     foodPantryServiceFor: "食品发放服务",
     currentTime: "当前时间",
@@ -429,6 +476,8 @@ const translations: Record<Language, Record<string, string>> = {
     arcadeEstimatedWaitLabel: "ESPERA ESTIMADA",
     arcadeTicketCalledTitle: "¡NÚMERO LLAMADO!",
     arcadePleaseCheckIn: "POR FAVOR REGÍSTRESE",
+    ticketCalledTitle: "¡Número llamado!",
+    ticketCalledCheckIn: "Por favor regístrese",
     waiting: "En espera",
     foodPantryServiceFor: "Servicio del Banco de Alimentos",
     currentTime: "Hora actual",
@@ -611,6 +660,8 @@ const translations: Record<Language, Record<string, string>> = {
     arcadeEstimatedWaitLabel: "ПРИМЕРНОЕ ВРЕМЯ ОЖИДАНИЯ",
     arcadeTicketCalledTitle: "НОМЕР ВЫЗВАН!",
     arcadePleaseCheckIn: "ПОЖАЛУЙСТА, ОТМЕТЬТЕСЬ",
+    ticketCalledTitle: "Номер вызван!",
+    ticketCalledCheckIn: "Пожалуйста, отметьтесь",
     waiting: "Ожидайте",
     foodPantryServiceFor: "Раздача продуктов",
     currentTime: "Текущее время",
@@ -793,6 +844,8 @@ const translations: Record<Language, Record<string, string>> = {
     arcadeEstimatedWaitLabel: "ОРІЄНТОВНИЙ ЧАС ОЧІКУВАННЯ",
     arcadeTicketCalledTitle: "НОМЕР ВИКЛИКАНО!",
     arcadePleaseCheckIn: "БУДЬ ЛАСКА, ЗАРЕЄСТРУЙТЕСЯ",
+    ticketCalledTitle: "Номер викликано!",
+    ticketCalledCheckIn: "Будь ласка, зареєструйтеся",
     waiting: "Очікуйте",
     foodPantryServiceFor: "Роздача продуктів",
     currentTime: "Поточний час",
@@ -975,6 +1028,8 @@ const translations: Record<Language, Record<string, string>> = {
     arcadeEstimatedWaitLabel: "THỜI GIAN CHỜ DỰ KIẾN",
     arcadeTicketCalledTitle: "ĐÃ GỌI SỐ!",
     arcadePleaseCheckIn: "VUI LÒNG ĐIỂM DANH",
+    ticketCalledTitle: "Đã gọi số!",
+    ticketCalledCheckIn: "Vui lòng điểm danh",
     waiting: "Vui lòng chờ",
     foodPantryServiceFor: "Phát thực phẩm ngày",
     currentTime: "Giờ hiện tại",
@@ -1157,6 +1212,8 @@ const translations: Record<Language, Record<string, string>> = {
     arcadeEstimatedWaitLabel: "زمان انتظار تقریبی",
     arcadeTicketCalledTitle: "شماره شما فراخوانده شد!",
     arcadePleaseCheckIn: "لطفاً حضور خود را اعلام کنید",
+    ticketCalledTitle: "شماره شما فراخوانده شد!",
+    ticketCalledCheckIn: "لطفاً حضور خود را اعلام کنید",
     waiting: "لطفاً صبر کنید",
     foodPantryServiceFor: "توزیع مواد غذایی برای",
     currentTime: "زمان کنونی",
@@ -1339,6 +1396,8 @@ const translations: Record<Language, Record<string, string>> = {
     arcadeEstimatedWaitLabel: "وقت الانتظار المتوقع",
     arcadeTicketCalledTitle: "تم استدعاء رقمك!",
     arcadePleaseCheckIn: "يرجى تسجيل الحضور",
+    ticketCalledTitle: "تم استدعاء رقمك!",
+    ticketCalledCheckIn: "يرجى تسجيل الحضور",
     waiting: "يرجى الانتظار",
     foodPantryServiceFor: "توزيع المواد الغذائية ليوم",
     currentTime: "الوقت الحالي",

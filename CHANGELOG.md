@@ -2,15 +2,52 @@
 
 ## [Unreleased]
 ### Added
+- **Ticket-called celebration on every public route:** the confetti + "Ticket
+  Called!" overlay now fires wherever a client with a saved ticket happens to be
+  — homepage, the `/display` board, and the inventory page — not just the
+  homepage. It is extracted into a shared `TicketCalledCelebration` component
+  (`src/components/ticket-called-celebration.tsx`): the homepage and display
+  board feed it their already-polled state, while inventory self-polls
+  `/api/state`. A wall-mounted board stays silent because it has no session
+  ticket. The celebration dedups per call across navigation via `sessionStorage`
+  (`src/lib/ticket-celebration.ts`), so a single call celebrates exactly once no
+  matter how many pages the client visits while it is active. `ReadOnlyDisplay`
+  no longer owns the overlay/confetti (it still renders the persistent
+  "called at HH:MM" message); Arcade keeps its own separate celebration per the
+  Arcade guardrails. The overlay copy is localized in all eight supported
+  languages (`ticketCalledTitle` / `ticketCalledCheckIn`).
 - **Dashboard bottom-nav tab:** added a new **Dashboard** destination between
   **Your ticket** and **What's in stock** in the public bottom navigation,
   linking to `/display`. The core bar uses a native imperative `grip` icon so
   nav hover/tap animations replay without remount stutter, the Arcade bar gets
   a matching pixel-art dashboard glyph, and `/display` now renders the bottom
-  nav with scroll clearance and a lower desktop dock offset for the dense
-  public board.
+  nav with scroll clearance.
 
 ### Changed
+- **Homepage onboarding step selection:** the personalized homepage (`/`) no
+  longer re-prompts for a language once one has been chosen this browser session.
+  The onboarding modal now decides its initial step after language hydration: a
+  saved ticket keeps it closed, an existing session language opens it directly at
+  the ticket step, and only a first-time visitor sees the language gate.
+- **Display nav auto-hide:** the bottom navigation on `/display` now hides after
+  a period of inactivity and reappears on any pointer/keyboard/touch activity.
+  The inactivity window matches the Admin display-language rotation interval when
+  rotation is enabled, otherwise falls back to 5 minutes. Auto-hide is scoped to
+  `/display` only — the homepage, inventory, and Arcade keep a persistent bar —
+  and honors `prefers-reduced-motion` by toggling visibility without the slide
+  transition.
+- **Homepage RTL layout scope:** constrained Arabic/Farsi directionality so the
+  homepage top chrome, public bottom-nav item order, and personalized display
+  structural card grids remain in the same physical order while localized text
+  containers still render RTL where appropriate.
+- **Display RTL layout scope:** constrained the display ticket/drawing card
+  chrome so the `DRAWING ORDER`/ticket heading and `Updated: HH:MM` badge keep
+  their physical left-to-right layout, and ticket number cells keep stable grid
+  order with a matching left-to-right status key while the card body can still
+  localize.
+- **Bottom nav dock offset:** standardized the desktop/tablet bottom-nav offset
+  across home, Dashboard, inventory, and Arcade so the dock no longer jumps
+  vertically between public routes.
 - **Admin "Rotate display languages" interval:** replaced the freeform minutes
   input with a dropdown from 1 to 10 minutes per language, with the interval
   label folded into each option.
@@ -18,6 +55,11 @@
   switcher now stays visible while Admin rotation is enabled. A manual language
   choice pauses automatic rotation for that browser session without changing the
   saved Admin setting.
+- **Session language continuity:** manual language choices now persist for the
+  browser session when navigating between public routes. If a client chooses a
+  language on the homepage and then opens Dashboard (`/display`), that choice
+  takes precedence over Admin language rotation; explicitly choosing English also
+  counts as a session override.
 - **Display language rotation validation:** direct API writes now reject
   duplicate languages and intervals outside 1-10 minutes, and normalize language
   order before persistence.

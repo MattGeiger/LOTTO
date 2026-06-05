@@ -4,6 +4,7 @@ import * as React from "react";
 import { ReadOnlyDisplay } from "@/components/readonly-display";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
+import { TicketCalledCelebration } from "@/components/ticket-called-celebration";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { Search } from "@/components/animate-ui/icons/search";
@@ -19,13 +20,25 @@ export function PublicDisplayPage() {
     null,
   );
   const searchTriggerRef = React.useRef(0);
-  const { t } = useLanguage();
+  const { hasSessionLanguageOverride, isLanguageHydrated, t } = useLanguage();
   const [latestState, setLatestState] = React.useState<RaffleState | null>(null);
   const [rotationPausedForSession, setRotationPausedForSession] = React.useState(false);
   const rotation = latestState?.displayLanguageRotation ?? null;
 
-  // Auto-rotate by default, but let a manual choice own this browser session.
-  useDisplayLanguageRotation(rotation, { paused: rotationPausedForSession });
+  // Auto-rotate by default, but any explicit browser-session choice owns the
+  // session, including English selected from the homepage.
+  useDisplayLanguageRotation(rotation, {
+    paused: !isLanguageHydrated || hasSessionLanguageOverride || rotationPausedForSession,
+  });
+
+  // Hide the bottom nav after the rotation cadence so the board stays clean
+  // between language cycles; fall back to 5 minutes when rotation is off or has
+  // no valid interval. Activity restores the bar (handled inside BottomTabBar).
+  const NAV_AUTOHIDE_FALLBACK_SECONDS = 300;
+  const navAutoHideSeconds =
+    rotation?.enabled && rotation.intervalSeconds > 0
+      ? rotation.intervalSeconds
+      : NAV_AUTOHIDE_FALLBACK_SECONDS;
 
   const handleManualLanguageChange = React.useCallback(() => {
     setRotationPausedForSession(true);
@@ -99,7 +112,8 @@ export function PublicDisplayPage() {
         <ThemeSwitcher />
       </div>
       <ReadOnlyDisplay ticketSearchRequest={searchSubmission ?? undefined} onStateChange={setLatestState} />
-      <BottomTabBar />
+      <BottomTabBar autoHideAfterSeconds={navAutoHideSeconds} />
+      <TicketCalledCelebration state={latestState} />
     </div>
   );
 }

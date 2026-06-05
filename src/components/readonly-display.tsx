@@ -3,7 +3,6 @@
 import React from "react";
 import Image from "next/image";
 import QRCode from "qrcode";
-import ReactCanvasConfetti from "react-canvas-confetti";
 import { MorphingText } from "@/components/animate-ui/primitives/texts/morphing";
 import { RollingText } from "@/components/animate-ui/primitives/texts/rolling";
 
@@ -65,23 +64,7 @@ const formatServiceClock = (input: Date | number, language: Language): string =>
 
 const POLL_ERROR_RETRY_MS = 30_000;
 const BURST_DURATION_MS = 2 * 60_000;
-const CALLED_ALERT_DURATION_MS = 10_000;
-const CALLED_CONFETTI_INTERVAL_MS = 2_000;
 const EMPTY_GENERATED_ORDER: number[] = [];
-
-type ConfettiAnimationOptions = {
-  spread?: number;
-  startVelocity?: number;
-  decay?: number;
-  scalar?: number;
-};
-
-type ConfettiInstance = (
-  options: ConfettiAnimationOptions & {
-    origin: { y: number };
-    particleCount: number;
-  },
-) => void;
 
 const DAYS: DayOfWeek[] = [
   "sunday",
@@ -136,7 +119,6 @@ type ReadOnlyDisplayProps = {
   displayVariant?: DisplayVariant;
   personalizedTicketNumber?: number | null;
   onRequestTicketChange?: () => void;
-  onPersonalizedTicketCalled?: (details: { ticketNumber: number; calledAt: number }) => void;
   onStateChange?: (state: RaffleState) => void;
   languageTextAnimation?: "scramble" | "none";
   showQrCode?: boolean;
@@ -148,7 +130,6 @@ export const ReadOnlyDisplay = ({
   displayVariant = "public",
   personalizedTicketNumber = null,
   onRequestTicketChange,
-  onPersonalizedTicketCalled,
   onStateChange,
   languageTextAnimation = "scramble",
   showQrCode = true,
@@ -164,16 +145,11 @@ export const ReadOnlyDisplay = ({
   const qrCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const pollTimeoutRef = React.useRef<number | null>(null);
   const pollStateRef = React.useRef<() => void>(() => {});
-  const confettiInstanceRef = React.useRef<ConfettiInstance | null>(null);
-  const confettiLoopIntervalRef = React.useRef<number | null>(null);
-  const confettiLoopTimeoutRef = React.useRef<number | null>(null);
-  const celebratedCallRef = React.useRef<string | null>(null);
   const lastSeenTimestampRef = React.useRef<number | null>(null);
   const lastChangeAtRef = React.useRef<number | null>(null);
   const burstUntilRef = React.useRef<number | null>(null);
   const lastSearchRequestRef = React.useRef(0);
   const [deviceNowMs, setDeviceNowMs] = React.useState(() => Date.now());
-  const [showCalledOverlay, setShowCalledOverlay] = React.useState(false);
 
   const formattedDate = formatDate(language, deviceNowMs);
 
@@ -193,47 +169,6 @@ export const ReadOnlyDisplay = ({
     },
     [clearPollTimeout],
   );
-
-  const clearConfettiLoop = React.useCallback(() => {
-    if (confettiLoopIntervalRef.current !== null) {
-      window.clearInterval(confettiLoopIntervalRef.current);
-      confettiLoopIntervalRef.current = null;
-    }
-    if (confettiLoopTimeoutRef.current !== null) {
-      window.clearTimeout(confettiLoopTimeoutRef.current);
-      confettiLoopTimeoutRef.current = null;
-    }
-  }, []);
-
-  const getConfettiInstance = React.useCallback(
-    ({ confetti }: { confetti: ConfettiInstance }) => {
-      confettiInstanceRef.current = confetti;
-    },
-    [],
-  );
-
-  const makeConfettiShot = React.useCallback(
-    (
-      particleRatio: number,
-      options: ConfettiAnimationOptions,
-    ) => {
-      if (!confettiInstanceRef.current) return;
-      confettiInstanceRef.current({
-        ...options,
-        origin: { y: 0.7 },
-        particleCount: Math.floor(200 * particleRatio),
-      });
-    },
-    [],
-  );
-
-  const fireConfetti = React.useCallback(() => {
-    makeConfettiShot(0.25, { spread: 26, startVelocity: 55 });
-    makeConfettiShot(0.2, { spread: 60 });
-    makeConfettiShot(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
-    makeConfettiShot(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
-    makeConfettiShot(0.1, { spread: 120, startVelocity: 45 });
-  }, [makeConfettiShot]);
 
   const pollState = React.useCallback(async () => {
     if (document.visibilityState === "hidden") {
@@ -447,66 +382,14 @@ export const ReadOnlyDisplay = ({
     personalizedTicketStatus !== "unclaimed" &&
     !personalizedCalledAtTime;
 
-  React.useEffect(
-    () => () => {
-      clearConfettiLoop();
-    },
-    [clearConfettiLoop],
-  );
-
-  React.useEffect(() => {
-    if (!isPersonalized || personalizedTicketNumber === null || personalizedCalledAt === null) {
-      return;
-    }
-
-    const celebrationKey = `${personalizedTicketNumber}:${personalizedCalledAt}`;
-    if (celebratedCallRef.current === celebrationKey) {
-      return;
-    }
-    celebratedCallRef.current = celebrationKey;
-
-    setShowCalledOverlay(true);
-    clearConfettiLoop();
-    onPersonalizedTicketCalled?.({
-      ticketNumber: personalizedTicketNumber,
-      calledAt: personalizedCalledAt,
-    });
-
-    const scheduleConfetti =
-      typeof window.requestAnimationFrame === "function"
-        ? window.requestAnimationFrame.bind(window)
-        : (callback: FrameRequestCallback) => window.setTimeout(callback, 0);
-
-    const triggerConfetti = () => {
-      scheduleConfetti(() => {
-        fireConfetti();
-      });
-    };
-
-    triggerConfetti();
-    confettiLoopIntervalRef.current = window.setInterval(triggerConfetti, CALLED_CONFETTI_INTERVAL_MS);
-    confettiLoopTimeoutRef.current = window.setTimeout(() => {
-      setShowCalledOverlay(false);
-      clearConfettiLoop();
-    }, CALLED_ALERT_DURATION_MS);
-  }, [
-    clearConfettiLoop,
-    fireConfetti,
-    isPersonalized,
-    personalizedCalledAt,
-    personalizedTicketNumber,
-    onPersonalizedTicketCalled,
-  ]);
-
-  React.useEffect(() => {
-    if (!isPersonalized || personalizedCalledAt !== null) return;
-    setShowCalledOverlay(false);
-    clearConfettiLoop();
-  }, [clearConfettiLoop, isPersonalized, personalizedCalledAt]);
+  // The "your ticket was called" overlay + confetti now live in the shared
+  // <TicketCalledCelebration /> (mounted by each public route), so the board
+  // itself only renders the persistent "called at HH:MM" message below.
 
   const nowServingValueClassName = isPersonalized
     ? "text-[96px]"
     : "text-[clamp(4.5rem,10vh,96px)]";
+  const textDirection = isRTL(language) ? "rtl" : "ltr";
   const noTicketMessageClassName = cn(
     "block w-full text-center font-extrabold leading-snug text-foreground",
     isPersonalized ? "text-3xl" : "text-2xl sm:text-3xl [@media(max-height:760px)]:text-2xl",
@@ -523,8 +406,8 @@ export const ReadOnlyDisplay = ({
           // the ticket grid/card behind the dock.
           isPersonalized ? "pb-28" : "pb-32",
         )}
-      >
-        <div className="mx-auto flex w-full flex-col gap-4">
+        >
+        <div data-testid="readonly-display-content" className="mx-auto flex w-full flex-col gap-4" dir="ltr">
         {/* Logo + Now Serving Row */}
         <div
           className={cn(
@@ -561,7 +444,7 @@ export const ReadOnlyDisplay = ({
 
           {/* NOW SERVING - center */}
           <div className="flex justify-center">
-            <div className="text-center">
+            <div dir={textDirection} className="text-center">
               <p className="mb-1 text-lg uppercase tracking-[0.14em] text-muted-foreground">
                 <T text={t("nowServing")} />
               </p>
@@ -622,7 +505,11 @@ export const ReadOnlyDisplay = ({
         </div>
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-3 sm:gap-4">
-          <Card className="border-border/80 bg-card/80 text-start animate-slide-in-up gap-1" style={{ animationDelay: "100ms" }}>
+          <Card
+            dir={textDirection}
+            className="border-border/80 bg-card/80 text-start animate-slide-in-up gap-1"
+            style={{ animationDelay: "100ms" }}
+          >
             <CardHeader className="pb-0">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-lg uppercase tracking-[0.14em] text-muted-foreground">
@@ -635,7 +522,11 @@ export const ReadOnlyDisplay = ({
             </CardContent>
           </Card>
           {hasTickets ? (
-            <Card className="border-border/80 bg-card/80 text-start animate-slide-in-up gap-1" style={{ animationDelay: "200ms" }}>
+            <Card
+              dir={textDirection}
+              className="border-border/80 bg-card/80 text-start animate-slide-in-up gap-1"
+              style={{ animationDelay: "200ms" }}
+            >
               <CardHeader className="pb-0">
                 <CardTitle className="text-lg uppercase tracking-[0.14em] text-muted-foreground">
                   <T text={t("currentTime")} />
@@ -650,7 +541,11 @@ export const ReadOnlyDisplay = ({
               </CardContent>
             </Card>
           ) : null}
-          <Card className="border-border/80 bg-card/80 text-center animate-slide-in-up gap-1" style={{ animationDelay: "300ms" }}>
+          <Card
+            dir={textDirection}
+            className="border-border/80 bg-card/80 text-center animate-slide-in-up gap-1"
+            style={{ animationDelay: "300ms" }}
+          >
             <CardHeader className="pb-0">
               <CardTitle className="text-lg uppercase tracking-[0.14em] text-muted-foreground">
                 <T text={t("ticketsIssuedToday")} />
@@ -662,7 +557,11 @@ export const ReadOnlyDisplay = ({
               </p>
             </CardContent>
           </Card>
-          <Card className="border-border/80 bg-card/80 text-center animate-slide-in-up gap-1" style={{ animationDelay: "400ms" }}>
+          <Card
+            dir={textDirection}
+            className="border-border/80 bg-card/80 text-center animate-slide-in-up gap-1"
+            style={{ animationDelay: "400ms" }}
+          >
             <CardHeader className="pb-0">
               <CardTitle className="text-lg uppercase tracking-[0.14em] text-muted-foreground">
                 <T text={t("totalTicketsIssued")} />
@@ -676,17 +575,21 @@ export const ReadOnlyDisplay = ({
           </Card>
         </div>
 
-        <Card className="border-border/80 bg-card/80">
+        <Card dir={textDirection} className="border-border/80 bg-card/80">
           <CardHeader className="pb-2">
-            <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-lg uppercase tracking-[0.14em] text-muted-foreground">
+            <div className="flex items-center justify-between gap-2" dir="ltr">
+              <CardTitle className="text-lg uppercase tracking-[0.14em] text-muted-foreground" dir="ltr">
                 <T text={isPersonalized ? t("yourTicketCardTitle") : t("drawingOrder")} />
               </CardTitle>
               <Badge
                 variant="outline"
                 className="border-border/60 text-xs font-medium text-muted-foreground"
+                dir="ltr"
               >
-                <T text={t("updated")} />: {updatedTime}
+                <T text={t("updated")} />:{" "}
+                <span dir="ltr" className="[unicode-bidi:isolate]">
+                  {updatedTime}
+                </span>
               </Badge>
             </div>
           </CardHeader>
@@ -860,7 +763,11 @@ export const ReadOnlyDisplay = ({
 
             {hasTickets && !isPersonalized && (
               <>
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-3 md:gap-4">
+                <div
+                  data-testid="ticket-grid"
+                  className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-3 md:gap-4"
+                  dir="ltr"
+                >
                   {generatedOrder.map((value, index) => {
                     const baseClasses =
                       "flex items-center justify-center rounded-xl border text-center text-2xl font-extrabold leading-[1.2] px-3 py-3 cursor-pointer transition-transform hover:scale-[1.03]";
@@ -881,6 +788,7 @@ export const ReadOnlyDisplay = ({
                         className={`${baseClasses} ${stateClass} animate-fade-in`}
                         style={{ animationDelay: `${Math.min(index * 30, 1500)}ms` }}
                         role="button"
+                        dir="ltr"
                         tabIndex={0}
                         onClick={() => setSelectedTicket(value)}
                         onKeyDown={(e) => {
@@ -896,26 +804,40 @@ export const ReadOnlyDisplay = ({
                   })}
                 </div>
 
-                <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                <div
+                  data-testid="ticket-status-key"
+                  className="mt-5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"
+                  dir="ltr"
+                >
                   <div className="flex items-center gap-2">
                     <span className="size-3 rounded-full border ticket-upcoming" />
-                    <T text={t("notCalled")} />
+                    <span dir={textDirection}>
+                      <T text={t("notCalled")} />
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="size-3 rounded-full border ticket-serving" />
-                    <T text={t("nowServing")} />
+                    <span dir={textDirection}>
+                      <T text={t("nowServing")} />
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="size-3 rounded-full border ticket-served" />
-                    <T text={t("called")} />
+                    <span dir={textDirection}>
+                      <T text={t("called")} />
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="size-3 rounded-full border ticket-unclaimed" />
-                    <T text={t("unclaimed")} />
+                    <span dir={textDirection}>
+                      <T text={t("unclaimed")} />
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="size-3 rounded-full border ticket-returned" />
-                    <T text={t("returned")} />
+                    <span dir={textDirection}>
+                      <T text={t("returned")} />
+                    </span>
                   </div>
                 </div>
               </>
@@ -962,36 +884,6 @@ export const ReadOnlyDisplay = ({
         )}
         </div>
       </div>
-      {isPersonalized && showCalledOverlay ? (
-        <>
-          <div className="pointer-events-none fixed inset-0 z-[65] bg-black/40 backdrop-blur-sm" />
-          <div
-            className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center px-6"
-            aria-live="polite"
-          >
-            <div className="w-full max-w-xl rounded-2xl border border-border/70 bg-card/95 px-8 py-6 text-center shadow-2xl">
-              <p className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-                Ticket Called!
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-foreground/90 sm:text-3xl">
-                Please Check-in
-              </p>
-            </div>
-          </div>
-          <ReactCanvasConfetti
-            onInit={getConfettiInstance}
-            style={{
-              position: "fixed",
-              pointerEvents: "none",
-              width: "100%",
-              height: "100%",
-              top: 0,
-              left: 0,
-              zIndex: 75,
-            }}
-          />
-        </>
-      ) : null}
     </ScrambleOnLanguageChange>
   );
 };

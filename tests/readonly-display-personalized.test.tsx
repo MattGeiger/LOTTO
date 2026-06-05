@@ -7,8 +7,6 @@ import { ReadOnlyDisplay } from "@/components/readonly-display";
 import { LanguageProvider } from "@/contexts/language-context";
 import type { RaffleState } from "@/lib/state-types";
 
-const confettiFireMock = vi.fn();
-
 vi.mock("next/font/local", () => ({
   default: () => ({ className: "font-arcade-display", variable: "" }),
 }));
@@ -29,17 +27,6 @@ vi.mock("@/components/animate-ui/primitives/texts/morphing", () => ({
 
 vi.mock("@/components/animate-ui/primitives/texts/rolling", () => ({
   RollingText: ({ text }: { text: string }) => <span>{text}</span>,
-}));
-
-vi.mock("react-canvas-confetti", () => ({
-  default: ({
-    onInit,
-  }: {
-    onInit?: ({ confetti }: { confetti: (...args: unknown[]) => void }) => void;
-  }) => {
-    onInit?.({ confetti: confettiFireMock });
-    return <div data-testid="confetti-canvas" />;
-  },
 }));
 
 const baseState: RaffleState = {
@@ -77,7 +64,6 @@ describe("ReadOnlyDisplay personalized variant", () => {
 
   beforeEach(() => {
     window.localStorage.clear();
-    confettiFireMock.mockReset();
     currentState = structuredClone(baseState);
     vi.stubGlobal(
       "fetch",
@@ -129,6 +115,24 @@ describe("ReadOnlyDisplay personalized variant", () => {
     });
   });
 
+  it("keeps personalized display structure LTR while allowing RTL card text", async () => {
+    window.localStorage.setItem("display-language", "ar");
+    renderPersonalizedDisplay();
+
+    expect(await screen.findByText("تذكرتك")).toBeInTheDocument();
+    expect(screen.getByTestId("readonly-display-content")).toHaveAttribute("dir", "ltr");
+
+    const serviceDate = screen.getByTestId("service-date");
+    expect(serviceDate.closest("[dir='rtl']")).toContainElement(serviceDate);
+    expect(serviceDate.closest("[dir='ltr']")).toContainElement(serviceDate);
+
+    const ticketCardTitle = screen.getByText("تذكرتك").closest("[data-slot='card-title']");
+    expect(ticketCardTitle).toHaveAttribute("dir", "ltr");
+
+    const updatedBadge = screen.getByText("تم التحديث").closest("[data-slot='badge']");
+    expect(updatedBadge).toHaveAttribute("dir", "ltr");
+  });
+
   it("hides the public legend in personalized mode", async () => {
     renderPersonalizedDisplay();
     await screen.findByText("YOUR TICKET");
@@ -169,27 +173,18 @@ describe("ReadOnlyDisplay personalized variant", () => {
     expect(screen.queryByText("YOUR TICKET NUMBER")).not.toBeInTheDocument();
   });
 
-  it("shows called-ticket overlay, triggers confetti, and reports the personalized ticket call once", async () => {
+  it("no longer renders the called-ticket overlay itself (moved to TicketCalledCelebration)", async () => {
     currentState = {
       ...currentState,
-      calledAt: {
-        24: 1_739_898_060_000,
-      },
+      calledAt: { 24: 1_739_898_060_000 },
     };
-    const onPersonalizedTicketCalled = vi.fn();
 
-    renderPersonalizedDisplay({ onPersonalizedTicketCalled });
+    renderPersonalizedDisplay();
 
-    expect(await screen.findByText("Ticket Called!")).toBeInTheDocument();
-    expect(screen.getByText("Please Check-in")).toBeInTheDocument();
-    expect(screen.getByTestId("confetti-canvas")).toBeInTheDocument();
-    await waitFor(() => {
-      expect(confettiFireMock).toHaveBeenCalled();
-    });
-    expect(onPersonalizedTicketCalled).toHaveBeenCalledTimes(1);
-    expect(onPersonalizedTicketCalled).toHaveBeenCalledWith({
-      ticketNumber: 24,
-      calledAt: 1_739_898_060_000,
-    });
+    // The board still shows the persistent "called at" message, but the
+    // celebratory overlay/confetti is now owned by the shared component.
+    await screen.findByText("YOUR TICKET");
+    expect(screen.queryByText("Ticket Called!")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("confetti-canvas")).not.toBeInTheDocument();
   });
 });

@@ -2,7 +2,11 @@ import * as React from "react";
 import { act, fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { LanguageProvider, useLanguage } from "@/contexts/language-context";
+import {
+  DISPLAY_LANGUAGE_SESSION_STORAGE_KEY,
+  LanguageProvider,
+  useLanguage,
+} from "@/contexts/language-context";
 import { useDisplayLanguageRotation } from "@/hooks/use-display-language-rotation";
 import type { DisplayLanguageRotation } from "@/lib/state-types";
 
@@ -41,10 +45,26 @@ function ManualPauseHarness({ config }: { config: DisplayLanguageRotation | null
   );
 }
 
+function LanguageSessionHarness() {
+  const { hasSessionLanguageOverride, isLanguageHydrated, language, setLanguage } = useLanguage();
+
+  return (
+    <>
+      <span data-testid="lang">{language}</span>
+      <span data-testid="hydrated">{String(isLanguageHydrated)}</span>
+      <span data-testid="override">{String(hasSessionLanguageOverride)}</span>
+      <button type="button" onClick={() => setLanguage("en")}>
+        Manual English
+      </button>
+    </>
+  );
+}
+
 describe("useDisplayLanguageRotation", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
   afterEach(() => {
@@ -77,6 +97,7 @@ describe("useDisplayLanguageRotation", () => {
       vi.advanceTimersByTime(60_000);
     });
     expect(getByTestId("lang").textContent).toBe("en");
+    expect(window.sessionStorage.getItem(DISPLAY_LANGUAGE_SESSION_STORAGE_KEY)).toBeNull();
   });
 
   it("stays static for a single language (no interval needed)", () => {
@@ -182,10 +203,41 @@ describe("useDisplayLanguageRotation", () => {
       fireEvent.click(getByRole("button", { name: "Manual Vietnamese" }));
     });
     expect(getByTestId("lang").textContent).toBe("vi");
+    expect(window.sessionStorage.getItem(DISPLAY_LANGUAGE_SESSION_STORAGE_KEY)).toBe("vi");
 
     act(() => {
       vi.advanceTimersByTime(180_000);
     });
     expect(getByTestId("lang").textContent).toBe("vi");
+  });
+
+  it("treats an explicit English choice as a session override", () => {
+    const { getByRole, getByTestId } = render(
+      <LanguageProvider>
+        <LanguageSessionHarness />
+      </LanguageProvider>,
+    );
+
+    act(() => {
+      fireEvent.click(getByRole("button", { name: "Manual English" }));
+    });
+
+    expect(getByTestId("lang").textContent).toBe("en");
+    expect(getByTestId("override").textContent).toBe("true");
+    expect(window.sessionStorage.getItem(DISPLAY_LANGUAGE_SESSION_STORAGE_KEY)).toBe("en");
+  });
+
+  it("hydrates an explicit English session override from storage", () => {
+    window.sessionStorage.setItem(DISPLAY_LANGUAGE_SESSION_STORAGE_KEY, "en");
+
+    const { getByTestId } = render(
+      <LanguageProvider>
+        <LanguageSessionHarness />
+      </LanguageProvider>,
+    );
+
+    expect(getByTestId("lang").textContent).toBe("en");
+    expect(getByTestId("hydrated").textContent).toBe("true");
+    expect(getByTestId("override").textContent).toBe("true");
   });
 });

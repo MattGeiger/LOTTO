@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
+import { TicketCalledCelebration } from "@/components/ticket-called-celebration";
 
 const normalizeTicketNumber = (rawInput: string): number | null => {
   const normalized = rawInput.trim().toUpperCase();
@@ -32,10 +33,13 @@ const hasActiveTicketRange = (state: RaffleState | null): boolean =>
   !!state && state.startNumber > 0 && state.endNumber >= state.startNumber;
 
 export function PersonalizedHomePage() {
-  const { setLanguage, t } = useLanguage();
+  const { setLanguage, hasSessionLanguageOverride, isLanguageHydrated, t } = useLanguage();
   const { trigger } = useAppHaptics();
   const [onboardingStep, setOnboardingStep] = React.useState<"language" | "ticket">("language");
-  const [isOnboardingModalOpen, setIsOnboardingModalOpen] = React.useState(true);
+  // Start closed and decide once language hydration completes (see the
+  // onboarding effect below). This avoids briefly flashing the language step
+  // before we know whether the client already has a session language choice.
+  const [isOnboardingModalOpen, setIsOnboardingModalOpen] = React.useState(false);
   const [ticketInput, setTicketInput] = React.useState("");
   const [ticketInputError, setTicketInputError] = React.useState("");
   const [selectedTicketNumber, setSelectedTicketNumber] = React.useState<number | null>(null);
@@ -50,13 +54,26 @@ export function PersonalizedHomePage() {
     [latestState],
   );
 
+  // Single source of truth for the initial onboarding decision. Gated on
+  // language hydration so the session language override is known before we pick
+  // a step:
+  //   ticket saved        -> modal stays closed
+  //   language chosen      -> open at the ticket step (skip the redundant gate)
+  //   no language choice   -> open at the language step
   React.useEffect(() => {
+    if (!isLanguageHydrated) return;
     const persistedTicket = readPersistedHomepageTicket();
-    if (persistedTicket === null) return;
-    setSelectedTicketNumber(persistedTicket);
-    setTicketInput(String(persistedTicket).padStart(2, "0"));
-    setIsOnboardingModalOpen(false);
-  }, []);
+    if (persistedTicket !== null) {
+      setSelectedTicketNumber(persistedTicket);
+      setTicketInput(String(persistedTicket).padStart(2, "0"));
+      setIsOnboardingModalOpen(false);
+      return;
+    }
+    setOnboardingStep(hasSessionLanguageOverride ? "ticket" : "language");
+    setIsOnboardingModalOpen(true);
+    // Run once hydration completes; the override value is read at that point.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLanguageHydrated]);
 
   // If the saved ticket goes stale (8h expiry, or the operator reset to a new
   // drawing range), drop it from the personalized view — but do NOT force the
@@ -124,7 +141,11 @@ export function PersonalizedHomePage() {
 
   return (
     <div className="relative">
-      <div className="absolute left-6 right-6 top-4 z-30 flex items-center justify-between gap-5 py-2 sm:left-8 sm:right-8 lg:left-10 lg:right-10">
+      <header
+        aria-label="Homepage controls"
+        dir="ltr"
+        className="absolute left-6 right-6 top-4 z-30 flex items-center justify-between gap-5 py-2 sm:left-8 sm:right-8 lg:left-10 lg:right-10"
+      >
         <LanguageSwitcher enableHaptics />
         <div className="flex-1 flex justify-center px-2">
           <div className="w-full max-w-[220px]">
@@ -147,7 +168,7 @@ export function PersonalizedHomePage() {
         <div className="flex items-center gap-2">
           <ThemeSwitcher enableHaptics />
         </div>
-      </div>
+      </header>
       <ReadOnlyDisplay
         displayVariant="personalized"
         personalizedTicketNumber={selectedTicketNumber}
@@ -267,6 +288,7 @@ export function PersonalizedHomePage() {
         </DialogContent>
       </Dialog>
       <BottomTabBar />
+      <TicketCalledCelebration state={latestState} />
     </div>
   );
 }
