@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 ### Added
+- **Staff page: Release Notes modal, About modal, and searchable Help.** Adapted
+  from the FEED project. The version number on `/staff` is now a button that
+  opens a plain-language **release notes** modal (content in
+  `docs/release-notes.md`); the old static credits line is replaced by an
+  **About** modal (`src/components/about-dialog.tsx`); and a new **Help** link
+  opens a searchable, indexed help section at `/help` (index) and
+  `/help/[slug]` (per-topic detail) with table of contents, scroll-spy,
+  deep-linkable sections (`?q=…#section`), and search-term highlighting. Help
+  content is authored as markdown in `docs/user-guides/NN-*.md`; the parser and
+  section-level search index live in `src/lib/user-guides.ts` (pure, tested) with
+  a server-only filesystem loader in `src/lib/user-guides.server.ts`. Markdown is
+  rendered with `react-markdown` + `remark-gfm`. Help/release/about content is
+  English-only, matching the Staff page. See `docs/HELP_SYSTEM.md`.
 - **Ticket-called celebration on every public route:** the confetti + "Ticket
   Called!" overlay now fires wherever a client with a saved ticket happens to be
   — homepage, the `/display` board, and the inventory page — not just the
