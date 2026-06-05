@@ -40,7 +40,7 @@ Four destinations, in this fixed order:
 | # | Label             | Route        | Icon               | Icon source |
 |---|-------------------|--------------|--------------------|-------------|
 | 1 | Your ticket       | `/`          | `ticket`           | Imperative-ref icon (ticket-rip) |
-| 2 | Dashboard         | `/display`   | `layout-dashboard` | Local animate-ui icon wrapped by the nav imperative-ref adapter |
+| 2 | Dashboard         | `/display`   | `layout-dashboard` | Imperative-ref icon (dashboard tile pulse) |
 | 3 | What's in stock   | `/inventory` | `shopping-cart`    | Imperative-ref icon (cart-hop) |
 | 4 | Games             | `/arcade`    | `gamepad-2`        | Imperative-ref icon (controller) |
 
@@ -121,10 +121,9 @@ flag (suppresses self-hover when a parent holds the ref), `motion` elements
 bound to a single `useAnimation()` control with `normal` / `animate` variants.
 
 Core nav icons live under `src/components/lucide-animated/`: `ticket.tsx`,
-`cart.tsx`, `layout-dashboard.tsx`, and `gamepad-2.tsx`. The Dashboard icon
-uses `src/components/animate-ui/icons/layout-dashboard.tsx` as its native
-animate-ui implementation, then wraps it in the imperative-ref adapter so the
-tab bar can drive it the same way as the other icons.
+`cart.tsx`, `layout-dashboard.tsx`, and `gamepad-2.tsx`. The Dashboard nav icon
+uses the same imperative-ref pattern as the other tab icons so hover/tap and
+active-on-mount triggers can replay without remounting the SVG.
 
 > **Geometry rule:** copy the resting SVG geometry verbatim from
 > `node_modules/lucide-react/dist/esm/icons/<name>.js` (`__iconNode`) so each
@@ -188,12 +187,9 @@ src/components/
     bottom-tab-bar.tsx      # presentational: renders tabs, owns icon refs,
                             # active-on-mount effect, hover/tap → ref calls
     nav-items.ts            # the four-item config (label, href, icon, matcher)
-  animate-ui/
-    icons/
-      layout-dashboard.tsx  # native animate-ui Dashboard icon
   lucide-animated/
     ticket.tsx              # new imperative-ref icon (ticket-rip)
-    layout-dashboard.tsx    # imperative-ref adapter around animate-ui icon
+    layout-dashboard.tsx    # imperative-ref icon (dashboard tile pulse)
     cart.tsx                # new imperative-ref icon (cart-hop)
     gamepad-2.tsx           # new imperative-ref icon (controller)
 src/arcade/
@@ -273,8 +269,8 @@ is acceptable (it's navigation, not gameplay integration), but observe:
 
 - The bar must **not** pull arcade gameplay state/components into `/` or
   `src/components/readonly-display.tsx`.
-- Keep the core nav model and core icons under `src/components/navigation/`,
-  `src/components/lucide-animated/`, and `src/components/animate-ui/icons/`.
+- Keep the core nav model and core icons under `src/components/navigation/`
+  and `src/components/lucide-animated/`.
 - Keep the arcade-styled nav presentation and pixel icons under `src/arcade/*`
   so Arcade preserves its separate visual language.
 - When the bar renders on an arcade page, it is a thin link surface only.
@@ -348,8 +344,8 @@ should follow once the bar is live:
 
 - [x] Create `ticket.tsx`, `cart.tsx`, `gamepad-2.tsx` in `lucide-animated/`
       (geometry verbatim from `lucide-react`; animations per design intent).
-- [x] Add Dashboard (`/display`) using a local animate-ui
-      `layout-dashboard` icon wrapped by an imperative-ref adapter.
+- [x] Add Dashboard (`/display`) using a native imperative-ref
+      `layout-dashboard` icon.
 - [x] Build `nav-items.ts` (label, href, icon, route matcher).
 - [x] Build `bottom-tab-bar.tsx`: desktop dock + mobile bar presentations,
       `usePathname()` active detection, icon refs, active-on-mount effect
