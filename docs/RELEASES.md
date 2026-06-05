@@ -12,6 +12,8 @@ The public navigation now gives the live board a first-class entry point:
   **What's in stock**, and **Games**.
 - **Direct board access:** **Dashboard** links to `/display`, the large public
   raffle board.
+- **Core icon:** the Dashboard tab uses a native imperative `grip` icon with a
+  staggered dot-fade animation.
 - **Consistent chrome:** `/display` now renders the same fixed bottom nav as the
   other core public pages, with scroll clearance and a lower desktop dock offset
   for the dense board layout.

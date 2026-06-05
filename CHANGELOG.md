@@ -4,11 +4,11 @@
 ### Added
 - **Dashboard bottom-nav tab:** added a new **Dashboard** destination between
   **Your ticket** and **What's in stock** in the public bottom navigation,
-  linking to `/display`. The core bar uses a native imperative
-  `layout-dashboard` icon so nav hover/tap animations replay without remount
-  stutter, the Arcade bar gets a matching pixel-art dashboard glyph, and
-  `/display` now renders the bottom nav with scroll clearance and a lower
-  desktop dock offset for the dense public board.
+  linking to `/display`. The core bar uses a native imperative `grip` icon so
+  nav hover/tap animations replay without remount stutter, the Arcade bar gets
+  a matching pixel-art dashboard glyph, and `/display` now renders the bottom
+  nav with scroll clearance and a lower desktop dock offset for the dense
+  public board.
 
 ### Changed
 - **Admin "Rotate display languages" interval:** replaced the freeform minutes
