@@ -40,7 +40,7 @@ Four destinations, in this fixed order:
 | # | Label             | Route        | Icon               | Icon source |
 |---|-------------------|--------------|--------------------|-------------|
 | 1 | Your ticket       | `/`          | `ticket`           | Imperative-ref icon (ticket-rip) |
-| 2 | Dashboard         | `/display`   | `layout-dashboard` | Imperative-ref icon (dashboard tile pulse) |
+| 2 | Dashboard         | `/display`   | `grip`             | Imperative-ref icon (grip-dot fade wave) |
 | 3 | What's in stock   | `/inventory` | `shopping-cart`    | Imperative-ref icon (cart-hop) |
 | 4 | Games             | `/arcade`    | `gamepad-2`        | Imperative-ref icon (controller) |
 
@@ -121,8 +121,8 @@ flag (suppresses self-hover when a parent holds the ref), `motion` elements
 bound to a single `useAnimation()` control with `normal` / `animate` variants.
 
 Core nav icons live under `src/components/lucide-animated/`: `ticket.tsx`,
-`cart.tsx`, `layout-dashboard.tsx`, and `gamepad-2.tsx`. The Dashboard nav icon
-uses the same imperative-ref pattern as the other tab icons so hover/tap and
+`grip.tsx`, `cart.tsx`, and `gamepad-2.tsx`. The Dashboard nav icon uses the
+same imperative-ref pattern as the other tab icons so hover/tap and
 active-on-mount triggers can replay without remounting the SVG.
 
 > **Geometry rule:** copy the resting SVG geometry verbatim from
@@ -137,7 +137,7 @@ Each icon's motion is a *signal of interactivity*, themed to the destination:
 | Icon | Resting | Animated intent |
 |------|---------|-----------------|
 | **Ticket** (`/`) | Standard Lucide ticket with perforation line | **Tears in two.** Split at the perforation; translate the two halves apart by a small delta (e.g. ±1.5–2px on X) with a slight opposing rotation, then spring back to `normal`. Borrow the spring tuning from `archive.tsx` (`type: "spring", stiffness: 200, damping: 25`). |
-| **Dashboard** (`/display`) | Standard Lucide layout-dashboard tile geometry | **Tiles pulse in sequence.** The four dashboard tiles scale/fade with a short stagger, then settle back to the Lucide resting shape. |
+| **Dashboard** (`/display`) | Standard Lucide grip dot geometry | **Dots fade in sequence.** The nine grip dots fade down and back up with a short stagger, then settle back to the Lucide resting shape. |
 | **Cart** (`/inventory`) | Standard Lucide shopping-cart | **Scale + hop.** `scale: 1 → 1.1` with a one-shot `y` bounce (`[0, -5, 0]`), `ease: "easeInOut"`, ~0.3–0.4s. (Matches the CartIcon reference in the brief.) |
 | **Gamepad-2** (`/arcade`) | Standard Lucide gamepad-2 | **Controller wiggle + control fade.** The body gently translates back and forth (small X oscillation); the d-pad and face buttons fade out then fade back in (`opacity` + light spring), staggered. Compose a transform loop on a `motion.g` for the body with per-element `opacity` variants for the controls. |
 
@@ -189,7 +189,7 @@ src/components/
     nav-items.ts            # the four-item config (label, href, icon, matcher)
   lucide-animated/
     ticket.tsx              # new imperative-ref icon (ticket-rip)
-    layout-dashboard.tsx    # imperative-ref icon (dashboard tile pulse)
+    grip.tsx                # imperative-ref icon (grip-dot fade wave)
     cart.tsx                # new imperative-ref icon (cart-hop)
     gamepad-2.tsx           # new imperative-ref icon (controller)
 src/arcade/
@@ -332,7 +332,7 @@ should follow once the bar is live:
 |----------|--------|-----------|
 | Nav pattern | Bottom tab bar (Option B) | Works desktop + mobile from one model; keeps centered marquee header; always visible |
 | Inventory icon | **Cart** (`shopping-cart`) | User selection (over the handoff's box suggestion) |
-| Dashboard tab | **Route `/display` with `layout-dashboard` icon** | Gives clients and staff a direct public-board entry point between ticket lookup and inventory |
+| Dashboard tab | **Route `/display` with `grip` icon** | Gives clients and staff a direct public-board entry point between ticket lookup and inventory |
 | Icon system | Imperative-ref (`lucide-animated/`) | Trigger zone is the whole tab, larger than the icon; parent holds refs for mount animation |
 | Render trigger | **Active tab only, on mount** | Honors "animate on render" while respecting FEED's anti-repetition rule for persistent nav |
 | Gameplay visibility | **Hidden during active gameplay** | Renders on `/arcade` index, not on `/arcade/brick-mayhem`, `/arcade/snake`, or `/arcade/zombie-attack`; automatic under per-page placement |
@@ -344,8 +344,7 @@ should follow once the bar is live:
 
 - [x] Create `ticket.tsx`, `cart.tsx`, `gamepad-2.tsx` in `lucide-animated/`
       (geometry verbatim from `lucide-react`; animations per design intent).
-- [x] Add Dashboard (`/display`) using a native imperative-ref
-      `layout-dashboard` icon.
+- [x] Add Dashboard (`/display`) using a native imperative-ref `grip` icon.
 - [x] Build `nav-items.ts` (label, href, icon, route matcher).
 - [x] Build `bottom-tab-bar.tsx`: desktop dock + mobile bar presentations,
       `usePathname()` active detection, icon refs, active-on-mount effect

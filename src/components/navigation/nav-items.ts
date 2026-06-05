@@ -2,7 +2,7 @@ import type { ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from "r
 
 import { CartIcon } from "@/components/lucide-animated/cart";
 import { Gamepad2Icon } from "@/components/lucide-animated/gamepad-2";
-import { LayoutDashboardIcon } from "@/components/lucide-animated/layout-dashboard";
+import { GripIcon } from "@/components/lucide-animated/grip";
 import { TicketIcon } from "@/components/lucide-animated/ticket";
 
 // Shared imperative handle exposed by every nav icon. Core nav icons in
@@ -42,7 +42,7 @@ export const navItems: NavItem[] = [
     id: "dashboard",
     labelKey: "navDashboard",
     href: "/display",
-    icon: LayoutDashboardIcon,
+    icon: GripIcon,
     isActive: (pathname) => pathname === "/display",
   },
   {
