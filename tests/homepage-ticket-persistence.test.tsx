@@ -66,6 +66,7 @@ describe("homepage ticket persistence", () => {
 
   beforeEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
     currentState = structuredClone(statePayload);
     vi.stubGlobal(
       "fetch",

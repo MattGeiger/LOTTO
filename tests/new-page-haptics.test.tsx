@@ -83,6 +83,7 @@ describe("New page haptics", () => {
 
   beforeEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
     rawTriggerMock.mockReset();
     currentState = structuredClone(baseStatePayload);
     vi.stubGlobal(

@@ -288,7 +288,7 @@ export function PersonalizedHomePage() {
         </DialogContent>
       </Dialog>
       <BottomTabBar />
-      <TicketCalledCelebration state={latestState} />
+      <TicketCalledCelebration state={latestState} ticketNumber={selectedTicketNumber} />
     </div>
   );
 }

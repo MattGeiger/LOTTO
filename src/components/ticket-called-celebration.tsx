@@ -44,6 +44,13 @@ type TicketCalledCelebrationProps = {
    * routes that do not otherwise poll (e.g. the inventory page).
    */
   poll?: boolean;
+  /**
+   * Explicit ticket to watch. Pass on the homepage (where the number lives in
+   * React state) so the celebration fires the instant a just-entered number is
+   * already called, without waiting for the next poll. When omitted, the saved
+   * homepage ticket is read from storage (used by the display board / inventory).
+   */
+  ticketNumber?: number | null;
 };
 
 /**
@@ -55,7 +62,11 @@ type TicketCalledCelebrationProps = {
  * `lib/ticket-celebration` so the same call never re-fires when the user moves
  * between pages.
  */
-export function TicketCalledCelebration({ state: stateProp, poll = false }: TicketCalledCelebrationProps) {
+export function TicketCalledCelebration({
+  state: stateProp,
+  poll = false,
+  ticketNumber: ticketNumberProp,
+}: TicketCalledCelebrationProps) {
   const { t } = useLanguage();
   const polledState = useSelfPolledState(poll);
   const state = poll ? polledState : stateProp ?? null;
@@ -105,10 +116,18 @@ export function TicketCalledCelebration({ state: stateProp, poll = false }: Tick
   // re-read on every poll so range/expiry resets drop a stale ticket.
   React.useEffect(() => {
     const ticketContext = state ? { startNumber: state.startNumber, endNumber: state.endNumber } : null;
-    const ticketNumber = state ? readPersistedHomepageTicket(Date.now(), ticketContext) : null;
-    const calledAt = ticketNumber !== null ? state?.calledAt?.[ticketNumber] ?? null : null;
+    // Prefer an explicitly supplied ticket (homepage); otherwise read the saved
+    // ticket from storage (display board / inventory).
+    const ticketNumber =
+      ticketNumberProp !== undefined
+        ? ticketNumberProp
+        : state
+          ? readPersistedHomepageTicket(Date.now(), ticketContext)
+          : null;
+    const calledAt =
+      ticketNumber !== null && ticketNumber !== undefined ? state?.calledAt?.[ticketNumber] ?? null : null;
 
-    if (ticketNumber === null || calledAt === null) {
+    if (ticketNumber === null || ticketNumber === undefined || calledAt === null) {
       // No active call (none yet, or operator reset) — drop any open overlay.
       setShowCalledOverlay(false);
       clearConfettiLoop();
@@ -140,7 +159,7 @@ export function TicketCalledCelebration({ state: stateProp, poll = false }: Tick
       setShowCalledOverlay(false);
       clearConfettiLoop();
     }, CALLED_ALERT_DURATION_MS);
-  }, [state, clearConfettiLoop, fireConfetti]);
+  }, [state, ticketNumberProp, clearConfettiLoop, fireConfetti]);
 
   if (!showCalledOverlay) return null;
 

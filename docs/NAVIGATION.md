@@ -12,6 +12,10 @@ Replace the ad-hoc button cluster with a single persistent navigation system
 shared across all four top-level public destinations. One nav model, two
 presentations (desktop dock + mobile tab bar).
 
+> **Not in the tab bar:** the staff-facing **Help** section (`/help`,
+> `/help/[slug]`) is reached from a link on the Staff page, not the public bottom
+> tab bar. See `docs/HELP_SYSTEM.md`.
+
 This document captures the agreed design direction so implementation stays
 consistent. It is the source of truth for the nav bar; update it alongside any
 behavior change (per `AGENTS.md` documentation priority).
