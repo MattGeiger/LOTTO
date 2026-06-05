@@ -29,11 +29,15 @@ passes it to the release-notes modal.
 
 ## About
 
-- Hardcoded product/credits card in `src/components/about-dialog.tsx`: the Temple
-  Consulting logo, title, tagline, "Made by / Made for / Made with", and the
-  current version (passed in from the Staff page). The license row and GitHub
-  source button from FEED are intentionally omitted (LOTTO has no published
-  license; the repo may be private).
+- Product/credits card in `src/components/about-dialog.tsx`, matching FEED's
+  format: the Temple Consulting logo, title, tagline, "Made by / Made for / Made
+  with", the current version (passed in from the Staff page), and a **Source Code
+  on GitHub** button. Like FEED, the `DialogContent` is made transparent
+  (`border-0 bg-transparent p-0 shadow-none`) so the inner `Card` is the visible
+  surface (no card-in-a-card). LOTTO's `DialogContent` has no built-in close
+  button, so both this and the release-notes modal add an explicit `DialogClose`
+  (X, top-right). The FEED AGPL/open-source disclaimer and license row are
+  omitted (LOTTO has no published license).
 - **Logo theming:** two SVG variants in `public/` — `temple-logo-light.svg`
   (black) and `temple-logo-dark.svg` (white) — swapped with `dark:hidden` /
   `hidden dark:block`, so the logo tracks the theme selector (the `.dark` class

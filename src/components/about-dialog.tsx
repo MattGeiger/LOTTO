@@ -1,11 +1,14 @@
 "use client";
 
 import * as React from "react";
+import { Github, X } from "lucide-react";
 
 import { useAppHaptics } from "@/components/haptics-provider";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -21,9 +24,9 @@ const aboutFacts: { label: string; value: string }[] = [];
 
 /**
  * "About" link that opens a product/credits modal. Replaces the static credits
- * line on the Staff page. Adapted from FEED's AboutCard with LOTTO branding;
- * per project decision the license row and GitHub source button are omitted
- * (LOTTO has no published license and the repo may be private).
+ * line on the Staff page. Mirrors FEED's AboutCard format: a transparent
+ * DialogContent whose visible surface is the inner Card (so the card gradient is
+ * the modal, not a card-in-a-card), a close button, and a GitHub source link.
  */
 export function AboutDialog({ version }: AboutDialogProps) {
   const { trigger } = useAppHaptics();
@@ -40,13 +43,13 @@ export function AboutDialog({ version }: AboutDialogProps) {
           About
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="border-0 bg-transparent p-0 shadow-none sm:max-w-xl">
         <DialogHeader className="sr-only">
           <DialogTitle>About LOTTO</DialogTitle>
           <DialogDescription>Product, credits, and version information for LOTTO.</DialogDescription>
         </DialogHeader>
-        <Card className="rounded-lg border-0 bg-transparent shadow-none">
-          <CardContent className="flex flex-col items-center gap-6 p-2 text-center sm:p-4">
+        <Card className="rounded-lg">
+          <CardContent className="flex flex-col items-center gap-6 p-8 text-center sm:p-10">
             {/* Temple Consulting logo — black on light themes, white on dark
                 themes (the `.dark` class covers dark + dark hi-viz). */}
             <div>
@@ -123,8 +126,28 @@ export function AboutDialog({ version }: AboutDialogProps) {
                 </div>
               ))}
             </dl>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+              <Button asChild variant="secondary">
+                <a
+                  href="https://github.com/MattGeiger/LOTTO"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Github className="h-4 w-4" aria-hidden="true" />
+                  Source Code on GitHub
+                </a>
+              </Button>
+            </div>
           </CardContent>
         </Card>
+        <DialogClose
+          onClick={() => trigger("uiToggle")}
+          className="absolute right-4 top-4 rounded-sm text-muted-foreground opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogClose>
       </DialogContent>
     </Dialog>
   );
