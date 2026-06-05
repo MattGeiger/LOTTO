@@ -119,6 +119,7 @@ function renderWithLanguage(ui: React.ReactNode) {
 describe("public inventory page", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
     vi.stubGlobal(
       "ResizeObserver",
       class ResizeObserver {

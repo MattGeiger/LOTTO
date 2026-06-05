@@ -10,9 +10,10 @@ import type { DisplayLanguageRotation } from "@/lib/state-types";
  * languages on a timed interval (each shown for `intervalSeconds`). Mounted only
  * on the public board (`PublicDisplayPage`) so it never affects the personalized
  * homepage at `/`. It calls `setLanguage` from the surrounding non-persisting
- * `LanguageProvider`, so rotation never writes the shared `display-language`
- * preference. Each language change automatically triggers the board's existing
- * scramble transition and RTL direction flip.
+ * `LanguageProvider`, using its transient setter so rotation never writes the
+ * shared `display-language` preference or the session language override. Each
+ * language change automatically triggers the board's existing scramble
+ * transition and RTL direction flip.
  *
  * Rotation is intentionally independent of `prefers-reduced-motion` — showing a
  * client their own language is content/accessibility, not decoration. Only the
@@ -27,7 +28,7 @@ export function useDisplayLanguageRotation(
   config: DisplayLanguageRotation | null,
   { paused = false }: DisplayLanguageRotationOptions = {},
 ) {
-  const { setLanguage } = useLanguage();
+  const { setTransientLanguage } = useLanguage();
 
   const enabled = config?.enabled ?? false;
   const languages = React.useMemo(() => config?.languages ?? [], [config?.languages]);
@@ -41,24 +42,24 @@ export function useDisplayLanguageRotation(
     if (paused) return;
 
     if (!enabled || languages.length === 0) {
-      setLanguage("en");
+      setTransientLanguage("en");
       return;
     }
 
     let index = 0;
     // Start the cycle at the first selected language immediately.
-    setLanguage(languages[0]);
+    setTransientLanguage(languages[0]);
 
     // A single language is a static pick (no interval needed).
     if (languages.length === 1 || intervalSeconds <= 0) return;
 
     const id = window.setInterval(() => {
       index = (index + 1) % languages.length;
-      setLanguage(languages[index]);
+      setTransientLanguage(languages[index]);
     }, intervalSeconds * 1000);
 
     return () => window.clearInterval(id);
-    // `signature` encodes enabled/languages/intervalSeconds; `setLanguage` is stable.
+    // `signature` encodes enabled/languages/intervalSeconds; `setTransientLanguage` is stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signature, setLanguage]);
+  }, [signature, setTransientLanguage]);
 }

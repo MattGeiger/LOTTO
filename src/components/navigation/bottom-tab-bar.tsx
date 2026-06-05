@@ -22,12 +22,24 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function BottomTabBar() {
+type BottomTabBarProps = {
+  /**
+   * When set (used by the `/display` board), the bar hides after this many
+   * seconds of inactivity and reappears on any user activity. Omit on every
+   * other route to keep the bar permanently visible.
+   */
+  autoHideAfterSeconds?: number;
+};
+
+export function BottomTabBar({ autoHideAfterSeconds }: BottomTabBarProps = {}) {
   const pathname = usePathname() ?? "";
   const { language, t } = useLanguage();
+  const textDirection = isRTL(language) ? "rtl" : "ltr";
   const iconRefs = React.useRef<Record<string, NavIconHandle | null>>({});
   const reducedMotionRef = React.useRef(false);
-  const isDisplayRoute = pathname === "/display";
+
+  const autoHideEnabled = typeof autoHideAfterSeconds === "number" && autoHideAfterSeconds > 0;
+  const [isHidden, setIsHidden] = React.useState(false);
 
   // Active-tab-only, once-per-page-load mount animation.
   React.useEffect(() => {
@@ -41,15 +53,53 @@ export function BottomTabBar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Display-only auto-hide: start visible, hide after the inactivity window,
+  // and restore on any user activity (which also restarts the timer). Listening
+  // at the window level means the hidden bar can be pointer-events-none without
+  // trapping the user — any tap/move/key brings it back. Re-runs when the
+  // interval changes (e.g. admin edits the rotation cadence).
+  React.useEffect(() => {
+    if (!autoHideEnabled) {
+      setIsHidden(false);
+      return;
+    }
+
+    let timeoutId: number | undefined;
+    const restart = () => {
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => setIsHidden(true), autoHideAfterSeconds * 1000);
+    };
+    const handleActivity = () => {
+      setIsHidden(false);
+      restart();
+    };
+
+    const events: Array<keyof WindowEventMap> = ["pointerdown", "pointermove", "keydown", "touchstart"];
+    for (const event of events) {
+      window.addEventListener(event, handleActivity, { passive: true });
+    }
+    restart();
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      for (const event of events) {
+        window.removeEventListener(event, handleActivity);
+      }
+    };
+  }, [autoHideEnabled, autoHideAfterSeconds]);
+
   return (
     <nav
       aria-label={t("navPrimaryLabel")}
-      dir={isRTL(language) ? "rtl" : "ltr"}
+      dir="ltr"
+      aria-hidden={isHidden || undefined}
+      inert={isHidden || undefined}
+      data-auto-hidden={isHidden ? "true" : undefined}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 flex justify-center sm:px-4",
-        // The public board has dense below-the-fold content; keep its dock low
-        // so the initial viewport remains readable.
-        isDisplayRoute ? "sm:bottom-2" : "sm:bottom-9",
+        "fixed inset-x-0 bottom-0 z-40 flex justify-center sm:bottom-6 sm:px-4",
+        autoHideEnabled &&
+          (reducedMotionRef.current ? "" : "transition-[opacity,transform] duration-300 ease-out"),
+        isHidden && "pointer-events-none translate-y-full opacity-0 sm:translate-y-[calc(100%+1.5rem)]"
       )}
     >
       <ul
@@ -97,7 +147,10 @@ export function BottomTabBar() {
                     size={24}
                     className="inline-flex"
                   />
-                  <span className={cn("text-center text-xs leading-tight", active ? "font-semibold" : "font-medium")}>
+                  <span
+                    dir={textDirection}
+                    className={cn("text-center text-xs leading-tight", active ? "font-semibold" : "font-medium")}
+                  >
                     {t(item.labelKey)}
                   </span>
                 </span>

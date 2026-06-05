@@ -15,8 +15,8 @@ The public navigation now gives the live board a first-class entry point:
 - **Core icon:** the Dashboard tab uses a native imperative `grip` icon with a
   staggered dot-fade animation.
 - **Consistent chrome:** `/display` now renders the same fixed bottom nav as the
-  other core public pages, with scroll clearance and a lower desktop dock offset
-  for the dense board layout.
+  other core public pages, and the core and Arcade bars share the same desktop
+  dock offset to avoid jumps between routes.
 - **Arcade separation preserved:** the Arcade index mirrors the same four public
   destinations with its own pixel-art dashboard icon and arcade-styled bar.
 

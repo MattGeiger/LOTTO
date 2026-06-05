@@ -61,11 +61,25 @@ Four destinations, in this fixed order:
 ## Layout & Presentation
 
 ### Desktop — floating capsule dock
-- Centered horizontally, fixed ~36px from the bottom of the viewport.
-- Exception: `/display` lowers the desktop dock closer to the viewport bottom so
-  the dense public board remains readable in the initial viewport.
+- Centered horizontally, fixed consistently across public routes
+  (`sm:bottom-6` in the core and arcade tab bars).
 - Sits *above* page content; always visible regardless of scroll.
 - Full-pill shape, subtle vertical gradient, layered shadow, hairline lit edge.
+
+### Auto-hide (display board only)
+- `BottomTabBar` accepts an optional `autoHideAfterSeconds` prop. When set and
+  greater than zero, the bar hides after that many seconds of inactivity and
+  reappears on any window-level `pointerdown`/`pointermove`/`keydown`/`touchstart`
+  activity (which also restarts the timer).
+- Only `/display` passes the prop (via `PublicDisplayPage`); every other route
+  renders the bar without it, so the bar stays permanently visible there.
+- The interval is the Admin display-language rotation `intervalSeconds` when
+  rotation is enabled with a valid interval, otherwise a 5-minute fallback. See
+  `docs/DISPLAY_LANGUAGE_ROTATION.md`.
+- Hidden state is `pointer-events-none` and removed from the accessibility tree
+  (`aria-hidden` + `inert`) so it never traps focus; window-level listeners are
+  what restore it. The slide/fade transition is skipped under
+  `prefers-reduced-motion` (visibility still toggles).
 
 Directional tokens from the mock (map to LOTTO equivalents, do not hard-code hex):
 
@@ -93,6 +107,15 @@ Directional tokens from the mock (map to LOTTO equivalents, do not hard-code hex
 
 The active tab is derived from the current route (see
 [Determining the active tab](#determining-the-active-tab)).
+
+### Directionality
+- The bottom-nav **item order is structural** and stays left-to-right in every
+  language: Your ticket, Dashboard, What's in stock, Games.
+- Arabic/Farsi labels still render with `dir="rtl"` inside their label span, but
+  the nav container itself remains `dir="ltr"` so RTL does not mirror the tab
+  order.
+- Apply this same rule to top-level chrome: use RTL for localized text only when
+  it improves reading, not for broad layout mirroring.
 
 ---
 

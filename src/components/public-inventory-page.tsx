@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
+import { TicketCalledCelebration } from "@/components/ticket-called-celebration";
 import { ScrambleOnLanguageChange, T } from "@/components/core/scramble-text";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import { PackageCheck } from "@/components/animate-ui/icons/package-check";
@@ -467,6 +468,7 @@ export function PublicInventoryPage() {
         </ScrollArea>
       </div>
       <BottomTabBar />
+      <TicketCalledCelebration poll />
     </main>
     </ScrambleOnLanguageChange>
   );

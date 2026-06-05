@@ -53,16 +53,18 @@ type DisplayLanguageRotation = {
   arrives on `ReadOnlyDisplay`'s `onStateChange`, captured by
   `PublicDisplayPage`.
 - `useDisplayLanguageRotation` (`src/hooks/use-display-language-rotation.ts`)
-  cycles `setLanguage` over `config.languages` every `intervalSeconds`, starting
-  at the first language. It keys its timer on a stable signature
+  cycles the provider's transient language state over `config.languages` every
+  `intervalSeconds`, starting at the first language. It keys its timer on a stable signature
   (`enabled|languages|intervalSeconds`) so polls that don't change the config do
   not restart the cycle. A single language is a static pick (no timer). When
   rotation is disabled, cleared, or has no languages, an already-open board
   returns to English.
 - The display's `LanguageSwitcher` remains visible during rotation. If someone
-  manually chooses a language in that browser session, automatic rotation pauses
-  for that session and the manual choice stays in place until reload.
-- Each `setLanguage` automatically triggers the board's existing
+  manually chooses a language anywhere in that browser session — including
+  explicitly choosing English from the homepage — automatic rotation pauses for
+  that session and the manual choice stays in place while they navigate between
+  public routes.
+- Each language state change automatically triggers the board's existing
   `ScrambleOnLanguageChange` transition and the `isRTL` direction flip — so
   rotating into Arabic/Farsi flips the board to right-to-left for free.
 - Rotation is intentionally **independent of `prefers-reduced-motion`** — showing
@@ -71,19 +73,35 @@ type DisplayLanguageRotation = {
 
 ## Scope: `/display` only, no preference bleed
 
-The `LanguageProvider` is mounted at the root layout and persists the chosen
-language to `localStorage["display-language"]`. To keep rotation from clobbering
-that shared preference or affecting other routes:
+The `LanguageProvider` is mounted at the root layout and stores explicit manual
+language choices in `sessionStorage["display-language-session"]` for the current
+browser session. The root provider also keeps the legacy
+`localStorage["display-language"]` preference for persistent routes. To keep
+rotation from clobbering user choices or affecting other routes:
 
 - `src/app/display/page.tsx` wraps the board in a **non-persisting**
-  `LanguageProvider` (`persist={false}`, a small prop added to the provider).
-  Rotation changes the board language in memory only.
+  `LanguageProvider` (`persist={false}`). It still reads session language
+  selections, but it does not write the shared local preference.
+- Admin rotation calls the provider's transient setter, so timer-driven language
+  changes are in memory only and never create a session override.
 - The rotation hook is mounted **only by `PublicDisplayPage`**, so the
   personalized homepage (`/`) — where each client picks their own language in the
   onboarding modal — is unaffected.
 - The board's manual `LanguageSwitcher` stays available even while rotation is
-  active. A manual pick pauses automatic rotation for that browser session only;
-  it does not change the Admin setting or write the shared preference.
+  active. A manual pick on `/display`, or a prior pick on another public route,
+  pauses automatic rotation for that browser session only; it does not change the
+  Admin setting. Choosing English counts as an explicit session override.
+
+## Nav auto-hide coupling
+
+On `/display`, the bottom navigation auto-hides after an inactivity window equal
+to this rotation `intervalSeconds` (when rotation is enabled with a valid
+interval), so the board chrome clears between language cycles. When rotation is
+disabled or has no valid interval, the nav falls back to a 5-minute window. Any
+pointer/keyboard/touch activity restores the bar and restarts the timer. This
+coupling is wired in `PublicDisplayPage` via the `BottomTabBar`
+`autoHideAfterSeconds` prop and applies to `/display` only. See
+`docs/NAVIGATION.md` for the nav behavior details.
 
 ## Operational note
 
