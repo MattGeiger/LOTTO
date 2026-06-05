@@ -20,8 +20,6 @@ type AboutDialogProps = {
   version: string;
 };
 
-const aboutFacts: { label: string; value: string }[] = [];
-
 /**
  * "About" link that opens a product/credits modal. Replaces the static credits
  * line on the Staff page. Mirrors FEED's AboutCard format: a transparent
@@ -30,7 +28,10 @@ const aboutFacts: { label: string; value: string }[] = [];
  */
 export function AboutDialog({ version }: AboutDialogProps) {
   const { trigger } = useAppHaptics();
-  const facts = [...aboutFacts, { label: "Version", value: `v${version}` }];
+  const facts = [
+    { label: "Version", value: `v${version}` },
+    { label: "License", value: "MIT" },
+  ];
 
   return (
     <Dialog>
