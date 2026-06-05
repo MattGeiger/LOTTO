@@ -6,7 +6,8 @@
   from the FEED project. The version number on `/staff` is now a button that
   opens a plain-language **release notes** modal (content in
   `docs/release-notes.md`); the old static credits line is replaced by an
-  **About** modal (`src/components/about-dialog.tsx`); and a new **Help** link
+  **About** modal (`src/components/about-dialog.tsx`) with a theme-aware Temple
+  Consulting logo (`public/temple-logo-{light,dark}.svg`); and a new **Help** link
   opens a searchable, indexed help section at `/help` (index) and
   `/help/[slug]` (per-topic detail) with table of contents, scroll-spy,
   deep-linkable sections (`?q=…#section`), and search-term highlighting. Help

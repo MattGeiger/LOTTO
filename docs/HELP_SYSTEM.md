@@ -29,10 +29,17 @@ passes it to the release-notes modal.
 
 ## About
 
-- Hardcoded product/credits card in `src/components/about-dialog.tsx`: title,
-  tagline, "Made by / Made for / Made with", and the current version (passed in
-  from the Staff page). The license row and GitHub source button from FEED are
-  intentionally omitted (LOTTO has no published license; the repo may be private).
+- Hardcoded product/credits card in `src/components/about-dialog.tsx`: the Temple
+  Consulting logo, title, tagline, "Made by / Made for / Made with", and the
+  current version (passed in from the Staff page). The license row and GitHub
+  source button from FEED are intentionally omitted (LOTTO has no published
+  license; the repo may be private).
+- **Logo theming:** two SVG variants in `public/` — `temple-logo-light.svg`
+  (black) and `temple-logo-dark.svg` (white) — swapped with `dark:hidden` /
+  `hidden dark:block`, so the logo tracks the theme selector (the `.dark` class
+  covers both dark and dark hi-viz). The adaptive `Temple_Icon_System.svg` from
+  FEED is intentionally not used because its in-SVG `prefers-color-scheme` keys
+  off the OS, not LOTTO's theme toggle.
 
 ## Searchable Help
 

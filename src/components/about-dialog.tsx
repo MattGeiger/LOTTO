@@ -47,6 +47,22 @@ export function AboutDialog({ version }: AboutDialogProps) {
         </DialogHeader>
         <Card className="rounded-lg border-0 bg-transparent shadow-none">
           <CardContent className="flex flex-col items-center gap-6 p-2 text-center sm:p-4">
+            {/* Temple Consulting logo — black on light themes, white on dark
+                themes (the `.dark` class covers dark + dark hi-viz). */}
+            <div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/temple-logo-light.svg"
+                alt="Temple Consulting, LLC."
+                className="mx-auto h-20 w-20 dark:hidden"
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/temple-logo-dark.svg"
+                alt="Temple Consulting, LLC."
+                className="mx-auto hidden h-20 w-20 dark:block"
+              />
+            </div>
             <div>
               <h2 className="text-3xl font-semibold tracking-tight">LOTTO</h2>
               <p className="mt-1 text-sm font-medium text-muted-foreground">
