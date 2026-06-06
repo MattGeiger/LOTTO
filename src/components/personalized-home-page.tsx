@@ -22,6 +22,7 @@ import {
   type HomepageTicketStorageContext,
 } from "@/lib/home-ticket-storage";
 import type { RaffleState } from "@/lib/state-types";
+import { cn } from "@/lib/utils";
 import { hasSeenAnnouncement, isAnnouncementActive, markAnnouncementSeen } from "@/lib/announcement";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -223,7 +224,10 @@ export function PersonalizedHomePage() {
         }}
       >
         <DialogContent
-          className="max-w-md bg-popover/[65%] backdrop-blur-[6px] backdrop-brightness-150 backdrop-saturate-[0.85] shadow-[inset_0_3px_0_0_rgb(255_255_255/0.5),0_24px_60px_-15px_rgb(0_0_0/0.3)] dark:bg-popover/[75%] dark:backdrop-brightness-90 dark:shadow-[inset_0_3px_0_0_rgb(255_255_255/0.12),0_24px_60px_-15px_rgb(0_150_255/0.4)]"
+          className={cn(
+            "max-w-md bg-popover/[65%] backdrop-blur-[6px] backdrop-brightness-150 backdrop-saturate-[0.85] shadow-[inset_0_3px_0_0_rgb(255_255_255/0.5),0_24px_60px_-15px_rgb(0_0_0/0.3)] dark:bg-popover/[75%] dark:backdrop-brightness-90 dark:shadow-[inset_0_3px_0_0_rgb(255_255_255/0.12),0_24px_60px_-15px_rgb(0_150_255/0.4)]",
+            onboardingStep === "announcement" && "flex max-h-[85vh] flex-col",
+          )}
           onEscapeKeyDown={(event) => {
             if (onboardingStep === "language") event.preventDefault();
           }}
@@ -255,10 +259,10 @@ export function PersonalizedHomePage() {
             </>
           ) : onboardingStep === "announcement" ? (
             <>
-              <DialogHeader className="mb-3">
+              <DialogHeader className="mb-3 shrink-0">
                 <DialogTitle className="sr-only">Announcement</DialogTitle>
               </DialogHeader>
-              <ScrollArea className="max-h-[min(60vh,420px)] pr-3">
+              <ScrollArea className="-mr-3 min-h-0 flex-1 pr-3">
                 <div className="space-y-4 text-foreground">
                   {announcement ? <MarkdownGuideContent content={announcement.markdown} /> : null}
                 </div>
@@ -266,7 +270,7 @@ export function PersonalizedHomePage() {
               <Button
                 type="button"
                 haptic="uiConfirm"
-                className="mt-4 h-11 w-full text-base"
+                className="mt-4 h-11 w-full shrink-0 text-base"
                 onClick={handleAnnouncementContinue}
               >
                 <span>{t("announcementContinue")}</span>

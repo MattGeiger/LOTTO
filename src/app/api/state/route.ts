@@ -72,7 +72,7 @@ const displayLanguageRotationSchema = z
   })
   .nullable();
 
-const ANNOUNCEMENT_MAX_LENGTH = 1717;
+const ANNOUNCEMENT_MAX_LENGTH = 1800;
 
 const announcementSchema = z.object({
   enabled: z.boolean(),

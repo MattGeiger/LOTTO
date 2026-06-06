@@ -213,7 +213,7 @@ export function HelpSearch({ index, className }: HelpSearchProps) {
                   <li key={result.id} role="option" aria-selected={false}>
                     <Link
                       href={href}
-                      className="group flex w-full items-start gap-3 px-3 py-2.5 outline-none hover:bg-accent focus-visible:bg-accent"
+                      className="group flex w-full items-start gap-3 px-3 py-2.5 outline-none hover:bg-muted focus-visible:bg-muted"
                       onClick={() => setIsFocused(false)}
                     >
                       <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />

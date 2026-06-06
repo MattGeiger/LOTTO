@@ -7,9 +7,11 @@
   Italic, bulleted/numbered lists). The editor defaults to a **Live Preview** that
   is editable while showing formatting (WYSIWYG via Tiptap), with an **Edit Code**
   view for direct Markdown — toggled by an animated `animate-ui` tabs control — so
-  no Markdown knowledge is required. Announcements are capped at **1,717
-  characters** (spaces included) with a live `n/1,717` count, and long drafts
-  scroll within the editor. An optional show-from / hide-after schedule is
+  no Markdown knowledge is required. Announcements are capped at **1,800
+  characters** (spaces included) with a live `n/1,800` count, and long drafts
+  scroll within the editor. Unsaved drafts persist in browser storage, so they
+  survive switching to another app or tab (a focus-driven state refresh no
+  longer wipes the editor). An optional show-from / hide-after schedule is
   supported. One announcement is stored at a time (`RaffleState.announcement`,
   new `setAnnouncement` action). When active, it appears as a third onboarding
   step on the homepage (after language, before ticket), shown once per browser
@@ -20,6 +22,12 @@
   native underline and it needs an extra dependency.)
 
 ### Fixed
+- **Homepage announcement modal scrolls long content.** Long announcements no
+  longer overflow the dialog or cover the Continue button — the message area is
+  a bounded, scrollable region with the action pinned below it.
+- **Help table-of-contents contrast in dark mode.** The active/hover TOC entry
+  used the yellow accent background with white text; it now uses the accent
+  foreground color, and help search results use a neutral hover background.
 - **Admin "Next up" no longer lists returned tickets.** Returned numbers are
   skipped during queue advancement, so they're now excluded from the Next up
   card (the next five genuinely upcoming numbers are shown).
