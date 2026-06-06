@@ -11,6 +11,7 @@ import { ChevronLeft, ChevronRight, CircleHelp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { HelpSearch } from "@/components/help/help-search";
+import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
 import { getAllUserGuides, getHelpSearchIndex } from "@/lib/user-guides.server";
 
 export const metadata = {
@@ -22,7 +23,7 @@ export default function HelpIndexPage() {
   const searchIndex = getHelpSearchIndex();
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-10 pb-28 sm:pb-32">
       <div>
         <Button variant="ghost" size="sm" asChild>
           <Link href="/staff">
@@ -64,6 +65,7 @@ export default function HelpIndexPage() {
           </Link>
         ))}
       </div>
+      <BottomTabBar />
     </main>
   );
 }

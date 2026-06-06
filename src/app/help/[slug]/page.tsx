@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { GuideArticle } from "@/components/help/guide-article";
 import { GuideToc } from "@/components/help/guide-toc";
 import { HelpSearch } from "@/components/help/help-search";
+import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
 import { getGuideToc } from "@/lib/user-guides";
 import {
   getAllUserGuides,
@@ -44,7 +45,7 @@ export default async function HelpGuideDetailPage({ params }: { params: Promise<
   const next = index >= 0 && index < guides.length - 1 ? guides[index + 1] : null;
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-10 pb-28 sm:pb-32">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/help">
@@ -96,6 +97,7 @@ export default async function HelpGuideDetailPage({ params }: { params: Promise<
           </Button>
         ) : null}
       </nav>
+      <BottomTabBar />
     </main>
   );
 }

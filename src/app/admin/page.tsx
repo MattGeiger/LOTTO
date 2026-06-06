@@ -30,7 +30,7 @@ import {
   Redo2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { ArrowLeft } from "@/components/animate-ui/icons/arrow-left";
+import { HelpNavButton } from "@/components/help-nav-button";
 import { ChevronLeft } from "@/components/animate-ui/icons/chevron-left";
 import { ChevronRight } from "@/components/animate-ui/icons/chevron-right";
 import { Sparkles } from "@/components/animate-ui/icons/sparkles";
@@ -1650,12 +1650,17 @@ const AdminPage = () => {
     currentIndex >= 0 && state?.generatedOrder ? state.generatedOrder[currentIndex] : null;
 
   const nextFive = React.useMemo(() => {
-    if (!state?.generatedOrder) return [];
-    return state.generatedOrder.slice(
-      Math.max(0, currentIndex >= 0 ? currentIndex + 1 : 0),
-      currentIndex >= 0 ? currentIndex + 6 : 5,
-    );
-  }, [state?.generatedOrder, currentIndex]);
+    const order = state?.generatedOrder;
+    if (!order) return [];
+    const status = state?.ticketStatus ?? {};
+    const start = currentIndex >= 0 ? currentIndex + 1 : 0;
+    // Returned tickets are skipped during queue advancement, so exclude them
+    // from "Next up" — then take the next five genuinely upcoming numbers.
+    return order
+      .slice(start)
+      .filter((ticket) => status[ticket] !== "returned")
+      .slice(0, 5);
+  }, [state?.generatedOrder, state?.ticketStatus, currentIndex]);
 
   const { nextServingIndex, prevServingIndex } = React.useMemo(() => {
     const getNextNonReturnedIndex = (startIdx: number, step: 1 | -1) => {
@@ -1942,12 +1947,7 @@ const AdminPage = () => {
           />
         </div>
         <div className="flex items-center gap-3">
-          <Button asChild variant="outline" size="sm">
-            <Link href="/staff">
-              <ArrowLeft className="mr-2 size-4" animateOnHover animateOnTap animateOnView />
-              Back
-            </Link>
-          </Button>
+          <HelpNavButton />
           {pendingAction && (
             <Badge
               variant="success"

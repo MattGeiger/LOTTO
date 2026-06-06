@@ -1,6 +1,17 @@
 # Changelog
 
 ## [Unreleased]
+### Fixed
+- **Admin "Next up" no longer lists returned tickets.** Returned numbers are
+  skipped during queue advancement, so they're now excluded from the Next up
+  card (the next five genuinely upcoming numbers are shown).
+
+### Changed
+- **Admin: replaced the vestigial "Back" button with a "Help" button** (animated
+  `CircleHelp` icon, links to `/help`) now that the login/nav flow is in place.
+  The bottom navigation (public or authenticated variant) now also appears on the
+  Help pages (`/help`, `/help/[slug]`).
+
 ### Added
 - **Staff login + authenticated navigation (v2.0):** the `/staff` route is now a
   sign-in screen (the former marketing landing was retired); already-authenticated
