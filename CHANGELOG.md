@@ -1,6 +1,14 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- **Polished, promotion-ready README** with app screenshots
+  (`docs/screenshots/`), a feature/audience overview, quickstart, tech stack, and
+  license summary — modeled on the FEED project. The previous operational runbook
+  (env vars, Vercel + Neon production setup, standalone read-only board,
+  persistence) moved to [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). GitHub repo
+  description and topics were also set.
+
 ### Changed
 - **License: relicensed from MIT to AGPL-3.0-or-later**, matching the FEED
   project. The `LICENSE` file now contains the GNU AGPL v3 text, `package.json`
