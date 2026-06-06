@@ -50,6 +50,7 @@ vi.mock("@/lib/state-manager", () => ({
     setDisplayUrl: vi.fn().mockResolvedValue(mockState),
     setOperatingHours: vi.fn().mockResolvedValue(mockState),
     setDisplayLanguageRotation: vi.fn().mockResolvedValue(mockState),
+    setAnnouncement: vi.fn().mockResolvedValue(mockState),
   },
 }));
 
@@ -213,6 +214,27 @@ describe("API /api/state", () => {
       const { POST } = await import("@/app/api/state/route");
       const response = await POST(makePostRequest({ action: "revertTicketStatus" }));
       expect(response.status).toBe(400);
+    });
+
+    it("routes setAnnouncement action", async () => {
+      const { stateManager } = await import("@/lib/state-manager");
+      const { POST } = await import("@/app/api/state/route");
+      const announcement = {
+        enabled: true,
+        markdown: "## Hi",
+        startsAt: null,
+        endsAt: null,
+        updatedAt: 123,
+      };
+      const response = await POST(makePostRequest({ action: "setAnnouncement", announcement }));
+      expect(response.status).toBe(200);
+      expect(stateManager.setAnnouncement).toHaveBeenCalledWith(announcement);
+    });
+
+    it("accepts a null announcement (clearing it)", async () => {
+      const { POST } = await import("@/app/api/state/route");
+      const response = await POST(makePostRequest({ action: "setAnnouncement", announcement: null }));
+      expect(response.status).toBe(200);
     });
 
     it("routes reset action", async () => {

@@ -22,9 +22,12 @@ import {
   type HomepageTicketStorageContext,
 } from "@/lib/home-ticket-storage";
 import type { RaffleState } from "@/lib/state-types";
+import { hasSeenAnnouncement, isAnnouncementActive, markAnnouncementSeen } from "@/lib/announcement";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { MarkdownGuideContent } from "@/components/help/markdown-guide";
 import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
 import { TicketCalledCelebration } from "@/components/ticket-called-celebration";
 
@@ -42,7 +45,9 @@ const hasActiveTicketRange = (state: RaffleState | null): boolean =>
 export function PersonalizedHomePage() {
   const { setLanguage, hasSessionLanguageOverride, isLanguageHydrated, t } = useLanguage();
   const { trigger } = useAppHaptics();
-  const [onboardingStep, setOnboardingStep] = React.useState<"language" | "ticket">("language");
+  const [onboardingStep, setOnboardingStep] = React.useState<"language" | "announcement" | "ticket">(
+    "language",
+  );
   // Start closed and decide once language hydration completes (see the
   // onboarding effect below). This avoids briefly flashing the language step
   // before we know whether the client already has a session language choice.
@@ -52,6 +57,8 @@ export function PersonalizedHomePage() {
   const [selectedTicketNumber, setSelectedTicketNumber] = React.useState<number | null>(null);
   const [latestState, setLatestState] = React.useState<RaffleState | null>(null);
   const ticketRangeReady = hasActiveTicketRange(latestState);
+  const announcement = latestState?.announcement ?? null;
+  const announcementActive = isAnnouncementActive(announcement);
 
   const ticketStorageContext = React.useMemo<HomepageTicketStorageContext | null>(
     () =>
@@ -95,6 +102,17 @@ export function PersonalizedHomePage() {
     setTicketInput("");
   }, [selectedTicketNumber, ticketStorageContext]);
 
+  // Insert the announcement as a step before the ticket step: once the modal is
+  // heading to "ticket" and an active announcement hasn't been seen this session,
+  // show it first. Re-evaluates when state (and thus the announcement) loads.
+  React.useEffect(() => {
+    if (!isOnboardingModalOpen) return;
+    if (onboardingStep !== "ticket") return;
+    if (!announcement || !announcementActive) return;
+    if (hasSeenAnnouncement(announcement.updatedAt)) return;
+    setOnboardingStep("announcement");
+  }, [isOnboardingModalOpen, onboardingStep, announcement, announcementActive]);
+
   const handleLanguageSelect = React.useCallback(
     (language: Language) => {
       setLanguage(language);
@@ -134,6 +152,11 @@ export function PersonalizedHomePage() {
     setOnboardingStep("language");
   }, []);
 
+  const handleAnnouncementContinue = React.useCallback(() => {
+    if (announcement) markAnnouncementSeen(announcement.updatedAt);
+    setOnboardingStep("ticket");
+  }, [announcement]);
+
   const handleRequestTicketChange = React.useCallback(() => {
     setTicketInputError("");
     setTicketInput(selectedTicketNumber === null ? "" : String(selectedTicketNumber).padStart(2, "0"));
@@ -142,9 +165,13 @@ export function PersonalizedHomePage() {
   }, [selectedTicketNumber]);
 
   const handleDismissOnboarding = React.useCallback(() => {
+    // Leaving the announcement (skip → "just looking") counts as seen.
+    if (onboardingStep === "announcement" && announcement) {
+      markAnnouncementSeen(announcement.updatedAt);
+    }
     setTicketInputError("");
     setIsOnboardingModalOpen(false);
-  }, []);
+  }, [onboardingStep, announcement]);
 
   return (
     <div className="relative">
@@ -191,7 +218,8 @@ export function PersonalizedHomePage() {
         // forward. Step 2 (ticket) can be dismissed (X / Escape / tap-outside),
         // which routes through the same "just looking" handler.
         onOpenChange={(open) => {
-          if (!open && onboardingStep === "ticket") handleDismissOnboarding();
+          // Language is a focused gate; announcement and ticket can be dismissed.
+          if (!open && onboardingStep !== "language") handleDismissOnboarding();
         }}
       >
         <DialogContent
@@ -224,6 +252,25 @@ export function PersonalizedHomePage() {
                   </Button>
                 ))}
               </div>
+            </>
+          ) : onboardingStep === "announcement" ? (
+            <>
+              <DialogHeader className="mb-3">
+                <DialogTitle className="sr-only">Announcement</DialogTitle>
+              </DialogHeader>
+              <ScrollArea className="max-h-[min(60vh,420px)] pr-3">
+                <div className="space-y-4 text-foreground">
+                  {announcement ? <MarkdownGuideContent content={announcement.markdown} /> : null}
+                </div>
+              </ScrollArea>
+              <Button
+                type="button"
+                haptic="uiConfirm"
+                className="mt-4 h-11 w-full text-base"
+                onClick={handleAnnouncementContinue}
+              >
+                <span>{t("announcementContinue")}</span>
+              </Button>
             </>
           ) : (
             <>

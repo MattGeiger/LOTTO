@@ -1,6 +1,20 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- **Announcement builder (v2.0).** Staff can compose an announcement from the
+  Admin page using a small editor with formatting buttons (Title toggle, Bold,
+  Italic, bulleted/numbered lists) and an **Edit Code / Live Preview** toggle —
+  no Markdown knowledge required — with an optional show-from / hide-after
+  schedule. One announcement is stored at a time (`RaffleState.announcement`,
+  new `setAnnouncement` action). When active, it appears as a third onboarding
+  step on the homepage (after language, before ticket), shown once per browser
+  session and rendered with the shared Markdown renderer. New
+  `src/components/{markdown-editor,announcement-editor}.tsx`,
+  `src/lib/announcement.ts`, a `docs/user-guides/09-markdown-formatting.md` help
+  guide, and an in-editor link to it. (Underline was deferred — Markdown has no
+  native underline and it needs an extra dependency.)
+
 ### Fixed
 - **Admin "Next up" no longer lists returned tickets.** Returned numbers are
   skipped during queue advancement, so they're now excluded from the Next up

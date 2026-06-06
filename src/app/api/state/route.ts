@@ -72,6 +72,14 @@ const displayLanguageRotationSchema = z
   })
   .nullable();
 
+const announcementSchema = z.object({
+  enabled: z.boolean(),
+  markdown: z.string().max(5000),
+  startsAt: z.number().int().nullable(),
+  endsAt: z.number().int().nullable(),
+  updatedAt: z.number().int(),
+});
+
 const actionSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("generate"),
@@ -151,6 +159,10 @@ const actionSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("setDisplayLanguageRotation"),
     config: displayLanguageRotationSchema,
+  }),
+  z.object({
+    action: z.literal("setAnnouncement"),
+    announcement: announcementSchema.nullable(),
   }),
 ]);
 
@@ -271,6 +283,10 @@ export async function POST(request: Request) {
       case "setDisplayLanguageRotation":
         return NextResponse.json(
           await stateManager.setDisplayLanguageRotation(payload.config),
+        );
+      case "setAnnouncement":
+        return NextResponse.json(
+          await stateManager.setAnnouncement(payload.announcement),
         );
       default:
         return NextResponse.json({ error: "Unsupported action" }, { status: 400 });

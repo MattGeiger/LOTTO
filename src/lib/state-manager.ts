@@ -12,6 +12,7 @@ import path from "node:path";
 import {
   defaultState,
   formatTimestamp,
+  type Announcement,
   type DisplayLanguageRotation,
   type Mode,
   type OperatingHours,
@@ -191,6 +192,7 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
       operatingHours: current.operatingHours ?? defaultState.operatingHours,
       timezone: current.timezone ?? defaultState.timezone,
       displayLanguageRotation: current.displayLanguageRotation ?? null,
+      announcement: current.announcement ?? null,
     });
   };
 
@@ -615,6 +617,11 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
     return persist({ ...current, displayLanguageRotation: config });
   };
 
+  const setAnnouncement = async (announcement: Announcement | null) => {
+    const current = await safeReadState();
+    return persist({ ...current, announcement });
+  };
+
   const getDisplayUrl = async () => {
     const current = await safeReadState();
     return current.displayUrl || null;
@@ -641,6 +648,7 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
     getDisplayUrl,
     setOperatingHours,
     setDisplayLanguageRotation,
+    setAnnouncement,
   };
 };
 
