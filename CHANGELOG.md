@@ -1,6 +1,16 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- **License: relicensed from MIT to AGPL-3.0-or-later**, matching the FEED
+  project. The `LICENSE` file now contains the GNU AGPL v3 text, `package.json`
+  declares `"license": "AGPL-3.0-or-later"`, and every `.ts`/`.tsx` source file
+  carries an SPDX header. A new `TRADEMARKS.md` carves the William Temple House
+  name, logos, visual identity, and production domain out of the code license
+  (they are not open source), and the About modal now shows the AGPL license plus
+  a short open-source/branding notice. Third-party and WTH-branding assets are
+  unaffected by the code license.
+
 ### Added
 - **Staff page: Release Notes modal, About modal, and searchable Help.** Adapted
   from the FEED project. The version number on `/staff` is now a button that

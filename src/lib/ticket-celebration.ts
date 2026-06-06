@@ -1,3 +1,10 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025 Matt Geiger, Temple Consulting, LLC.
+//
+// LOTTO — Line Order Transparency & Ticketing Organizer. Application code
+// licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
+// is not covered by this license; see TRADEMARKS.md.
+
 /**
  * Shared constants + cross-page dedup for the "your ticket was called"
  * celebration (overlay + confetti). The celebration is mounted on every public

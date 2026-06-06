@@ -1,3 +1,10 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025 Matt Geiger, Temple Consulting, LLC.
+//
+// LOTTO — Line Order Transparency & Ticketing Organizer. Application code
+// licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
+// is not covered by this license; see TRADEMARKS.md.
+
 // Canonical list of supported display languages. Kept in a plain (non-"use
 // client") module so both server code (e.g. the API route's Zod enum) and
 // client components (language context, onboarding, the rotation editor) can
