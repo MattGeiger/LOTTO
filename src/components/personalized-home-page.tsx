@@ -27,7 +27,6 @@ import { hasSeenAnnouncement, isAnnouncementActive, markAnnouncementSeen } from 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { MarkdownGuideContent } from "@/components/help/markdown-guide";
 import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
 import { TicketCalledCelebration } from "@/components/ticket-called-celebration";
@@ -262,11 +261,11 @@ export function PersonalizedHomePage() {
               <DialogHeader className="mb-3 shrink-0">
                 <DialogTitle className="sr-only">Announcement</DialogTitle>
               </DialogHeader>
-              <ScrollArea className="-mr-3 min-h-0 flex-1 pr-3">
+              <div className="min-h-0 flex-1 overflow-y-auto pr-1">
                 <div className="space-y-4 text-foreground">
                   {announcement ? <MarkdownGuideContent content={announcement.markdown} /> : null}
                 </div>
-              </ScrollArea>
+              </div>
               <Button
                 type="button"
                 haptic="uiConfirm"
