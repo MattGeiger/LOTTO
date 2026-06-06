@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 ### Added
+- **Ticket-status revert (v2.0):** Returned and Unclaimed ticket numbers in the
+  admin Live State lists are now tappable. Tapping one opens a confirm dialog
+  ("Revert Returned/Unclaimed Ticket") that clears the status, returning the
+  ticket to its normal state without rewinding the current "now serving"
+  position. Adds a `revertTicketStatus` API action + state-manager support
+  (file + Neon), optimistic UI, and tests.
 - **Polished, promotion-ready README** with app screenshots
   (`docs/screenshots/`) — including **dark mode** and **localized** boards
   (Chinese, Russian, Arabic/RTL) — a feature/audience overview, quickstart, tech

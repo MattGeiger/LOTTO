@@ -493,6 +493,34 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
     });
   };
 
+  const revertTicketStatus = async (ticketNumber: number) => {
+    const current = await safeReadState();
+    ensureHasRange(current);
+
+    if (!Number.isInteger(ticketNumber) || ticketNumber <= 0) {
+      throw new Error("Ticket number must be a positive integer.");
+    }
+    if (ticketNumber < current.startNumber || ticketNumber > current.endNumber) {
+      throw new Error("Ticket number must be within the active range.");
+    }
+
+    const currentStatus = current.ticketStatus?.[ticketNumber];
+    if (currentStatus !== "returned" && currentStatus !== "unclaimed") {
+      // Nothing to revert — leave state unchanged (idempotent, race-safe).
+      return current;
+    }
+
+    const nextStatus = { ...(current.ticketStatus ?? {}) } as RaffleState["ticketStatus"];
+    delete nextStatus[ticketNumber];
+
+    // Clearing the flag only restores the ticket's "not called" state; it does
+    // not rewind currentlyServing/calledAt (which advanced when it was marked).
+    return persist({
+      ...current,
+      ticketStatus: nextStatus,
+    });
+  };
+
   const resetState = async () => {
     const current = await safeReadState();
     return persist({
@@ -603,6 +631,7 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
     advanceServing,
     markTicketReturned,
     markTicketUnclaimed,
+    revertTicketStatus,
     resetState,
     listSnapshots,
     restoreSnapshot,

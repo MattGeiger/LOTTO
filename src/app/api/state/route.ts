@@ -114,6 +114,10 @@ const actionSchema = z.discriminatedUnion("action", [
     ticketNumber: z.number().int().positive(),
   }),
   z.object({
+    action: z.literal("revertTicketStatus"),
+    ticketNumber: z.number().int().positive(),
+  }),
+  z.object({
     action: z.literal("reset"),
   }),
   z.object({
@@ -241,6 +245,10 @@ export async function POST(request: Request) {
       case "markUnclaimed":
         return NextResponse.json(
           await stateManager.markTicketUnclaimed(payload.ticketNumber),
+        );
+      case "revertTicketStatus":
+        return NextResponse.json(
+          await stateManager.revertTicketStatus(payload.ticketNumber),
         );
       case "reset":
         return NextResponse.json(await stateManager.resetState());

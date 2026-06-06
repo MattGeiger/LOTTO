@@ -270,6 +270,53 @@ describe("state manager", () => {
     );
   });
 
+  it("reverts a returned ticket back to no status", async () => {
+    await manager.generateState({ startNumber: 10, endNumber: 12, mode: "random" });
+    await manager.markTicketReturned(11);
+
+    const reverted = await manager.revertTicketStatus(11);
+
+    expect(reverted.ticketStatus[11]).toBeUndefined();
+  });
+
+  it("reverts an unclaimed ticket back to no status", async () => {
+    await manager.generateState({ startNumber: 1, endNumber: 3, mode: "sequential" });
+    await manager.updateCurrentlyServing(2);
+    await manager.markTicketUnclaimed(1);
+
+    const reverted = await manager.revertTicketStatus(1);
+
+    expect(reverted.ticketStatus[1]).toBeUndefined();
+  });
+
+  it("does not rewind now-serving when reverting a returned ticket", async () => {
+    await manager.generateState({ startNumber: 1, endNumber: 3, mode: "sequential" });
+    await manager.updateCurrentlyServing(2);
+    const afterReturn = await manager.markTicketReturned(2);
+    expect(afterReturn.currentlyServing).toBe(3);
+
+    const reverted = await manager.revertTicketStatus(2);
+
+    expect(reverted.ticketStatus[2]).toBeUndefined();
+    expect(reverted.currentlyServing).toBe(3);
+  });
+
+  it("is a no-op when reverting a ticket with no returned/unclaimed status", async () => {
+    await manager.generateState({ startNumber: 1, endNumber: 3, mode: "sequential" });
+
+    const reverted = await manager.revertTicketStatus(2);
+
+    expect(reverted.ticketStatus[2]).toBeUndefined();
+  });
+
+  it("rejects revert updates outside the active range", async () => {
+    await manager.generateState({ startNumber: 1, endNumber: 2, mode: "random" });
+
+    await expect(manager.revertTicketStatus(10)).rejects.toThrow(
+      /within the active range/i,
+    );
+  });
+
   it("clears returned ticket flags on reset", async () => {
     await manager.generateState({ startNumber: 1, endNumber: 2, mode: "random" });
     await manager.markTicketReturned(1);

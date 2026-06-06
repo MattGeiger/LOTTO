@@ -33,6 +33,10 @@ Not every called number shows up. You can mark a ticket:
 
 Mark these from the dashboard; the board updates with the matching status color.
 
+**Made a mistake?** In the **Returned tickets** and **Unclaimed tickets** lists,
+tap any ticket number and confirm **Revert** to clear its status — the ticket
+returns to normal without changing who's currently being served.
+
 ## Operating Hours & the Display URL
 
 - **Operating hours** tell the board when the pantry is open, before-open, or
