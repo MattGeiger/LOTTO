@@ -33,7 +33,7 @@ function GuideTocLinks({ items }: { items: GuideTocItem[] }) {
             data-guide-toc-link
             data-heading-id={item.id}
             className={cn(
-              "block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[active=true]:bg-accent data-[active=true]:font-medium data-[active=true]:text-foreground",
+              "block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:font-medium data-[active=true]:text-accent-foreground",
               item.depth === 3 && "ml-3 text-xs",
             )}
           >

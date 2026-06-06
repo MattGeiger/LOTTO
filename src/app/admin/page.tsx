@@ -101,6 +101,8 @@ type ActionPayload =
   | { action: "setAnnouncement"; announcement: Announcement | null }
   | { action: "generateBatch"; startNumber: number; endNumber: number; batchSize: number };
 
+const ANNOUNCEMENT_DRAFT_KEY = "lotto:announcement-draft";
+
 type Snapshot = {
   id: string;
   timestamp: number;
@@ -1021,6 +1023,12 @@ const AdminPage = () => {
   const [pendingRotation, setPendingRotation] =
     React.useState<DisplayLanguageRotation | null>(null);
   const [pendingAnnouncement, setPendingAnnouncement] = React.useState<Announcement | null>(null);
+  // Tracks whether the announcement draft has been hydrated from localStorage,
+  // and the server announcement we last reconciled the draft against. Together
+  // these keep an unsaved draft from being wiped when the tab regains focus and
+  // re-fetches state, while still adopting genuine server-side changes.
+  const announcementHydratedRef = React.useRef(false);
+  const syncedAnnouncementRef = React.useRef<string | null>(null);
   const [timezoneMismatchOpen, setTimezoneMismatchOpen] = React.useState(false);
   const browserOriginRef = React.useRef<string | null>(null);
   const stateRef = React.useRef<RaffleState | null>(null);
@@ -1219,8 +1227,51 @@ const AdminPage = () => {
 
   React.useEffect(() => {
     setPendingRotation(state?.displayLanguageRotation ?? null);
-    setPendingAnnouncement(state?.announcement ?? null);
-  }, [state?.displayLanguageRotation, state?.announcement]);
+  }, [state?.displayLanguageRotation]);
+
+  // Reconcile the announcement draft with server state without discarding
+  // unsaved edits. On first load we hydrate from a persisted draft (so it
+  // survives reloads and app switches); afterward we only adopt the server
+  // value when it genuinely changes (e.g., saved on another device).
+  React.useEffect(() => {
+    const server = state?.announcement ?? null;
+    const serverKey = JSON.stringify(server);
+
+    if (!announcementHydratedRef.current) {
+      announcementHydratedRef.current = true;
+      syncedAnnouncementRef.current = serverKey;
+      let draft: Announcement | null = null;
+      try {
+        const raw = window.localStorage.getItem(ANNOUNCEMENT_DRAFT_KEY);
+        if (raw) draft = JSON.parse(raw) as Announcement;
+      } catch {
+        draft = null;
+      }
+      setPendingAnnouncement(draft ?? server);
+      return;
+    }
+
+    if (serverKey !== syncedAnnouncementRef.current) {
+      syncedAnnouncementRef.current = serverKey;
+      setPendingAnnouncement(server);
+    }
+  }, [state?.announcement]);
+
+  // Persist the announcement draft to browser storage while it diverges from
+  // the saved server value; clear it once they match (e.g., after saving).
+  React.useEffect(() => {
+    try {
+      const serverKey = JSON.stringify(state?.announcement ?? null);
+      const draftKey = JSON.stringify(pendingAnnouncement ?? null);
+      if (draftKey === serverKey) {
+        window.localStorage.removeItem(ANNOUNCEMENT_DRAFT_KEY);
+      } else {
+        window.localStorage.setItem(ANNOUNCEMENT_DRAFT_KEY, draftKey);
+      }
+    } catch {
+      // Ignore storage failures (private mode, quota, etc.).
+    }
+  }, [pendingAnnouncement, state?.announcement]);
 
   const postAction = React.useCallback(async (payload: ActionPayload) => {
     const response = await fetch("/api/state", {

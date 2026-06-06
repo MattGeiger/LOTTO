@@ -36,7 +36,7 @@ type MarkdownEditorProps = {
   maxLength?: number;
 };
 
-export const ANNOUNCEMENT_MAX_LENGTH = 1717;
+export const ANNOUNCEMENT_MAX_LENGTH = 1800;
 
 const PROSE =
   "[&_h2]:mt-3 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:tracking-tight [&_h3]:mt-2 [&_h3]:text-lg [&_h3]:font-semibold [&_p]:leading-7 [&_ul]:ml-5 [&_ul]:list-disc [&_ul]:space-y-1 [&_ol]:ml-5 [&_ol]:list-decimal [&_ol]:space-y-1 [&_strong]:font-semibold [&_em]:italic [&_a]:underline";
