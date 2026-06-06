@@ -212,15 +212,15 @@ export function MarkdownEditor({
 
         <div className="relative ml-auto">
           <TabsHighlight className="absolute inset-1 z-0 rounded-sm bg-background shadow-sm">
-            <TabsList className="inline-flex gap-1 rounded-md border bg-accent/60 p-1">
+            <TabsList className="inline-flex gap-1 rounded-md border bg-muted p-1">
               <TabsHighlightItem value="preview">
-                <TabsTrigger value="preview" className="relative z-10 inline-flex h-7 items-center gap-1.5 px-2 text-xs">
+                <TabsTrigger value="preview" className="relative z-10 inline-flex h-7 min-w-0 items-center gap-1.5 px-2 text-xs text-muted-foreground">
                   <Eye className="h-3.5 w-3.5" />
                   Live preview
                 </TabsTrigger>
               </TabsHighlightItem>
               <TabsHighlightItem value="code">
-                <TabsTrigger value="code" className="relative z-10 inline-flex h-7 items-center gap-1.5 px-2 text-xs">
+                <TabsTrigger value="code" className="relative z-10 inline-flex h-7 min-w-0 items-center gap-1.5 px-2 text-xs text-muted-foreground">
                   <Code className="h-3.5 w-3.5" />
                   Edit code
                 </TabsTrigger>
