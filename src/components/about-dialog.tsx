@@ -1,3 +1,10 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025 Matt Geiger, Temple Consulting, LLC.
+//
+// LOTTO — Line Order Transparency & Ticketing Organizer. Application code
+// licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
+// is not covered by this license; see TRADEMARKS.md.
+
 "use client";
 
 import * as React from "react";
@@ -30,7 +37,7 @@ export function AboutDialog({ version }: AboutDialogProps) {
   const { trigger } = useAppHaptics();
   const facts = [
     { label: "Version", value: `v${version}` },
-    { label: "License", value: "MIT" },
+    { label: "License", value: "AGPL-3.0-or-later" },
   ];
 
   return (
@@ -127,6 +134,12 @@ export function AboutDialog({ version }: AboutDialogProps) {
                 </div>
               ))}
             </dl>
+
+            <p className="max-w-md text-xs leading-5 text-muted-foreground">
+              The application code is open source under AGPL-3.0-or-later. William
+              Temple House branding is not open source and may not be reused without
+              separate permission.
+            </p>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
               <Button asChild variant="secondary">
