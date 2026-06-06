@@ -39,6 +39,7 @@ const baseState: RaffleState = {
   operatingHours: null,
   timezone: "America/Los_Angeles",
   displayLanguageRotation: null,
+        announcement: null,
 };
 
 const calledState: RaffleState = { ...baseState, calledAt: { 24: 1_739_898_060_000 } };

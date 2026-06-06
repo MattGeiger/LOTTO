@@ -72,9 +72,11 @@ const displayLanguageRotationSchema = z
   })
   .nullable();
 
+const ANNOUNCEMENT_MAX_LENGTH = 1717;
+
 const announcementSchema = z.object({
   enabled: z.boolean(),
-  markdown: z.string().max(5000),
+  markdown: z.string().max(ANNOUNCEMENT_MAX_LENGTH),
   startsAt: z.number().int().nullable(),
   endsAt: z.number().int().nullable(),
   updatedAt: z.number().int(),

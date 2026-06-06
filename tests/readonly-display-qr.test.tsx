@@ -61,6 +61,7 @@ const baseState: RaffleState = {
   operatingHours: null,
   timezone: "America/Los_Angeles",
   displayLanguageRotation: null,
+        announcement: null,
 };
 
 const lastQrTarget = () => toCanvasMock.mock.calls.at(-1)?.[1] as string | undefined;

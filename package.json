@@ -29,6 +29,9 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-email/components": "^1.0.1",
+    "@tiptap/pm": "^3.26.0",
+    "@tiptap/react": "^3.26.0",
+    "@tiptap/starter-kit": "^3.26.0",
     "@vercel/speed-insights": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -54,6 +57,7 @@
     "server-only": "^0.0.1",
     "sonner": "^1.7.4",
     "tailwind-merge": "^3.4.0",
+    "tiptap-markdown": "^0.9.0",
     "web-haptics": "^0.0.6",
     "zod": "^4.1.12"
   },

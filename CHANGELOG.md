@@ -4,9 +4,13 @@
 ### Added
 - **Announcement builder (v2.0).** Staff can compose an announcement from the
   Admin page using a small editor with formatting buttons (Title toggle, Bold,
-  Italic, bulleted/numbered lists) and an **Edit Code / Live Preview** toggle —
-  no Markdown knowledge required — with an optional show-from / hide-after
-  schedule. One announcement is stored at a time (`RaffleState.announcement`,
+  Italic, bulleted/numbered lists). The editor defaults to a **Live Preview** that
+  is editable while showing formatting (WYSIWYG via Tiptap), with an **Edit Code**
+  view for direct Markdown — toggled by an animated `animate-ui` tabs control — so
+  no Markdown knowledge is required. Announcements are capped at **1,717
+  characters** (spaces included) with a live `n/1,717` count, and long drafts
+  scroll within the editor. An optional show-from / hide-after schedule is
+  supported. One announcement is stored at a time (`RaffleState.announcement`,
   new `setAnnouncement` action). When active, it appears as a third onboarding
   step on the homepage (after language, before ticket), shown once per browser
   session and rendered with the shared Markdown renderer. New

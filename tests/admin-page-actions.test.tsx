@@ -18,6 +18,10 @@ vi.mock("@/components/navigation/bottom-tab-bar", () => ({
   BottomTabBar: () => null,
 }));
 
+vi.mock("@/components/announcement-editor", () => ({
+  AnnouncementEditor: () => null,
+}));
+
 vi.mock("sonner", () => ({
   toast: {
     error: (...args: unknown[]) => toastError(...args),
