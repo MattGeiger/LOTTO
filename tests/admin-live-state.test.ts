@@ -57,6 +57,46 @@ function computeMaxWaitMinutes(peopleWaiting: number): number | null {
   return peopleWaiting > 0 ? Math.round(peopleWaiting * MINUTES_PER_TICKET) : null;
 }
 
+// Mirrors the "Next up" computation in src/app/admin/page.tsx
+function computeNextUp(
+  generatedOrder: number[] | undefined,
+  currentIndex: number,
+  ticketStatus: Record<number, TicketStatus> | undefined,
+): number[] {
+  if (!generatedOrder) return [];
+  const status = ticketStatus ?? {};
+  const start = currentIndex >= 0 ? currentIndex + 1 : 0;
+  return generatedOrder
+    .slice(start)
+    .filter((ticket) => status[ticket] !== "returned")
+    .slice(0, 5);
+}
+
+describe("Admin Live State: Next up", () => {
+  it("lists the upcoming tickets after the current position", () => {
+    const order = [5, 3, 1, 4, 2, 6, 7];
+    expect(computeNextUp(order, 1, undefined)).toEqual([1, 4, 2, 6, 7]);
+  });
+
+  it("excludes returned tickets (they are skipped in advancement)", () => {
+    const order = [5, 3, 1, 4, 2, 6, 7];
+    // 1 and 6 are returned → should not appear in Next up.
+    const status: Record<number, TicketStatus> = { 1: "returned", 6: "returned" };
+    expect(computeNextUp(order, 1, status)).toEqual([4, 2, 7]);
+  });
+
+  it("caps the list at five upcoming tickets", () => {
+    const order = [1, 2, 3, 4, 5, 6, 7, 8];
+    expect(computeNextUp(order, -1, undefined)).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it("keeps five after skipping returned tickets when enough remain", () => {
+    const order = [1, 2, 3, 4, 5, 6, 7, 8];
+    const status: Record<number, TicketStatus> = { 2: "returned", 4: "returned" };
+    expect(computeNextUp(order, -1, status)).toEqual([1, 3, 5, 6, 7]);
+  });
+});
+
 describe("Admin Live State: Tickets Called", () => {
   it("returns 0 when no tickets are generated", () => {
     expect(computeTicketsCalled(undefined, -1, undefined)).toBe(0);
