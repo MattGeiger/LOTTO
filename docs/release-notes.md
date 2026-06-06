@@ -1,7 +1,3 @@
-# Release notes
-
-Plain-language summaries of what's new in LOTTO, newest first. For the full
-technical history, see `CHANGELOG.md` and `docs/RELEASES.md`.
 
 ## Unreleased
 

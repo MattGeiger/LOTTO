@@ -33,6 +33,9 @@
   and language.
 
 ### Changed
+- **Help detail layout:** aligned the desktop "On this page" sidebar with the
+  guide article card on initial page load while preserving its sticky scroll
+  behavior.
 - **License: relicensed from MIT to AGPL-3.0-or-later**, matching the FEED
   project. The `LICENSE` file now contains the GNU AGPL v3 text, `package.json`
   declares `"license": "AGPL-3.0-or-later"`, and every `.ts`/`.tsx` source file

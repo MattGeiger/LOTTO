@@ -53,7 +53,9 @@ Routed pages, statically generated:
 - `src/app/help/page.tsx` — index: search box + a card grid of guides.
 - `src/app/help/[slug]/page.tsx` — detail: search box, table of contents
   (mobile collapsible + desktop sticky with scroll-spy), the rendered guide, and
-  previous/next navigation. `generateStaticParams` prerenders one page per guide.
+  previous/next navigation. The desktop table of contents is aligned with the
+  guide article card on initial page load, then sticks below the top chrome while
+  scrolling. `generateStaticParams` prerenders one page per guide.
 
 ### Authoring content
 
