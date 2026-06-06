@@ -91,6 +91,27 @@ color-coded drawing-order grid, ticket search, and a QR code to their phone.
 
 ![Arcade index](./docs/screenshots/arcade.png)
 
+### Dark mode
+
+Light, dark, and a flat high-visibility theme are all supported. The board and
+staff dashboard in dark:
+
+| Display board | Staff dashboard |
+|---|---|
+| ![Display board, dark mode](./docs/screenshots/display-board-dark.png) | ![Staff landing, dark mode](./docs/screenshots/staff-dark.png) |
+
+### Localization
+
+The same display board in Chinese, Russian, and Arabic — note the right-to-left
+layout for Arabic (and Persian), with ticket numbers kept in their natural order:
+
+| 中文 (Chinese) | Русский (Russian) | العربية (Arabic, RTL) |
+|---|---|---|
+| ![Display board in Chinese](./docs/screenshots/display-board-zh.png) | ![Display board in Russian](./docs/screenshots/display-board-ru.png) | ![Display board in Arabic](./docs/screenshots/display-board-ar.png) |
+
+> Regenerate all screenshots with `npm run screenshots` while the app is running
+> (drives your installed Chrome via `puppeteer-core`).
+
 ---
 
 ## Quickstart (development)

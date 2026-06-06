@@ -3,11 +3,16 @@
 ## [Unreleased]
 ### Added
 - **Polished, promotion-ready README** with app screenshots
-  (`docs/screenshots/`), a feature/audience overview, quickstart, tech stack, and
-  license summary — modeled on the FEED project. The previous operational runbook
-  (env vars, Vercel + Neon production setup, standalone read-only board,
-  persistence) moved to [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). GitHub repo
-  description and topics were also set.
+  (`docs/screenshots/`) — including **dark mode** and **localized** boards
+  (Chinese, Russian, Arabic/RTL) — a feature/audience overview, quickstart, tech
+  stack, and license summary, modeled on the FEED project. The previous
+  operational runbook (env vars, Vercel + Neon production setup, standalone
+  read-only board, persistence) moved to [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+  GitHub repo description and topics were also set.
+- **`npm run screenshots`** — a reproducible screenshot generator
+  (`scripts/screenshots.mjs`) that drives the installed Chrome via `puppeteer-core`
+  (dev dependency, no bundled browser) to capture each surface at a pinned theme
+  and language.
 
 ### Changed
 - **License: relicensed from MIT to AGPL-3.0-or-later**, matching the FEED
