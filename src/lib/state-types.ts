@@ -36,6 +36,17 @@ export type DisplayLanguageRotation = {
   intervalSeconds: number;
 };
 
+export type Announcement = {
+  enabled: boolean;
+  /** Markdown body authored in the admin announcement editor. */
+  markdown: string;
+  /** Optional display window (epoch ms); null means unbounded on that side. */
+  startsAt: number | null;
+  endsAt: number | null;
+  /** Last save time (epoch ms); also used to key "seen this session". */
+  updatedAt: number;
+};
+
 export type RaffleState = {
   startNumber: number;
   endNumber: number;
@@ -50,6 +61,7 @@ export type RaffleState = {
   operatingHours: OperatingHours | null;
   timezone: string;
   displayLanguageRotation: DisplayLanguageRotation | null;
+  announcement: Announcement | null;
 };
 
 export const defaultState: RaffleState = {
@@ -74,6 +86,7 @@ export const defaultState: RaffleState = {
   },
   timezone: "America/Los_Angeles",
   displayLanguageRotation: null,
+  announcement: null,
 };
 
 export const formatTimestamp = (timestamp: number) => {

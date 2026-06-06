@@ -18,6 +18,7 @@ import {
   History,
   Languages,
   Loader2,
+  Megaphone,
   MonitorCheck,
   ScanQrCode,
   HandPlatter,
@@ -40,6 +41,7 @@ import { ConfirmAction } from "@/components/confirm-action";
 import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
 import { OperatingHoursEditor } from "@/components/operating-hours-editor";
 import { DisplayLanguageRotationEditor } from "@/components/display-language-rotation-editor";
+import { AnnouncementEditor } from "@/components/announcement-editor";
 import { ArchiveIcon, type ArchiveIconHandle } from "@/components/lucide-animated/archive";
 import {
   AlertDialog,
@@ -70,6 +72,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import {
   defaultState,
+  type Announcement,
   type DisplayLanguageRotation,
   type Mode,
   type OperatingHours,
@@ -95,6 +98,7 @@ type ActionPayload =
   | { action: "setDisplayUrl"; url: string | null }
   | { action: "setOperatingHours"; hours: OperatingHours; timezone: string }
   | { action: "setDisplayLanguageRotation"; config: DisplayLanguageRotation | null }
+  | { action: "setAnnouncement"; announcement: Announcement | null }
   | { action: "generateBatch"; startNumber: number; endNumber: number; batchSize: number };
 
 type Snapshot = {
@@ -443,6 +447,14 @@ const applySetDisplayLanguageRotationOptimistic = (
   displayLanguageRotation: config,
 });
 
+const applySetAnnouncementOptimistic = (
+  state: RaffleState,
+  announcement: Announcement | null,
+): RaffleState => ({
+  ...state,
+  announcement,
+});
+
 const buildOptimisticPatch = (
   id: string,
   payload: ActionPayload,
@@ -511,6 +523,12 @@ const buildOptimisticPatch = (
         id,
         kind: payload.action,
         apply: (state) => applySetDisplayLanguageRotationOptimistic(state, payload.config),
+      };
+    case "setAnnouncement":
+      return {
+        id,
+        kind: payload.action,
+        apply: (state) => applySetAnnouncementOptimistic(state, payload.announcement),
       };
     case "generate":
       if (payload.mode !== "sequential") return null;
@@ -1002,6 +1020,7 @@ const AdminPage = () => {
   const [pendingTimezone, setPendingTimezone] = React.useState<string>("America/Los_Angeles");
   const [pendingRotation, setPendingRotation] =
     React.useState<DisplayLanguageRotation | null>(null);
+  const [pendingAnnouncement, setPendingAnnouncement] = React.useState<Announcement | null>(null);
   const [timezoneMismatchOpen, setTimezoneMismatchOpen] = React.useState(false);
   const browserOriginRef = React.useRef<string | null>(null);
   const stateRef = React.useRef<RaffleState | null>(null);
@@ -1200,7 +1219,8 @@ const AdminPage = () => {
 
   React.useEffect(() => {
     setPendingRotation(state?.displayLanguageRotation ?? null);
-  }, [state?.displayLanguageRotation]);
+    setPendingAnnouncement(state?.announcement ?? null);
+  }, [state?.displayLanguageRotation, state?.announcement]);
 
   const postAction = React.useCallback(async (payload: ActionPayload) => {
     const response = await fetch("/api/state", {
@@ -1512,6 +1532,23 @@ const AdminPage = () => {
     const next = config && config.languages.length > 0 ? config : null;
     await sendAction({ action: "setDisplayLanguageRotation", config: next });
   }, [pendingRotation, sendAction]);
+
+  const handleSaveAnnouncement = React.useCallback(async () => {
+    const draft = pendingAnnouncement;
+    if (draft?.enabled && draft.markdown.trim().length === 0) {
+      toast.error("Add a message to show an announcement.");
+      return;
+    }
+    if (draft?.startsAt != null && draft.endsAt != null && draft.endsAt <= draft.startsAt) {
+      toast.error('"Hide after" must be later than "Show from".');
+      return;
+    }
+    // Persist null only when there's nothing authored; otherwise keep the draft
+    // (enabled or not) so the message is remembered. Stamp the save time.
+    const next: Announcement | null =
+      draft && draft.markdown.trim().length > 0 ? { ...draft, updatedAt: Date.now() } : null;
+    await sendAction({ action: "setAnnouncement", announcement: next });
+  }, [pendingAnnouncement, sendAction]);
 
   const handleCleanup = async (days: number) => {
     setCleanupMessage(null);
@@ -2679,6 +2716,35 @@ const AdminPage = () => {
                 disabled={loading || nonDrawActionPending}
               >
                 Save language rotation
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card space-y-4 lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Megaphone className="size-4 text-muted-foreground" />
+                Announcement
+              </CardTitle>
+              <CardDescription>
+                Show a message to clients during onboarding (after they choose a language, before
+                entering a ticket). Format it with the toolbar — no Markdown knowledge needed.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-1 flex-col gap-4">
+              <AnnouncementEditor
+                value={pendingAnnouncement}
+                onChange={setPendingAnnouncement}
+                disabled={loading || nonDrawActionPending}
+              />
+              <Button
+                variant="default"
+                size="sm"
+                className="mt-auto self-start"
+                onClick={handleSaveAnnouncement}
+                disabled={loading || nonDrawActionPending}
+              >
+                Save announcement
               </Button>
             </CardContent>
           </Card>
