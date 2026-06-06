@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 ### Added
+- **Staff login + authenticated navigation (v2.0):** the `/staff` route is now a
+  sign-in screen (the former marketing landing was retired); already-authenticated
+  visitors are redirected to `/admin`. `/login` and `/staff` share one login
+  experience (`src/components/login-experience.tsx`) with a version/About/Help
+  footer. Signed-in staff get an enhanced bottom navigation variant —
+  **Admin** (`/admin`), **Dashboard** (`/display`), **What's in stock**
+  (`/inventory`), **Games** (`/arcade`) — using the same component, animation
+  rules, and (for Admin) a new animated `LayoutPanelTop` icon. The variant is
+  driven by a lightweight `StaffAuthContext` bridged from NextAuth via a new
+  `AuthSessionProvider`; unauthenticated visitors keep the existing public nav.
+  The bottom nav now also persists on `/admin`, and the arcade-styled bar gains a
+  matching pixel Admin glyph.
 - **Ticket-status revert (v2.0):** Returned and Unclaimed ticket numbers in the
   admin Live State lists are now tappable. Tapping one opens a confirm dialog
   ("Revert Returned/Unclaimed Ticket") that clears the status, returning the

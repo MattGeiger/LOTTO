@@ -15,6 +15,10 @@ import { SESSION_EXPIRED_MESSAGE } from "@/lib/session-expired";
 const toastError = vi.fn();
 const toastSuccess = vi.fn();
 
+vi.mock("@/components/navigation/bottom-tab-bar", () => ({
+  BottomTabBar: () => null,
+}));
+
 vi.mock("sonner", () => ({
   toast: {
     error: (...args: unknown[]) => toastError(...args),

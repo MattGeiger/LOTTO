@@ -13,6 +13,10 @@ import AdminPage from "@/app/admin/page";
 
 const toastError = vi.fn();
 
+vi.mock("@/components/navigation/bottom-tab-bar", () => ({
+  BottomTabBar: () => null,
+}));
+
 vi.mock("sonner", () => ({
   toast: {
     error: (...args: unknown[]) => toastError(...args),

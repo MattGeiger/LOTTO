@@ -11,7 +11,8 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { navItems, type NavIconHandle } from "@/components/navigation/nav-items";
+import { useStaffAuthenticated } from "@/components/staff-auth-context";
+import { authNavItems, navItems, type NavIconHandle } from "@/components/navigation/nav-items";
 import { useLanguage } from "@/contexts/language-context";
 import { isRTL } from "@/lib/rtl-utils";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,12 @@ export function BottomTabBar({ autoHideAfterSeconds }: BottomTabBarProps = {}) {
   const iconRefs = React.useRef<Record<string, NavIconHandle | null>>({});
   const reducedMotionRef = React.useRef(false);
 
+  // Authenticated staff get the Admin · Dashboard · What's in stock · Games
+  // variant; everyone else gets the public Your-ticket-first bar. Same component,
+  // same animation rules — only the destinations differ.
+  const isStaff = useStaffAuthenticated();
+  const items = isStaff ? authNavItems : navItems;
+
   const autoHideEnabled = typeof autoHideAfterSeconds === "number" && autoHideAfterSeconds > 0;
   const [isHidden, setIsHidden] = React.useState(false);
 
@@ -52,7 +59,7 @@ export function BottomTabBar({ autoHideAfterSeconds }: BottomTabBarProps = {}) {
   React.useEffect(() => {
     reducedMotionRef.current = prefersReducedMotion();
     if (reducedMotionRef.current || didPlayMountAnimation) return;
-    const activeItem = navItems.find((item) => item.isActive(pathname));
+    const activeItem = items.find((item) => item.isActive(pathname));
     if (!activeItem) return;
     iconRefs.current[activeItem.id]?.startAnimation();
     didPlayMountAnimation = true;
@@ -116,7 +123,7 @@ export function BottomTabBar({ autoHideAfterSeconds }: BottomTabBarProps = {}) {
           "sm:w-auto sm:rounded-full sm:border sm:p-2 sm:shadow-[var(--base-shadow-lg)]"
         )}
       >
-        {navItems.map((item) => {
+        {items.map((item) => {
           const active = item.isActive(pathname);
           const Icon = item.icon;
           const animate = () => {
