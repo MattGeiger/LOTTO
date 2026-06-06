@@ -82,7 +82,7 @@ export function GuideToc({ items, variant, enableScrollSpy = false }: GuideTocPr
   }
 
   return (
-    <aside className="hidden lg:mt-4 lg:block">
+    <aside className="hidden lg:block">
       {enableScrollSpy ? <GuideTocScrollSpy headingIds={headingIds} /> : null}
       <div className="sticky top-20 rounded-lg border border-border/70 bg-background/40 p-4 shadow-xl backdrop-blur-[14px] backdrop-saturate-150 supports-[backdrop-filter]:bg-background/40">
         <div className="mb-3 flex items-center gap-2 text-sm font-medium">
