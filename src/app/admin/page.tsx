@@ -2302,7 +2302,7 @@ const AdminPage = () => {
                 <div className="flex flex-wrap gap-2">
                     {nextFive?.length
                     ? nextFive.map((ticket, idx) => (
-                        <Badge key={ticket} variant="success" className="animate-fade-in" style={{ animationDelay: `${idx * 50}ms` }}>
+                        <Badge key={ticket} variant="success" className="animate-fade-in min-w-[3.25rem] px-4 py-2 text-2xl" style={{ animationDelay: `${idx * 50}ms` }}>
                           #{ticket}
                         </Badge>
                       ))
@@ -2329,7 +2329,7 @@ const AdminPage = () => {
                             style={{ animationDelay: `${idx * 50}ms` }}
                             title={`Revert returned ticket #${ticket}`}
                           >
-                            <Badge variant="danger" className="cursor-pointer text-[var(--ticket-returned-text)] transition-opacity hover:opacity-80">
+                            <Badge variant="danger" className="cursor-pointer min-w-[3.25rem] px-4 py-2 text-2xl text-[var(--ticket-returned-text)] transition-opacity hover:opacity-80">
                               #{ticket}
                             </Badge>
                           </button>
@@ -2358,7 +2358,7 @@ const AdminPage = () => {
                             style={{ animationDelay: `${idx * 50}ms` }}
                             title={`Revert unclaimed ticket #${ticket}`}
                           >
-                            <Badge variant="warning" className="cursor-pointer text-[var(--ticket-unclaimed-text)] transition-opacity hover:opacity-80">
+                            <Badge variant="warning" className="cursor-pointer min-w-[3.25rem] px-4 py-2 text-2xl text-[var(--ticket-unclaimed-text)] transition-opacity hover:opacity-80">
                               #{ticket}
                             </Badge>
                           </button>
