@@ -11,10 +11,12 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { AdminIcon } from "@/arcade/components/icons/admin-icon";
 import { DashboardIcon } from "@/arcade/components/icons/dashboard-icon";
 import { GamingIcon } from "@/arcade/components/icons/gaming-icon";
 import { ReceiptIcon } from "@/arcade/components/icons/receipt-icon";
 import { ShoppingCartIcon } from "@/arcade/components/icons/shopping-cart-icon";
+import { useStaffAuthenticated } from "@/components/staff-auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { isRTL } from "@/lib/rtl-utils";
 import { cn } from "@/lib/utils";
@@ -54,6 +56,21 @@ const ARCADE_NAV_ITEMS: ArcadeNavItem[] = [
   },
 ];
 
+// Authenticated staff variant: Admin · Dashboard · What's in stock · Games,
+// mirroring the core bar's auth variant in arcade pixel style.
+const ARCADE_AUTH_NAV_ITEMS: ArcadeNavItem[] = [
+  {
+    id: "admin",
+    labelKey: "navAdmin",
+    href: "/admin",
+    Icon: AdminIcon,
+    isActive: (p) => p === "/admin" || p.startsWith("/admin/"),
+  },
+  ARCADE_NAV_ITEMS[1],
+  ARCADE_NAV_ITEMS[2],
+  ARCADE_NAV_ITEMS[3],
+];
+
 /**
  * Arcade-styled bottom tab bar. Rendered only on the arcade index (`/arcade`),
  * never on the game routes — those keep their own Back control. Inherits the
@@ -62,6 +79,8 @@ const ARCADE_NAV_ITEMS: ArcadeNavItem[] = [
 export function ArcadeBottomTabBar() {
   const pathname = usePathname() ?? "";
   const { language, t } = useLanguage();
+  const isStaff = useStaffAuthenticated();
+  const items = isStaff ? ARCADE_AUTH_NAV_ITEMS : ARCADE_NAV_ITEMS;
 
   return (
     <nav
@@ -75,7 +94,7 @@ export function ArcadeBottomTabBar() {
           "sm:w-auto sm:gap-2 sm:border-2 sm:px-3 sm:pb-2 sm:shadow-[0_0_0_2px_rgba(255,109,232,0.3)]"
         )}
       >
-        {ARCADE_NAV_ITEMS.map(({ id, labelKey, href, Icon, isActive }) => {
+        {items.map(({ id, labelKey, href, Icon, isActive }) => {
           const active = isActive(pathname);
           return (
             <li key={id} className="flex flex-1 sm:flex-initial">

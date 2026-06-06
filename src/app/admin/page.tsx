@@ -37,6 +37,7 @@ import { Sparkles } from "@/components/animate-ui/icons/sparkles";
 import { AdminAnimatedIcon } from "@/components/admin-animated-icon";
 
 import { ConfirmAction } from "@/components/confirm-action";
+import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
 import { OperatingHoursEditor } from "@/components/operating-hours-editor";
 import { DisplayLanguageRotationEditor } from "@/components/display-language-rotation-editor";
 import { ArchiveIcon, type ArchiveIconHandle } from "@/components/lucide-animated/archive";
@@ -1922,7 +1923,7 @@ const AdminPage = () => {
   return (
     <TooltipProvider>
       <div className="min-h-screen w-full bg-gradient-display">
-        <main className="relative mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-6 py-10">
+        <main className="relative mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-6 py-10 pb-28 sm:pb-32">
         <div className="w-full">
           <Image
             src="/wth-logo-horizontal.png"
@@ -2709,6 +2710,7 @@ const AdminPage = () => {
           </div>
         )}
         </main>
+        <BottomTabBar />
       </div>
     </TooltipProvider>
   );

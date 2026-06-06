@@ -10,6 +10,7 @@ import type { ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from "r
 import { CartIcon } from "@/components/lucide-animated/cart";
 import { Gamepad2Icon } from "@/components/lucide-animated/gamepad-2";
 import { GripIcon } from "@/components/lucide-animated/grip";
+import { LayoutPanelTopIcon } from "@/components/lucide-animated/layout-panel-top";
 import { TicketIcon } from "@/components/lucide-animated/ticket";
 
 // Shared imperative handle exposed by every nav icon. Core nav icons in
@@ -24,7 +25,7 @@ export type NavIconComponent = ForwardRefExoticComponent<
   HTMLAttributes<HTMLDivElement> & { size?: number } & RefAttributes<NavIconHandle>
 >;
 
-export type NavItemId = "ticket" | "dashboard" | "inventory" | "games";
+export type NavItemId = "ticket" | "dashboard" | "inventory" | "games" | "admin";
 
 export type NavItem = {
   id: NavItemId;
@@ -64,6 +65,40 @@ export const navItems: NavItem[] = [
     labelKey: "navGames",
     href: "/arcade",
     // Prefix match so deep arcade routes still light the Games tab.
+    isActive: (pathname) => pathname === "/arcade" || pathname.startsWith("/arcade/"),
+    icon: Gamepad2Icon,
+  },
+];
+
+// Authenticated staff variant: Admin · Dashboard · What's in stock · Games.
+// Same component + animation rules as the public bar (see docs/NAVIGATION.md);
+// only the destinations differ. Rendered when the viewer is signed in.
+export const authNavItems: NavItem[] = [
+  {
+    id: "admin",
+    labelKey: "navAdmin",
+    href: "/admin",
+    icon: LayoutPanelTopIcon,
+    isActive: (pathname) => pathname === "/admin" || pathname.startsWith("/admin/"),
+  },
+  {
+    id: "dashboard",
+    labelKey: "navDashboard",
+    href: "/display",
+    icon: GripIcon,
+    isActive: (pathname) => pathname === "/display",
+  },
+  {
+    id: "inventory",
+    labelKey: "navInventory",
+    href: "/inventory",
+    icon: CartIcon,
+    isActive: (pathname) => pathname === "/inventory",
+  },
+  {
+    id: "games",
+    labelKey: "navGames",
+    href: "/arcade",
     isActive: (pathname) => pathname === "/arcade" || pathname.startsWith("/arcade/"),
     icon: Gamepad2Icon,
   },

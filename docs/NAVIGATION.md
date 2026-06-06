@@ -16,6 +16,22 @@ presentations (desktop dock + mobile tab bar).
 > `/help/[slug]`) is reached from a link on the Staff page, not the public bottom
 > tab bar. See `docs/HELP_SYSTEM.md`.
 
+### Authenticated staff variant (v2.0)
+
+Signed-in staff see a variant of the same bottom tab bar with staff
+destinations, left→right: **Admin** (`/admin`), **Dashboard** (`/display`),
+**What's in stock** (`/inventory`), **Games** (`/arcade`). It uses the same
+component, styling, and icon-animation rules as the public bar — only the
+destinations differ (`authNavItems` in `src/components/navigation/nav-items.ts`;
+arcade equivalent in `arcade-bottom-tab-bar.tsx`). The Admin tab uses an animated
+`LayoutPanelTop` icon (`src/components/lucide-animated/layout-panel-top.tsx`), and
+the arcade bar uses a matching pixel `AdminIcon`.
+
+The variant is selected by `useStaffAuthenticated()`
+(`src/components/staff-auth-context.tsx`), a boolean context bridged from NextAuth
+by `AuthSessionProvider` and defaulting to `false` (public nav) when absent. The
+bar persists across staff pages, including `/admin`.
+
 This document captures the agreed design direction so implementation stays
 consistent. It is the source of truth for the nav bar; update it alongside any
 behavior change (per `AGENTS.md` documentation priority).
