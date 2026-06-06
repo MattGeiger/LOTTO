@@ -1,214 +1,225 @@
-# William Temple House — Digital Raffle & Queue Board
+<p align="center">
+  <a href="https://templepdx.com">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="public/temple-logo-dark.svg">
+      <img alt="Temple Consulting, LLC." src="public/temple-logo-light.svg" width="96" height="96">
+    </picture>
+  </a>
+</p>
 
-Next.js (App Router) app with ShadCN-inspired UI, JSON persistence, and atomic backups to digitize the pantry raffle flow.
+<p align="center"><em>A creation of <a href="https://templepdx.com">Temple Consulting, LLC.</a></em></p>
 
-## Features
-- Staff dashboard (`/admin`) to set ranges, toggle random vs sequential, append tickets, update “now serving,” mark returned/unclaimed tickets, configure display language rotation, and reset with confirmations.
-- Public display (`/display`) with airport-style grid, status legend, ticket detail messaging (called/returned/unclaimed), and QR code sharing, using adaptive polling with visibility pause and operating-hours backoff. Supports an optional admin-configured **language rotation** that cycles the board through selected languages on a timer (scramble transition, RTL-aware) so non-English speakers can read it without tapping anything.
-- Personalized homepage (`/`) serves the personalization track while preserving the board visual language (QR panel and top-bar search removed, centered WTH branding added, redundant board-row logo removed so `NOW SERVING` sits centered, and a load-time language picker modal shown on entry). Promoted from the former `/new` preview to the default homepage in v1.16.0.
-- Public inventory lookup (`/inventory`) fetches FEED's unauthenticated public inventory endpoint without credentials, showing in-stock pantry items grouped by category with limits, status tags, dietary flags, freshness, and selected-language item/category names where FEED provides translations.
-- Arcade preview is available at `/arcade` with one playable game (`Snake`) in v1.5.0.
-- Multilingual display UI with language switcher (English, 中文, Español, Русский, Українська, Tiếng Việt, فارسی, العربية) and automatic RTL direction for Farsi/Arabic.
-- Built-in read-only board in Next.js plus an optional standalone server (`npm run readonly`) on its own port for edge/legacy hosting.
-- File-based datastore with atomic writes, timestamped backups, and append logic that preserves prior random order.
-- Tests written with Vitest + Testing Library for the state manager and grid highlighting.
+# LOTTO — Line Order Transparency & Ticketing Organizer
 
-## Local URLs
-- Personalized homepage: http://localhost:3000/
-- Public board: http://localhost:3000/display
-- Inventory lookup: http://localhost:3000/inventory
-- Arcade preview: http://localhost:3000/arcade
-- Admin: http://localhost:3000/admin
-- Login: http://localhost:3000/login
-- Staff intro: http://localhost:3000/staff
+A fun, fair, and simple **queue-management and ticketing** system for chance-based
+or sequential lines — built for [William Temple House](https://www.williamtemple.org/)
+and shared as an open-source reference for other nonprofits running ticketed
+distributions (food pantries, clinics, giveaways, and similar).
 
-## Production Deployment
-- Live: https://williamtemple.app (Vercel, custom domain)
-- Auth: Magic link + OTP fallback; restricted to `@williamtemple.org`
-- Email: Resend sender `login@williamtemple.app` (add DMARC/SPF/DKIM in DNS)
-- Database: Neon Postgres (serverless) with shared connection pool
-- Hosting: Next.js 16 on Vercel (proxy.ts middleware, serverless runtime)
+**Production deployment:** https://williamtemple.app
+**License:** [AGPL-3.0-or-later](./LICENSE)
+**Status:** v1.17.2 — in production use
 
-### Production environment variables
+---
+
+## What LOTTO does
+
+LOTTO turns a paper-ticket line into a calm, transparent, multilingual
+experience. Staff set today's ticket range and call numbers; clients see exactly
+who's being served and roughly how long their wait is — on a big lobby screen or
+on their own phone, in their own language.
+
+- **Live display board** (`/display`) — an airport-style "Now Serving" board with
+  a color-coded drawing-order grid (now serving / called / unclaimed / returned),
+  ticket search, and a QR code that sends clients to their personal status.
+- **Personalized client view** (`/`) — pick a language, enter a ticket, and see
+  your position, people ahead, and estimated wait. Enter a number even before the
+  drawing starts. When your number is called, confetti — on whatever page you're on.
+- **Staff dashboard** (`/admin`) — set ticket ranges (random or sequential), call
+  numbers, mark tickets returned/unclaimed, configure operating hours, and
+  undo/restore from timestamped snapshots.
+- **What's in stock** (`/inventory`) — a read-only public inventory (categories,
+  limits, stock status, dietary flags) sourced from the
+  [FEED](https://feed.williamtemple.app) public endpoint, localized where FEED
+  provides translations.
+- **Built-in arcade** (`/arcade`) — optional retro games (Snake, Brick Mayhem,
+  and more) to keep waiting guests entertained; gameplay pauses the instant a
+  player's ticket is called.
+- **Eight languages, three themes** — English, Spanish, Chinese, Russian,
+  Ukrainian, Vietnamese, Persian, and Arabic (with right-to-left support), plus
+  light, dark, and a flat high-visibility accessibility theme. The board can even
+  rotate through languages automatically.
+- **In-app Help, About, and release notes** — a searchable, indexed staff help
+  section (`/help`) with plain-language guides and workflows.
+
+## Who LOTTO is for
+
+- **Nonprofits and service organizations** running a ticketed or
+  first-come-first-served line that want to digitize it without an expensive
+  software contract.
+- **Multilingual communities** — clients who don't read English can follow the
+  board and their own status in their language.
+- **Developers** who want a real-world reference for a Next.js 16 App Router app
+  with live polling, multilingual + RTL UI, theme tokens, magic-link auth, and a
+  Postgres-or-file persistence layer.
+
+If LOTTO looks useful, you can fork it, modify it, and deploy your own instance —
+see [LICENSE](./LICENSE) and [TRADEMARKS.md](./TRADEMARKS.md) for the terms.
+
+---
+
+## Screenshots
+
+**Live display board** — the lobby screen clients watch: "Now Serving," a
+color-coded drawing-order grid, ticket search, and a QR code to their phone.
+
+![LOTTO public display board](./docs/screenshots/display-board.png)
+
+**Staff landing** — quick access to the dashboard, the public board, and the arcade:
+
+![Staff landing page](./docs/screenshots/staff.png)
+
+**What's in stock** — live, localized public inventory with limits and dietary flags:
+
+![Public inventory page](./docs/screenshots/inventory.png)
+
+**Searchable Help** — plain-language staff guides with section-level search:
+
+![In-app help index](./docs/screenshots/help.png)
+
+**Arcade** — optional retro games for waiting guests, kept separate from the raffle:
+
+![Arcade index](./docs/screenshots/arcade.png)
+
+---
+
+## Quickstart (development)
+
+### Prerequisites
+
+- **Node.js 20+**
+- Optionally **Docker Desktop** for the full local stack (app + Postgres + MailDev)
+
+### Get it running
+
+```bash
+git clone https://github.com/MattGeiger/LOTTO.git
+cd LOTTO
+npm install
+npm run dev
 ```
-AUTH_BYPASS=false
-AUTH_SECRET=<generated>
-AUTH_TRUST_HOST=true
-DATABASE_URL=postgresql://...sslmode=require
-EMAIL_FROM=login@williamtemple.app
-RESEND_API_KEY=re_...
-ADMIN_EMAIL_DOMAIN=williamtemple.org
-NODE_ENV=production
+
+Open http://localhost:3000 — the client homepage (`/`), the staff landing
+(`/staff`), and the public board (`/display`). On localhost, auth is bypassed
+automatically and state is read from a local `data/state.json` fallback, so no
+database or email setup is needed to explore.
+
+For the full stack with Postgres and a local mail inbox:
+
+```bash
+docker compose up --build   # app on :3000, MailDev inbox on :1080
 ```
 
-## Scripts
-- `npm run dev` — start the Next.js dev server.
-- `npm run build` — production build.
-- `npm start` — run the built app.
-- `npm run readonly` — start the optional standalone read-only board on port 4000 (configurable via `READONLY_PORT`).
-- `npm test` — run Vitest suite.
-- `npm run lint` — run ESLint.
+Full environment variables, the production runbook (Vercel + Neon + Resend), the
+optional standalone read-only board, and persistence details are in
+[`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md).
 
-## Read-only board options
-- Built-in: `/` is the personalized homepage (language + ticket onboarding), `/display` is the QR-enabled public board, and `/arcade` is the Arcade preview surface (Snake launch game).
-- FEED inventory: `/inventory` reads `NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL` when set, otherwise defaults to `https://feed.williamtemple.app/api/public/inventory.json`.
-- Optional standalone: `npm run readonly` on port `4000`, still polling `data/state.json` for legacy/edge hosting.
-- Configure standalone via env vars:
-  - `READONLY_PORT` — port to listen on (default `4000`).
-  - `READONLY_POLL_MS` — poll interval in milliseconds (default `10000`).
-  - `READONLY_DATA_DIR` — directory containing `state.json` (default `./data`).
-  ```bash
-  npm run readonly
-  # open http://localhost:4000
-  ```
+---
 
-## Persistence
-- State stored under `data/state.json` with timestamped backup files (`state-YYYYMMDDHHMMSSmmm-XXXXXX.json`).
-- Data dir is ignored by Git except for `data/.gitkeep` to preserve the folder.
+## Tech stack
 
-## Deployment intent (Vercel hobby/free)
-- Target hosting is Vercel’s hobby/free tier, which uses Neon-backed Postgres for managed storage.
-- Vercel filesystem is ephemeral (`/tmp` only), so production persistence must move off local files to a durable store (e.g., Neon Postgres via Vercel Postgres/Neon SDK).
-- Stay within hobby limits (approx. 190 compute hours, ~512 MB DB storage, up to 10 DBs); avoid features that require paid plans.
-- Plan to map current `state.json` + snapshot history to a Postgres schema (or equivalent durable store) so undo/redo and backups remain available across deployments.
+- **Framework:** Next.js 16 (App Router), React 19, TypeScript
+- **UI:** Tailwind CSS with CSS-variable design tokens, shadcn / Radix UI
+  components, `lucide-react` + [animate-ui](https://animate-ui.com/) motion variants
+- **Content:** `react-markdown` + `remark-gfm` for in-app help and release notes
+- **Data:** Neon Postgres in production; a file-based `data/state.json` fallback
+  for local development
+- **Auth & email:** NextAuth magic link + OTP, delivered via [Resend](https://resend.com/)
+- **Testing:** Vitest + Testing Library
+- **Hosting:** Vercel
 
-## Deploy runbook (Vercel + Neon + magic links)
-1) Provision storage (Neon via Vercel Marketplace Postgres integration)
-- Install the Neon integration from the Vercel Marketplace and attach it to this project; note `POSTGRES_URL`/`DATABASE_URL` from the Storage tab.
-- Initialize tables (run once via Neon console/psql):
-  ```sql
-  create table if not exists raffle_state (
-    id text primary key default 'singleton',
-    payload jsonb not null,
-    updated_at timestamptz not null default now()
-  );
-  create table if not exists raffle_snapshots (
-    id text primary key,
-    payload jsonb not null,
-    created_at timestamptz not null default now()
-  );
-  create index if not exists raffle_snapshots_created_at_idx on raffle_snapshots (created_at desc);
-  ```
-- Plan a retention policy (e.g., trim to last N snapshots or last N days) to stay within ~512 MB free storage.
-  - SDK: prefer `@neondatabase/serverless` (actively maintained). If upgrading from legacy `@vercel/postgres`, use `@neondatabase/vercel-postgres-compat` as a drop-in during transition.
-  - Env: `DATABASE_URL` is required for production and preferred locally; file-based state storage is only used when `DATABASE_URL` is absent in development.
+---
 
-2) Configure auth (magic links, domain-locked)
-- Use NextAuth Email provider with Resend free tier for mail delivery.
-- Enforce `@williamtemple.org` allowlist in the sign-in callback and/or before sending links.
-- Required env vars (set in Vercel project):
-  - `DATABASE_URL` (Neon connection string)
-  - `AUTH_SECRET` (strong random string)
-  - `AUTH_TRUST_HOST=true`
-  - `EMAIL_FROM` (verified sender in Resend)
-  - `RESEND_API_KEY`
-  - `ADMIN_EMAIL_DOMAIN=williamtemple.org`
+## Project structure
 
-3) Wire persistence to Postgres
-- Replace the file-based state manager with Postgres-backed reads/writes using `@neondatabase/serverless` (or `@neondatabase/vercel-postgres-compat` as a drop-in).
-- On persist: upsert `raffle_state` and insert into `raffle_snapshots` unless backups are skipped.
-- On load: read `raffle_state`, seeding a default row if missing.
-- Undo/redo/list/restore operations should query `raffle_snapshots` ordered by `created_at desc`.
-- Keep `/tmp` caching optional only for short-lived warm instances; treat the DB as source of truth.
+```
+src/
+  app/            App Router routes: / (client), /staff, /display, /admin,
+                  /inventory, /arcade, /help, and api/* route handlers
+  components/     Feature components + shadcn/ui primitives, help/, navigation/
+  arcade/         Arcade games, components, and styles (kept separate from raffle)
+  contexts/       React contexts (language, theme/contrast, haptics)
+  lib/            Pure helpers (state types, polling strategy, user-guides, …)
+docs/             Documentation, release notes, user guides, screenshots
+public/           Static assets (logos)
+tests/            Vitest + Testing Library
+```
 
-4) Snapshot retention
-- Add a daily cron job (Vercel Cron: max 2 jobs on Hobby) to call a small API route that trims old snapshots (e.g., keep last 500 or last 30 days).
-- Avoid per-request rate limiting in KV for public reads; if desired, rate-limit only admin/write routes (tiny traffic) using Upstash Redis free or simple in-process guards.
+Project conventions and architecture notes live in [`AGENTS.md`](./AGENTS.md) —
+required reading for non-trivial contributions. Notable feature docs:
+[`docs/NAVIGATION.md`](./docs/NAVIGATION.md),
+[`docs/HELP_SYSTEM.md`](./docs/HELP_SYSTEM.md),
+[`docs/DISPLAY_LANGUAGE_ROTATION.md`](./docs/DISPLAY_LANGUAGE_ROTATION.md).
 
-5) Migration from local files (one-time)
-- Write a script to read `data/state.json` and `data/state-*.json` and insert into `raffle_state`/`raffle_snapshots`.
-- Run the script locally with `DATABASE_URL` pointing to Neon; verify counts and sample undo/redo in the admin UI.
+---
 
-6) Deploy
-- Set all env vars in Vercel.
-- Deploy the Next.js app; verify `/` (public board), `/admin` (auth required), and `/api/state` reads/writes against Neon.
-- Confirm magic-link delivery works for an `@williamtemple.org` address.
+## Contributing
 
-7) Observability
-- Vercel free logs are short-lived; optionally add Sentry free or a lightweight `errors` table in Neon for aggregation (avoid PII).
-- Add a simple health/readiness route; ensure errors return 4xx/5xx without stack traces in production.
+Bug reports and pull requests are welcome. Read [`AGENTS.md`](./AGENTS.md) for
+conventions (shadcn/ui usage, design tokens, documentation expectations, and the
+Arcade separation guardrails) before opening a non-trivial PR.
 
-## Routing and domains (deployment)
-- Production domain: `williamtemple.app` (custom domain in Vercel).
-- Planned routes:
-  - `/` → personalized homepage (language + ticket onboarding); promoted from the former `/new` preview in v1.16.0.
-  - `/display` → public read-only board (QR-enabled operational experience).
-  - `/arcade` → Arcade preview menu (currently one launch game: Snake).
-  - `/login` → magic-link entry; after sign-in, redirect to the staff landing page (current homepage content).
-  - `/admin` → staff dashboard (unchanged), linked from the staff landing page after login.
-  - `/staff` → staff welcome/intro (former homepage).
-- Update Vercel project settings to point the production domain at this app; keep localhost paths for development (`http://localhost:3000` app with `/`, optional `http://localhost:4000` standalone read-only server).
+**Security issues** — please do **not** open a public issue; see
+[`docs/SECURITY.md`](./docs/SECURITY.md) for the disclosure process.
 
-## Local development (no external deps)
-- `docker-compose` runs the app, Postgres, and MailDev (SMTP + web UI). Default `.env.local` uses `DATABASE_URL=postgresql://postgres:postgres@db:5432/neondb?sslmode=disable`, `EMAIL_SERVER_HOST=maildev`, `EMAIL_SERVER_PORT=1025`.
-- Local `npm run dev` on localhost bypasses auth automatically (no OTP required) unless you are on Vercel.
-- Fully offline: leave `RESEND_API_KEY` unset and keep `EMAIL_FROM=login@localhost`.
-- To exercise the full email flow locally, keep `AUTH_BYPASS=false`, start docker, and open magic links from MailDev at `http://localhost:1080`.
+---
 
-## Environment Setup
+## License
 
-### Local Development
+**The application code is open source. The William Temple House deployment is
+branded, and the brand is not open source.**
 
-1. Copy the example environment file:
-   ```bash
-   cp .env.example .env.local
-   ```
-2. Generate an auth secret:
-   ```bash
-   openssl rand -base64 32
-   ```
-3. Fill `.env.local` with required values:
-   - `AUTH_SECRET` (required) and `AUTH_TRUST_HOST=true`
-   - `DATABASE_URL=postgresql://postgres:postgres@db:5432/neondb?sslmode=disable`
-   - `EMAIL_FROM=login@localhost`, `EMAIL_SERVER_HOST=maildev`, `EMAIL_SERVER_PORT=1025`
-   - `ADMIN_EMAIL_DOMAIN` (optional; restrict sign-ins)
-   - Optional: `RESEND_API_KEY` + production `EMAIL_FROM` when testing Resend instead of MailDev
-   - Optional: `AUTH_BYPASS=true` to bypass auth outside localhost dev (for example, custom non-production environments)
-4. Required services:
-   - Provided by docker compose: app, Postgres, MailDev (open http://localhost:1080 to view emails)
-   - Neon/Resend are only needed for production or remote testing
+LOTTO's application code is licensed under [AGPL-3.0-or-later](./LICENSE). In
+plain English:
 
-### Environment Variables Reference
+1. The application code is AGPL-3.0-or-later.
+2. Anyone may **use, study, modify, redistribute, and self-host** it under the
+   AGPL terms — free of charge.
+3. If someone modifies LOTTO and offers it to others over a network (**including
+   as a hosted web service**), the AGPL requires them to offer the corresponding
+   source to those users. This network-use clause is why LOTTO uses AGPL:
+   improvements should flow back to the community of organizations running it.
+4. The **William Temple House name, logos, visual identity, and domain are *not*
+   open source** and may not be reused without separate written permission. See
+   [TRADEMARKS.md](./TRADEMARKS.md).
+5. **Anyone deploying LOTTO should replace the William Temple House branding** —
+   name, logo, colors, domain, and contact information — with their own before
+   any public deployment.
 
-See `.env.example` for the full list. Critical vars:
-- `AUTH_SECRET` — required for JWT encryption (generate with openssl)
-- `DATABASE_URL` — required for magic-link/OTP storage
-- `RESEND_API_KEY` — required to send emails via Resend
-- `EMAIL_FROM` — must be verified in Resend (production default `login@williamtemple.app`)
-- `ADMIN_EMAIL_DOMAIN` — restricts login to your domain
+---
 
-Local options:
-- Localhost dev already bypasses auth automatically; set `AUTH_BYPASS=true` only when you need bypass in non-localhost non-production environments.
-- Add `RESEND_API_KEY` and a production `EMAIL_FROM` to test Resend instead of MailDev.
+## Acknowledgements
 
-## Run in Docker
-- Build and start locally (includes a bind mount for persistent `data/`):
-  ```bash
-  docker compose up --build
-  ```
-- App listens on `http://localhost:3000` (personalized homepage `/`, public board `/display`, Arcade preview `/arcade`, staff dashboard `/admin`, staff intro `/staff`).
-- Stored state lives in your host `./data` directory so it survives container restarts.
+LOTTO is a creation of [Temple Consulting, LLC.](https://templepdx.com), built by
+Matt Geiger to serve the clients of
+[William Temple House](https://www.williamtemple.org/), a Portland nonprofit
+serving the Pacific Northwest since 1965, where it runs in production. The
+application code is Temple Consulting's own work, released as open source so peer
+organizations can use and improve it; the William Temple House branding it ships
+with belongs to William Temple House (see [TRADEMARKS.md](./TRADEMARKS.md)).
 
-## Tech
-- Next.js 16 (App Router) + Tailwind CSS.
-- ShadCN-style UI components (Radix + cva).
-- Vitest + Testing Library.
-## Version History
-- 1.6.3 (2026-04-16) — Replaced the one-word `Unauthorized` admin toast on expired sign-in with an ASK-compliant message (`Your sign-in expired. Sign back in to keep working.`) plus an inline `Sign in` action button that preserves the admin callback URL.
-- 1.5.0 (2026-02-18) — Swapped public board to `/` with `/display` alias retained, introduced `/new` as the homepage preview candidate for future promotion, and shipped an Arcade preview with one playable game (Snake).
-- 1.2.0 (2026-01-20) — Refined the floating header search cluster so the pill shares the same palette-based gradient/hover fill as the language/theme buttons, keeps responsive text/icon scaling, and sits in its own padded grouping with a shadowed icon trigger.
-- 1.1.3 (2026-01-19) — Added the multilingual search bar on the public display so clients can quickly locate a ticket, with dedicated lookups and a “ticket not found” dialog.
-- 1.1.2 (2026-01-16) — Adaptive display polling with visibility pause, operating-hours slack, and idle backoff tiers to reduce edge requests.
-- 1.1.1 (2026-01-13) — Fixed returned-ticket skipping when advancing draw positions, confirm dialogs now close reliably, and display date refreshes on long-running screens.
-- 1.1.0 (2026-01-13) — Added returned/unclaimed ticket statuses, admin controls + Live State lists, display legend + ticket detail messaging, and returned tickets excluded from wait estimates with auto-advance when returned.
-- 1.0.4 (2025-12-12) — OTP-first login default and staff version display; lint cleanup.
-- 1.0.3 (2025-11-29) — Added operating hours with timezone selection, preserved through reset, plus closed-day display messaging and pantry hours table.
-- 1.0.1 (2025-11-28) — Added Vietnamese/Farsi/Arabic translations, RTL-aware public display (scoped to display only), and per-language timestamp localization.
-- 1.0.0 (2025-11-27) — Production release with magic link + OTP auth, Neon/Resend, snapshot cleanup, Speed Insights, custom domain.
-- 0.9.0 — Initial Vercel deployment and custom domain setup.
+LOTTO was built with [Claude](https://www.anthropic.com/claude) and
+[Claude Code](https://www.anthropic.com/claude-code), and with
+[Codex](https://openai.com/codex/) — a collaboration between a human author and
+AI agents. The animated icon system uses [Lucide](https://lucide.dev/) with
+motion variants from [animate-ui](https://animate-ui.com/).
 
-## Theme / design tokens
-- Global palette and design tokens live in `src/app/globals.css` (`--color-primary`, surfaces, borders, focus, status colors).
-- UI components (buttons, badges, cards, inputs, switches, tooltips) consume those tokens rather than hard-coded colors. Update tokens to change app-wide styling.
-- The public display no longer shows a mode pill; mode selection is still managed in the admin controls but not surfaced in the UI chrome.
-- Snapshot history: admin can undo/redo and restore from timestamped snapshots (backed by `data/state-*.json` files) via `/api/state` actions and UI controls.
+---
+
+## Contact
+
+- **Project maintainer:** Matt Geiger, Temple Consulting, LLC. —
+  [matt@templepdx.com](mailto:matt@templepdx.com) ·
+  [templepdx.com](https://templepdx.com)
+- **William Temple House (the originating deployment):**
+  https://www.williamtemple.org/about/contact/
