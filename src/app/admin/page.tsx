@@ -86,6 +86,7 @@ type ActionPayload =
   | { action: "advanceServing"; direction: "next" | "prev" }
   | { action: "markReturned"; ticketNumber: number }
   | { action: "markUnclaimed"; ticketNumber: number }
+  | { action: "revertTicketStatus"; ticketNumber: number }
   | { action: "reset" }
   | { action: "undo" }
   | { action: "redo" }
@@ -289,6 +290,23 @@ const applyMarkUnclaimedOptimistic = (
   };
 };
 
+const applyRevertTicketStatusOptimistic = (
+  state: RaffleState,
+  ticketNumber: number,
+): RaffleState => {
+  if (!hasConfiguredRange(state)) return state;
+  const status = state.ticketStatus?.[ticketNumber];
+  if (status !== "returned" && status !== "unclaimed") return state;
+
+  const nextStatus = { ...(state.ticketStatus ?? {}) } as RaffleState["ticketStatus"];
+  delete nextStatus[ticketNumber];
+
+  return {
+    ...state,
+    ticketStatus: nextStatus,
+  };
+};
+
 const applySetModeOptimistic = (state: RaffleState, mode: Mode): RaffleState => {
   if (!hasConfiguredRange(state)) {
     return { ...state, mode };
@@ -455,6 +473,12 @@ const buildOptimisticPatch = (
         id,
         kind: payload.action,
         apply: (state) => applyMarkUnclaimedOptimistic(state, payload.ticketNumber),
+      };
+    case "revertTicketStatus":
+      return {
+        id,
+        kind: payload.action,
+        apply: (state) => applyRevertTicketStatusOptimistic(state, payload.ticketNumber),
       };
     case "setMode":
       return {
@@ -1850,6 +1874,14 @@ const AdminPage = () => {
     setUnclaimedTicket("");
   };
 
+  const handleRevertTicketStatus = async (ticketNumber: number) => {
+    try {
+      await sendAction({ action: "revertTicketStatus", ticketNumber });
+    } catch {
+      // sendAction already surfaced the error toast
+    }
+  };
+
   const handleUndo = async () => {
     try {
       await sendAction({ action: "undo" });
@@ -2280,12 +2312,28 @@ const AdminPage = () => {
               {/* Row 5: full width */}
               <div className="space-y-1 rounded-lg border border-[var(--status-danger-border)] bg-gradient-status-danger p-3 sm:col-span-2 lg:col-span-6">
                 <p className="text-xs uppercase tracking-wide text-[var(--ticket-returned-text)]">Returned tickets</p>
+                <p className="text-[0.7rem] text-[var(--ticket-returned-text)]/80">Tap a ticket to revert its status.</p>
                 <div className="flex flex-wrap gap-2">
                     {returnedTickets.length
                     ? returnedTickets.map((ticket, idx) => (
-                        <Badge key={ticket} variant="danger" className="animate-fade-in text-[var(--ticket-returned-text)]" style={{ animationDelay: `${idx * 50}ms` }}>
-                          #{ticket}
-                        </Badge>
+                        <ConfirmAction
+                          key={ticket}
+                          title={`Revert returned ticket #${ticket}?`}
+                          description={`Ticket #${ticket} will no longer be marked as Returned and returns to its normal (not-called) state in the drawing. This does not change the current "now serving" position.`}
+                          confirmText="Revert Returned Ticket"
+                          onConfirm={() => handleRevertTicketStatus(ticket)}
+                        >
+                          <button
+                            type="button"
+                            className="animate-fade-in rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                            style={{ animationDelay: `${idx * 50}ms` }}
+                            title={`Revert returned ticket #${ticket}`}
+                          >
+                            <Badge variant="danger" className="cursor-pointer text-[var(--ticket-returned-text)] transition-opacity hover:opacity-80">
+                              #{ticket}
+                            </Badge>
+                          </button>
+                        </ConfirmAction>
                       ))
                     : "—"}
                 </div>
@@ -2293,12 +2341,28 @@ const AdminPage = () => {
               {/* Row 6: full width */}
               <div className="space-y-1 rounded-lg border border-[var(--status-warning-border)] bg-gradient-status-warning p-3 sm:col-span-2 lg:col-span-6">
                 <p className="text-xs uppercase tracking-wide text-[var(--ticket-unclaimed-text)]">Unclaimed tickets</p>
+                <p className="text-[0.7rem] text-[var(--ticket-unclaimed-text)]/80">Tap a ticket to revert its status.</p>
                 <div className="flex flex-wrap gap-2">
                     {unclaimedTickets.length
                     ? unclaimedTickets.map((ticket, idx) => (
-                        <Badge key={ticket} variant="warning" className="animate-fade-in text-[var(--ticket-unclaimed-text)]" style={{ animationDelay: `${idx * 50}ms` }}>
-                          #{ticket}
-                        </Badge>
+                        <ConfirmAction
+                          key={ticket}
+                          title={`Revert unclaimed ticket #${ticket}?`}
+                          description={`Ticket #${ticket} will no longer be marked as Unclaimed and returns to its normal (called) state in the drawing.`}
+                          confirmText="Revert Unclaimed Ticket"
+                          onConfirm={() => handleRevertTicketStatus(ticket)}
+                        >
+                          <button
+                            type="button"
+                            className="animate-fade-in rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                            style={{ animationDelay: `${idx * 50}ms` }}
+                            title={`Revert unclaimed ticket #${ticket}`}
+                          >
+                            <Badge variant="warning" className="cursor-pointer text-[var(--ticket-unclaimed-text)] transition-opacity hover:opacity-80">
+                              #{ticket}
+                            </Badge>
+                          </button>
+                        </ConfirmAction>
                       ))
                     : "—"}
                 </div>

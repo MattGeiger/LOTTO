@@ -41,6 +41,7 @@ vi.mock("@/lib/state-manager", () => ({
     advanceServing: vi.fn().mockResolvedValue({ ...mockState, currentlyServing: 7 }),
     markTicketReturned: vi.fn().mockResolvedValue(mockState),
     markTicketUnclaimed: vi.fn().mockResolvedValue(mockState),
+    revertTicketStatus: vi.fn().mockResolvedValue(mockState),
     resetState: vi.fn().mockResolvedValue(mockState),
     listSnapshots: vi.fn().mockResolvedValue(mockSnapshots),
     restoreSnapshot: vi.fn().mockResolvedValue(mockState),
@@ -196,6 +197,22 @@ describe("API /api/state", () => {
       );
       expect(response.status).toBe(200);
       expect(stateManager.markTicketUnclaimed).toHaveBeenCalledWith(7);
+    });
+
+    it("routes revertTicketStatus action", async () => {
+      const { stateManager } = await import("@/lib/state-manager");
+      const { POST } = await import("@/app/api/state/route");
+      const response = await POST(
+        makePostRequest({ action: "revertTicketStatus", ticketNumber: 5 }),
+      );
+      expect(response.status).toBe(200);
+      expect(stateManager.revertTicketStatus).toHaveBeenCalledWith(5);
+    });
+
+    it("rejects revertTicketStatus without a ticket number", async () => {
+      const { POST } = await import("@/app/api/state/route");
+      const response = await POST(makePostRequest({ action: "revertTicketStatus" }));
+      expect(response.status).toBe(400);
     });
 
     it("routes reset action", async () => {
