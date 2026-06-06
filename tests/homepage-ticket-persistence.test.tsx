@@ -58,6 +58,7 @@ const statePayload: RaffleState = {
   operatingHours: null,
   timezone: "America/Los_Angeles",
   displayLanguageRotation: null,
+        announcement: null,
 };
 
 function renderHomePage() {

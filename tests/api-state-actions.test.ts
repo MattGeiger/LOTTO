@@ -237,6 +237,19 @@ describe("API /api/state", () => {
       expect(response.status).toBe(200);
     });
 
+    it("rejects an announcement longer than 1717 characters", async () => {
+      const { POST } = await import("@/app/api/state/route");
+      const announcement = {
+        enabled: true,
+        markdown: "a".repeat(1718),
+        startsAt: null,
+        endsAt: null,
+        updatedAt: 1,
+      };
+      const response = await POST(makePostRequest({ action: "setAnnouncement", announcement }));
+      expect(response.status).toBe(400);
+    });
+
     it("routes reset action", async () => {
       const { stateManager } = await import("@/lib/state-manager");
       const { POST } = await import("@/app/api/state/route");

@@ -36,14 +36,6 @@ Please arrive _before_ noon.
 
 Please arrive _before_ noon.
 
-## Underline
-
-Underline uses an HTML tag, since Markdown has no underline of its own.
-
-```
-This is <u>important</u>.
-```
-
 ## Bulleted lists
 
 Start each line with a dash and a space.
