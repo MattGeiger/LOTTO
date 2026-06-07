@@ -6,7 +6,10 @@
   The AI Configuration tab lets staff add, edit, validate, and delete AI provider
   configurations (OpenAI, Anthropic, Google) via a **multi-step wizard** and a
   table list, reproducing FEED's layout on LOTTO's primitives — name, model, API
-  key, cost, and token limits. API keys are **encrypted at rest** (AES-256-GCM with a per-record
+  key, cost, and token limits. Model selection uses **pre-baked templates**
+  (ported from FEED's model-specs) in a dropdown that auto-fills cost and token
+  limits per model, plus a "Custom" option for any model id. API keys are
+  **encrypted at rest** (AES-256-GCM with a per-record
   salt; master key from the `ENCRYPTION_MASTER_KEY` env var) and never returned
   to the client. A "Test"/validate action checks a key against the provider's
   models endpoint. New `/api/ai-config` routes (list/create/update/delete +
