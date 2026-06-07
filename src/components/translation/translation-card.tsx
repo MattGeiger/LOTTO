@@ -20,6 +20,7 @@ import {
   TabsTrigger,
 } from "@/components/animate-ui/primitives/animate/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AiConfigTab } from "@/components/translation/ai-config-tab";
 import { LanguageSettingsTab } from "@/components/translation/language-settings-tab";
 
 type TabValue = "languages" | "ai" | "management";
@@ -81,10 +82,7 @@ export function TranslationCard() {
               <LanguageSettingsTab />
             </TabsContent>
             <TabsContent value="ai">
-              <ComingSoon>
-                AI provider configuration arrives in the next update. You&apos;ll
-                add encrypted API keys and choose translation models here.
-              </ComingSoon>
+              <AiConfigTab />
             </TabsContent>
             <TabsContent value="management">
               <ComingSoon>

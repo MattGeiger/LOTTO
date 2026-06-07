@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 ### Added
+- **Translation admin card — AI Configuration (v2.0, Feature 3 increment 2).**
+  The AI Configuration tab lets staff add, edit, validate, and delete AI provider
+  configurations (OpenAI, Anthropic, Google) — name, model, API key, cost, and
+  token limits. API keys are **encrypted at rest** (AES-256-GCM with a per-record
+  salt; master key from the `ENCRYPTION_MASTER_KEY` env var) and never returned
+  to the client. A "Test"/validate action checks a key against the provider's
+  models endpoint. New `/api/ai-config` routes (list/create/update/delete +
+  `/validate`), an encryption module, and a file/Postgres-selectable config store
+  (mirroring the state manager, so local file-mode dev works without a database).
 - **Schema migration runner.** `scripts/apply-schema.mjs` (+ `npm run db:migrate`)
   applies the idempotent `schema.sql` (and optionally `schema.arcade.sql` via
   `--arcade`) to any Postgres target using the standard wire protocol — works
