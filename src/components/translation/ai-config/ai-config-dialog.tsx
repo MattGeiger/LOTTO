@@ -12,9 +12,12 @@
 "use client";
 
 import * as React from "react";
-import { Bot, DollarSign, Gauge, KeyRound, Settings, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 
+import { BotIcon } from "@/components/animate-ui/icons/bot";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { LockIcon } from "@/components/animate-ui/icons/lock";
+import { SettingsIcon } from "@/components/animate-ui/icons/settings";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -100,7 +103,7 @@ const defaultsForService = (serviceType: AiServiceType): FormState => {
   return applySpec({ ...base, modelName: first.name }, first);
 };
 
-const emptyForm = (): FormState => defaultsForService("Anthropic");
+const emptyForm = (): FormState => defaultsForService("Google");
 
 const fromConfig = (config: AiConfigPublic): FormState => {
   const spec = getModelSpecByModel(config.model);
@@ -132,7 +135,7 @@ function StepShell({
   description,
   children,
 }: {
-  icon: LucideIcon;
+  icon: React.ComponentType<{ className?: string; size?: number }>;
   title: string;
   description: string;
   children: React.ReactNode;
@@ -141,7 +144,11 @@ function StepShell({
     <div className="px-2">
       <div className="space-y-4">
         <div className="text-center">
-          <Icon className="mx-auto h-12 w-12 text-muted-foreground" aria-hidden="true" />
+          <AnimateIcon animateOnView animateOnViewOnce animateOnHover className="inline-flex">
+            <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Icon className="h-8 w-8" size={32} aria-hidden="true" />
+            </span>
+          </AnimateIcon>
           <h3 className="mt-2 text-lg font-medium">{title}</h3>
           <p className="mb-4 text-sm text-muted-foreground">{description}</p>
         </div>
@@ -251,7 +258,7 @@ export function AiConfigDialog({
 
         <ScrollArea className="h-[360px]">
           {stepId === "service" ? (
-            <StepShell icon={Bot} title="Service configuration" description="Choose the AI service and model.">
+            <StepShell icon={BotIcon} title="Service configuration" description="Choose the AI service and model.">
               <div className="space-y-2">
                 <Label htmlFor="wiz-provider">Provider</Label>
                 <Select
@@ -312,7 +319,7 @@ export function AiConfigDialog({
 
           {stepId === "apikey" ? (
             <StepShell
-              icon={KeyRound}
+              icon={LockIcon}
               title="API credentials"
               description={mode === "add" ? "Enter your provider API key." : "API key (already configured)."}
             >
@@ -362,7 +369,7 @@ export function AiConfigDialog({
           ) : null}
 
           {stepId === "cost" ? (
-            <StepShell icon={DollarSign} title="Cost tracking" description="Optional pricing for cost estimates.">
+            <StepShell icon={SettingsIcon} title="Cost tracking" description="Optional pricing for cost estimates.">
               <div className="space-y-2">
                 <Label htmlFor="wiz-unit">Unit price</Label>
                 <Select value={form.unitPrice} onValueChange={(v) => set("unitPrice", v as "per_1m" | "per_1k")}>
@@ -401,7 +408,7 @@ export function AiConfigDialog({
           ) : null}
 
           {stepId === "tokens" ? (
-            <StepShell icon={Gauge} title="Token limits" description="Optional input/output token limits.">
+            <StepShell icon={SettingsIcon} title="Token limits" description="Optional input/output token limits.">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="wiz-in-tok">Input token limit</Label>
@@ -438,7 +445,7 @@ export function AiConfigDialog({
           ) : null}
 
           {stepId === "name" ? (
-            <StepShell icon={Settings} title="Configuration details" description="Name this configuration.">
+            <StepShell icon={SettingsIcon} title="Configuration details" description="Name this configuration.">
               <div className="space-y-2">
                 <Label htmlFor="wiz-name">Name</Label>
                 <Input

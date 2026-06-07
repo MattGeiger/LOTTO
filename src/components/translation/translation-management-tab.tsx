@@ -8,9 +8,15 @@
 "use client";
 
 import * as React from "react";
-import { Pencil, Plus, RefreshCw, RotateCcw, Search, Trash2 } from "lucide-react";
+import type { Column, ColumnDef } from "@tanstack/react-table";
 import { toast } from "sonner";
 
+import { PlusIcon } from "@/components/animate-ui/icons/plus";
+import { RefreshCwIcon } from "@/components/animate-ui/icons/refresh-cw";
+import { RotateCcwIcon } from "@/components/animate-ui/icons/rotate-ccw";
+import { SearchCheckIcon } from "@/components/animate-ui/icons/search-check";
+import { SquarePenIcon } from "@/components/animate-ui/icons/square-pen";
+import { Trash2Icon } from "@/components/animate-ui/icons/trash-2";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +38,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { EnhancedDataTable } from "@/components/ui/enhanced-data-table";
+import { ResponsiveTruncatedText } from "@/components/ui/responsive-truncated-text";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -40,14 +48,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { TableActionMenu } from "@/components/ui/table-action-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { FindMissingDialog } from "@/components/translation/find-missing-dialog";
 import {
@@ -55,7 +56,10 @@ import {
   TRANSLATION_TYPES,
   type TranslationRecord,
   type TranslationStatus,
+  type TranslationType,
 } from "@/lib/translation/types";
+import { cn } from "@/lib/utils";
+import type { TableBulkAction } from "@/types/table";
 
 const ALL = "all";
 
@@ -77,6 +81,38 @@ function StatusBadge({ status }: { status: TranslationStatus }) {
   );
 }
 
+function formatTranslationType(type: TranslationType) {
+  if (type === "ui_string") return "UI string";
+  if (type === "announcement") return "Announcement";
+  return "Custom";
+}
+
+function SortableHeader<TData>({
+  column,
+  label,
+  className,
+}: {
+  column: Column<TData, unknown>;
+  label: string;
+  className?: string;
+}) {
+  const sorted = column.getIsSorted();
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      className={cn("-ml-2 h-8 px-2", className)}
+      onClick={() => column.toggleSorting(sorted === "asc")}
+    >
+      {label}
+      <span className="ml-1 text-xs text-muted-foreground" aria-hidden="true">
+        {sorted === "asc" ? "↑" : sorted === "desc" ? "↓" : "↕"}
+      </span>
+    </Button>
+  );
+}
+
 export function TranslationManagementTab() {
   const [rows, setRows] = React.useState<TranslationRecord[]>([]);
   const [languages, setLanguages] = React.useState<string[]>([]);
@@ -84,22 +120,17 @@ export function TranslationManagementTab() {
   const [filterLanguage, setFilterLanguage] = React.useState<string>(ALL);
   const [filterType, setFilterType] = React.useState<string>(ALL);
   const [filterStatus, setFilterStatus] = React.useState<string>(ALL);
-  const [selected, setSelected] = React.useState<Set<number>>(new Set());
   const [busy, setBusy] = React.useState(false);
+  const tableRef = React.useRef<{ clearSelection?: () => void }>(null);
 
-  // Add dialog
   const [addOpen, setAddOpen] = React.useState(false);
   const [addText, setAddText] = React.useState("");
   const [addLanguage, setAddLanguage] = React.useState("");
 
-  // Edit dialog
   const [editRow, setEditRow] = React.useState<TranslationRecord | null>(null);
   const [editText, setEditText] = React.useState("");
 
-  // Delete confirm
-  const [deleteId, setDeleteId] = React.useState<number | null>(null);
-
-  // Find-missing modal
+  const [deleteRow, setDeleteRow] = React.useState<TranslationRecord | null>(null);
   const [findOpen, setFindOpen] = React.useState(false);
 
   const loadLanguages = React.useCallback(async () => {
@@ -107,7 +138,7 @@ export function TranslationManagementTab() {
       const res = await fetch("/api/languages?enabled", { cache: "no-store" });
       if (!res.ok) return;
       const data = (await res.json()) as { languages: { name: string }[] };
-      setLanguages(data.languages.map((l) => l.name).filter((n) => n !== "English"));
+      setLanguages(data.languages.map((language) => language.name).filter((name) => name !== "English"));
     } catch {
       /* ignore */
     }
@@ -124,7 +155,7 @@ export function TranslationManagementTab() {
       if (!res.ok) throw new Error("Unable to load translations.");
       const data = (await res.json()) as { translations: TranslationRecord[] };
       setRows(data.translations);
-      setSelected(new Set());
+      tableRef.current?.clearSelection?.();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to load translations.");
     } finally {
@@ -135,20 +166,15 @@ export function TranslationManagementTab() {
   React.useEffect(() => {
     void loadLanguages();
   }, [loadLanguages]);
+
   React.useEffect(() => {
     void load();
   }, [load]);
 
-  const toggleSelect = (id: number, checked: boolean) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(id);
-      else next.delete(id);
-      return next;
-    });
-
-  const toggleSelectAll = (checked: boolean) =>
-    setSelected(checked ? new Set(rows.map((r) => r.id)) : new Set());
+  const openEdit = React.useCallback((row: TranslationRecord) => {
+    setEditRow(row);
+    setEditText(row.translatedText ?? "");
+  }, []);
 
   const runAdd = async () => {
     if (!addText.trim() || !addLanguage) {
@@ -160,7 +186,11 @@ export function TranslationManagementTab() {
       const res = await fetch("/api/translations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ originalText: addText.trim(), language: addLanguage, type: "custom" }),
+        body: JSON.stringify({
+          originalText: addText.trim(),
+          language: addLanguage,
+          type: "custom",
+        }),
       });
       const data = (await res.json().catch(() => ({}))) as { warning?: string; error?: string };
       if (!res.ok) throw new Error(data.error ?? "Unable to add the translation.");
@@ -195,79 +225,92 @@ export function TranslationManagementTab() {
     }
   };
 
-  const runRetry = async (id: number) => {
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/translations/${id}/retry`, { method: "POST" });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Unable to retry.");
-      toast.success("Retried.");
-      await load();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to retry.");
-    } finally {
-      setBusy(false);
-    }
-  };
+  const runRetry = React.useCallback(
+    async (row: TranslationRecord) => {
+      setBusy(true);
+      try {
+        const res = await fetch(`/api/translations/${row.id}/retry`, { method: "POST" });
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) throw new Error(data.error ?? "Unable to retry.");
+        toast.success(row.status === "completed" ? "Restarted translation." : "Retried translation.");
+        await load();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Unable to retry.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [load],
+  );
 
   const runDelete = async () => {
-    if (deleteId === null) return;
+    if (!deleteRow) return;
     setBusy(true);
     try {
-      const res = await fetch(`/api/translations/${deleteId}`, { method: "DELETE" });
+      const res = await fetch(`/api/translations/${deleteRow.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Unable to delete.");
       toast.success("Deleted.");
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to delete.");
     } finally {
-      setDeleteId(null);
+      setDeleteRow(null);
       setBusy(false);
     }
   };
 
-  const bulkRetry = async () => {
-    const ids = [...selected];
-    if (ids.length === 0) return;
-    setBusy(true);
-    try {
-      const res = await fetch("/api/translations/bulk-retry", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { error?: string; translated?: number; failed?: number };
-      if (!res.ok) throw new Error(data.error ?? "Unable to retry.");
-      toast.success(`Retried ${data.translated ?? 0}, ${data.failed ?? 0} failed.`);
-      await load();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to retry.");
-    } finally {
-      setBusy(false);
-    }
-  };
+  const bulkRetry = React.useCallback(
+    async (selectedRows: TranslationRecord[]) => {
+      if (selectedRows.length === 0) return;
+      setBusy(true);
+      try {
+        const res = await fetch("/api/translations/bulk-retry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: selectedRows.map((row) => row.id) }),
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          translated?: number;
+          failed?: number;
+        };
+        if (!res.ok) throw new Error(data.error ?? "Unable to retry.");
+        toast.success(`Retried ${data.translated ?? 0}, ${data.failed ?? 0} failed.`);
+        tableRef.current?.clearSelection?.();
+        await load();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Unable to retry.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [load],
+  );
 
-  const bulkDelete = async () => {
-    const ids = [...selected];
-    if (ids.length === 0) return;
-    setBusy(true);
-    try {
-      const res = await fetch("/api/translations/bulk-delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids }),
-      });
-      if (!res.ok) throw new Error("Unable to delete.");
-      toast.success("Deleted selected.");
-      await load();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to delete.");
-    } finally {
-      setBusy(false);
-    }
-  };
+  const bulkDelete = React.useCallback(
+    async (selectedRows: TranslationRecord[]) => {
+      if (selectedRows.length === 0) return;
+      setBusy(true);
+      try {
+        const res = await fetch("/api/translations/bulk-delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: selectedRows.map((row) => row.id) }),
+        });
+        if (!res.ok) throw new Error("Unable to delete.");
+        toast.success("Deleted selected.");
+        tableRef.current?.clearSelection?.();
+        await load();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Unable to delete.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [load],
+  );
 
-  const recoverStuck = async () => {
+  const recoverStuck = React.useCallback(async () => {
     setBusy(true);
     try {
       const res = await fetch("/api/translations/recover-stuck", { method: "POST" });
@@ -280,9 +323,195 @@ export function TranslationManagementTab() {
     } finally {
       setBusy(false);
     }
-  };
+  }, [load]);
 
-  const allSelected = rows.length > 0 && selected.size === rows.length;
+  const columns = React.useMemo<ColumnDef<TranslationRecord>[]>(
+    () => [
+      {
+        id: "select",
+        size: 44,
+        enableSorting: false,
+        enableHiding: false,
+        header: ({ table }) => (
+          <Checkbox
+            checked={
+              table.getIsAllRowsSelected() ||
+              (table.getIsSomeRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) => table.toggleAllRowsSelected(Boolean(value))}
+            aria-label="Select all translations"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(Boolean(value))}
+            aria-label={`Select translation ${row.original.id}`}
+          />
+        ),
+        meta: {
+          style: { width: 44, minWidth: 44, maxWidth: 44 },
+          headerClassName: "pl-4",
+          cellClassName: "pl-4",
+        },
+      },
+      {
+        accessorKey: "originalText",
+        size: 280,
+        header: ({ column }) => <SortableHeader column={column} label="Original" />,
+        cell: ({ row }) => (
+          <ResponsiveTruncatedText
+            text={row.original.originalText}
+            title="View full original text"
+            className="max-w-[18rem]"
+          />
+        ),
+        meta: {
+          cellClassName: "max-w-0",
+        },
+      },
+      {
+        accessorKey: "translatedText",
+        size: 280,
+        header: ({ column }) => <SortableHeader column={column} label="Translation" />,
+        cell: ({ row }) =>
+          row.original.translatedText ? (
+            <ResponsiveTruncatedText
+              text={row.original.translatedText}
+              title="View full translated text"
+              className="max-w-[18rem] text-muted-foreground"
+            />
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          ),
+        meta: {
+          cellClassName: "max-w-0",
+        },
+      },
+      {
+        accessorKey: "language",
+        size: 130,
+        enableHiding: true,
+        header: ({ column }) => <SortableHeader column={column} label="Language" />,
+        cell: ({ row }) => <span className="whitespace-nowrap">{row.original.language}</span>,
+      },
+      {
+        accessorKey: "type",
+        size: 120,
+        enableHiding: true,
+        header: ({ column }) => <SortableHeader column={column} label="Type" />,
+        cell: ({ row }) => <Badge variant="secondary">{formatTranslationType(row.original.type)}</Badge>,
+      },
+      {
+        accessorKey: "status",
+        size: 120,
+        enableHiding: true,
+        header: ({ column }) => <SortableHeader column={column} label="Status" />,
+        cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      },
+      {
+        id: "actions",
+        size: 56,
+        enableSorting: false,
+        enableHiding: false,
+        header: () => <span className="sr-only">Actions</span>,
+        cell: ({ row }) => (
+          <div className="flex justify-end pr-2">
+            <TableActionMenu
+              size="sm"
+              isLoading={busy}
+              triggerLabel={`Open actions for ${row.original.originalText}`}
+              actions={[
+                {
+                  label: "Edit",
+                  icon: SquarePenIcon,
+                  onClick: () => openEdit(row.original),
+                },
+                {
+                  label: row.original.status === "completed" ? "Restart Translation" : "Retry Translation",
+                  icon: row.original.status === "completed" ? RotateCcwIcon : RefreshCwIcon,
+                  onClick: () => void runRetry(row.original),
+                },
+                {
+                  label: "Delete",
+                  icon: Trash2Icon,
+                  onClick: () => setDeleteRow(row.original),
+                  variant: "destructive",
+                },
+              ]}
+            />
+          </div>
+        ),
+        meta: {
+          style: { width: 56, minWidth: 56, maxWidth: 56 },
+          headerClassName: "pr-3 text-right",
+          cellClassName: "pr-3",
+        },
+      },
+    ],
+    [busy, openEdit, runRetry],
+  );
+
+  const filterControls = (
+    <>
+      <Select value={filterLanguage} onValueChange={setFilterLanguage}>
+        <SelectTrigger className="w-full sm:w-40">
+          <SelectValue placeholder="Language" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>All languages</SelectItem>
+          {languages.map((name) => (
+            <SelectItem key={name} value={name}>
+              {name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={filterType} onValueChange={setFilterType}>
+        <SelectTrigger className="w-full sm:w-36">
+          <SelectValue placeholder="Type" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>All types</SelectItem>
+          {TRANSLATION_TYPES.map((type) => (
+            <SelectItem key={type} value={type}>
+              {formatTranslationType(type)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={filterStatus} onValueChange={setFilterStatus}>
+        <SelectTrigger className="w-full sm:w-36">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>All statuses</SelectItem>
+          {TRANSLATION_STATUSES.map((status) => (
+            <SelectItem key={status} value={status}>
+              {status}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
+  );
+
+  const bulkActions = React.useMemo<TableBulkAction<TranslationRecord>[]>(
+    () => [
+      {
+        label: "Retry Selected",
+        icon: RefreshCwIcon,
+        action: bulkRetry,
+      },
+      {
+        label: "Delete Selected",
+        icon: Trash2Icon,
+        action: bulkDelete,
+        variant: "destructive",
+      },
+    ],
+    [bulkDelete, bulkRetry],
+  );
 
   return (
     <div className="space-y-4">
@@ -292,160 +521,55 @@ export function TranslationManagementTab() {
         custom strings you add.
       </p>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" size="sm" onClick={() => setFindOpen(true)} disabled={busy}>
-          <Search className="mr-1 size-4" aria-hidden="true" />
-          Find missing
-        </Button>
-        <Button type="button" variant="outline" size="sm" onClick={() => setAddOpen(true)} disabled={busy}>
-          <Plus className="mr-1 size-4" aria-hidden="true" />
-          Add translation
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={recoverStuck} disabled={busy}>
-          <RotateCcw className="mr-1 size-4" aria-hidden="true" />
-          Recover stuck
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={load} disabled={busy} className="ml-auto">
-          <RefreshCw className="mr-1 size-4" aria-hidden="true" />
-          Refresh
-        </Button>
-      </div>
+      <EnhancedDataTable
+        ref={tableRef}
+        columns={columns}
+        data={rows}
+        isLoading={loading}
+        filterColumn="originalText"
+        filterPlaceholder="Filter original text..."
+        bodyMaxHeight="420px"
+        minTableWidth="100%"
+        tableClassName="table-fixed"
+        getRowId={(row) => String(row.id)}
+        mobileHiddenColumnIds={["language", "type", "status"]}
+        selection={{
+          enabled: true,
+          bulkActions,
+        }}
+        toolbarControls={filterControls}
+        toolbarActions={[
+          {
+            label: "Find missing",
+            icon: SearchCheckIcon,
+            variant: "default",
+            action: () => setFindOpen(true),
+            disabled: busy,
+          },
+          {
+            label: "Add translation",
+            icon: PlusIcon,
+            variant: "outline",
+            action: () => setAddOpen(true),
+            disabled: busy,
+          },
+          {
+            label: "Recover stuck",
+            icon: RotateCcwIcon,
+            variant: "ghost",
+            action: () => void recoverStuck(),
+            disabled: busy,
+          },
+          {
+            label: "Refresh",
+            icon: RefreshCwIcon,
+            variant: "ghost",
+            action: () => void load(),
+            disabled: busy,
+          },
+        ]}
+      />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Select value={filterLanguage} onValueChange={setFilterLanguage}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Language" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>All languages</SelectItem>
-            {languages.map((name) => (
-              <SelectItem key={name} value={name}>
-                {name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>All types</SelectItem>
-            {TRANSLATION_TYPES.map((t) => (
-              <SelectItem key={t} value={t}>
-                {t}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>All statuses</SelectItem>
-            {TRANSLATION_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {selected.size > 0 ? (
-        <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
-          <span className="tabular-nums text-muted-foreground">{selected.size} selected</span>
-          <Button type="button" variant="outline" size="sm" onClick={bulkRetry} disabled={busy}>
-            Retry selected
-          </Button>
-          <Button type="button" variant="outline" size="sm" onClick={bulkDelete} disabled={busy}>
-            Delete selected
-          </Button>
-        </div>
-      ) : null}
-
-      <div className="rounded-md border bg-card">
-        {loading ? (
-          <p className="p-4 text-sm text-muted-foreground">Loading…</p>
-        ) : rows.length === 0 ? (
-          <p className="p-6 text-center text-sm text-muted-foreground">
-            No translations yet. Use “Find missing” to scan content for enabled languages.
-          </p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-8">
-                  <Checkbox
-                    checked={allSelected}
-                    onCheckedChange={(c) => toggleSelectAll(c === true)}
-                    aria-label="Select all"
-                  />
-                </TableHead>
-                <TableHead>Original</TableHead>
-                <TableHead>Translation</TableHead>
-                <TableHead>Language</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selected.has(row.id)}
-                      onCheckedChange={(c) => toggleSelect(row.id, c === true)}
-                      aria-label={`Select ${row.id}`}
-                    />
-                  </TableCell>
-                  <TableCell className="max-w-[14rem] truncate" title={row.originalText}>
-                    {row.originalText}
-                  </TableCell>
-                  <TableCell className="max-w-[14rem] truncate text-muted-foreground" title={row.translatedText ?? ""}>
-                    {row.translatedText ?? "—"}
-                  </TableCell>
-                  <TableCell>{row.language}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{row.type}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={row.status} />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditRow(row);
-                          setEditText(row.translatedText ?? "");
-                        }}
-                      >
-                        <Pencil className="size-4" aria-hidden="true" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                      <Button type="button" variant="ghost" size="sm" onClick={() => runRetry(row.id)} disabled={busy}>
-                        <RefreshCw className="size-4" aria-hidden="true" />
-                        <span className="sr-only">Retry</span>
-                      </Button>
-                      <Button type="button" variant="ghost" size="sm" onClick={() => setDeleteId(row.id)}>
-                        <Trash2 className="size-4 text-destructive" aria-hidden="true" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-
-      {/* Add dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -455,7 +579,12 @@ export function TranslationManagementTab() {
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="tm-add-text">Original text (English)</Label>
-              <Textarea id="tm-add-text" value={addText} onChange={(e) => setAddText(e.target.value)} rows={3} />
+              <Textarea
+                id="tm-add-text"
+                value={addText}
+                onChange={(event) => setAddText(event.target.value)}
+                rows={3}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="tm-add-lang">Language</Label>
@@ -484,7 +613,6 @@ export function TranslationManagementTab() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit dialog */}
       <Dialog open={editRow !== null} onOpenChange={(open) => !open && setEditRow(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -502,7 +630,12 @@ export function TranslationManagementTab() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="tm-edit-text">Translation ({editRow?.language})</Label>
-              <Textarea id="tm-edit-text" value={editText} onChange={(e) => setEditText(e.target.value)} rows={4} />
+              <Textarea
+                id="tm-edit-text"
+                value={editText}
+                onChange={(event) => setEditText(event.target.value)}
+                rows={4}
+              />
             </div>
           </div>
           <DialogFooter>
@@ -518,11 +651,13 @@ export function TranslationManagementTab() {
 
       <FindMissingDialog open={findOpen} onOpenChange={setFindOpen} onProcessed={load} />
 
-      <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
+      <AlertDialog open={deleteRow !== null} onOpenChange={(open) => !open && setDeleteRow(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete translation?</AlertDialogTitle>
-            <AlertDialogDescription>This removes the translation row. This cannot be undone.</AlertDialogDescription>
+            <AlertDialogDescription>
+              This removes the translation row. This cannot be undone.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

@@ -9,6 +9,7 @@
 
 import { Info, ListOrdered } from "lucide-react";
 import { Clock } from "@/components/animate-ui/icons/clock";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import { Users } from "@/components/animate-ui/icons/users";
 import { X } from "@/components/animate-ui/icons/x";
 import { LanguageMorphText } from "@/components/language-morph-text";
@@ -62,10 +63,12 @@ export function TicketDetailDialog({
             <LanguageMorphText text={t("ticket")} /> #{ticketNumber}
           </DialogTitle>
         </DialogHeader>
-        <DialogClose className="absolute end-4 top-4 rounded-full p-1 text-muted-foreground transition hover:bg-muted/40">
-          <X className="h-4 w-4" animateOnHover />
-          <span className="sr-only">{t("close")}</span>
-        </DialogClose>
+        <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
+          <DialogClose className="absolute end-4 top-4 rounded-full p-1 text-muted-foreground transition hover:bg-muted/40">
+            <X className="h-4 w-4" />
+            <span className="sr-only">{t("close")}</span>
+          </DialogClose>
+        </AnimateIcon>
 
         <div className="space-y-3 py-4">
           {(isReturned || isUnclaimed || calledMessage) ? (
@@ -88,7 +91,6 @@ export function TicketDetailDialog({
               <div className="flex items-center gap-3 rounded-lg border bg-card p-4">
                 <Clock
                   className="h-6 w-6 text-primary dark:text-[color:var(--ticket-serving-border)]"
-                  animateOnHover
                 />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">
@@ -103,7 +105,6 @@ export function TicketDetailDialog({
               <div className="flex items-center gap-3 rounded-lg border bg-card p-4">
                 <Users
                   className="h-6 w-6 text-primary dark:text-[color:var(--ticket-serving-border)]"
-                  animateOnHover
                 />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">

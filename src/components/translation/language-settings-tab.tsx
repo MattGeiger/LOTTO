@@ -8,9 +8,13 @@
 "use client";
 
 import * as React from "react";
-import { Search, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { CircleCheckIcon } from "@/components/animate-ui/icons/circle-check";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { PlusIcon } from "@/components/animate-ui/icons/plus";
+import { SearchIcon } from "@/components/animate-ui/icons/search";
+import { XIcon } from "@/components/animate-ui/icons/x";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -135,33 +139,40 @@ export function LanguageSettingsTab() {
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[12rem] flex-1">
-          <Search
-            className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search languages…"
-            aria-label="Search languages"
-            disabled={loading || saving}
-            className="pl-8"
-          />
-        </div>
-        <Button type="button" variant="outline" size="sm" onClick={selectAllVisible} disabled={loading || saving}>
-          Select all
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={clearToBase}
-          disabled={loading || saving || selectedCount <= ALWAYS_ON.size}
-        >
-          <X className="mr-1 size-3.5" aria-hidden="true" />
-          Reset
-        </Button>
+        <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
+          <div className="relative min-w-[12rem] flex-1">
+            <SearchIcon
+              className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search languages…"
+              aria-label="Search languages"
+              disabled={loading || saving}
+              className="pl-8"
+            />
+          </div>
+        </AnimateIcon>
+        <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
+          <Button type="button" variant="outline" size="sm" onClick={selectAllVisible} disabled={loading || saving}>
+            <PlusIcon className="mr-1 size-3.5" aria-hidden="true" />
+            Select all
+          </Button>
+        </AnimateIcon>
+        <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={clearToBase}
+            disabled={loading || saving || selectedCount <= ALWAYS_ON.size}
+          >
+            <XIcon className="mr-1 size-3.5" aria-hidden="true" />
+            Reset
+          </Button>
+        </AnimateIcon>
         <span className="ml-auto text-sm tabular-nums text-muted-foreground">
           {selectedCount} enabled
         </span>
@@ -199,9 +210,12 @@ export function LanguageSettingsTab() {
       </ScrollArea>
 
       <div className="flex justify-end">
-        <Button type="button" size="sm" onClick={save} disabled={loading || saving || !dirty}>
-          {saving ? "Saving…" : "Save changes"}
-        </Button>
+        <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
+          <Button type="button" size="sm" onClick={save} disabled={loading || saving || !dirty}>
+            <CircleCheckIcon className="mr-1 size-4" aria-hidden="true" />
+            {saving ? "Saving…" : "Save changes"}
+          </Button>
+        </AnimateIcon>
       </div>
     </div>
   );

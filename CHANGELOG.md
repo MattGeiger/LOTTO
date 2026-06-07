@@ -1,7 +1,52 @@
 # Changelog
 
 ## [Unreleased]
+### Fixed
+- **Translation card mobile responsiveness.** Ported FEED's responsive table
+  patterns for the Translation and AI Configuration tabs: lower-priority
+  columns hide on mobile, long text truncates with a view-full dialog, and
+  per-row actions now live in a stable dropdown instead of colliding inline
+  buttons. The remaining mobile columns use a fixed 100%-width table layout so
+  the Actions column stays visible instead of being clipped by a desktop
+  min-width.
+- **Translation Management sticky table header.** Removed the extra table
+  overflow wrapper from the FEED-derived data table so the capped row viewport
+  scrolls rows while the header remains pinned.
+- **Translation card visual clipping.** Added the same inner-spacing pattern used
+  for scrollable inventory results so Translation tab shadows and focus/highlight
+  rings have room to render instead of being cropped by animated tab/scroll
+  boundaries.
+- **Translation tabs no longer collide on mobile.** The Translation card's
+  animate-ui tabs now stack on narrow screens with shortened labels and animated
+  trigger icons, then return to the three-column segmented control on larger
+  screens.
+- **Shared select/dropdown indicators no longer leak animation props.** Removed
+  direct `animateOnHover` props from state-indicator icons so shared primitives
+  follow the documented parent-wrapper animation pattern without React DOM
+  warnings.
+- **Ticket detail dialog icon triggers follow the animation rules.** The close
+  button now wraps its animated icon at the interactive parent, while static
+  metric icons no longer advertise hover animation.
+
+### Changed
+- **Translation Management table now uses a FEED-derived table foundation.** The
+  table is a single TanStack instance with responsive column visibility,
+  sorting/filtering, bulk actions, dropdown row actions, truncation dialogs, and
+  a fixed-height scroll shell whose header stays sticky while rows scroll.
+- **AI Configuration list now uses the FEED row-action pattern.** The inline
+  validate/edit/delete buttons were replaced by `TableActionMenu`, keeping
+  mobile rows compact and action menus stable.
+- **AI Configuration wizard default.** New AI configurations now default to
+  Google `gemini-2.5-flash-lite`, with the existing cost/token template applied,
+  and wizard step hero icons animate on reveal/hover to better match the FEED
+  modal pattern.
+
 ### Added
+- **FEED-derived table UI primitives for Translation surfaces.** Added
+  `EnhancedDataTable`, `TableActionMenu`, `ResponsiveTruncatedText`, table
+  truncation utilities, `useIsMobile`, and the native animate-ui icons needed
+  for translation tabs/toolbars/action menus. Covered by
+  `tests/enhanced-data-table.test.tsx`.
 - **Translation admin card — Translation Management (v2.0, Feature 3 increment 3).**
   The third tab ports FEED's Translation Management on LOTTO's primitives: a
   filterable table (language / type / status) of translations with per-row
