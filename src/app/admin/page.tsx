@@ -42,6 +42,7 @@ import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
 import { OperatingHoursEditor } from "@/components/operating-hours-editor";
 import { DisplayLanguageRotationEditor } from "@/components/display-language-rotation-editor";
 import { AnnouncementEditor } from "@/components/announcement-editor";
+import { TranslationCard } from "@/components/translation/translation-card";
 import { ArchiveIcon, type ArchiveIconHandle } from "@/components/lucide-animated/archive";
 import {
   AlertDialog,
@@ -2800,6 +2801,8 @@ const AdminPage = () => {
             </CardContent>
           </Card>
         </div>
+
+        <TranslationCard />
 
         {!error && state && (
           <Card className="border-status-success-border bg-status-success-bg">

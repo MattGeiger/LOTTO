@@ -11,16 +11,36 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/state", "/api/state/:path*", "/arcade/zombie-attack/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/api/state",
+    "/api/state/:path*",
+    "/api/languages",
+    "/api/languages/:path*",
+    "/api/ai-config",
+    "/api/ai-config/:path*",
+    "/api/translations",
+    "/api/translations/:path*",
+    "/arcade/zombie-attack/:path*",
+  ],
 };
+
+// API prefixes whose write methods (anything but GET/HEAD/OPTIONS) require an
+// authenticated staff session.
+const GATED_API_PREFIXES = [
+  "/api/state",
+  "/api/languages",
+  "/api/ai-config",
+  "/api/translations",
+];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isZombieAttack = pathname.startsWith("/arcade/zombie-attack");
   const isAdmin = pathname.startsWith("/admin");
-  const isApiState = pathname.startsWith("/api/state");
+  const isGatedApi = GATED_API_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   const isWriteApi =
-    isApiState && !["GET", "HEAD", "OPTIONS"].includes(request.method.toUpperCase());
+    isGatedApi && !["GET", "HEAD", "OPTIONS"].includes(request.method.toUpperCase());
   const isLocalDevelopment = process.env.NODE_ENV === "development" && !process.env.VERCEL;
   const authBypass = process.env.AUTH_BYPASS === "true" || isLocalDevelopment;
 

@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 ### Added
+- **Translation admin card — Language Settings (v2.0, Feature 3 increment 1).**
+  A new **Translation** card on the Admin page with a three-tab control
+  (Language Settings · AI Configuration · Translation Management; the latter two
+  arrive in upcoming increments). The Language Settings tab lists the full
+  60-language catalog (ported from FEED) with native labels, search, and
+  select-all/reset; the eight core languages are always on. Enabled languages
+  persist via a new `languages` table behind a file/Postgres-selectable store
+  (mirroring the state manager) and a session-gated `/api/languages` route.
+  Newly enabled languages stay hidden from visitors until their translations
+  exist (added in a later increment). New `schema.sql` tables for the AI
+  translation stack (`languages`, `ai_configurations`, `system_prompts`,
+  `translations`, `usage_records`).
 - **Announcement builder (v2.0).** Staff can compose an announcement from the
   Admin page using a small editor with formatting buttons (Title toggle, Bold,
   Italic, bulleted/numbered lists). The editor defaults to a **Live Preview** that
