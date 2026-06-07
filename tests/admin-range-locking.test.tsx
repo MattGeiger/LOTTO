@@ -21,6 +21,10 @@ vi.mock("@/components/announcement-editor", () => ({
   AnnouncementEditor: () => null,
 }));
 
+vi.mock("@/components/translation/translation-card", () => ({
+  TranslationCard: () => null,
+}));
+
 vi.mock("sonner", () => ({
   toast: {
     error: (...args: unknown[]) => toastError(...args),
