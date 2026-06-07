@@ -8,8 +8,12 @@
 "use client";
 
 import * as React from "react";
-import { Bot, Globe, ListChecks } from "lucide-react";
+import { Globe } from "lucide-react";
 
+import { BotIcon } from "@/components/animate-ui/icons/bot";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { LanguagesIcon } from "@/components/animate-ui/icons/languages";
+import { SearchCheckIcon } from "@/components/animate-ui/icons/search-check";
 import {
   Tabs,
   TabsContent,
@@ -27,13 +31,13 @@ import { TranslationManagementTab } from "@/components/translation/translation-m
 type TabValue = "languages" | "ai" | "management";
 
 const TRIGGER_CLASS =
-  "relative z-10 inline-flex h-8 w-full items-center justify-center gap-2 whitespace-nowrap px-3 text-xs text-muted-foreground sm:text-sm";
+  "relative z-10 inline-flex h-10 min-w-0 w-full items-center justify-center gap-2 px-3 text-xs leading-tight text-muted-foreground sm:h-8 sm:whitespace-nowrap sm:text-sm";
 
 export function TranslationCard() {
   const [tab, setTab] = React.useState<TabValue>("languages");
 
   return (
-    <Card className="bg-card">
+    <Card className="overflow-visible bg-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Globe className="size-4 text-muted-foreground" aria-hidden="true" />
@@ -43,41 +47,50 @@ export function TranslationCard() {
           Manage languages, AI translation providers, and translated content.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="overflow-visible px-4 sm:px-6">
         <Tabs value={tab} onValueChange={(value) => setTab(value as TabValue)}>
-          <div className="relative mb-4">
+          <div className="relative mb-4 overflow-visible px-1 pb-1">
             <TabsHighlight className="absolute inset-0.5 z-0 rounded-md bg-background shadow-sm">
-              <TabsList className="grid w-full grid-cols-3 gap-1 rounded-md border bg-muted p-1">
+              <TabsList className="grid h-auto w-full grid-cols-1 gap-1 overflow-visible rounded-md border bg-muted p-1 sm:grid-cols-3">
                 <TabsHighlightItem value="languages">
-                  <TabsTrigger value="languages" className={TRIGGER_CLASS}>
-                    <Globe className="size-4 shrink-0" aria-hidden="true" />
-                    Language Settings
-                  </TabsTrigger>
+                  <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
+                    <TabsTrigger value="languages" className={TRIGGER_CLASS}>
+                      <LanguagesIcon className="size-4 shrink-0" aria-hidden="true" />
+                      <span className="sm:hidden">Languages</span>
+                      <span className="hidden sm:inline">Language Settings</span>
+                    </TabsTrigger>
+                  </AnimateIcon>
                 </TabsHighlightItem>
                 <TabsHighlightItem value="ai">
-                  <TabsTrigger value="ai" className={TRIGGER_CLASS}>
-                    <Bot className="size-4 shrink-0" aria-hidden="true" />
-                    AI Configuration
-                  </TabsTrigger>
+                  <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
+                    <TabsTrigger value="ai" className={TRIGGER_CLASS}>
+                      <BotIcon className="size-4 shrink-0" aria-hidden="true" />
+                      <span className="sm:hidden">AI Config</span>
+                      <span className="hidden sm:inline">AI Configuration</span>
+                    </TabsTrigger>
+                  </AnimateIcon>
                 </TabsHighlightItem>
                 <TabsHighlightItem value="management">
-                  <TabsTrigger value="management" className={TRIGGER_CLASS}>
-                    <ListChecks className="size-4 shrink-0" aria-hidden="true" />
-                    Translation Management
-                  </TabsTrigger>
+                  <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
+                    <TabsTrigger value="management" className={TRIGGER_CLASS}>
+                      <SearchCheckIcon className="size-4 shrink-0" aria-hidden="true" />
+                      <span className="sm:hidden">Translations</span>
+                      <span className="hidden sm:inline">Translation Management</span>
+                    </TabsTrigger>
+                  </AnimateIcon>
                 </TabsHighlightItem>
               </TabsList>
             </TabsHighlight>
           </div>
 
-          <TabsContents>
-            <TabsContent value="languages">
+          <TabsContents className="overflow-visible px-1 pb-2">
+            <TabsContent value="languages" className="pt-1">
               <LanguageSettingsTab />
             </TabsContent>
-            <TabsContent value="ai">
+            <TabsContent value="ai" className="pt-1">
               <AiConfigTab />
             </TabsContent>
-            <TabsContent value="management">
+            <TabsContent value="management" className="pt-1">
               <TranslationManagementTab />
             </TabsContent>
           </TabsContents>

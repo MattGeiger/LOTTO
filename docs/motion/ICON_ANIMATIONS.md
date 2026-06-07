@@ -54,7 +54,9 @@ Help button).
 
 Motion/React icons driven by an `AnimateIcon` context wrapper or by trigger
 props (`animateOnHover`, `animateOnTap`, `animateOnView`). Examples in LOTTO:
-`ArrowRight`, `Lock`, `Search`. Trigger by wrapping the **interactive parent**:
+`ArrowRight`, `Lock`, `Search`, `Plus`, `SquarePen`, `Trash2`, `RefreshCw`,
+`RotateCcw`, `MoreHorizontal`, `Bot`, and `Languages`. Trigger by wrapping the
+**interactive parent**:
 
 ```tsx
 // CORRECT — handlers attach to the Button; the icon reads AnimateIcon context
@@ -68,6 +70,32 @@ props (`animateOnHover`, `animateOnTap`, `animateOnView`). Examples in LOTTO:
 
 Do **not** pass trigger props directly to a bare icon function component — it
 triggers a "Function components cannot be given refs" warning.
+
+### Action menus and table rows
+
+`TableActionMenu` (`src/components/ui/table-action-menu.tsx`) is the canonical
+pattern for compact per-row table actions. It uses three triggers:
+
+- `animate` when the dropdown opens, so menu items animate as they appear.
+- `animateOnHover` on the full menu row, not just the glyph.
+- `animateOnTap` for pointer/click feedback.
+
+All icons passed to `TableActionMenu` must be native animate-ui icons from
+`src/components/animate-ui/icons/*`. Do not use imperative-ref icons or static
+Lucide icons inside row action menus; they cannot reliably consume the parent
+`AnimateIcon` context and only animate when hovering the glyph itself.
+
+When adding a new row-menu action, first add or port the needed native
+animate-ui icon, then pass it through the action descriptor:
+
+```tsx
+<TableActionMenu
+  actions={[
+    { label: "Edit", icon: SquarePenIcon, onClick: edit },
+    { label: "Delete", icon: Trash2Icon, onClick: remove, variant: "destructive" },
+  ]}
+/>
+```
 
 ### 2. Imperative-ref icons (`@/components/lucide-animated/*`)
 
@@ -136,4 +164,5 @@ this shape, so any imperative-ref icon can be a nav icon.
 | Hover + tap + active-tab-on-mount, reduced-motion guarded | `src/components/navigation/bottom-tab-bar.tsx` |
 | Mount + hover + tap (imperative ref) | `src/components/help-nav-button.tsx` |
 | animate-ui props on an interactive parent | `src/components/staff-cta-buttons.tsx` |
+| Dropdown-open + row hover/tap action menu icons | `src/components/ui/table-action-menu.tsx` |
 | Static pixel-art (Arcade, no animation) | `src/arcade/components/icons/*` |

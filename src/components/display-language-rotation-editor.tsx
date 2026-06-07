@@ -82,7 +82,7 @@ export function DisplayLanguageRotationEditor({
         <div>
           <p className="text-sm font-semibold text-foreground">Enable rotation</p>
           <p className="text-xs text-muted-foreground">
-            Off shows one language; on cycles through your selection.
+            On cycles through your language selection.
           </p>
         </div>
         <Switch
