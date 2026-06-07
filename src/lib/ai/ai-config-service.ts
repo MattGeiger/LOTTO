@@ -84,3 +84,10 @@ export const getDecryptedApiKey = async (id: number): Promise<string | null> => 
 };
 
 export const getConfig = async (id: number): Promise<AiConfig | null> => store.get(id);
+
+// Server-only: the first active configuration with a stored key, used to drive
+// translation. Returns null when none is configured.
+export const getActiveConfig = async (): Promise<AiConfig | null> => {
+  const configs = await store.list();
+  return configs.find((config) => config.isActive && config.encryptedApiKey) ?? null;
+};

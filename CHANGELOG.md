@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 ### Added
+- **Translation admin card — Translation Management (v2.0, Feature 3 increment 3).**
+  The third tab ports FEED's Translation Management on LOTTO's primitives: a
+  filterable table (language / type / status) of translations with per-row
+  edit/retry/delete, bulk retry/delete, **Find missing** (audits UI strings +
+  the active announcement across enabled languages and queues the gaps), and
+  **Recover stuck** (re-runs translations stuck in pending). A dependency-free
+  translation engine calls the active AI provider over REST (OpenAI / Anthropic /
+  Google); results are stored with a pending/completed/failed status in the new
+  `translations` table behind a file/Postgres-selectable store. The auditor only
+  flags UI strings for *newly enabled* languages (the eight core languages keep
+  their hand-authored translations) while announcements are translated for every
+  enabled language. New `/api/translations` routes (list, add, correct, delete,
+  retry, bulk-retry, bulk-delete, find-missing, recover-stuck, metrics). English
+  UI strings moved to a shared `src/lib/ui-strings.ts` module.
 - **Translation admin card — AI Configuration (v2.0, Feature 3 increment 2).**
   The AI Configuration tab lets staff add, edit, validate, and delete AI provider
   configurations (OpenAI, Anthropic, Google) via a **multi-step wizard** and a

@@ -1,0 +1,83 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025 Matt Geiger, Temple Consulting, LLC.
+//
+// LOTTO — Line Order Transparency & Ticketing Organizer. Application code
+// licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
+// is not covered by this license; see TRADEMARKS.md.
+
+// Find-missing-translations auditor (ported in spirit from FEED's
+// translation-auditor). Compares the translatable content set against existing
+// translations across enabled languages and reports/queues the gaps.
+
+import { ALWAYS_ON_LANGUAGE_NAMES } from "@/lib/languages";
+import { listEnabledLanguages } from "@/lib/translation/languages-store";
+import { getContentItems } from "./content";
+import { translatePending, type ProcessResult } from "./engine";
+import * as store from "./translations-store";
+import type { TranslationKey } from "./types";
+
+export type MissingDetails = {
+  count: number;
+  byType: Record<string, number>;
+  byLanguage: Record<string, number>;
+  sampleItems: string[];
+};
+
+// A pending row older than this is treated as stale (re-queue it).
+const STALE_MS = 60_000;
+
+export const auditMissing = async (): Promise<{ missing: TranslationKey[]; details: MissingDetails }> => {
+  const base = new Set<string>(ALWAYS_ON_LANGUAGE_NAMES);
+  const enabledNonEnglish = (await listEnabledLanguages())
+    .map((l) => l.name)
+    .filter((name) => name !== "English");
+  // UI strings are already authored for the base languages (the hardcoded map),
+  // so only *newly enabled* languages need DB translations for them. The
+  // announcement (and custom strings) are dynamic, so every enabled non-English
+  // language needs them.
+  const uiTargets = enabledNonEnglish.filter((name) => !base.has(name));
+
+  const content = await getContentItems();
+  const existing = await store.list();
+  const byKey = new Map(existing.map((r) => [`${r.type}::${r.language}::${r.originalText}`, r]));
+  const now = Date.now();
+
+  const missing: TranslationKey[] = [];
+  const byType: Record<string, number> = {};
+  const byLanguage: Record<string, number> = {};
+  const sampleItems: string[] = [];
+
+  for (const item of content) {
+    const targets = item.type === "ui_string" ? uiTargets : enabledNonEnglish;
+    for (const language of targets) {
+      const row = byKey.get(`${item.type}::${language}::${item.originalText}`);
+      if (row) {
+        if (row.status === "completed") continue;
+        if (row.status === "pending" && now - row.updatedAt < STALE_MS) continue;
+      }
+      missing.push({ originalText: item.originalText, language, type: item.type });
+      byType[item.type] = (byType[item.type] ?? 0) + 1;
+      byLanguage[language] = (byLanguage[language] ?? 0) + 1;
+      if (sampleItems.length < 10) {
+        const snippet = item.originalText.length > 40 ? `${item.originalText.slice(0, 40)}…` : item.originalText;
+        sampleItems.push(`${snippet} → ${language}`);
+      }
+    }
+  }
+
+  return { missing, details: { count: missing.length, byType, byLanguage, sampleItems } };
+};
+
+export const findMissing = async (
+  process: boolean,
+): Promise<{ details: MissingDetails; processed?: ProcessResult }> => {
+  const { missing, details } = await auditMissing();
+  if (!process || missing.length === 0) return { details };
+
+  // Queue every missing item as pending, then translate inline.
+  for (const key of missing) {
+    await store.upsert(key, { status: "pending", translatedText: null, metadata: null });
+  }
+  const processed = await translatePending();
+  return { details, processed };
+};
