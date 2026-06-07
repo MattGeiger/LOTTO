@@ -22,19 +22,12 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AiConfigTab } from "@/components/translation/ai-config-tab";
 import { LanguageSettingsTab } from "@/components/translation/language-settings-tab";
+import { TranslationManagementTab } from "@/components/translation/translation-management-tab";
 
 type TabValue = "languages" | "ai" | "management";
 
 const TRIGGER_CLASS =
   "relative z-10 inline-flex h-8 w-full items-center justify-center gap-2 whitespace-nowrap px-3 text-xs text-muted-foreground sm:text-sm";
-
-function ComingSoon({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="rounded-md border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">
-      {children}
-    </div>
-  );
-}
 
 export function TranslationCard() {
   const [tab, setTab] = React.useState<TabValue>("languages");
@@ -85,10 +78,7 @@ export function TranslationCard() {
               <AiConfigTab />
             </TabsContent>
             <TabsContent value="management">
-              <ComingSoon>
-                Translation management (review, correct, retry, and find missing
-                translations) arrives after AI configuration is in place.
-              </ComingSoon>
+              <TranslationManagementTab />
             </TabsContent>
           </TabsContents>
         </Tabs>
