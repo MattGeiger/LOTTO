@@ -34,7 +34,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { MODEL_SUGGESTIONS } from "@/lib/ai/model-specs";
+import {
+  CUSTOM_MODEL,
+  getModelNames,
+  getModelSpec,
+  getModelSpecByModel,
+  getModelSpecsForService,
+  type ModelSpec,
+} from "@/lib/ai/model-specs";
 import {
   AI_SERVICE_TYPES,
   type AiConfigInput,
@@ -47,6 +54,9 @@ export type AiConfigDialogMode = "add" | "edit";
 type FormState = {
   name: string;
   serviceType: AiServiceType;
+  /** Dropdown selection: a preset model name or "Custom". */
+  modelName: string;
+  /** API model id sent to the provider (preset's `model`, or the custom value). */
   model: string;
   apiKey: string;
   inputCost: string;
@@ -58,33 +68,57 @@ type FormState = {
   isActive: boolean;
 };
 
-const emptyForm = (): FormState => ({
-  name: "",
-  serviceType: "Anthropic",
-  model: "",
-  apiKey: "",
-  inputCost: "",
-  outputCost: "",
+// Fill cost/token fields from a preset spec (prices are USD per 1M tokens).
+const applySpec = (form: FormState, spec: ModelSpec): FormState => ({
+  ...form,
+  model: spec.model,
+  inputCost: String(spec.inputPrice),
+  outputCost: String(spec.outputPrice),
   unitPrice: "per_1m",
-  inputTokenLimit: "",
-  outputTokenLimit: "",
-  maxTokens: "",
-  isActive: true,
+  inputTokenLimit: String(spec.inputTokenLimit),
+  outputTokenLimit: spec.outputTokenLimit ? String(spec.outputTokenLimit) : "",
+  maxTokens: spec.outputTokenLimit ? String(spec.outputTokenLimit) : "",
 });
 
-const fromConfig = (config: AiConfigPublic): FormState => ({
-  name: config.name,
-  serviceType: config.serviceType,
-  model: config.model,
-  apiKey: "",
-  inputCost: config.inputCost ? String(config.inputCost) : "",
-  outputCost: config.outputCost ? String(config.outputCost) : "",
-  unitPrice: config.unitPrice,
-  inputTokenLimit: config.inputTokenLimit ? String(config.inputTokenLimit) : "",
-  outputTokenLimit: config.outputTokenLimit ? String(config.outputTokenLimit) : "",
-  maxTokens: config.maxTokens ? String(config.maxTokens) : "",
-  isActive: config.isActive,
-});
+const defaultsForService = (serviceType: AiServiceType): FormState => {
+  const base: FormState = {
+    name: "",
+    serviceType,
+    modelName: CUSTOM_MODEL,
+    model: "",
+    apiKey: "",
+    inputCost: "",
+    outputCost: "",
+    unitPrice: "per_1m",
+    inputTokenLimit: "",
+    outputTokenLimit: "",
+    maxTokens: "",
+    isActive: true,
+  };
+  const first = getModelSpecsForService(serviceType)[0];
+  if (!first) return base;
+  return applySpec({ ...base, modelName: first.name }, first);
+};
+
+const emptyForm = (): FormState => defaultsForService("Anthropic");
+
+const fromConfig = (config: AiConfigPublic): FormState => {
+  const spec = getModelSpecByModel(config.model);
+  return {
+    name: config.name,
+    serviceType: config.serviceType,
+    modelName: spec?.name ?? CUSTOM_MODEL,
+    model: config.model,
+    apiKey: "",
+    inputCost: config.inputCost ? String(config.inputCost) : "",
+    outputCost: config.outputCost ? String(config.outputCost) : "",
+    unitPrice: config.unitPrice,
+    inputTokenLimit: config.inputTokenLimit ? String(config.inputTokenLimit) : "",
+    outputTokenLimit: config.outputTokenLimit ? String(config.outputTokenLimit) : "",
+    maxTokens: config.maxTokens ? String(config.maxTokens) : "",
+    isActive: config.isActive,
+  };
+};
 
 const numOrNull = (value: string): number | null => {
   if (value.trim() === "") return null;
@@ -220,7 +254,10 @@ export function AiConfigDialog({
             <StepShell icon={Bot} title="Service configuration" description="Choose the AI service and model.">
               <div className="space-y-2">
                 <Label htmlFor="wiz-provider">Provider</Label>
-                <Select value={form.serviceType} onValueChange={(v) => set("serviceType", v as AiServiceType)}>
+                <Select
+                  value={form.serviceType}
+                  onValueChange={(v) => setForm(defaultsForService(v as AiServiceType))}
+                >
                   <SelectTrigger id="wiz-provider">
                     <SelectValue />
                   </SelectTrigger>
@@ -235,18 +272,40 @@ export function AiConfigDialog({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="wiz-model">Model</Label>
-                <Input
-                  id="wiz-model"
-                  list="wiz-model-suggestions"
-                  value={form.model}
-                  onChange={(e) => set("model", e.target.value)}
-                  placeholder="model id"
-                />
-                <datalist id="wiz-model-suggestions">
-                  {MODEL_SUGGESTIONS[form.serviceType].map((m) => (
-                    <option key={m} value={m} />
-                  ))}
-                </datalist>
+                <Select
+                  value={form.modelName}
+                  onValueChange={(name) => {
+                    if (name === CUSTOM_MODEL) {
+                      setForm((f) => ({ ...f, modelName: CUSTOM_MODEL, model: "" }));
+                      return;
+                    }
+                    const spec = getModelSpec(name, form.serviceType);
+                    setForm((f) => (spec ? applySpec({ ...f, modelName: name }, spec) : { ...f, modelName: name }));
+                  }}
+                >
+                  <SelectTrigger id="wiz-model">
+                    <SelectValue placeholder="Select a model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getModelNames(form.serviceType).map((name) => (
+                      <SelectItem key={name} value={name}>
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.modelName === CUSTOM_MODEL ? (
+                  <Input
+                    aria-label="Custom model id"
+                    value={form.model}
+                    onChange={(e) => set("model", e.target.value)}
+                    placeholder="Enter model id (e.g. gpt-4o-mini-2024-07-18)"
+                  />
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Cost and token limits are pre-filled from this model&apos;s template — adjust on the next steps if needed.
+                  </p>
+                )}
               </div>
             </StepShell>
           ) : null}
