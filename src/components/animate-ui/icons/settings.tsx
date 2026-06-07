@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2025 Matt Geiger, Temple Consulting, LLC.
+// Copyright (C) 2026 Matt Geiger
 //
-// LOTTO — Line Order Transparency & Ticketing Organizer. Application code
-// licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
-// is not covered by this license; see TRADEMARKS.md.
+// FEED — Food Equity & Efficient Delivery. Application code licensed
+// under AGPL-3.0-or-later; see LICENSE. William Temple House branding is
+// not covered by this license; see TRADEMARKS.md.
 
-"use client";
+'use client';
 
-import * as React from "react";
-import { motion, type Variants } from "motion/react";
+import * as React from 'react';
+import { motion, type Variants } from 'motion/react';
 
 import {
   getVariants,
-  IconWrapper,
   useAnimateIconContext,
+  IconWrapper,
   type IconProps,
-} from "@/components/animate-ui/icons/icon";
+} from '@/components/animate-ui/icons/icon';
 
 type SettingsProps = IconProps<keyof typeof animations>;
 
@@ -24,8 +24,8 @@ const animations = {
     gear: {
       initial: { rotate: 0 },
       animate: {
-        rotate: 120,
-        transition: { duration: 0.55, ease: "easeInOut" },
+        rotate: 60,
+        transition: { type: 'spring', stiffness: 150, damping: 15 },
       },
     },
   } satisfies Record<string, Variants>,
@@ -52,10 +52,10 @@ function IconComponent({ size, ...props }: SettingsProps) {
         variants={variants.gear}
         initial="initial"
         animate={controls}
-        style={{ transformOrigin: "center" }}
+        style={{ transformOrigin: 'center' }}
       >
-        <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.32-1.915" />
-        <circle cx="12" cy="12" r="3" />
+        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+        <circle cx={12} cy={12} r={3} />
       </motion.g>
     </motion.svg>
   );

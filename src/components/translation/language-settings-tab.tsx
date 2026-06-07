@@ -10,15 +10,14 @@
 import * as React from "react";
 import { toast } from "sonner";
 
-import { CircleCheckIcon } from "@/components/animate-ui/icons/circle-check";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import { PlusIcon } from "@/components/animate-ui/icons/plus";
-import { SearchIcon } from "@/components/animate-ui/icons/search";
 import { XIcon } from "@/components/animate-ui/icons/x";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SearchIcon, type SearchIconHandle } from "@/components/ui/search";
 import {
   ALWAYS_ON_LANGUAGE_NAMES,
   getCatalogEntryByName,
@@ -36,6 +35,7 @@ export function LanguageSettingsTab() {
   const [search, setSearch] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
+  const searchIconRef = React.useRef<SearchIconHandle>(null);
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -55,6 +55,14 @@ export function LanguageSettingsTab() {
   React.useEffect(() => {
     void load();
   }, [load]);
+
+  React.useEffect(() => {
+    searchIconRef.current?.startAnimation();
+  }, []);
+
+  const playSearchIcon = React.useCallback(() => {
+    searchIconRef.current?.startAnimation();
+  }, []);
 
   const filtered = React.useMemo(() => {
     const source = rows.length > 0 ? rows : LANGUAGE_CATALOG.map((entry, index) => ({
@@ -139,22 +147,26 @@ export function LanguageSettingsTab() {
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
-        <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
-          <div className="relative min-w-[12rem] flex-1">
-            <SearchIcon
-              className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search languages…"
-              aria-label="Search languages"
-              disabled={loading || saving}
-              className="pl-8"
-            />
-          </div>
-        </AnimateIcon>
+        <div
+          className="relative min-w-[12rem] flex-1"
+          onMouseEnter={playSearchIcon}
+          onClick={playSearchIcon}
+        >
+          <SearchIcon
+            ref={searchIconRef}
+            size={16}
+            className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search languages…"
+            aria-label="Search languages"
+            disabled={loading || saving}
+            className="pl-8"
+          />
+        </div>
         <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
           <Button type="button" variant="outline" size="sm" onClick={selectAllVisible} disabled={loading || saving}>
             <PlusIcon className="mr-1 size-3.5" aria-hidden="true" />
@@ -210,12 +222,9 @@ export function LanguageSettingsTab() {
       </ScrollArea>
 
       <div className="flex justify-end">
-        <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
-          <Button type="button" size="sm" onClick={save} disabled={loading || saving || !dirty}>
-            <CircleCheckIcon className="mr-1 size-4" aria-hidden="true" />
-            {saving ? "Saving…" : "Save changes"}
-          </Button>
-        </AnimateIcon>
+        <Button type="button" size="sm" onClick={save} disabled={loading || saving || !dirty}>
+          {saving ? "Saving…" : "Save changes"}
+        </Button>
       </div>
     </div>
   );

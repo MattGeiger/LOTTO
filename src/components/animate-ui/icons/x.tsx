@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2025 Matt Geiger, Temple Consulting, LLC.
+// Copyright (C) 2026 Matt Geiger
 //
-// LOTTO — Line Order Transparency & Ticketing Organizer. Application code
-// licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
-// is not covered by this license; see TRADEMARKS.md.
+// FEED — Food Equity & Efficient Delivery. Application code licensed
+// under AGPL-3.0-or-later; see LICENSE. William Temple House branding is
+// not covered by this license; see TRADEMARKS.md.
 
 'use client';
 
@@ -21,62 +21,20 @@ type XProps = IconProps<keyof typeof animations>;
 
 const animations = {
   default: {
-    line1: {
-      initial: {
-        rotate: 0,
-        transition: { ease: 'easeInOut', duration: 0.4 },
-      },
+    path1: {
+      initial: { pathLength: 1, opacity: 1 },
       animate: {
-        rotate: 90,
-        transition: { ease: 'easeInOut', duration: 0.4 },
+        pathLength: [0, 1],
+        opacity: [0, 1],
+        transition: { duration: 0.4, ease: 'linear', opacity: { duration: 0.1 } },
       },
     },
-    line2: {
-      initial: {
-        rotate: 0,
-        transition: { ease: 'easeInOut', duration: 0.4, delay: 0.1 },
-      },
+    path2: {
+      initial: { pathLength: 1, opacity: 1 },
       animate: {
-        rotate: 90,
-        transition: { ease: 'easeInOut', duration: 0.4, delay: 0.1 },
-      },
-    },
-  } satisfies Record<string, Variants>,
-  plus: {
-    line1: {
-      initial: {
-        rotate: 0,
-        x1: 6,
-        y1: 18,
-        x2: 18,
-        y2: 6,
-        transition: { ease: 'easeInOut', duration: 0.3, delay: 0.1 },
-      },
-      animate: {
-        rotate: 45,
-        x1: 7.1,
-        y1: 16.9,
-        x2: 16.9,
-        y2: 7.1,
-        transition: { ease: 'easeInOut', duration: 0.3, delay: 0.1 },
-      },
-    },
-    line2: {
-      initial: {
-        rotate: 0,
-        x1: 6,
-        y1: 6,
-        x2: 18,
-        y2: 18,
-        transition: { ease: 'easeInOut', duration: 0.3 },
-      },
-      animate: {
-        rotate: 45,
-        x1: 7.1,
-        y1: 7.1,
-        x2: 16.9,
-        y2: 16.9,
-        transition: { ease: 'easeInOut', duration: 0.3 },
+        pathLength: [0, 1],
+        opacity: [0, 1],
+        transition: { delay: 0.2, duration: 0.4, ease: 'linear', opacity: { duration: 0.1 } },
       },
     },
   } satisfies Record<string, Variants>,
@@ -99,21 +57,15 @@ function IconComponent({ size, ...props }: XProps) {
       strokeLinejoin="round"
       {...props}
     >
-      <motion.line
-        x1={6}
-        y1={18}
-        x2={18}
-        y2={6}
-        variants={variants.line1}
+      <motion.path
+        d="M18 6 6 18"
+        variants={variants.path1}
         initial="initial"
         animate={controls}
       />
-      <motion.line
-        x1={6}
-        y1={6}
-        x2={18}
-        y2={18}
-        variants={variants.line2}
+      <motion.path
+        d="m6 6 12 12"
+        variants={variants.path2}
         initial="initial"
         animate={controls}
       />
@@ -125,4 +77,10 @@ function X(props: XProps) {
   return <IconWrapper icon={IconComponent} {...props} />;
 }
 
-export { animations, X, X as XIcon, type XProps, type XProps as XIconProps };
+export {
+  animations,
+  X,
+  X as XIcon,
+  type XProps,
+  type XProps as XIconProps,
+};

@@ -12,6 +12,15 @@
 - **Translation Management sticky table header.** Removed the extra table
   overflow wrapper from the FEED-derived data table so the capped row viewport
   scrolls rows while the header remains pinned.
+- **Translation card tab transitions.** Switched the Translation card to the
+  FEED-style animate-ui radix tabs wrapper so tab highlights and panel
+  transitions follow the production FEED pattern. The tab panel transition is
+  now a simple fade/blur instead of the older side-to-side sliding animation.
+- **Translation section animated icons now use FEED implementations.** Replaced
+  local/improvised Translation card section icons with FEED's imperative
+  `ui/globe`, `ui/bot`, and `ui/languages` icons, switched Language Settings
+  search to FEED's `ui/search`, and replaced the AI Configuration key-test icon
+  with FEED's native `ClipboardCheckIcon`.
 - **Translation card visual clipping.** Added the same inner-spacing pattern used
   for scrollable inventory results so Translation tab shadows and focus/highlight
   rings have room to render instead of being cropped by animated tab/scroll
@@ -32,10 +41,13 @@
 - **Translation Management table now uses a FEED-derived table foundation.** The
   table is a single TanStack instance with responsive column visibility,
   sorting/filtering, bulk actions, dropdown row actions, truncation dialogs, and
-  a fixed-height scroll shell whose header stays sticky while rows scroll.
+  a fixed-height scroll shell whose header stays sticky while rows scroll. It
+  now uses the FEED pagination controls with a 25-row default, keeping the scroll
+  viewport capped while limiting very large result sets.
 - **AI Configuration list now uses the FEED row-action pattern.** The inline
   validate/edit/delete buttons were replaced by `TableActionMenu`, keeping
-  mobile rows compact and action menus stable.
+  mobile rows compact and action menus stable. It shares the same FEED
+  pagination controls and 25-row default as Translation Management.
 - **AI Configuration wizard default.** New AI configurations now default to
   Google `gemini-2.5-flash-lite`, with the existing cost/token template applied,
   and wizard step hero icons animate on reveal/hover to better match the FEED
@@ -44,9 +56,9 @@
 ### Added
 - **FEED-derived table UI primitives for Translation surfaces.** Added
   `EnhancedDataTable`, `TableActionMenu`, `ResponsiveTruncatedText`, table
-  truncation utilities, `useIsMobile`, and the native animate-ui icons needed
-  for translation tabs/toolbars/action menus. Covered by
-  `tests/enhanced-data-table.test.tsx`.
+  truncation utilities, FEED-style pagination controls, `useIsMobile`, and the
+  native animate-ui icons needed for translation tabs/toolbars/action menus.
+  Covered by `tests/enhanced-data-table.test.tsx`.
 - **Translation admin card — Translation Management (v2.0, Feature 3 increment 3).**
   The third tab ports FEED's Translation Management on LOTTO's primitives: a
   filterable table (language / type / status) of translations with per-row
