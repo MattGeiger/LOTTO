@@ -15,7 +15,11 @@
   their hand-authored translations) while announcements are translated for every
   enabled language. New `/api/translations` routes (list, add, correct, delete,
   retry, bulk-retry, bulk-delete, find-missing, recover-stuck, metrics). English
-  UI strings moved to a shared `src/lib/ui-strings.ts` module.
+  UI strings moved to a shared `src/lib/ui-strings.ts` module. The **Find Missing
+  Translations** modal is a faithful port of FEED's enhanced dialog: a pre-scan
+  "what this will do" card with an animated progress bar, then Overview / Details
+  / Languages tabs with per-content-type counts, per-type selection, and a
+  queue-and-translate action (the API accepts a `types` filter).
 - **Translation admin card — AI Configuration (v2.0, Feature 3 increment 2).**
   The AI Configuration tab lets staff add, edit, validate, and delete AI provider
   configurations (OpenAI, Anthropic, Google) via a **multi-step wizard** and a

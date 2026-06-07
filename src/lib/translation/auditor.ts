@@ -14,7 +14,7 @@ import { listEnabledLanguages } from "@/lib/translation/languages-store";
 import { getContentItems } from "./content";
 import { translatePending, type ProcessResult } from "./engine";
 import * as store from "./translations-store";
-import type { TranslationKey } from "./types";
+import type { TranslationKey, TranslationType } from "./types";
 
 export type MissingDetails = {
   count: number;
@@ -70,12 +70,18 @@ export const auditMissing = async (): Promise<{ missing: TranslationKey[]; detai
 
 export const findMissing = async (
   process: boolean,
+  types?: TranslationType[],
 ): Promise<{ details: MissingDetails; processed?: ProcessResult }> => {
   const { missing, details } = await auditMissing();
   if (!process || missing.length === 0) return { details };
 
-  // Queue every missing item as pending, then translate inline.
-  for (const key of missing) {
+  // Optionally restrict queuing to the selected content types.
+  const typeSet = types && types.length > 0 ? new Set(types) : null;
+  const toQueue = typeSet ? missing.filter((key) => typeSet.has(key.type)) : missing;
+  if (toQueue.length === 0) return { details };
+
+  // Queue every selected missing item as pending, then translate inline.
+  for (const key of toQueue) {
     await store.upsert(key, { status: "pending", translatedText: null, metadata: null });
   }
   const processed = await translatePending();
