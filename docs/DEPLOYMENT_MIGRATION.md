@@ -78,7 +78,7 @@ Goal: run the same stack locally and on Vercel using Neon Postgres, NextAuth v5 
    - `/admin` accessible post-login; non-allowed domains rejected.
 
 7) Vercel notes
-  - Set envs in Vercel: `DATABASE_URL`, `ARCADE_DATABASE_URL`, `AUTH_SECRET`, `AUTH_TRUST_HOST=true`, `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL_DOMAIN`.
+  - Set envs in Vercel: `DATABASE_URL`, `ARCADE_DATABASE_URL`, `AUTH_SECRET`, `AUTH_TRUST_HOST=true`, `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL_DOMAIN`, and `ENCRYPTION_MASTER_KEY` (base64-encoded 32-byte value used to encrypt AI provider API keys at rest; generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`). Without it, the AI Configuration tab cannot store keys.
    - Same auth config works on Vercel; Neon free tier is sufficient. Production will fail fast without `DATABASE_URL`.
    - Next.js 16 renamed `middleware` → `proxy`; file lives at `src/proxy.ts` with the same matcher guarding `/admin` and `/api/state` and runs on the Node.js runtime by default (no Edge support).
 
