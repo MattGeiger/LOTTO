@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 ### Added
+- **Schema migration runner.** `scripts/apply-schema.mjs` (+ `npm run db:migrate`)
+  applies the idempotent `schema.sql` (and optionally `schema.arcade.sql` via
+  `--arcade`) to any Postgres target using the standard wire protocol — works
+  for both local Docker Postgres and Neon. See `docs/DEPLOYMENT_MIGRATION.md`.
 - **Translation admin card — Language Settings (v2.0, Feature 3 increment 1).**
   A new **Translation** card on the Admin page with a three-tab control
   (Language Settings · AI Configuration · Translation Management; the latter two

@@ -7,7 +7,27 @@ Goal: run the same stack locally and on Vercel using Neon Postgres, NextAuth v5 
 1) Provision Neon
    - Create a project in Neon (free tier OK).
    - Copy the connection string (`postgresql://...sslmode=require`).
-   - Run schema once in Neon SQL editor using `schema.sql` at the repo root. It creates raffle tables, snapshots, indexes, and NextAuth tables.
+   - Run schema once in Neon SQL editor using `schema.sql` at the repo root. It
+     creates raffle tables, snapshots, indexes, NextAuth tables, and the
+     **AI-translation tables** (`languages`, `ai_configurations`,
+     `system_prompts`, `translations`, `usage_records`).
+   - `schema.sql` is idempotent (`CREATE ... IF NOT EXISTS`), so re-running it to
+     pick up new tables is safe and non-destructive.
+   - Alternatively, apply it programmatically with the migration runner:
+     ```
+     # Local Docker DB (after `docker compose up -d db`):
+     DATABASE_URL=postgresql://postgres:postgres@localhost:5432/neondb \
+       node scripts/apply-schema.mjs
+     # Any environment whose .env.local has DATABASE_URL set:
+     npm run db:migrate            # add --arcade to also apply schema.arcade.sql
+     ```
+     The runner uses `pg` (standard wire protocol), so it works against both
+     local Docker Postgres and Neon.
+
+   > **Dev without a database:** language settings (and other AI-translation
+   > features as they land) fall back to file storage under `data/` when
+   > `STATE_STORAGE=file` or no `DATABASE_URL` is reachable — mirroring the
+   > raffle-state file fallback. No schema/DB is required for local file-mode dev.
    - For Arcade high scores, create a separate Neon project/database and run
      `schema.arcade.sql` there. Use its least-privilege runtime role connection
      string as `ARCADE_DATABASE_URL`; do not point Arcade at the core
