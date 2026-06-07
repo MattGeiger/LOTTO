@@ -15,14 +15,22 @@ Goal: run the same stack locally and on Vercel using Neon Postgres, NextAuth v5 
      pick up new tables is safe and non-destructive.
    - Alternatively, apply it programmatically with the migration runner:
      ```
-     # Local Docker DB (after `docker compose up -d db`):
-     DATABASE_URL=postgresql://postgres:postgres@localhost:5432/neondb \
+     # Verify first against production (Neon) — applies in a transaction and
+     # rolls back, writing nothing:
+     DATABASE_URL='postgresql://...neon...sslmode=require' \
+       node scripts/apply-schema.mjs --dry-run
+     # Then apply for real (atomic: all-or-nothing):
+     DATABASE_URL='postgresql://...neon...sslmode=require' \
        node scripts/apply-schema.mjs
-     # Any environment whose .env.local has DATABASE_URL set:
-     npm run db:migrate            # add --arcade to also apply schema.arcade.sql
+     # Or, when .env.local already points at the target DB:
+     npm run db:migrate            # add -- --dry-run to verify, --arcade for arcade
      ```
      The runner uses `pg` (standard wire protocol), so it works against both
-     local Docker Postgres and Neon.
+     local Docker Postgres and Neon. Each schema file is applied inside a single
+     `BEGIN/COMMIT` transaction, so a failure rolls back cleanly and never leaves
+     a half-migrated database. Because every statement is `CREATE ... IF NOT
+     EXISTS`, re-running against a DB that already has the core tables only adds
+     the new ones.
 
    > **Dev without a database:** language settings (and other AI-translation
    > features as they land) fall back to file storage under `data/` when

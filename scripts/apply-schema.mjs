@@ -10,12 +10,19 @@
 // Safe to re-run: every statement uses CREATE ... IF NOT EXISTS.
 //
 // Usage:
-//   node --env-file=.env.local scripts/apply-schema.mjs           # core schema
-//   node --env-file=.env.local scripts/apply-schema.mjs --arcade  # also arcade
+//   node --env-file=.env.local scripts/apply-schema.mjs            # core schema
+//   node --env-file=.env.local scripts/apply-schema.mjs --arcade   # also arcade
+//   node --env-file=.env.local scripts/apply-schema.mjs --dry-run  # verify only
 //
 // Reads DATABASE_URL (and ARCADE_DATABASE_URL with --arcade) from the
 // environment. Uses `pg` (node-postgres), which speaks the standard wire
 // protocol to both local Docker Postgres and Neon.
+//
+// Safety: each file is applied inside a single transaction (BEGIN/COMMIT) so it
+// is all-or-nothing — a failure rolls back, never leaving a half-migrated
+// schema. Every statement is CREATE ... IF NOT EXISTS, so applying to a DB that
+// already has some tables is a no-op. Use --dry-run first against production
+// (Neon) to confirm the migration applies cleanly without writing anything.
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -26,32 +33,50 @@ import pg from "pg";
 const { Pool } = pg;
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-const applyFile = async (label, connectionString, schemaPath) => {
+const applyFile = async (label, connectionString, schemaPath, dryRun) => {
   if (!connectionString) {
     console.error(`[skip] ${label}: connection string not set.`);
     return false;
   }
   const sql = readFileSync(join(repoRoot, schemaPath), "utf8");
   const pool = new Pool({ connectionString });
+  const client = await pool.connect();
   try {
-    // node-postgres runs multiple statements in a single simple query when no
-    // parameters are supplied; the whole idempotent file applies at once.
-    await pool.query(sql);
-    console.log(`[ok]   ${label}: applied ${schemaPath}`);
+    // Apply the whole idempotent file atomically: every statement commits
+    // together or none do, so a failure can never leave a half-migrated schema.
+    // (All statements are CREATE ... IF NOT EXISTS — safe to wrap and re-run.)
+    await client.query("BEGIN");
+    await client.query(sql);
+    if (dryRun) {
+      await client.query("ROLLBACK");
+      console.log(`[dry-run] ${label}: ${schemaPath} applied cleanly, rolled back (no changes kept).`);
+    } else {
+      await client.query("COMMIT");
+      console.log(`[ok]   ${label}: applied ${schemaPath} (atomic).`);
+    }
     return true;
   } catch (error) {
-    console.error(`[fail] ${label}: ${error?.message ?? error}`);
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      /* ignore rollback error */
+    }
+    console.error(`[fail] ${label}: ${error?.message ?? error} (rolled back, no changes applied).`);
     return false;
   } finally {
+    client.release();
     await pool.end();
   }
 };
 
 const main = async () => {
   const withArcade = process.argv.includes("--arcade");
-  let ok = await applyFile("core", process.env.DATABASE_URL, "schema.sql");
+  // --dry-run applies the schema inside a transaction and rolls back — proves it
+  // would apply cleanly against the target (e.g. production Neon) without writing.
+  const dryRun = process.argv.includes("--dry-run");
+  let ok = await applyFile("core", process.env.DATABASE_URL, "schema.sql", dryRun);
   if (withArcade) {
-    ok = (await applyFile("arcade", process.env.ARCADE_DATABASE_URL, "schema.arcade.sql")) && ok;
+    ok = (await applyFile("arcade", process.env.ARCADE_DATABASE_URL, "schema.arcade.sql", dryRun)) && ok;
   }
   process.exit(ok ? 0 : 1);
 };
