@@ -49,6 +49,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { FindMissingDialog } from "@/components/translation/find-missing-dialog";
 import {
   TRANSLATION_STATUSES,
   TRANSLATION_TYPES,
@@ -57,13 +58,6 @@ import {
 } from "@/lib/translation/types";
 
 const ALL = "all";
-
-type MissingDetails = {
-  count: number;
-  byType: Record<string, number>;
-  byLanguage: Record<string, number>;
-  sampleItems: string[];
-};
 
 function StatusBadge({ status }: { status: TranslationStatus }) {
   if (status === "completed") {
@@ -105,9 +99,8 @@ export function TranslationManagementTab() {
   // Delete confirm
   const [deleteId, setDeleteId] = React.useState<number | null>(null);
 
-  // Find-missing results
-  const [missing, setMissing] = React.useState<MissingDetails | null>(null);
-  const [missingOpen, setMissingOpen] = React.useState(false);
+  // Find-missing modal
+  const [findOpen, setFindOpen] = React.useState(false);
 
   const loadLanguages = React.useCallback(async () => {
     try {
@@ -274,48 +267,6 @@ export function TranslationManagementTab() {
     }
   };
 
-  const scanMissing = async () => {
-    setBusy(true);
-    try {
-      const res = await fetch("/api/translations/find-missing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ process: false }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { details?: MissingDetails; error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Scan failed.");
-      setMissing(data.details ?? null);
-      setMissingOpen(true);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Scan failed.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const queueMissing = async () => {
-    setBusy(true);
-    try {
-      const res = await fetch("/api/translations/find-missing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ process: true }),
-      });
-      const data = (await res.json().catch(() => ({}))) as {
-        processed?: { translated: number; failed: number };
-        error?: string;
-      };
-      if (!res.ok) throw new Error(data.error ?? "Unable to queue translations.");
-      toast.success(`Translated ${data.processed?.translated ?? 0}, ${data.processed?.failed ?? 0} failed.`);
-      setMissingOpen(false);
-      await load();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to queue translations.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const recoverStuck = async () => {
     setBusy(true);
     try {
@@ -342,7 +293,7 @@ export function TranslationManagementTab() {
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" size="sm" onClick={scanMissing} disabled={busy}>
+        <Button type="button" size="sm" onClick={() => setFindOpen(true)} disabled={busy}>
           <Search className="mr-1 size-4" aria-hidden="true" />
           Find missing
         </Button>
@@ -565,55 +516,7 @@ export function TranslationManagementTab() {
         </DialogContent>
       </Dialog>
 
-      {/* Find-missing results */}
-      <Dialog open={missingOpen} onOpenChange={setMissingOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Missing translations</DialogTitle>
-            <DialogDescription>
-              {missing
-                ? missing.count === 0
-                  ? "Everything is translated for the enabled languages."
-                  : `${missing.count} item(s) need translation.`
-                : ""}
-            </DialogDescription>
-          </DialogHeader>
-          {missing && missing.count > 0 ? (
-            <div className="space-y-3 text-sm">
-              <div>
-                <p className="mb-1 font-medium">By language</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.entries(missing.byLanguage).map(([lang, n]) => (
-                    <Badge key={lang} variant="outline">
-                      {lang}: {n}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="mb-1 font-medium">By type</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.entries(missing.byType).map(([t, n]) => (
-                    <Badge key={t} variant="secondary">
-                      {t}: {n}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : null}
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setMissingOpen(false)} disabled={busy}>
-              Close
-            </Button>
-            {missing && missing.count > 0 ? (
-              <Button type="button" onClick={queueMissing} disabled={busy}>
-                {busy ? "Translating…" : "Queue & translate"}
-              </Button>
-            ) : null}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <FindMissingDialog open={findOpen} onOpenChange={setFindOpen} onProcessed={load} />
 
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
