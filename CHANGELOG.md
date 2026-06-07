@@ -4,8 +4,9 @@
 ### Added
 - **Translation admin card — AI Configuration (v2.0, Feature 3 increment 2).**
   The AI Configuration tab lets staff add, edit, validate, and delete AI provider
-  configurations (OpenAI, Anthropic, Google) — name, model, API key, cost, and
-  token limits. API keys are **encrypted at rest** (AES-256-GCM with a per-record
+  configurations (OpenAI, Anthropic, Google) via a **multi-step wizard** and a
+  table list, reproducing FEED's layout on LOTTO's primitives — name, model, API
+  key, cost, and token limits. API keys are **encrypted at rest** (AES-256-GCM with a per-record
   salt; master key from the `ENCRYPTION_MASTER_KEY` env var) and never returned
   to the client. A "Test"/validate action checks a key against the provider's
   models endpoint. New `/api/ai-config` routes (list/create/update/delete +
@@ -14,7 +15,9 @@
 - **Schema migration runner.** `scripts/apply-schema.mjs` (+ `npm run db:migrate`)
   applies the idempotent `schema.sql` (and optionally `schema.arcade.sql` via
   `--arcade`) to any Postgres target using the standard wire protocol — works
-  for both local Docker Postgres and Neon. See `docs/DEPLOYMENT_MIGRATION.md`.
+  for both local Docker Postgres and Neon. Each file applies inside a single
+  transaction (atomic, all-or-nothing) and supports `--dry-run` to verify a clean
+  apply against production (Neon) without writing. See `docs/DEPLOYMENT_MIGRATION.md`.
 - **Translation admin card — Language Settings (v2.0, Feature 3 increment 1).**
   A new **Translation** card on the Admin page with a three-tab control
   (Language Settings · AI Configuration · Translation Management; the latter two
