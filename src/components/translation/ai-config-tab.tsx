@@ -12,7 +12,7 @@ import type { Column, ColumnDef } from "@tanstack/react-table";
 import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
-import { CircleCheckIcon } from "@/components/animate-ui/icons/circle-check";
+import { ClipboardCheckIcon } from "@/components/animate-ui/icons/clipboard-check";
 import { PlusIcon } from "@/components/animate-ui/icons/plus";
 import { SquarePenIcon } from "@/components/animate-ui/icons/square-pen";
 import { Trash2Icon } from "@/components/animate-ui/icons/trash-2";
@@ -220,7 +220,7 @@ export function AiConfigTab() {
               actions={[
                 {
                   label: "Test key",
-                  icon: CircleCheckIcon,
+                  icon: ClipboardCheckIcon,
                   onClick: () => void validateExisting(row.original.id),
                   disabled: !row.original.hasApiKey,
                 },
@@ -275,6 +275,7 @@ export function AiConfigTab() {
         filterPlaceholder="Filter configurations..."
         minTableWidth="100%"
         tableClassName="table-fixed"
+        defaultPageSize={25}
         getRowId={(row) => String(row.id)}
         mobileHiddenColumnIds={["provider", "model", "status"]}
         toolbarActions={[

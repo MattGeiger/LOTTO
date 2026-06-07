@@ -1,39 +1,38 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2025 Matt Geiger, Temple Consulting, LLC.
+// Copyright (C) 2026 Matt Geiger
 //
-// LOTTO — Line Order Transparency & Ticketing Organizer. Application code
-// licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
-// is not covered by this license; see TRADEMARKS.md.
+// FEED — Food Equity & Efficient Delivery. Application code licensed
+// under AGPL-3.0-or-later; see LICENSE. William Temple House branding is
+// not covered by this license; see TRADEMARKS.md.
 
-"use client";
+'use client';
 
-import * as React from "react";
-import { motion, type Variants } from "motion/react";
+import * as React from 'react';
+import { motion, type Variants } from 'motion/react';
 
 import {
   getVariants,
-  IconWrapper,
   useAnimateIconContext,
+  IconWrapper,
   type IconProps,
-} from "@/components/animate-ui/icons/icon";
+} from '@/components/animate-ui/icons/icon';
 
 type Trash2Props = IconProps<keyof typeof animations>;
 
 const animations = {
   default: {
-    lid: {
-      initial: { y: 0, rotate: 0 },
+    lidGroup: {
+      initial: { y: 0 },
       animate: {
-        y: [-1, -3, 0],
-        rotate: [0, -12, 0],
-        transition: { duration: 0.45, ease: "easeInOut" },
+        y: [0, -1.1, -1.1, 0],
+        transition: { duration: 0.5, ease: 'easeInOut', times: [0, 0.3, 0.7, 1] },
       },
     },
-    body: {
-      initial: { scaleY: 1 },
+    bodyGroup: {
+      initial: { y: 0 },
       animate: {
-        scaleY: [1, 0.94, 1],
-        transition: { duration: 0.45, ease: "easeInOut" },
+        y: [0, 1, 1, 0],
+        transition: { duration: 0.5, ease: 'easeInOut', times: [0, 0.3, 0.7, 1] },
       },
     },
   } satisfies Record<string, Variants>,
@@ -57,23 +56,21 @@ function IconComponent({ size, ...props }: Trash2Props) {
       {...props}
     >
       <motion.g
-        variants={variants.lid}
+        variants={variants.lidGroup}
         initial="initial"
         animate={controls}
-        style={{ transformOrigin: "12px 5px" }}
       >
         <path d="M3 6h18" />
         <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
       </motion.g>
       <motion.g
-        variants={variants.body}
+        variants={variants.bodyGroup}
         initial="initial"
         animate={controls}
-        style={{ transformOrigin: "12px 18px" }}
       >
-        <path d="M19 6 18 20a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-        <path d="M10 11v6" />
-        <path d="M14 11v6" />
+        <path d="M19 8v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8" />
+        <line x1="10" x2="10" y1="11" y2="17" />
+        <line x1="14" x2="14" y1="11" y2="17" />
       </motion.g>
     </motion.svg>
   );

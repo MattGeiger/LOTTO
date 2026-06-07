@@ -1,41 +1,107 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2025 Matt Geiger, Temple Consulting, LLC.
+// Copyright (C) 2026 Matt Geiger
 //
-// LOTTO — Line Order Transparency & Ticketing Organizer. Application code
-// licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
-// is not covered by this license; see TRADEMARKS.md.
+// FEED — Food Equity & Efficient Delivery. Application code licensed
+// under AGPL-3.0-or-later; see LICENSE. William Temple House branding is
+// not covered by this license; see TRADEMARKS.md.
 
-"use client";
+'use client';
 
-import * as React from "react";
-import { motion, type Variants } from "motion/react";
+import * as React from 'react';
+import { motion, type Variants } from 'motion/react';
 
 import {
   getVariants,
-  IconWrapper,
   useAnimateIconContext,
+  IconWrapper,
   type IconProps,
-} from "@/components/animate-ui/icons/icon";
+} from '@/components/animate-ui/icons/icon';
 
 type BotProps = IconProps<keyof typeof animations>;
 
 const animations = {
   default: {
-    antenna: {
-      initial: { y: 0, rotate: 0 },
+    path1: {},
+    rect: {},
+    path2: {},
+    path3: {},
+    path4: {
+      initial: {
+        x: 0,
+        y: 0,
+      },
       animate: {
-        y: [0, -1.5, 0],
-        rotate: [0, 10, -8, 0],
-        transition: { duration: 0.55, ease: "easeInOut" },
+        x: [0, -1.5, 1.5, 0],
+        y: [0, 1.5, 1.5, 0],
+        transition: {
+          ease: 'easeInOut',
+          duration: 1.3,
+        },
       },
     },
-    eyes: {
-      initial: { scaleY: 1 },
+    path5: {
+      initial: {
+        x: 0,
+        y: 0,
+      },
       animate: {
-        scaleY: [1, 0.2, 1],
-        transition: { duration: 0.45, ease: "easeInOut" },
+        x: [0, -1.5, 1.5, 0],
+        y: [0, 1.5, 1.5, 0],
+        transition: {
+          ease: 'easeInOut',
+          duration: 1.3,
+        },
       },
     },
+  } satisfies Record<string, Variants>,
+  blink: {
+    path1: {},
+    rect: {},
+    path2: {},
+    path3: {},
+    path4: {
+      initial: {
+        scaleY: 1,
+      },
+      animate: {
+        scaleY: [1, 0.5, 1],
+        transition: {
+          ease: 'easeInOut',
+          duration: 0.6,
+        },
+      },
+    },
+    path5: {
+      initial: {
+        scaleY: 1,
+      },
+      animate: {
+        scaleY: [1, 0.5, 1],
+        transition: {
+          ease: 'easeInOut',
+          duration: 0.6,
+        },
+      },
+    },
+  } satisfies Record<string, Variants>,
+  wink: {
+    path1: {},
+    rect: {},
+    path2: {},
+    path3: {},
+    path4: {
+      initial: {
+        scaleY: 1,
+      },
+      animate: {
+        scaleY: [1, 0.5, 1],
+        transition: {
+          ease: 'easeInOut',
+          duration: 0.6,
+        },
+      },
+    },
+    path5: {},
   } satisfies Record<string, Variants>,
 } as const;
 
@@ -56,27 +122,46 @@ function IconComponent({ size, ...props }: BotProps) {
       strokeLinejoin="round"
       {...props}
     >
-      <motion.g
-        variants={variants.antenna}
+      <motion.path
+        d="M12 8V4H8"
+        variants={variants.path1}
         initial="initial"
         animate={controls}
-        style={{ transformOrigin: "12px 7px" }}
-      >
-        <path d="M12 8V4H8" />
-      </motion.g>
-      <rect width="16" height="12" x="4" y="8" rx="2" />
-      <path d="M2 14h2" />
-      <path d="M20 14h2" />
-      <motion.g
-        variants={variants.eyes}
+      />
+      <motion.rect
+        width={16}
+        height={12}
+        x={4}
+        y={8}
+        rx={2}
+        variants={variants.rect}
         initial="initial"
         animate={controls}
-        style={{ transformOrigin: "12px 14px" }}
-      >
-        <path d="M9 13v2" />
-        <path d="M15 13v2" />
-      </motion.g>
-      <path d="M10 18h4" />
+      />
+      <motion.path
+        d="M2 14h2"
+        variants={variants.path2}
+        initial="initial"
+        animate={controls}
+      />
+      <motion.path
+        d="M20 14h2"
+        variants={variants.path3}
+        initial="initial"
+        animate={controls}
+      />
+      <motion.path
+        d="M15 13v2"
+        variants={variants.path4}
+        initial="initial"
+        animate={controls}
+      />
+      <motion.path
+        d="M9 13v2"
+        variants={variants.path5}
+        initial="initial"
+        animate={controls}
+      />
     </motion.svg>
   );
 }

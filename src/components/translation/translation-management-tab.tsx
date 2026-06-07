@@ -531,6 +531,7 @@ export function TranslationManagementTab() {
         bodyMaxHeight="420px"
         minTableWidth="100%"
         tableClassName="table-fixed"
+        defaultPageSize={25}
         getRowId={(row) => String(row.id)}
         mobileHiddenColumnIds={["language", "type", "status"]}
         selection={{

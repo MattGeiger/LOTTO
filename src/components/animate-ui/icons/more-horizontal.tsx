@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2025 Matt Geiger, Temple Consulting, LLC.
+// Copyright (C) 2026 Matt Geiger
 //
-// LOTTO — Line Order Transparency & Ticketing Organizer. Application code
-// licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
-// is not covered by this license; see TRADEMARKS.md.
+// FEED — Food Equity & Efficient Delivery. Application code licensed
+// under AGPL-3.0-or-later; see LICENSE. William Temple House branding is
+// not covered by this license; see TRADEMARKS.md.
 
-"use client";
+'use client';
 
-import * as React from "react";
-import { motion, type Variants } from "motion/react";
+import * as React from 'react';
+import { motion, type Variants } from 'motion/react';
 
 import {
   getVariants,
-  IconWrapper,
   useAnimateIconContext,
+  IconWrapper,
   type IconProps,
-} from "@/components/animate-ui/icons/icon";
+} from '@/components/animate-ui/icons/icon';
 
 type MoreHorizontalProps = IconProps<keyof typeof animations>;
 
@@ -53,33 +53,9 @@ function IconComponent({ size, ...props }: MoreHorizontalProps) {
       strokeLinejoin="round"
       {...props}
     >
-      <motion.circle
-        cx={5}
-        cy={12}
-        r={1}
-        variants={variants.left}
-        initial="initial"
-        animate={controls}
-        style={{ transformOrigin: "5px 12px" }}
-      />
-      <motion.circle
-        cx={12}
-        cy={12}
-        r={1}
-        variants={variants.middle}
-        initial="initial"
-        animate={controls}
-        style={{ transformOrigin: "12px 12px" }}
-      />
-      <motion.circle
-        cx={19}
-        cy={12}
-        r={1}
-        variants={variants.right}
-        initial="initial"
-        animate={controls}
-        style={{ transformOrigin: "19px 12px" }}
-      />
+      <motion.circle cx={5} cy={12} r={1} variants={variants.left} initial="initial" animate={controls} style={{ transformOrigin: '5px 12px' }} />
+      <motion.circle cx={12} cy={12} r={1} variants={variants.middle} initial="initial" animate={controls} style={{ transformOrigin: '12px 12px' }} />
+      <motion.circle cx={19} cy={12} r={1} variants={variants.right} initial="initial" animate={controls} style={{ transformOrigin: '19px 12px' }} />
     </motion.svg>
   );
 }

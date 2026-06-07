@@ -22,6 +22,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import type { TableSelectionOptions } from "@/types/table";
 import { TableFeatureBar, type ToolbarAction } from "./components/TableFeatureBar";
+import { TablePagination } from "./components/TablePagination";
 import { useTableFeatures } from "./hooks/useTableFeatures";
 
 const DEFAULT_MOBILE_HIDDEN_COLUMN_IDS = [
@@ -56,6 +57,9 @@ interface EnhancedDataTableProps<TData> {
   toolbarActions?: ToolbarAction[];
   toolbarControls?: React.ReactNode;
   mobileHiddenColumnIds?: string[];
+  defaultPageSize?: number;
+  preservePageOnDataChange?: boolean;
+  enablePagination?: boolean;
   getRowId?: (row: TData, index: number) => string;
 }
 
@@ -88,6 +92,9 @@ function EnhancedDataTableInner<TData>(
     toolbarActions,
     toolbarControls,
     mobileHiddenColumnIds = DEFAULT_MOBILE_HIDDEN_COLUMN_IDS,
+    defaultPageSize = 25,
+    preservePageOnDataChange = true,
+    enablePagination = true,
     getRowId,
   }: EnhancedDataTableProps<TData>,
   ref: React.ForwardedRef<{ clearSelection?: () => void }>,
@@ -108,10 +115,23 @@ function EnhancedDataTableInner<TData>(
     columns,
     selection,
     getRowId,
+    defaultPageSize,
+    autoResetPageIndex: preservePageOnDataChange ? false : undefined,
     initialState: {
       columnVisibility: responsiveColumnVisibility,
     },
   });
+
+  const handlePageSizeChange = React.useCallback(
+    (newPageSize: number) => {
+      const filteredRowCount = table.getFilteredRowModel().rows.length;
+      const maxPageIndex = Math.max(0, Math.ceil(filteredRowCount / newPageSize) - 1);
+      if (table.getState().pagination.pageIndex > maxPageIndex) {
+        table.setPageIndex(maxPageIndex);
+      }
+    },
+    [table],
+  );
 
   React.useEffect(() => {
     for (const [columnId, visible] of Object.entries(responsiveColumnVisibility)) {
@@ -222,6 +242,9 @@ function EnhancedDataTableInner<TData>(
           <div className="overflow-hidden rounded-md">{tableMarkup}</div>
         )}
       </div>
+      {enablePagination ? (
+        <TablePagination table={table} onPageSizeChange={handlePageSizeChange} />
+      ) : null}
     </div>
   );
 }

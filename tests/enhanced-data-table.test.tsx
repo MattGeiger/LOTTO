@@ -58,6 +58,11 @@ function SortableHeader<TData>({ column, label }: { column: Column<TData, unknow
 function renderTable(options?: { mobile?: boolean; bodyMaxHeight?: string; onEdit?: () => void }) {
   setMobileViewport(Boolean(options?.mobile));
   const onEdit = options?.onEdit ?? vi.fn();
+  const tableRows = Array.from({ length: 30 }, (_, index) => ({
+    id: index + 1,
+    name: index === 0 ? "Alpha translation" : index === 1 ? "Beta translation" : `Row ${index + 1}`,
+    status: index % 2 === 0 ? "completed" : "pending",
+  }));
   const columns: ColumnDef<Row>[] = [
     {
       accessorKey: "name",
@@ -92,7 +97,7 @@ function renderTable(options?: { mobile?: boolean; bodyMaxHeight?: string; onEdi
   render(
     <EnhancedDataTable
       columns={columns}
-      data={rows}
+      data={options?.bodyMaxHeight ? tableRows : rows}
       getRowId={(row) => String(row.id)}
       filterColumn="name"
       filterPlaceholder="Filter rows"
@@ -123,6 +128,10 @@ describe("EnhancedDataTable", () => {
 
     expect(screen.getByTestId("enhanced-table-scroll-shell")).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: /name/i })).toHaveClass("sticky");
+    expect(screen.getByTestId("pagination-controls")).toBeInTheDocument();
+    expect(screen.getByTestId("rows-per-page-selector")).toHaveTextContent("25 rows");
+    expect(screen.getByText("Row 25")).toBeInTheDocument();
+    expect(screen.queryByText("Row 26")).not.toBeInTheDocument();
   });
 
   it("opens stable row action menus from the compact actions button", async () => {

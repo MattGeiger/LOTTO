@@ -55,8 +55,8 @@ Help button).
 Motion/React icons driven by an `AnimateIcon` context wrapper or by trigger
 props (`animateOnHover`, `animateOnTap`, `animateOnView`). Examples in LOTTO:
 `ArrowRight`, `Lock`, `Search`, `Plus`, `SquarePen`, `Trash2`, `RefreshCw`,
-`RotateCcw`, `MoreHorizontal`, `Bot`, and `Languages`. Trigger by wrapping the
-**interactive parent**:
+`RotateCcw`, `MoreHorizontal`, `ClipboardCheck`, `Bot`, and `Languages`. Trigger by
+wrapping the **interactive parent**:
 
 ```tsx
 // CORRECT — handlers attach to the Button; the icon reads AnimateIcon context
@@ -97,12 +97,28 @@ animate-ui icon, then pass it through the action descriptor:
 />
 ```
 
-### 2. Imperative-ref icons (`@/components/lucide-animated/*`)
+### Translation tabs
+
+The Translation card uses the FEED-style radix tabs wrapper at
+`src/components/animate-ui/components/radix/tabs.tsx`. Its section icons should
+match FEED's imperative-ref page/section icon pattern:
+
+- `Language Settings`: `src/components/ui/globe.tsx`
+- `AI Configuration`: `src/components/ui/bot.tsx`
+- `Translation Management`: `src/components/ui/languages.tsx`
+
+These icons expose `startAnimation()` / `stopAnimation()` via `forwardRef`.
+Animate them on first render and drive hover/tap from the interactive tab or
+section parent, matching FEED's Language Management, AI Configuration, and
+Translation Management surfaces.
+
+### 2. Imperative-ref icons (`@/components/ui/*` and `@/components/lucide-animated/*`)
 
 Lucide-animated-style icons that expose `startAnimation()` / `stopAnimation()`
 via `forwardRef` and manage their own Motion controls. Examples in LOTTO:
-`GripIcon`, `TicketIcon`, `CartIcon`, `Gamepad2Icon`, `LayoutPanelTopIcon`,
-`CircleHelpIcon`, `EyeIcon`, `ArchiveIcon`, `HistoryIcon`, `LanguagesIcon`,
+`GlobeIcon`, `BotIcon`, `LanguagesIcon`, `SearchIcon`, `GripIcon`,
+`TicketIcon`, `CartIcon`, `Gamepad2Icon`, `LayoutPanelTopIcon`,
+`CircleHelpIcon`, `EyeIcon`, `ArchiveIcon`, `HistoryIcon`, and
 `MonitorCheckIcon`.
 
 Drive them via a ref — the correct pattern when the trigger zone is larger than
