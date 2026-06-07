@@ -168,7 +168,7 @@ export function LanguageSettingsTab() {
       </div>
 
       <ScrollArea className="h-[300px] rounded-md border bg-card">
-        <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {filtered.map((row) => {
             const entry = getCatalogEntryByName(row.name);
             const locked = ALWAYS_ON.has(row.name);

@@ -8,7 +8,7 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, KeyRound, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { AlertTriangle, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -24,64 +24,23 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { MODEL_SUGGESTIONS } from "@/lib/ai/model-specs";
-import { AI_SERVICE_TYPES, type AiConfigPublic, type AiServiceType } from "@/lib/ai/types";
-
-type FormState = {
-  name: string;
-  serviceType: AiServiceType;
-  model: string;
-  apiKey: string;
-  inputCost: string;
-  outputCost: string;
-  unitPrice: "per_1m" | "per_1k";
-  maxTokens: string;
-  isActive: boolean;
-};
-
-const emptyForm = (): FormState => ({
-  name: "",
-  serviceType: "Anthropic",
-  model: "",
-  apiKey: "",
-  inputCost: "",
-  outputCost: "",
-  unitPrice: "per_1m",
-  maxTokens: "",
-  isActive: true,
-});
-
-const numOrUndef = (value: string): number | undefined => {
-  if (value.trim() === "") return undefined;
-  const n = Number(value);
-  return Number.isFinite(n) ? n : undefined;
-};
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { AiConfigDialog, type AiConfigDialogMode } from "@/components/translation/ai-config/ai-config-dialog";
+import type { AiConfigInput, AiConfigPublic } from "@/lib/ai/types";
 
 export function AiConfigTab() {
   const [configs, setConfigs] = React.useState<AiConfigPublic[]>([]);
   const [encryptionConfigured, setEncryptionConfigured] = React.useState(true);
   const [loading, setLoading] = React.useState(true);
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [editingId, setEditingId] = React.useState<number | null>(null);
-  const [form, setForm] = React.useState<FormState>(emptyForm());
-  const [saving, setSaving] = React.useState(false);
-  const [testing, setTesting] = React.useState(false);
+  const [dialogMode, setDialogMode] = React.useState<AiConfigDialogMode>("add");
+  const [editing, setEditing] = React.useState<AiConfigPublic | null>(null);
   const [deleteId, setDeleteId] = React.useState<number | null>(null);
 
   const load = React.useCallback(async () => {
@@ -104,90 +63,36 @@ export function AiConfigTab() {
   }, [load]);
 
   const openAdd = () => {
-    setEditingId(null);
-    setForm(emptyForm());
+    setDialogMode("add");
+    setEditing(null);
     setDialogOpen(true);
   };
 
   const openEdit = (config: AiConfigPublic) => {
-    setEditingId(config.id);
-    setForm({
-      name: config.name,
-      serviceType: config.serviceType,
-      model: config.model,
-      apiKey: "",
-      inputCost: config.inputCost ? String(config.inputCost) : "",
-      outputCost: config.outputCost ? String(config.outputCost) : "",
-      unitPrice: config.unitPrice,
-      maxTokens: config.maxTokens ? String(config.maxTokens) : "",
-      isActive: config.isActive,
-    });
+    setDialogMode("edit");
+    setEditing(config);
     setDialogOpen(true);
   };
 
-  const buildPayload = () => ({
-    name: form.name.trim(),
-    serviceType: form.serviceType,
-    model: form.model.trim(),
-    ...(form.apiKey ? { apiKey: form.apiKey } : {}),
-    inputCost: numOrUndef(form.inputCost),
-    outputCost: numOrUndef(form.outputCost),
-    unitPrice: form.unitPrice,
-    maxTokens: numOrUndef(form.maxTokens) ?? null,
-    isActive: form.isActive,
-  });
-
-  const testKey = async () => {
-    if (!form.apiKey) {
-      toast.error("Enter an API key to test.");
-      return;
-    }
-    setTesting(true);
+  const handleSave = async (input: AiConfigInput): Promise<boolean> => {
     try {
-      const res = await fetch("/api/ai-config/validate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ serviceType: form.serviceType, apiKey: form.apiKey }),
-      });
-      const data = (await res.json()) as { result?: { ok: boolean; message: string } };
-      if (data.result?.ok) toast.success(data.result.message);
-      else toast.error(data.result?.message ?? "Validation failed.");
-    } catch {
-      toast.error("Unable to validate the API key.");
-    } finally {
-      setTesting(false);
-    }
-  };
-
-  const save = async () => {
-    if (!form.name.trim() || !form.model.trim()) {
-      toast.error("Name and model are required.");
-      return;
-    }
-    if (editingId === null && !form.apiKey) {
-      toast.error("An API key is required.");
-      return;
-    }
-    setSaving(true);
-    try {
-      const url = editingId === null ? "/api/ai-config" : `/api/ai-config/${editingId}`;
-      const method = editingId === null ? "POST" : "PUT";
+      const url = dialogMode === "add" ? "/api/ai-config" : `/api/ai-config/${editing?.id}`;
+      const method = dialogMode === "add" ? "POST" : "PUT";
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildPayload()),
+        body: JSON.stringify(input),
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(data.error ?? "Unable to save the configuration.");
       }
-      toast.success(editingId === null ? "Configuration added." : "Configuration updated.");
-      setDialogOpen(false);
+      toast.success(dialogMode === "add" ? "Configuration added." : "Configuration updated.");
       await load();
+      return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to save the configuration.");
-    } finally {
-      setSaving(false);
+      return false;
     }
   };
 
@@ -255,198 +160,71 @@ export function AiConfigTab() {
             No AI configurations yet. Add one to enable translation.
           </p>
         ) : (
-          <ul className="divide-y">
-            {configs.map((config) => (
-              <li key={config.id} className="flex flex-wrap items-center gap-3 p-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium">{config.name}</span>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Provider</TableHead>
+                <TableHead>Model</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {configs.map((config) => (
+                <TableRow key={config.id}>
+                  <TableCell className="font-medium">{config.name}</TableCell>
+                  <TableCell>
                     <Badge variant="secondary">{config.serviceType}</Badge>
-                    {!config.isActive ? <Badge variant="outline">inactive</Badge> : null}
-                    {config.hasApiKey ? (
-                      <Badge variant="outline" className="text-muted-foreground">
-                        <KeyRound className="size-3" aria-hidden="true" /> key set
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{config.model}</TableCell>
+                  <TableCell>
+                    {config.isActive ? (
+                      <Badge variant="outline" className="border-status-success-border text-status-success-text">
+                        Active
                       </Badge>
-                    ) : null}
-                  </div>
-                  <p className="truncate text-xs text-muted-foreground">{config.model}</p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => validateExisting(config.id)}
-                    title="Test the stored API key"
-                  >
-                    <ShieldCheck className="size-4" aria-hidden="true" />
-                    <span className="sr-only">Test key</span>
-                  </Button>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => openEdit(config)}>
-                    <Pencil className="size-4" aria-hidden="true" />
-                    <span className="sr-only">Edit</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setDeleteId(config.id)}
-                  >
-                    <Trash2 className="size-4 text-destructive" aria-hidden="true" />
-                    <span className="sr-only">Delete</span>
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground">
+                        Inactive
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => validateExisting(config.id)}
+                        title="Test the stored API key"
+                      >
+                        <ShieldCheck className="size-4" aria-hidden="true" />
+                        <span className="sr-only">Test key</span>
+                      </Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => openEdit(config)}>
+                        <Pencil className="size-4" aria-hidden="true" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setDeleteId(config.id)}>
+                        <Trash2 className="size-4 text-destructive" aria-hidden="true" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editingId === null ? "Add configuration" : "Edit configuration"}</DialogTitle>
-            <DialogDescription>
-              {editingId === null
-                ? "Add an AI provider and API key for translation."
-                : "Update this configuration. Leave the API key blank to keep the stored one."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="ai-name">Name</Label>
-              <Input
-                id="ai-name"
-                value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="e.g. Primary translator"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="ai-provider">Provider</Label>
-                <Select
-                  value={form.serviceType}
-                  onValueChange={(v) => setForm((f) => ({ ...f, serviceType: v as AiServiceType }))}
-                >
-                  <SelectTrigger id="ai-provider">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {AI_SERVICE_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="ai-model">Model</Label>
-                <Input
-                  id="ai-model"
-                  list="ai-model-suggestions"
-                  value={form.model}
-                  onChange={(e) => setForm((f) => ({ ...f, model: e.target.value }))}
-                  placeholder="model id"
-                />
-                <datalist id="ai-model-suggestions">
-                  {MODEL_SUGGESTIONS[form.serviceType].map((model) => (
-                    <option key={model} value={model} />
-                  ))}
-                </datalist>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="ai-key">API key</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="ai-key"
-                  type="password"
-                  autoComplete="off"
-                  value={form.apiKey}
-                  onChange={(e) => setForm((f) => ({ ...f, apiKey: e.target.value }))}
-                  placeholder={editingId === null ? "Paste API key" : "Leave blank to keep"}
-                />
-                <Button type="button" variant="outline" size="sm" onClick={testKey} disabled={testing}>
-                  {testing ? "Testing…" : "Test"}
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="ai-in-cost">Input cost</Label>
-                <Input
-                  id="ai-in-cost"
-                  inputMode="decimal"
-                  value={form.inputCost}
-                  onChange={(e) => setForm((f) => ({ ...f, inputCost: e.target.value }))}
-                  placeholder="0"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="ai-out-cost">Output cost</Label>
-                <Input
-                  id="ai-out-cost"
-                  inputMode="decimal"
-                  value={form.outputCost}
-                  onChange={(e) => setForm((f) => ({ ...f, outputCost: e.target.value }))}
-                  placeholder="0"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="ai-unit">Per</Label>
-                <Select
-                  value={form.unitPrice}
-                  onValueChange={(v) => setForm((f) => ({ ...f, unitPrice: v as "per_1m" | "per_1k" }))}
-                >
-                  <SelectTrigger id="ai-unit">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="per_1m">1M tokens</SelectItem>
-                    <SelectItem value="per_1k">1K tokens</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-1.5">
-                <Label htmlFor="ai-max-tokens">Max output tokens (optional)</Label>
-                <Input
-                  id="ai-max-tokens"
-                  inputMode="numeric"
-                  value={form.maxTokens}
-                  onChange={(e) => setForm((f) => ({ ...f, maxTokens: e.target.value }))}
-                  placeholder="auto"
-                  className="w-32"
-                />
-              </div>
-              <label className="flex items-center gap-2 text-sm">
-                <Switch
-                  checked={form.isActive}
-                  onCheckedChange={(checked) => setForm((f) => ({ ...f, isActive: checked }))}
-                />
-                Active
-              </label>
-            </div>
-          </div>
-
-          <div className="mt-4 flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} disabled={saving}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={save} disabled={saving}>
-              {saving ? "Saving…" : "Save"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AiConfigDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        mode={dialogMode}
+        config={editing}
+        onSave={handleSave}
+      />
 
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
