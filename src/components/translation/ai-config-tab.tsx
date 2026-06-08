@@ -55,6 +55,7 @@ import { cn } from "@/lib/utils";
 type AiModelRow = AiConfigPublic & { configType: "apikey"; originalId: number };
 type SystemPromptRow = ReturnType<typeof toPromptConfiguration>;
 type ConfigRow = AiModelRow | SystemPromptRow;
+const TYPE_PICKER_ICON_RESET_DELAY_MS = 1500;
 
 function SortableHeader<TData>({
   column,
@@ -95,8 +96,11 @@ export function AiConfigTab() {
   const [promptDialogMode, setPromptDialogMode] = React.useState<SystemPromptDialogMode>("add");
   const [editingPrompt, setEditingPrompt] = React.useState<SystemPrompt | null>(null);
   const [deleteConfig, setDeleteConfig] = React.useState<ConfigRow | null>(null);
+  const [typePickerIntro, setTypePickerIntro] = React.useState(false);
   const tableRef = React.useRef<{ clearSelection?: () => void }>(null);
   const aiModelIconRef = React.useRef<CpuIconHandle>(null);
+  const typePickerIntroTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typePickerImperativeStartRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -130,6 +134,45 @@ export function AiConfigTab() {
   React.useEffect(() => {
     void load();
   }, [load]);
+
+  React.useEffect(() => {
+    if (typePickerIntroTimerRef.current) {
+      clearTimeout(typePickerIntroTimerRef.current);
+      typePickerIntroTimerRef.current = null;
+    }
+    if (typePickerImperativeStartRef.current) {
+      clearTimeout(typePickerImperativeStartRef.current);
+      typePickerImperativeStartRef.current = null;
+    }
+
+    if (!typeOpen) {
+      setTypePickerIntro(false);
+      aiModelIconRef.current?.stopAnimation();
+      return;
+    }
+
+    setTypePickerIntro(true);
+    typePickerImperativeStartRef.current = setTimeout(() => {
+      aiModelIconRef.current?.startAnimation();
+      typePickerImperativeStartRef.current = null;
+    }, 0);
+    typePickerIntroTimerRef.current = setTimeout(() => {
+      setTypePickerIntro(false);
+      aiModelIconRef.current?.stopAnimation();
+      typePickerIntroTimerRef.current = null;
+    }, TYPE_PICKER_ICON_RESET_DELAY_MS);
+
+    return () => {
+      if (typePickerIntroTimerRef.current) {
+        clearTimeout(typePickerIntroTimerRef.current);
+        typePickerIntroTimerRef.current = null;
+      }
+      if (typePickerImperativeStartRef.current) {
+        clearTimeout(typePickerImperativeStartRef.current);
+        typePickerImperativeStartRef.current = null;
+      }
+    };
+  }, [typeOpen]);
 
   const openAdd = React.useCallback(() => {
     setTypeOpen(true);
@@ -385,7 +428,7 @@ export function AiConfigTab() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="text-center">
-              <AnimateIcon animateOnView animateOnViewOnce animateOnHover className="inline-block">
+              <AnimateIcon animate={typePickerIntro} animateOnHover className="inline-block">
                 <BotIcon className="mx-auto size-12 text-muted-foreground" size={48} />
               </AnimateIcon>
               <h3 className="mt-2 text-lg font-medium">Configuration Type</h3>
@@ -405,6 +448,8 @@ export function AiConfigTab() {
                 }}
                 onMouseEnter={() => aiModelIconRef.current?.startAnimation()}
                 onMouseLeave={() => aiModelIconRef.current?.stopAnimation()}
+                onPointerDown={() => aiModelIconRef.current?.startAnimation()}
+                onPointerUp={() => aiModelIconRef.current?.stopAnimation()}
               >
                 <CardHeader className="pb-2 text-center">
                   <CpuIcon ref={aiModelIconRef} className="mx-auto size-8 text-primary" size={32} />
@@ -416,7 +461,7 @@ export function AiConfigTab() {
                   </CardDescription>
                 </CardContent>
               </Card>
-              <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
+              <AnimateIcon asChild animate={typePickerIntro} animateOnHover animateOnTap>
                 <Card className="cursor-pointer transition-all hover:border-primary" onClick={openAddPrompt}>
                   <CardHeader className="pb-2 text-center">
                     <MessageSquareQuoteIcon className="mx-auto size-8 text-primary" size={32} />

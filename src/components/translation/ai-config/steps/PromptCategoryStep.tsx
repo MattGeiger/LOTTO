@@ -36,21 +36,31 @@ const PROMPT_CATEGORIES: PromptCategory[] = [
   },
 ];
 
-export function PromptCategoryStep({ data, onChange }: BaseStepProps<PromptConfigData>) {
+export function PromptCategoryStep({ data, onChange, animateIntro = false }: BaseStepProps<PromptConfigData>) {
   const fileTextIconRef = React.useRef<FileTextIconHandle>(null);
+
+  React.useEffect(() => {
+    if (animateIntro) {
+      fileTextIconRef.current?.startAnimation();
+      return;
+    }
+
+    fileTextIconRef.current?.stopAnimation();
+  }, [animateIntro]);
 
   return (
     <StepWrapper
       icon={MessageSquareQuoteIcon}
       title="Prompt Category"
       description="Select the category that best fits your prompt purpose"
+      animateIntro={animateIntro}
     >
       <div className="grid grid-cols-1 gap-2">
         {PROMPT_CATEGORIES.map((category) => {
           const Icon = category.icon;
           const isImperativeIcon = category.id === "inventory_translation";
           return (
-            <AnimateIcon key={category.id} asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
+            <AnimateIcon key={category.id} asChild animate={animateIntro} animateOnHover animateOnTap>
               <Card
                 className={cn(
                   "cursor-pointer p-3 transition-all hover:border-primary",
@@ -59,6 +69,8 @@ export function PromptCategoryStep({ data, onChange }: BaseStepProps<PromptConfi
                 onClick={() => onChange({ promptCategory: category.id })}
                 onMouseEnter={isImperativeIcon ? () => fileTextIconRef.current?.startAnimation() : undefined}
                 onMouseLeave={isImperativeIcon ? () => fileTextIconRef.current?.stopAnimation() : undefined}
+                onPointerDown={isImperativeIcon ? () => fileTextIconRef.current?.startAnimation() : undefined}
+                onPointerUp={isImperativeIcon ? () => fileTextIconRef.current?.stopAnimation() : undefined}
               >
                 <div className="flex items-start gap-3">
                   {isImperativeIcon ? (

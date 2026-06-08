@@ -19,12 +19,14 @@ export function StepWrapper({
   title,
   description,
   children,
+  animateIntro = false,
   suppressHeader = false,
 }: {
   icon: StepIcon;
   title: string;
   description: string;
   children: React.ReactNode;
+  animateIntro?: boolean;
   suppressHeader?: boolean;
 }) {
   if (suppressHeader) {
@@ -35,7 +37,7 @@ export function StepWrapper({
     <div className="px-2">
       <div className="space-y-4">
         <div className="text-center">
-          <AnimateIcon animateOnView animateOnViewOnce animateOnHover className="inline-block">
+          <AnimateIcon animate={animateIntro} animateOnHover className="inline-block">
             <Icon className="mx-auto h-12 w-12 text-muted-foreground" size={48} />
           </AnimateIcon>
           <h3 className="mt-2 text-lg font-medium">{title}</h3>

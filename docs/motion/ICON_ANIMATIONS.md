@@ -85,6 +85,36 @@ All icons passed to `TableActionMenu` must be native animate-ui icons from
 Lucide icons inside row action menus; they cannot reliably consume the parent
 `AnimateIcon` context and only animate when hovering the glyph itself.
 
+### The mount/view stuck-state bug
+
+FEED documents a subtle first-hover failure mode that also applies to LOTTO:
+when an animate-ui icon is already active because of `animate` or
+`animateOnView`, a later hover may call `setLocalAnimate(true)` while the value
+is already `true`. React skips the unchanged state update, so the first hover is
+a no-op. The icon only starts animating on the second hover because the first
+mouse leave finally flips the internal state back to `false`.
+
+LOTTO fixes this in `src/components/animate-ui/icons/icon.tsx`: every new
+zero-delay trigger replays an already-active icon through a short
+`false -> true` state transition. That keeps first-appearance animation,
+hover, and tap compatible without requiring every caller to manually reset mount
+animation state.
+
+Do not work around this bug locally by hand-rolling hover state in feature
+components. Use `AnimateIcon` for native animate-ui icons, and only use the
+timed open-state reset pattern below when a component intentionally wants menu
+items to animate once each time a dropdown opens.
+
+```tsx
+const [animateMount, setAnimateMount] = React.useState(false);
+
+// Correct for dropdown-open animation: true while opening, reset after the
+// mount animation duration so later hover/tap triggers start cleanly.
+<AnimateIcon asChild animate={animateMount} animateOnHover animateOnTap>
+  <DropdownMenuItem>...</DropdownMenuItem>
+</AnimateIcon>
+```
+
 When adding a new row-menu action, first add or port the needed native
 animate-ui icon, then pass it through the action descriptor:
 

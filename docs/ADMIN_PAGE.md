@@ -1,8 +1,34 @@
-# Admin Page — Live State Card
+# Admin Page
 
-The **Live State** card on the admin page (`/admin`) provides a real-time summary of today's raffle drawing. It is the primary at-a-glance status display for staff operating the food distribution lottery.
+The admin page (`/admin`) is the staff control surface for operating the daily
+raffle drawing. Daily-use operational controls stay visible by default, while
+lower-frequency configuration tools are grouped behind progressive disclosure.
 
-## Layout
+## Page Structure
+
+The default admin view keeps these cards visible:
+
+- Ticket Range & Order
+- Now Serving
+- Live State
+- History
+- System reset
+- Share the live board
+
+The following configuration cards live inside the collapsed **Advanced**
+accordion:
+
+- Set operating hours
+- Rotate display languages
+- Announcement
+- Translation
+
+This keeps setup/localization tools available without cluttering the daily
+workflow. The accordion uses the local animate-ui radix wrapper at
+`src/components/animate-ui/components/radix/accordion.tsx` and loads collapsed by
+default.
+
+## Live State Card Layout
 
 The card uses a responsive CSS Grid with three breakpoint tiers:
 

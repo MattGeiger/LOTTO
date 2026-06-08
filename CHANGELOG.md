@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 ### Fixed
+- **Animated icons replay on first hover after mount/view animation.** Fixed the
+  FEED-documented `AnimateIcon` stuck-state bug where icons that animated on
+  page load or viewport entry stayed internally active, causing the first hover
+  to no-op until mouse leave reset the state. `AnimateIcon` now replays an
+  already-active zero-delay trigger through a `false -> true` transition, and
+  the motion documentation records the root cause and correct pattern.
+- **AI Configuration type-picker icon animations are consistent.** The Add AI
+  Configuration modal now drives the Bot hero, AI Model CPU card, and System
+  Prompt card icons from the same modal-open animation cycle with an explicit
+  reset, so all three animate on initial render and replay from the first hover.
+  The System Prompt multi-step modal now uses the same step-open intro/reset
+  trigger for the prompt-category hero and UI/Inventory/Announcement category
+  icons.
 - **Translation card mobile responsiveness.** Ported FEED's responsive table
   patterns for the Translation and AI Configuration tabs: lower-priority
   columns hide on mobile, long text truncates with a view-full dialog, and
@@ -38,6 +51,14 @@
   metric icons no longer advertise hover animation.
 
 ### Changed
+- **Admin configuration tools moved behind Advanced accordion.** Added the
+  local animate-ui radix Accordion wrapper and grouped Set operating hours,
+  Rotate display languages, Announcement, and Translation inside a collapsed
+  `Advanced` section so the daily admin view focuses on operational controls.
+- **System reset card layout clarified.** Moved the reset confirmation input and
+  Reset for New Day action directly under the card description, with snapshot
+  cleanup controls anchored lower in the card so the destructive daily reset
+  flow is visually distinct from maintenance cleanup.
 - **Announcement and Translation cards now marked Beta.** Added `Beta` pills to
   both card headers so staff understand these staged authoring/localization
   sections are still under active development and refinement.
