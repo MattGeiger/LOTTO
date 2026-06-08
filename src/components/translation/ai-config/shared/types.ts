@@ -61,6 +61,7 @@ export interface BaseStepProps<T extends ConfigData | BaseConfigData = ConfigDat
   mode: StepMode;
   data: T;
   onChange: (data: Partial<T>) => void;
+  animateIntro?: boolean;
   isLoading?: boolean;
   validation?: ValidationState;
   onBlur?: (field: keyof T, type?: ValidationType) => void;

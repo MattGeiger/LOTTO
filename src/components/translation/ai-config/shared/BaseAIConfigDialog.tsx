@@ -22,6 +22,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 import type { BaseDialogProps, ConfigData, ValidationState, ValidationType } from "./types";
 
+const STEP_INTRO_RESET_DELAY_MS = 1500;
+
 export function BaseAIConfigDialog<T extends ConfigData>({
   open,
   onOpenChange,
@@ -40,6 +42,8 @@ export function BaseAIConfigDialog<T extends ConfigData>({
     errors: {},
   });
   const [saving, setSaving] = React.useState(false);
+  const [stepIntro, setStepIntro] = React.useState(false);
+  const stepIntroTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const steps = getSteps(data);
   const currentStep = steps[currentStepIndex];
@@ -63,6 +67,31 @@ export function BaseAIConfigDialog<T extends ConfigData>({
       setCurrentStepIndex(steps.length - 1);
     }
   }, [steps.length, currentStepIndex]);
+
+  React.useEffect(() => {
+    if (stepIntroTimerRef.current) {
+      clearTimeout(stepIntroTimerRef.current);
+      stepIntroTimerRef.current = null;
+    }
+
+    if (!open) {
+      setStepIntro(false);
+      return;
+    }
+
+    setStepIntro(true);
+    stepIntroTimerRef.current = setTimeout(() => {
+      setStepIntro(false);
+      stepIntroTimerRef.current = null;
+    }, STEP_INTRO_RESET_DELAY_MS);
+
+    return () => {
+      if (stepIntroTimerRef.current) {
+        clearTimeout(stepIntroTimerRef.current);
+        stepIntroTimerRef.current = null;
+      }
+    };
+  }, [open, currentStepIndex]);
 
   const handleDataChange = (updates: Partial<T>) => {
     setData((prev) => ({ ...prev, ...updates }));
@@ -122,6 +151,7 @@ export function BaseAIConfigDialog<T extends ConfigData>({
             mode={mode}
             data={data}
             onChange={handleDataChange}
+            animateIntro={stepIntro}
             isLoading={isLoading || saving}
             validation={validation}
             onBlur={handleBlur}

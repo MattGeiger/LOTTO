@@ -160,6 +160,7 @@ function AnimateIcon({
   const [status, setStatus] = React.useState<'initial' | 'animate'>('initial');
 
   const delayRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const replayRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const loopDelayRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAnimateInProgressRef = React.useRef<boolean>(false);
   const animateEndPromiseRef = React.useRef<Promise<void> | null>(null);
@@ -181,12 +182,24 @@ function AnimateIcon({
         clearTimeout(delayRef.current);
         delayRef.current = null;
       }
+      if (replayRef.current) {
+        clearTimeout(replayRef.current);
+        replayRef.current = null;
+      }
       setCurrentAnimation(next);
       if (delay > 0) {
         setLocalAnimate(false);
         delayRef.current = setTimeout(() => {
           setLocalAnimate(true);
         }, delay);
+      } else if (activeRef.current) {
+        // Replay after mount/view animation leaves localAnimate true; otherwise
+        // the first hover is a no-op because React receives setState(true).
+        setLocalAnimate(false);
+        replayRef.current = setTimeout(() => {
+          replayRef.current = null;
+          setLocalAnimate(true);
+        }, 0);
       } else {
         setLocalAnimate(true);
       }
@@ -199,6 +212,10 @@ function AnimateIcon({
     if (delayRef.current) {
       clearTimeout(delayRef.current);
       delayRef.current = null;
+    }
+    if (replayRef.current) {
+      clearTimeout(replayRef.current);
+      replayRef.current = null;
     }
     if (loopDelayRef.current) {
       clearTimeout(loopDelayRef.current);
@@ -222,6 +239,7 @@ function AnimateIcon({
   React.useEffect(() => {
     return () => {
       if (delayRef.current) clearTimeout(delayRef.current);
+      if (replayRef.current) clearTimeout(replayRef.current);
       if (loopDelayRef.current) clearTimeout(loopDelayRef.current);
     };
   }, []);

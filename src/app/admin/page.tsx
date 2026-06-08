@@ -35,6 +35,12 @@ import { HelpNavButton } from "@/components/help-nav-button";
 import { ChevronLeft } from "@/components/animate-ui/icons/chevron-left";
 import { ChevronRight } from "@/components/animate-ui/icons/chevron-right";
 import { Sparkles } from "@/components/animate-ui/icons/sparkles";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/animate-ui/components/radix/accordion";
 import { AdminAnimatedIcon } from "@/components/admin-animated-icon";
 
 import { ConfirmAction } from "@/components/confirm-action";
@@ -2572,7 +2578,7 @@ const AdminPage = () => {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-          <Card className="bg-card space-y-3">
+          <Card className="bg-card flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DatabaseZap className="size-4 text-muted-foreground" />
@@ -2582,7 +2588,13 @@ const AdminPage = () => {
                 Clears the range, order, and now serving. State is backed up before reset.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="flex flex-1 flex-col gap-4">
+              <ResetActionControls
+                loading={loading}
+                pendingNonDrawAction={pendingNonDrawAction}
+                onReset={handleReset}
+              />
+              <div className="min-h-20 flex-1" aria-hidden="true" />
               <div className="space-y-2">
                 <Label>Cleanup old snapshots</Label>
                 <div className="flex flex-wrap gap-2">
@@ -2622,12 +2634,6 @@ const AdminPage = () => {
                   </Alert>
                 )}
               </div>
-              <Separator />
-              <ResetActionControls
-                loading={loading}
-                pendingNonDrawAction={pendingNonDrawAction}
-                onReset={handleReset}
-              />
             </CardContent>
           </Card>
 
@@ -2689,123 +2695,141 @@ const AdminPage = () => {
               )}
             </CardContent>
           </Card>
-
-          <Card className="bg-card space-y-4">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarClock className="size-4 text-muted-foreground" />
-                Set operating hours
-              </CardTitle>
-              <CardDescription>
-                Choose open days and hours so clients know when the pantry is available.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {pendingHours ? (
-                <OperatingHoursEditor
-                  hours={pendingHours}
-                  timezone={pendingTimezone}
-                  onChange={setPendingHours}
-                  onTimezoneChange={setPendingTimezone}
-                  disabled={loading || nonDrawActionPending}
-                />
-              ) : (
-                <p className="text-sm text-muted-foreground">Loading hours…</p>
-              )}
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleSaveOperatingHours}
-                disabled={!pendingHours || loading || nonDrawActionPending}
-              >
-                Save operating hours
-              </Button>
-              <AlertDialog open={timezoneMismatchOpen} onOpenChange={setTimezoneMismatchOpen}>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Confirm timezone selection</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Your device timezone does not match the pantry timezone. The timezone should
-                      match the location of services. Continue anyway?
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel disabled={nonDrawActionPending}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleConfirmTimezoneMismatch}
-                      disabled={nonDrawActionPending}
-                    >
-                      Continue and Save
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card space-y-4">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Languages className="size-4 text-muted-foreground" />
-                Rotate display languages
-              </CardTitle>
-              <CardDescription>
-                Cycle the public board (<code>/display</code>) through several languages so
-                non-English speakers have equal access to queue information.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-1 flex-col gap-4">
-              <DisplayLanguageRotationEditor
-                value={pendingRotation}
-                onChange={setPendingRotation}
-                disabled={loading || nonDrawActionPending}
-              />
-              <Button
-                variant="default"
-                size="sm"
-                className="mt-auto self-start"
-                onClick={handleSaveRotation}
-                disabled={loading || nonDrawActionPending}
-              >
-                Save language rotation
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card space-y-4 lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Megaphone className="size-4 text-muted-foreground" />
-                Announcement
-                <Badge variant="outline" className="ml-1 border-status-warning-border text-xs text-status-warning-text">
-                  Beta
-                </Badge>
-              </CardTitle>
-              <CardDescription>
-                Show a message to clients during onboarding (after they choose a language, before
-                entering a ticket). Format it with the toolbar — no Markdown knowledge needed.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-1 flex-col gap-4">
-              <AnnouncementEditor
-                value={pendingAnnouncement}
-                onChange={setPendingAnnouncement}
-                disabled={loading || nonDrawActionPending}
-              />
-              <Button
-                variant="default"
-                size="sm"
-                className="mt-auto self-start"
-                onClick={handleSaveAnnouncement}
-                disabled={loading || nonDrawActionPending}
-              >
-                Save announcement
-              </Button>
-            </CardContent>
-          </Card>
         </div>
 
-        <TranslationCard />
+        <Accordion type="single" collapsible>
+          <AccordionItem value="advanced-admin">
+            <AccordionTrigger>
+              <span className="flex flex-col gap-1">
+                <span>Advanced</span>
+                <span className="text-sm font-normal text-muted-foreground">
+                  Configuration tools for hours, languages, announcements, and translation.
+                </span>
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <Card className="bg-card space-y-4">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CalendarClock className="size-4 text-muted-foreground" />
+                      Set operating hours
+                    </CardTitle>
+                    <CardDescription>
+                      Choose open days and hours so clients know when the pantry is available.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {pendingHours ? (
+                      <OperatingHoursEditor
+                        hours={pendingHours}
+                        timezone={pendingTimezone}
+                        onChange={setPendingHours}
+                        onTimezoneChange={setPendingTimezone}
+                        disabled={loading || nonDrawActionPending}
+                      />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Loading hours…</p>
+                    )}
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={handleSaveOperatingHours}
+                      disabled={!pendingHours || loading || nonDrawActionPending}
+                    >
+                      Save operating hours
+                    </Button>
+                    <AlertDialog open={timezoneMismatchOpen} onOpenChange={setTimezoneMismatchOpen}>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirm timezone selection</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Your device timezone does not match the pantry timezone. The timezone should
+                            match the location of services. Continue anyway?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={nonDrawActionPending}>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleConfirmTimezoneMismatch}
+                            disabled={nonDrawActionPending}
+                          >
+                            Continue and Save
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-card space-y-4">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Languages className="size-4 text-muted-foreground" />
+                      Rotate display languages
+                    </CardTitle>
+                    <CardDescription>
+                      Cycle the public board (<code>/display</code>) through several languages so
+                      non-English speakers have equal access to queue information.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex flex-1 flex-col gap-4">
+                    <DisplayLanguageRotationEditor
+                      value={pendingRotation}
+                      onChange={setPendingRotation}
+                      disabled={loading || nonDrawActionPending}
+                    />
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="mt-auto self-start"
+                      onClick={handleSaveRotation}
+                      disabled={loading || nonDrawActionPending}
+                    >
+                      Save language rotation
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-card space-y-4 lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Megaphone className="size-4 text-muted-foreground" />
+                      Announcement
+                      <Badge variant="outline" className="ml-1 border-status-warning-border text-xs text-status-warning-text">
+                        Beta
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription>
+                      Show a message to clients during onboarding (after they choose a language, before
+                      entering a ticket). Format it with the toolbar — no Markdown knowledge needed.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex flex-1 flex-col gap-4">
+                    <AnnouncementEditor
+                      value={pendingAnnouncement}
+                      onChange={setPendingAnnouncement}
+                      disabled={loading || nonDrawActionPending}
+                    />
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="mt-auto self-start"
+                      onClick={handleSaveAnnouncement}
+                      disabled={loading || nonDrawActionPending}
+                    >
+                      Save announcement
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <div className="lg:col-span-2">
+                  <TranslationCard />
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
         {!error && state && (
           <Card className="border-status-success-border bg-status-success-bg">

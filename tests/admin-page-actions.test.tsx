@@ -23,7 +23,7 @@ vi.mock("@/components/announcement-editor", () => ({
 }));
 
 vi.mock("@/components/translation/translation-card", () => ({
-  TranslationCard: () => null,
+  TranslationCard: () => <div>Translation</div>,
 }));
 
 vi.mock("sonner", () => ({
@@ -131,6 +131,7 @@ describe("Admin page actions", () => {
     toastSuccess.mockReset();
     installMatchMedia();
     installFetch();
+    window.scrollTo = vi.fn();
   });
 
   it("renders and shows Now Serving card after loading", async () => {
@@ -293,6 +294,24 @@ describe("Admin page actions", () => {
     await screen.findByText("Ticket Range & Order");
     expect(screen.getByLabelText("Start Number")).toBeInTheDocument();
     expect(screen.getByLabelText("End Number")).toBeInTheDocument();
+  });
+
+  it("hides advanced configuration cards until the Advanced accordion is expanded", async () => {
+    render(<AdminPage />);
+    await screen.findByText("System reset");
+
+    expect(screen.queryByText("Set operating hours")).not.toBeInTheDocument();
+    expect(screen.queryByText("Rotate display languages")).not.toBeInTheDocument();
+    expect(screen.queryByText("Announcement")).not.toBeInTheDocument();
+    expect(screen.queryByText("Translation")).not.toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /Advanced/ }));
+
+    expect(await screen.findByText("Set operating hours")).toBeInTheDocument();
+    expect(screen.getByText("Rotate display languages")).toBeInTheDocument();
+    expect(screen.getByText("Announcement")).toBeInTheDocument();
+    expect(screen.getByText("Translation")).toBeInTheDocument();
   });
 
   it("enables reset action only when RESET phrase is entered", async () => {
