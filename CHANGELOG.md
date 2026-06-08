@@ -38,6 +38,33 @@
   metric icons no longer advertise hover animation.
 
 ### Changed
+- **Announcement and Translation cards now marked Beta.** Added `Beta` pills to
+  both card headers so staff understand these staged authoring/localization
+  sections are still under active development and refinement.
+- **AI Configuration now ports FEED's model/prompt setup workflow.** The Add
+  Configuration action now opens the FEED-style type picker so staff can create
+  either an encrypted AI model configuration or a reusable System Prompt. System
+  prompts and AI models now use a FEED-derived `BaseAIConfigDialog`,
+  `StepWrapper`, step-definition factory, and per-step component structure
+  instead of LOTTO-local monolithic wizard panels. Saved prompts feed translation
+  requests while the hard-coded LOTTO translation prompt remains the fallback
+  when no active prompt exists. The System Prompt modal now offers LOTTO's three
+  intended prompt categories — UI Translations, Inventory, and Announcements —
+  instead of FEED's Custom Translation / document classification taxonomy. The
+  type-picker Prompt card and System Prompt flow use FEED's animated
+  `MessageSquareQuote`, `SlidersVertical`, and imperative `FileText` icon
+  patterns instead of LOTTO-local substitutes; the AI Parameters step now uses
+  FEED-style sliders, and the unused Endpoint URL field was removed.
+- **Translation AI FEED parity rule documented.** Added
+  `docs/TRANSLATION_AI_FEED_PARITY.md` and updated `AGENTS.md` to require a
+  FEED-first porting approach for Translation AI UI: port FEED component
+  structure and missing icons/utilities first, then adapt only app-boundary or
+  documented LOTTO design differences.
+- **Translation Management Add Translation now matches FEED fan-out behavior.**
+  The Add Translation dialog now collects one English custom string, validates
+  a 3–1,800 character range with a visible counter, and submits it for
+  every enabled non-English language instead of requiring staff to pick one
+  language at a time.
 - **Translation Management table now uses a FEED-derived table foundation.** The
   table is a single TanStack instance with responsive column visibility,
   sorting/filtering, bulk actions, dropdown row actions, truncation dialogs, and

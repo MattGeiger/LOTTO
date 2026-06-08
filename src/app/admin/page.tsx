@@ -2777,6 +2777,9 @@ const AdminPage = () => {
               <CardTitle className="flex items-center gap-2">
                 <Megaphone className="size-4 text-muted-foreground" />
                 Announcement
+                <Badge variant="outline" className="ml-1 border-status-warning-border text-xs text-status-warning-text">
+                  Beta
+                </Badge>
               </CardTitle>
               <CardDescription>
                 Show a message to clients during onboarding (after they choose a language, before

@@ -16,6 +16,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/animate-ui/components/radix/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BotIcon, type BotIconHandle } from "@/components/ui/bot";
 import { GlobeIcon, type GlobeIconHandle } from "@/components/ui/globe";
@@ -87,6 +88,9 @@ export function TranslationCard() {
             size={16}
           />
           Translation
+          <Badge variant="outline" className="ml-1 border-status-warning-border text-xs text-status-warning-text">
+            Beta
+          </Badge>
         </CardTitle>
         <CardDescription>
           Manage languages, AI translation providers, and translated content.

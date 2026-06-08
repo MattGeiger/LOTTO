@@ -13,6 +13,9 @@ import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 import { ClipboardCheckIcon } from "@/components/animate-ui/icons/clipboard-check";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { BotIcon } from "@/components/animate-ui/icons/bot";
+import { MessageSquareQuoteIcon } from "@/components/animate-ui/icons/message-square-quote";
 import { PlusIcon } from "@/components/animate-ui/icons/plus";
 import { SquarePenIcon } from "@/components/animate-ui/icons/square-pen";
 import { Trash2Icon } from "@/components/animate-ui/icons/trash-2";
@@ -28,12 +31,29 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { EnhancedDataTable } from "@/components/ui/enhanced-data-table";
 import { ResponsiveTruncatedText } from "@/components/ui/responsive-truncated-text";
 import { TableActionMenu } from "@/components/ui/table-action-menu";
 import { AiConfigDialog, type AiConfigDialogMode } from "@/components/translation/ai-config/ai-config-dialog";
+import {
+  SystemPromptDialog,
+  type SystemPromptDialogMode,
+} from "@/components/translation/ai-config/system-prompt-dialog";
+import { toPromptConfiguration, type SystemPrompt, type SystemPromptInput } from "@/lib/ai/system-prompt-types";
 import type { AiConfigInput, AiConfigPublic } from "@/lib/ai/types";
 import { cn } from "@/lib/utils";
+
+type AiModelRow = AiConfigPublic & { configType: "apikey"; originalId: number };
+type SystemPromptRow = ReturnType<typeof toPromptConfiguration>;
+type ConfigRow = AiModelRow | SystemPromptRow;
 
 function SortableHeader<TData>({
   column,
@@ -62,25 +82,40 @@ function SortableHeader<TData>({
 }
 
 export function AiConfigTab() {
-  const [configs, setConfigs] = React.useState<AiConfigPublic[]>([]);
+  const [configs, setConfigs] = React.useState<ConfigRow[]>([]);
+  const [prompts, setPrompts] = React.useState<SystemPrompt[]>([]);
   const [encryptionConfigured, setEncryptionConfigured] = React.useState(true);
   const [loading, setLoading] = React.useState(true);
+  const [typeOpen, setTypeOpen] = React.useState(false);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [dialogMode, setDialogMode] = React.useState<AiConfigDialogMode>("add");
-  const [editing, setEditing] = React.useState<AiConfigPublic | null>(null);
-  const [deleteConfig, setDeleteConfig] = React.useState<AiConfigPublic | null>(null);
+  const [editing, setEditing] = React.useState<AiModelRow | null>(null);
+  const [promptDialogOpen, setPromptDialogOpen] = React.useState(false);
+  const [promptDialogMode, setPromptDialogMode] = React.useState<SystemPromptDialogMode>("add");
+  const [editingPrompt, setEditingPrompt] = React.useState<SystemPrompt | null>(null);
+  const [deleteConfig, setDeleteConfig] = React.useState<ConfigRow | null>(null);
   const tableRef = React.useRef<{ clearSelection?: () => void }>(null);
 
   const load = React.useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/ai-config", { cache: "no-store" });
-      if (!res.ok) throw new Error("Unable to load AI configurations.");
-      const data = (await res.json()) as {
+      const [configRes, promptRes] = await Promise.all([
+        fetch("/api/ai-config", { cache: "no-store" }),
+        fetch("/api/system-prompts", { cache: "no-store" }),
+      ]);
+      if (!configRes.ok || !promptRes.ok) throw new Error("Unable to load AI configurations.");
+      const data = (await configRes.json()) as {
         configs: AiConfigPublic[];
         encryptionConfigured: boolean;
       };
-      setConfigs(data.configs);
+      const promptData = (await promptRes.json()) as { prompts: SystemPrompt[] };
+      const modelRows: AiModelRow[] = data.configs.map((config) => ({
+        ...config,
+        configType: "apikey",
+        originalId: config.id,
+      }));
+      setPrompts(promptData.prompts);
+      setConfigs([...modelRows, ...promptData.prompts.map(toPromptConfiguration)]);
       setEncryptionConfigured(data.encryptionConfigured);
       tableRef.current?.clearSelection?.();
     } catch (error) {
@@ -95,16 +130,37 @@ export function AiConfigTab() {
   }, [load]);
 
   const openAdd = React.useCallback(() => {
+    setTypeOpen(true);
+  }, []);
+
+  const openAddModel = React.useCallback(() => {
+    setTypeOpen(false);
     setDialogMode("add");
     setEditing(null);
     setDialogOpen(true);
   }, []);
 
-  const openEdit = React.useCallback((config: AiConfigPublic) => {
-    setDialogMode("edit");
-    setEditing(config);
-    setDialogOpen(true);
+  const openAddPrompt = React.useCallback(() => {
+    setTypeOpen(false);
+    setPromptDialogMode("add");
+    setEditingPrompt(null);
+    setPromptDialogOpen(true);
   }, []);
+
+  const openEdit = React.useCallback(
+    (config: ConfigRow) => {
+      if (config.configType === "prompt") {
+        setPromptDialogMode("edit");
+        setEditingPrompt(prompts.find((prompt) => prompt.id === config.originalId) ?? null);
+        setPromptDialogOpen(true);
+        return;
+      }
+      setDialogMode("edit");
+      setEditing(config);
+      setDialogOpen(true);
+    },
+    [prompts],
+  );
 
   const handleSave = async (input: AiConfigInput): Promise<boolean> => {
     try {
@@ -128,6 +184,28 @@ export function AiConfigTab() {
     }
   };
 
+  const handlePromptSave = async (input: SystemPromptInput): Promise<boolean> => {
+    try {
+      const url = promptDialogMode === "add" ? "/api/system-prompts" : `/api/system-prompts/${editingPrompt?.id}`;
+      const method = promptDialogMode === "add" ? "POST" : "PUT";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? "Unable to save the system prompt.");
+      }
+      toast.success(promptDialogMode === "add" ? "System prompt added." : "System prompt updated.");
+      await load();
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to save the system prompt.");
+      return false;
+    }
+  };
+
   const validateExisting = React.useCallback(async (id: number) => {
     try {
       const res = await fetch("/api/ai-config/validate", {
@@ -146,7 +224,11 @@ export function AiConfigTab() {
   const confirmDelete = async () => {
     if (!deleteConfig) return;
     try {
-      const res = await fetch(`/api/ai-config/${deleteConfig.id}`, { method: "DELETE" });
+      const url =
+        deleteConfig.configType === "prompt"
+          ? `/api/system-prompts/${deleteConfig.originalId}`
+          : `/api/ai-config/${deleteConfig.originalId}`;
+      const res = await fetch(url, { method: "DELETE" });
       if (!res.ok) throw new Error("Unable to delete the configuration.");
       toast.success("Configuration deleted.");
       await load();
@@ -157,7 +239,7 @@ export function AiConfigTab() {
     }
   };
 
-  const columns = React.useMemo<ColumnDef<AiConfigPublic>[]>(
+  const columns = React.useMemo<ColumnDef<ConfigRow>[]>(
     () => [
       {
         accessorKey: "name",
@@ -171,17 +253,21 @@ export function AiConfigTab() {
         size: 130,
         enableHiding: true,
         header: ({ column }) => <SortableHeader column={column} label="Provider" />,
-        cell: ({ row }) => <Badge variant="secondary">{row.original.serviceType}</Badge>,
+        cell: ({ row }) => (
+          <Badge variant={row.original.configType === "prompt" ? "outline" : "secondary"}>
+            {row.original.configType === "prompt" ? "System Prompt" : row.original.serviceType}
+          </Badge>
+        ),
       },
       {
         accessorKey: "model",
         size: 260,
         enableHiding: true,
-        header: ({ column }) => <SortableHeader column={column} label="Model" />,
+        header: ({ column }) => <SortableHeader column={column} label="Model / prompt" />,
         cell: ({ row }) => (
           <ResponsiveTruncatedText
-            text={row.original.model}
-            title="View model identifier"
+            text={row.original.configType === "prompt" ? row.original.model.replace("_", " ") : row.original.model}
+            title={row.original.configType === "prompt" ? "View prompt type" : "View model identifier"}
             className="max-w-[18rem] text-muted-foreground"
           />
         ),
@@ -221,8 +307,8 @@ export function AiConfigTab() {
                 {
                   label: "Test key",
                   icon: ClipboardCheckIcon,
-                  onClick: () => void validateExisting(row.original.id),
-                  disabled: !row.original.hasApiKey,
+                  onClick: () => void validateExisting(row.original.originalId),
+                  disabled: row.original.configType === "prompt" || !row.original.hasApiKey,
                 },
                 {
                   label: "Edit",
@@ -284,10 +370,66 @@ export function AiConfigTab() {
             icon: PlusIcon,
             variant: "default",
             action: openAdd,
-            disabled: loading || !encryptionConfigured,
+            disabled: loading,
           },
         ]}
       />
+
+      <Dialog open={typeOpen} onOpenChange={setTypeOpen}>
+        <DialogContent className="sm:max-w-[550px]">
+          <DialogHeader>
+            <DialogTitle>Add AI Configuration</DialogTitle>
+            <DialogDescription>Select the type of AI configuration to create.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-center">
+              <AnimateIcon animateOnView animateOnViewOnce animateOnHover className="inline-block">
+                <BotIcon className="mx-auto size-12 text-muted-foreground" size={48} />
+              </AnimateIcon>
+              <h3 className="mt-2 text-lg font-medium">Configuration Type</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Choose whether to add a provider model or a reusable system prompt.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
+                <Card
+                  className={cn(
+                    "cursor-pointer transition-all hover:border-primary",
+                    !encryptionConfigured && "cursor-not-allowed opacity-60",
+                  )}
+                  onClick={() => {
+                    if (encryptionConfigured) openAddModel();
+                  }}
+                >
+                  <CardHeader className="pb-2 text-center">
+                    <BotIcon className="mx-auto size-8 text-primary" size={32} />
+                    <CardTitle className="text-base">AI Model</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <CardDescription className="text-center">
+                      Configure API key, provider model, costs, and usage limits.
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              </AnimateIcon>
+              <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
+                <Card className="cursor-pointer transition-all hover:border-primary" onClick={openAddPrompt}>
+                  <CardHeader className="pb-2 text-center">
+                    <MessageSquareQuoteIcon className="mx-auto size-8 text-primary" size={32} />
+                    <CardTitle className="text-base">Prompt</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <CardDescription className="text-center">
+                      Create a system prompt for translation behavior and tone.
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              </AnimateIcon>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AiConfigDialog
         open={dialogOpen}
@@ -297,12 +439,20 @@ export function AiConfigTab() {
         onSave={handleSave}
       />
 
+      <SystemPromptDialog
+        open={promptDialogOpen}
+        onOpenChange={setPromptDialogOpen}
+        mode={promptDialogMode}
+        prompt={editingPrompt}
+        onSave={handlePromptSave}
+      />
+
       <AlertDialog open={deleteConfig !== null} onOpenChange={(open) => !open && setDeleteConfig(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete configuration?</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes the AI configuration and its stored API key. This cannot be undone.
+              This removes the selected {deleteConfig?.configType === "prompt" ? "system prompt" : "AI configuration"}. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

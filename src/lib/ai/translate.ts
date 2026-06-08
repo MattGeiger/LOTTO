@@ -10,6 +10,7 @@
 // short UI strings + announcement text.
 
 import type { AiServiceType } from "./types";
+import * as systemPromptStore from "./system-prompt-store";
 
 export type TranslateParams = {
   serviceType: AiServiceType;
@@ -32,6 +33,23 @@ const buildSystemPrompt = (targetLanguage: string): string =>
     "Do not translate brand names. Return ONLY the translation — no quotes, labels, or commentary.",
   ].join(" ");
 
+const buildCustomSystemPrompt = async (targetLanguage: string): Promise<string> => {
+  const prompt = await systemPromptStore.getActiveTranslationPrompt().catch((error) => {
+    console.warn("[AI Translate] Unable to load custom system prompt; using fallback.", error);
+    return null;
+  });
+  if (!prompt) return buildSystemPrompt(targetLanguage);
+  const parts = [
+    prompt.description,
+    prompt.translationApproach,
+    prompt.contextGuidance,
+    prompt.additionalGuidance,
+    `Translate the user's text into ${targetLanguage}.`,
+    "Return ONLY the translation — no quotes, labels, or commentary.",
+  ].filter((part): part is string => Boolean(part?.trim()));
+  return parts.length > 0 ? parts.join("\n\n") : buildSystemPrompt(targetLanguage);
+};
+
 const isGpt5Family = (model: string): boolean => /(^|[^a-z])gpt-5/i.test(model);
 
 const translateOpenAI = async (
@@ -39,10 +57,11 @@ const translateOpenAI = async (
   text: string,
   targetLanguage: string,
 ): Promise<TranslateResult> => {
+  const systemPrompt = await buildCustomSystemPrompt(targetLanguage);
   const body: Record<string, unknown> = {
     model: p.model,
     messages: [
-      { role: "system", content: buildSystemPrompt(targetLanguage) },
+      { role: "system", content: systemPrompt },
       { role: "user", content: text },
     ],
   };
@@ -77,6 +96,7 @@ const translateAnthropic = async (
   text: string,
   targetLanguage: string,
 ): Promise<TranslateResult> => {
+  const systemPrompt = await buildCustomSystemPrompt(targetLanguage);
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -87,7 +107,7 @@ const translateAnthropic = async (
     body: JSON.stringify({
       model: p.model,
       max_tokens: p.maxTokens ?? 2048,
-      system: buildSystemPrompt(targetLanguage),
+      system: systemPrompt,
       messages: [{ role: "user", content: text }],
     }),
   });
@@ -110,6 +130,7 @@ const translateGoogle = async (
   text: string,
   targetLanguage: string,
 ): Promise<TranslateResult> => {
+  const systemPrompt = await buildCustomSystemPrompt(targetLanguage);
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
     p.model,
   )}:generateContent?key=${encodeURIComponent(p.apiKey)}`;
@@ -117,7 +138,7 @@ const translateGoogle = async (
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: buildSystemPrompt(targetLanguage) }] },
+      systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: [{ role: "user", parts: [{ text }] }],
       generationConfig: { maxOutputTokens: p.maxTokens ?? 2048 },
     }),

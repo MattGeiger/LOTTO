@@ -36,11 +36,30 @@ consistent with existing patterns and workflows.
 - User-facing notifications should use `sonner` toasts unless an existing
   pattern dictates otherwise.
 
+## Translation AI / FEED Parity
+- The Translation card's AI surfaces are a FEED-first parity area. For
+  Language Settings, AI Configuration, System Prompts, and Translation
+  Management, treat FEED production components as the source of truth.
+- Do not simplify, consolidate, rename, or visually substitute FEED UI/UX
+  patterns unless the user explicitly approves the deviation or LOTTO has a
+  documented design-intent difference.
+- Port FEED component structure first, then adapt only boundary concerns:
+  service calls become Next.js route fetches, FEED persistence maps to LOTTO
+  stores/API routes, and FEED-only domain concepts may be omitted when noted in
+  docs (for example, LOTTO omits FEED classification prompts and replaces FEED's
+  prompt taxonomy with UI translations, Inventory, and Announcements).
+- Keep FEED animated icon vocabulary and interaction rules for these surfaces.
+  If an icon/utility is missing in LOTTO, port it from FEED before substituting.
+- See `docs/TRANSLATION_AI_FEED_PARITY.md` before changing
+  `src/components/translation/*` AI-related UI.
+
 ## Documentation Priority
 - Documentation is a first-class requirement for this repo.
 - Any feature implementation or behavior change must update docs to reflect the current state.
 - New features should have comprehensive implementation planning documented before major coding begins.
 - `docs/GAME.md` and `docs/V2.0_PLANNED_FEATURES.md` should be kept aligned with live Arcade behavior and planned scope.
+- `docs/TRANSLATION_AI_FEED_PARITY.md` should be kept aligned with the live
+  Translation AI implementation and any approved FEED deviations.
 - `CHANGELOG.md` must capture both implementation changes and significant documentation updates.
 
 ## Arcade Guardrails

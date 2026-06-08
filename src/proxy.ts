@@ -19,6 +19,8 @@ export const config = {
     "/api/languages/:path*",
     "/api/ai-config",
     "/api/ai-config/:path*",
+    "/api/system-prompts",
+    "/api/system-prompts/:path*",
     "/api/translations",
     "/api/translations/:path*",
     "/arcade/zombie-attack/:path*",
@@ -31,6 +33,7 @@ const GATED_API_PREFIXES = [
   "/api/state",
   "/api/languages",
   "/api/ai-config",
+  "/api/system-prompts",
   "/api/translations",
 ];
 
