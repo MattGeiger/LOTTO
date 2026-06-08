@@ -54,7 +54,8 @@
   type-picker Prompt card and System Prompt flow use FEED's animated
   `MessageSquareQuote`, `SlidersVertical`, and imperative `FileText` icon
   patterns instead of LOTTO-local substitutes; the AI Parameters step now uses
-  FEED-style sliders, and the unused Endpoint URL field was removed.
+  FEED-style sliders, the unused Endpoint URL field was removed, and the AI
+  Model type-picker card now uses FEED's imperative `CpuIcon`.
 - **Translation AI FEED parity rule documented.** Added
   `docs/TRANSLATION_AI_FEED_PARITY.md` and updated `AGENTS.md` to require a
   FEED-first porting approach for Translation AI UI: port FEED component

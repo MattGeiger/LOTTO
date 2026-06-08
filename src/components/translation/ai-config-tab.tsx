@@ -32,6 +32,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CpuIcon, type CpuIconHandle } from "@/components/ui/cpu";
 import {
   Dialog,
   DialogContent,
@@ -95,6 +96,7 @@ export function AiConfigTab() {
   const [editingPrompt, setEditingPrompt] = React.useState<SystemPrompt | null>(null);
   const [deleteConfig, setDeleteConfig] = React.useState<ConfigRow | null>(null);
   const tableRef = React.useRef<{ clearSelection?: () => void }>(null);
+  const aiModelIconRef = React.useRef<CpuIconHandle>(null);
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -392,27 +394,28 @@ export function AiConfigTab() {
               </p>
             </div>
             <div className="grid grid-cols-1 gap-4">
-              <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
-                <Card
-                  className={cn(
-                    "cursor-pointer transition-all hover:border-primary",
-                    !encryptionConfigured && "cursor-not-allowed opacity-60",
-                  )}
-                  onClick={() => {
-                    if (encryptionConfigured) openAddModel();
-                  }}
-                >
-                  <CardHeader className="pb-2 text-center">
-                    <BotIcon className="mx-auto size-8 text-primary" size={32} />
-                    <CardTitle className="text-base">AI Model</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <CardDescription className="text-center">
-                      Configure API key, provider model, costs, and usage limits.
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              </AnimateIcon>
+              <Card
+                className={cn(
+                  "cursor-pointer transition-all hover:border-primary",
+                  !encryptionConfigured && "cursor-not-allowed opacity-60",
+                )}
+                onClick={() => {
+                  aiModelIconRef.current?.startAnimation();
+                  if (encryptionConfigured) openAddModel();
+                }}
+                onMouseEnter={() => aiModelIconRef.current?.startAnimation()}
+                onMouseLeave={() => aiModelIconRef.current?.stopAnimation()}
+              >
+                <CardHeader className="pb-2 text-center">
+                  <CpuIcon ref={aiModelIconRef} className="mx-auto size-8 text-primary" size={32} />
+                  <CardTitle className="text-base">AI Model</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <CardDescription className="text-center">
+                    Configure API key, provider model, costs, and usage limits.
+                  </CardDescription>
+                </CardContent>
+              </Card>
               <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
                 <Card className="cursor-pointer transition-all hover:border-primary" onClick={openAddPrompt}>
                   <CardHeader className="pb-2 text-center">

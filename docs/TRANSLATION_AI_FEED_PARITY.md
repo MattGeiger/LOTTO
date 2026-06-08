@@ -68,6 +68,7 @@ Relevant FEED frontend paths:
   `src/components/animate-ui/icons/message-square-quote.tsx`,
   `src/components/animate-ui/icons/sliders-vertical.tsx`, and
   `src/components/ui/file-text.tsx`
+- FEED AI model type-picker icon -> `src/components/ui/cpu.tsx`
 - FEED slider control -> `src/components/ui/slider.tsx`
 
 ## Review Checklist
