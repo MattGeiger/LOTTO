@@ -16,9 +16,13 @@ export const runtime = "nodejs";
 
 const addSchema = z.object({
   originalText: z.string().min(1).max(4000),
-  language: z.string().min(1).max(64),
+  language: z.string().min(1).max(64).optional(),
+  targetLanguages: z.array(z.string().min(1).max(64)).min(1).max(100).optional(),
   type: z.enum(TRANSLATION_TYPES).optional(),
   translate: z.boolean().optional(),
+}).refine((data) => Boolean(data.language || data.targetLanguages?.length), {
+  message: "Provide a language or targetLanguages.",
+  path: ["targetLanguages"],
 });
 
 // GET /api/translations?language=&type=&status=
@@ -38,7 +42,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/translations — add a (custom) translation row and optionally translate it now.
+// POST /api/translations — add custom translation row(s) and optionally translate them now.
 export async function POST(request: Request) {
   let body: unknown;
   try {
@@ -52,29 +56,41 @@ export async function POST(request: Request) {
   }
 
   try {
-    const record = await store.upsert(
-      {
-        originalText: parsed.data.originalText,
-        language: parsed.data.language,
-        type: parsed.data.type ?? "custom",
-      },
-      { status: "pending", translatedText: null, metadata: null },
+    const targetLanguages = Array.from(
+      new Set(parsed.data.targetLanguages ?? (parsed.data.language ? [parsed.data.language] : [])),
+    );
+    const records = await Promise.all(
+      targetLanguages.map((language) =>
+        store.upsert(
+          {
+            originalText: parsed.data.originalText,
+            language,
+            type: parsed.data.type ?? "custom",
+          },
+          { status: "pending", translatedText: null, metadata: null },
+        ),
+      ),
     );
     if (parsed.data.translate !== false) {
       try {
-        await translateRowsByIds([record.id]);
+        await translateRowsByIds(records.map((record) => record.id));
       } catch (error) {
         if (error instanceof NoActiveConfigError) {
           return NextResponse.json(
-            { translation: record, warning: error.message },
+            {
+              translation: records[0] ?? null,
+              translations: records,
+              warning: error.message,
+            },
             { status: 201 },
           );
         }
         throw error;
       }
     }
-    const fresh = await store.get(record.id);
-    return NextResponse.json({ translation: fresh ?? record }, { status: 201 });
+    const fresh = await Promise.all(records.map((record) => store.get(record.id)));
+    const translations = fresh.map((record, index) => record ?? records[index]);
+    return NextResponse.json({ translation: translations[0] ?? null, translations }, { status: 201 });
   } catch (error) {
     console.error("[Translations] POST failed:", error);
     return NextResponse.json({ error: "Unable to add the translation." }, { status: 500 });

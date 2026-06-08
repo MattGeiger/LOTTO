@@ -62,6 +62,8 @@ import { cn } from "@/lib/utils";
 import type { TableBulkAction } from "@/types/table";
 
 const ALL = "all";
+const ADD_TRANSLATION_MIN_LENGTH = 3;
+const ADD_TRANSLATION_MAX_LENGTH = 1800;
 
 function StatusBadge({ status }: { status: TranslationStatus }) {
   if (status === "completed") {
@@ -125,7 +127,7 @@ export function TranslationManagementTab() {
 
   const [addOpen, setAddOpen] = React.useState(false);
   const [addText, setAddText] = React.useState("");
-  const [addLanguage, setAddLanguage] = React.useState("");
+  const [addError, setAddError] = React.useState("");
 
   const [editRow, setEditRow] = React.useState<TranslationRecord | null>(null);
   const [editText, setEditText] = React.useState("");
@@ -171,32 +173,58 @@ export function TranslationManagementTab() {
     void load();
   }, [load]);
 
+  React.useEffect(() => {
+    if (!addOpen) {
+      setAddText("");
+      setAddError("");
+    }
+  }, [addOpen]);
+
   const openEdit = React.useCallback((row: TranslationRecord) => {
     setEditRow(row);
     setEditText(row.translatedText ?? "");
   }, []);
 
   const runAdd = async () => {
-    if (!addText.trim() || !addLanguage) {
-      toast.error("Enter text and pick a language.");
+    const originalText = addText.trim();
+    if (originalText.length < ADD_TRANSLATION_MIN_LENGTH) {
+      setAddError("Translation text must be at least 3 characters.");
       return;
     }
+    if (originalText.length > ADD_TRANSLATION_MAX_LENGTH) {
+      setAddError("Translation text must be 1,800 characters or fewer.");
+      return;
+    }
+    const targetLanguages = languages.filter((name) => name !== "English");
+    if (targetLanguages.length === 0) {
+      const message = "No target languages found. Enable at least one non-English language first.";
+      setAddError(message);
+      toast.error(message);
+      return;
+    }
+    setAddError("");
     setBusy(true);
     try {
       const res = await fetch("/api/translations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          originalText: addText.trim(),
-          language: addLanguage,
+          originalText,
+          targetLanguages,
           type: "custom",
         }),
       });
-      const data = (await res.json().catch(() => ({}))) as { warning?: string; error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        translations?: unknown[];
+        warning?: string;
+        error?: string;
+      };
       if (!res.ok) throw new Error(data.error ?? "Unable to add the translation.");
-      toast[data.warning ? "warning" : "success"](data.warning ?? "Translation added.");
+      toast[data.warning ? "warning" : "success"](
+        data.warning ??
+          `Translations initiated for ${data.translations?.length ?? targetLanguages.length} languages.`,
+      );
       setAddOpen(false);
-      setAddText("");
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to add the translation.");
@@ -575,7 +603,10 @@ export function TranslationManagementTab() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Add translation</DialogTitle>
-            <DialogDescription>Add a custom string and translate it into a language.</DialogDescription>
+            <DialogDescription>
+              Add a custom string and translate it into every enabled non-English language.
+              Text must be between 3 and 1,800 characters.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
@@ -584,23 +615,21 @@ export function TranslationManagementTab() {
                 id="tm-add-text"
                 value={addText}
                 onChange={(event) => setAddText(event.target.value)}
-                rows={3}
+                disabled={busy}
+                placeholder="Enter your translation here..."
+                rows={5}
+                maxLength={ADD_TRANSLATION_MAX_LENGTH}
+                className={cn(addError && "border-destructive focus-visible:ring-destructive/30")}
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="tm-add-lang">Language</Label>
-              <Select value={addLanguage} onValueChange={setAddLanguage}>
-                <SelectTrigger id="tm-add-lang">
-                  <SelectValue placeholder="Select language" />
-                </SelectTrigger>
-                <SelectContent>
-                  {languages.map((name) => (
-                    <SelectItem key={name} value={name}>
-                      {name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="text-muted-foreground">
+                  Targets {languages.length} enabled non-English {languages.length === 1 ? "language" : "languages"}.
+                </span>
+                <span className="tabular-nums text-muted-foreground">
+                  {addText.length}/1,800
+                </span>
+              </div>
+              {addError ? <p className="text-sm font-medium text-destructive">{addError}</p> : null}
             </div>
           </div>
           <DialogFooter>
@@ -608,7 +637,7 @@ export function TranslationManagementTab() {
               Cancel
             </Button>
             <Button type="button" onClick={runAdd} disabled={busy}>
-              Add &amp; translate
+              {busy ? "Adding..." : "Add Translation"}
             </Button>
           </DialogFooter>
         </DialogContent>

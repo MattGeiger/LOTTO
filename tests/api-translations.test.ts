@@ -72,6 +72,31 @@ describe("/api/translations", () => {
     expect(res.status).toBe(201);
   });
 
+  it("POST adds custom translations for multiple target languages", async () => {
+    const store = await import("@/lib/translation/translations-store");
+    const engine = await import("@/lib/translation/engine");
+    vi.mocked(store.upsert)
+      .mockResolvedValueOnce({ ...sampleRow, id: 10, language: "Bosnian", status: "pending", translatedText: null })
+      .mockResolvedValueOnce({ ...sampleRow, id: 11, language: "Spanish", status: "pending", translatedText: null });
+    vi.mocked(store.get)
+      .mockResolvedValueOnce({ ...sampleRow, id: 10, language: "Bosnian" })
+      .mockResolvedValueOnce({ ...sampleRow, id: 11, language: "Spanish" });
+
+    const { POST } = await import("@/app/api/translations/route");
+    const res = await POST(
+      json(
+        { originalText: "Welcome", targetLanguages: ["Bosnian", "Spanish"] },
+        "http://localhost/api/translations",
+      ),
+    );
+
+    expect(res.status).toBe(201);
+    expect(store.upsert).toHaveBeenCalledTimes(2);
+    expect(engine.translateRowsByIds).toHaveBeenCalledWith([10, 11]);
+    const body = (await res.json()) as { translations: unknown[] };
+    expect(body.translations).toHaveLength(2);
+  });
+
   it("PUT applies a correction", async () => {
     const { PUT } = await import("@/app/api/translations/[id]/route");
     const res = await PUT(json({ translatedText: "fixed" }, "http://localhost/api/translations/1", "PUT"), {
