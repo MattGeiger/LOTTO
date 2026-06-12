@@ -6,6 +6,7 @@
 // is not covered by this license; see TRADEMARKS.md.
 
 import type { Language } from "@/contexts/language-context";
+import { getCatalogEntryByCode } from "@/lib/languages";
 
 export const DEFAULT_FEED_PUBLIC_INVENTORY_URL =
   "https://feed.williamtemple.app/api/public/inventory.json";
@@ -97,7 +98,10 @@ function normalizeFeedPublicInventoryUrl(configuredUrl: string | undefined): str
 }
 
 export function getFeedDisplayName(entity: TranslatedFeedEntity, language: Language): string {
-  const feedLanguage = feedLanguageByLottoLanguage[language];
+  // Core codes use the explicit FEED-name map; dynamic catalog languages map
+  // code → English name (FEED keys its public translations by language name),
+  // so inventory already translated in FEED shows up for newly enabled languages.
+  const feedLanguage = feedLanguageByLottoLanguage[language] ?? getCatalogEntryByCode(language)?.name ?? "";
   const translatedName = entity.translations[feedLanguage];
   return translatedName && translatedName.trim().length > 0 ? translatedName : entity.name;
 }

@@ -18,19 +18,9 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAppHaptics } from "@/components/haptics-provider";
 import { useLanguage, type Language } from "@/contexts/language-context";
-
-const languageNames: Record<Language, string> = {
-  en: "English",
-  zh: "中文",
-  es: "Español",
-  ru: "Русский",
-  uk: "Українська",
-  vi: "Tiếng Việt",
-  fa: "فارسی",
-  ar: "العربية",
-};
 
 export const LANGUAGE_SWITCHER_TRIGGER_ID = "language-switcher-trigger";
 
@@ -40,11 +30,16 @@ type LanguageSwitcherProps = {
 };
 
 export function LanguageSwitcher({ enableHaptics = false, onLanguageChange }: LanguageSwitcherProps) {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, availableLanguages, ensureAvailableLanguagesLoaded } = useLanguage();
   const { trigger } = useAppHaptics();
 
+  // With more than 10 options (dynamic languages enabled), bound the menu and scroll.
+  const needsScroll = availableLanguages.length > 10;
+
   return (
-    <DropdownMenu>
+    // Load the dynamic language list when the picker opens (not on page mount),
+    // so pages pay nothing until the visitor actually reaches for the menu.
+    <DropdownMenu onOpenChange={(open) => open && ensureAvailableLanguagesLoaded()}>
       <DropdownMenuTrigger asChild>
         <Button
           id={LANGUAGE_SWITCHER_TRIGGER_ID}
@@ -57,26 +52,35 @@ export function LanguageSwitcher({ enableHaptics = false, onLanguageChange }: La
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-popover/[45%] backdrop-blur-[6px]">
-        <DropdownMenuRadioGroup
-          value={language}
-          onValueChange={(val) => {
-            if (val === language) {
-              return;
-            }
-            const nextLanguage = val as Language;
-            setLanguage(nextLanguage);
-            onLanguageChange?.(nextLanguage);
-            if (enableHaptics) {
-              trigger("uiSelect");
-            }
-          }}
-        >
-          {Object.entries(languageNames).map(([code, name]) => (
-            <DropdownMenuRadioItem key={code} value={code}>
-              {name}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
+        {(() => {
+          const radioGroup = (
+            <DropdownMenuRadioGroup
+              value={language}
+              onValueChange={(val) => {
+                if (val === language) {
+                  return;
+                }
+                const nextLanguage = val as Language;
+                setLanguage(nextLanguage);
+                onLanguageChange?.(nextLanguage);
+                if (enableHaptics) {
+                  trigger("uiSelect");
+                }
+              }}
+            >
+              {availableLanguages.map((option) => (
+                <DropdownMenuRadioItem key={option.code} value={option.code}>
+                  {option.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          );
+          return needsScroll ? (
+            <ScrollArea className="h-[min(60vh,20rem)]">{radioGroup}</ScrollArea>
+          ) : (
+            radioGroup
+          );
+        })()}
       </DropdownMenuContent>
     </DropdownMenu>
   );

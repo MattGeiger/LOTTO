@@ -13,7 +13,14 @@
 
 export const LANGUAGE_CODES = ["en", "zh", "es", "ru", "uk", "vi", "fa", "ar"] as const;
 
-export type Language = (typeof LANGUAGE_CODES)[number];
+// The eight hardcoded, always-on core languages.
+export type CoreLanguage = (typeof LANGUAGE_CODES)[number];
+
+// A client display language: one of the core codes, or any enabled catalog code
+// (Feature 4 dynamic languages, e.g. "bs"). Kept as `string` because admin-
+// enabled languages are data, not a compile-time union; runtime validation uses
+// `isLanguageCode` (core) / `isCatalogCode` (any supported).
+export type Language = string;
 
 export const LANGUAGE_OPTIONS: ReadonlyArray<{ code: Language; label: string }> = [
   { code: "en", label: "English" },
@@ -26,7 +33,7 @@ export const LANGUAGE_OPTIONS: ReadonlyArray<{ code: Language; label: string }> 
   { code: "ar", label: "العربية" },
 ];
 
-export function isLanguageCode(value: string): value is Language {
+export function isLanguageCode(value: string): value is CoreLanguage {
   return (LANGUAGE_CODES as readonly string[]).includes(value);
 }
 
@@ -127,11 +134,20 @@ export const ALWAYS_ON_LANGUAGE_NAMES: ReadonlyArray<string> = [
 ];
 
 const CATALOG_BY_NAME = new Map(LANGUAGE_CATALOG.map((entry) => [entry.name, entry]));
+const CATALOG_BY_CODE = new Map(LANGUAGE_CATALOG.map((entry) => [entry.code, entry]));
 
 export function getCatalogEntryByName(name: string): LanguageCatalogEntry | undefined {
   return CATALOG_BY_NAME.get(name);
 }
 
+export function getCatalogEntryByCode(code: string): LanguageCatalogEntry | undefined {
+  return CATALOG_BY_CODE.get(code);
+}
+
 export function isValidLanguageName(name: string): boolean {
   return CATALOG_BY_NAME.has(name);
+}
+
+export function isCatalogCode(value: string): boolean {
+  return CATALOG_BY_CODE.has(value);
 }

@@ -64,7 +64,7 @@ const displayLanguageRotationSchema = z
     }
   })
   .transform((config) => {
-    const selected = new Set(config.languages);
+    const selected = new Set<string>(config.languages);
     return {
       ...config,
       languages: LANGUAGE_OPTIONS.map((option) => option.code).filter((code) => selected.has(code)),

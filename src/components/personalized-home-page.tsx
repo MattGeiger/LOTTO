@@ -15,7 +15,6 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useAppHaptics } from "@/components/haptics-provider";
 import { useLanguage, type Language } from "@/contexts/language-context";
-import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import {
   readPersistedHomepageTicket,
   writePersistedHomepageTicket,
@@ -43,7 +42,20 @@ const hasActiveTicketRange = (state: RaffleState | null): boolean =>
   !!state && state.startNumber > 0 && state.endNumber >= state.startNumber;
 
 export function PersonalizedHomePage() {
-  const { setLanguage, hasSessionLanguageOverride, isLanguageHydrated, t } = useLanguage();
+  const {
+    setLanguage,
+    hasSessionLanguageOverride,
+    isLanguageHydrated,
+    t,
+    availableLanguages,
+    ensureAvailableLanguagesLoaded,
+    announcementTranslation,
+  } = useLanguage();
+
+  // The onboarding modal renders the language grid — load the dynamic list.
+  React.useEffect(() => {
+    ensureAvailableLanguagesLoaded();
+  }, [ensureAvailableLanguagesLoaded]);
   const { trigger } = useAppHaptics();
   const [onboardingStep, setOnboardingStep] = React.useState<"language" | "announcement" | "ticket">(
     "language",
@@ -241,8 +253,14 @@ export function PersonalizedHomePage() {
                   <span>{t("chooseLanguage")}</span>
                 </DialogTitle>
               </DialogHeader>
-              <div className="grid grid-cols-2 gap-3">
-                {LANGUAGE_OPTIONS.map((option) => (
+              <div
+                className={cn(
+                  "grid grid-cols-2 gap-3",
+                  // With dynamic languages enabled (>10 options), bound and scroll.
+                  availableLanguages.length > 10 && "max-h-[min(55vh,24rem)] overflow-y-auto pr-1",
+                )}
+              >
+                {availableLanguages.map((option) => (
                   <Button
                     key={option.code}
                     type="button"
@@ -263,7 +281,11 @@ export function PersonalizedHomePage() {
               </DialogHeader>
               <div className="min-h-0 flex-1 overflow-y-auto pr-1">
                 <div className="space-y-4 text-foreground">
-                  {announcement ? <MarkdownGuideContent content={announcement.markdown} /> : null}
+                  {announcement ? (
+                    // Spec: announcements are always localized when a translation
+                    // exists for the visitor's language; English is the fallback.
+                    <MarkdownGuideContent content={announcementTranslation ?? announcement.markdown} />
+                  ) : null}
                 </div>
               </div>
               <Button

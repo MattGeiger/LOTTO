@@ -20,7 +20,9 @@ const localeMap: Record<Language, string> = {
 
 export function formatDate(language: Language, input?: Date | number): string {
   const now = input instanceof Date ? input : typeof input === "number" ? new Date(input) : new Date();
-  const locale = localeMap[language];
+  // Core languages use their mapped locale; dynamic catalog languages pass their
+  // BCP-47 code straight to Intl (e.g. "bs" → Bosnian month/weekday names).
+  const locale = localeMap[language] ?? language;
 
   const weekday = now.toLocaleString(locale, { weekday: "long", calendar: "gregory" });
   const day = now.getDate();
