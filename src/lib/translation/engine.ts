@@ -49,7 +49,9 @@ const translateRow = async (
       status: "completed",
       promptTokens: result.promptTokens,
       completionTokens: result.completionTokens,
-      metadata: null,
+      // Auditability (spec): record which provider/model produced each
+      // translation, for troubleshooting, quality review, and comparison.
+      metadata: { provider: params.serviceType, model: params.model },
     });
     return true;
   } catch (error) {
@@ -57,6 +59,8 @@ const translateRow = async (
       status: "failed",
       metadata: {
         ...(record.metadata ?? {}),
+        provider: params.serviceType,
+        model: params.model,
         error: error instanceof Error ? error.message : "Translation failed.",
         failedAt: Date.now(),
       },
