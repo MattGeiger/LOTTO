@@ -26,9 +26,15 @@ const bulkUpdateSchema = z.object({
 
 // GET /api/languages          → all catalog rows (with is_enabled)
 // GET /api/languages?enabled  → only enabled rows
+// GET /api/languages?client   → visitor-facing options (core + completed packs)
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
+    if (url.searchParams.has("client")) {
+      const { listClientLanguages } = await import("@/lib/translation/pack");
+      const languages = await listClientLanguages();
+      return NextResponse.json({ languages }, { status: 200 });
+    }
     const enabledOnly = url.searchParams.has("enabled");
     const languages = enabledOnly ? await listEnabledLanguages() : await listLanguages();
     return NextResponse.json({ languages }, { status: 200 });

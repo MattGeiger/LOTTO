@@ -9,10 +9,12 @@
 
 import React from "react";
 
-import { isLanguageCode, type Language } from "@/lib/languages";
+import { isCatalogCode, isLanguageCode, LANGUAGE_OPTIONS, type Language } from "@/lib/languages";
 import { UI_STRINGS_EN } from "@/lib/ui-strings";
 
 export type { Language };
+
+type LanguageOption = { code: Language; label: string };
 
 type LanguageContextType = {
   language: Language;
@@ -21,6 +23,18 @@ type LanguageContextType = {
   hasSessionLanguageOverride: boolean;
   isLanguageHydrated: boolean;
   t: (key: string) => string;
+  /**
+   * Visitor-selectable languages: the eight core options plus any admin-enabled
+   * catalog languages whose translation packs are complete (Feature 4).
+   */
+  availableLanguages: ReadonlyArray<LanguageOption>;
+  /**
+   * Request the dynamic language list. Surfaces that render a picker call this
+   * on mount; it fetches once per provider lifetime.
+   */
+  ensureAvailableLanguagesLoaded: () => void;
+  /** Translated active announcement for the current language, when available. */
+  announcementTranslation: string | null;
 };
 
 const LanguageContext = React.createContext<LanguageContextType | undefined>(undefined);
@@ -43,6 +57,18 @@ export function LanguageProvider({
   const [language, setLanguageState] = React.useState<Language>("en");
   const [hasSessionLanguageOverride, setHasSessionLanguageOverride] = React.useState(false);
   const [isLanguageHydrated, setIsLanguageHydrated] = React.useState(false);
+  const [availableLanguages, setAvailableLanguages] =
+    React.useState<ReadonlyArray<LanguageOption>>(LANGUAGE_OPTIONS);
+  const [pack, setPack] = React.useState<{
+    code: string;
+    uiStrings: Record<string, string>;
+    announcement: string | null;
+  } | null>(null);
+  const packCacheRef = React.useRef(new Map<string, NonNullable<typeof pack>>());
+
+  // A stored language is restorable when it's a core code or any catalog code
+  // (dynamic languages persist by their BCP-47 code, same as core ones).
+  const isRestorableCode = (value: string) => isLanguageCode(value) || isCatalogCode(value);
 
   React.useEffect(() => {
     if (typeof window === "undefined") {
@@ -51,7 +77,7 @@ export function LanguageProvider({
     }
 
     const sessionStored = window.sessionStorage.getItem(DISPLAY_LANGUAGE_SESSION_STORAGE_KEY);
-    if (sessionStored && isLanguageCode(sessionStored)) {
+    if (sessionStored && isRestorableCode(sessionStored)) {
       setLanguageState(sessionStored);
       setHasSessionLanguageOverride(true);
       setIsLanguageHydrated(true);
@@ -59,11 +85,75 @@ export function LanguageProvider({
     }
 
     const stored = window.localStorage.getItem(DISPLAY_LANGUAGE_STORAGE_KEY);
-    if (stored && isLanguageCode(stored)) {
+    if (stored && isRestorableCode(stored)) {
       setLanguageState(stored);
     }
     setIsLanguageHydrated(true);
   }, []);
+
+  // Lazily load the visitor-facing language list (core + completed dynamic
+  // languages). Called by surfaces that render a language picker, so pages
+  // without one never pay the request — and tests with ordered fetch mocks
+  // aren't disturbed. Failures keep the static core options.
+  const languagesRequestedRef = React.useRef(false);
+  const ensureAvailableLanguagesLoaded = React.useCallback(() => {
+    if (languagesRequestedRef.current) return;
+    languagesRequestedRef.current = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/languages?client", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { languages?: { code?: string; label?: string }[] };
+        if (!Array.isArray(data.languages)) return;
+        const options = data.languages.filter(
+          (entry): entry is LanguageOption =>
+            typeof entry?.code === "string" && typeof entry?.label === "string",
+        );
+        if (options.length >= LANGUAGE_OPTIONS.length) setAvailableLanguages(options);
+      } catch {
+        // Offline/unavailable — keep the core options.
+      }
+    })();
+  }, []);
+
+  // Load the translation pack for any non-English language: dynamic languages
+  // need it for UI strings; core languages need it for the announcement.
+  React.useEffect(() => {
+    if (language === "en") {
+      setPack(null);
+      return;
+    }
+    const cached = packCacheRef.current.get(language);
+    if (cached) {
+      setPack(cached);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/translations/pack?code=${encodeURIComponent(language)}`, {
+          cache: "no-store",
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          pack?: { code?: string; uiStrings?: Record<string, string>; announcement?: string | null };
+        };
+        if (cancelled || typeof data.pack?.code !== "string") return;
+        const next = {
+          code: data.pack.code,
+          uiStrings: data.pack.uiStrings ?? {},
+          announcement: data.pack.announcement ?? null,
+        };
+        packCacheRef.current.set(language, next);
+        setPack(next);
+      } catch {
+        // Translation pack unavailable — t() falls back to English.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [language]);
 
   const setLanguage = React.useCallback(
     (lang: Language) => {
@@ -83,10 +173,19 @@ export function LanguageProvider({
     setLanguageState(lang);
   }, []);
 
+  // Fallback chain (v2.0 spec): hand-authored translation → DB-translated pack
+  // (dynamic languages) → English → the key itself.
   const t = React.useCallback(
-    (key: string) => translations[language]?.[key] ?? translations.en[key] ?? key,
-    [language],
+    (key: string) =>
+      translations[language]?.[key] ??
+      (pack?.code === language ? pack.uiStrings[key] : undefined) ??
+      translations.en[key] ??
+      key,
+    [language, pack],
   );
+
+  const announcementTranslation =
+    language !== "en" && pack?.code === language ? pack.announcement : null;
 
   return (
     <LanguageContext.Provider
@@ -97,6 +196,9 @@ export function LanguageProvider({
         hasSessionLanguageOverride,
         isLanguageHydrated,
         t,
+        availableLanguages,
+        ensureAvailableLanguagesLoaded,
+        announcementTranslation,
       }}
     >
       {children}

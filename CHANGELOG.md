@@ -103,6 +103,21 @@
   modal pattern.
 
 ### Added
+- **Expanded localization — visitors see dynamic languages (v2.0, Feature 4).**
+  The client bridge that completes the AI translation stack: `t()` now resolves
+  hand-authored translation → DB-translated pack → English → key, so a newly
+  enabled language (e.g. Bosnian) localizes the entire visitor UI once its pack
+  is complete. New public endpoints: `GET /api/translations/pack?code=<bcp47>`
+  (completed UI-string translations + the translated active announcement for one
+  language) and `GET /api/languages?client` (the eight core languages plus
+  enabled catalog languages whose packs are complete — "active when complete").
+  The language switcher and onboarding language step list dynamic languages with
+  native labels (loaded lazily when the picker is used) and gain a scroll bound
+  past 10 options; the onboarding announcement renders in the visitor's language
+  with English fallback. Dynamic languages use their BCP-47 code with Intl for
+  dates, English fallback for wait-time phrasing, and FEED's public inventory
+  translations by catalog name — so inventory already translated in FEED appears
+  for newly enabled languages. Urdu added to the RTL set.
 - **FEED-derived table UI primitives for Translation surfaces.** Added
   `EnhancedDataTable`, `TableActionMenu`, `ResponsiveTruncatedText`, table
   truncation utilities, FEED-style pagination controls, `useIsMobile`, and the

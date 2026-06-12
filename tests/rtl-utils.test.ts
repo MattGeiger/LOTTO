@@ -9,8 +9,12 @@ import { isRTL, RTL_LANGUAGES } from "@/lib/rtl-utils";
 
 describe("RTL utilities", () => {
   describe("RTL_LANGUAGES", () => {
-    it("contains exactly Arabic and Persian", () => {
-      expect(RTL_LANGUAGES).toEqual(["ar", "fa"]);
+    it("contains exactly Arabic, Persian, and Urdu", () => {
+      expect(RTL_LANGUAGES).toEqual(["ar", "fa", "ur"]);
+    });
+
+    it("isRTL returns true for Urdu", () => {
+      expect(isRTL("ur")).toBe(true);
     });
   });
 
