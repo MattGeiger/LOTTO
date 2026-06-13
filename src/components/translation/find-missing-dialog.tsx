@@ -20,7 +20,7 @@ import {
   FileText,
   Loader2,
   Megaphone,
-  Pencil,
+  Package,
   Search,
   XCircle,
   type LucideIcon,
@@ -61,7 +61,7 @@ type MissingDetails = {
 const TYPE_META: Record<TranslationType, { label: string; icon: LucideIcon }> = {
   ui_string: { label: "UI strings", icon: FileText },
   announcement: { label: "Announcement", icon: Megaphone },
-  custom: { label: "Custom", icon: Pencil },
+  inventory: { label: "Inventory", icon: Package },
 };
 
 export function FindMissingDialog({

@@ -9,7 +9,7 @@
 // content is UI strings (from the language context) and the active announcement,
 // plus staff-authored custom strings.
 
-export const TRANSLATION_TYPES = ["ui_string", "announcement", "custom"] as const;
+export const TRANSLATION_TYPES = ["ui_string", "announcement", "inventory"] as const;
 export type TranslationType = (typeof TRANSLATION_TYPES)[number];
 
 export const TRANSLATION_STATUSES = ["pending", "completed", "failed"] as const;
