@@ -9,12 +9,24 @@
 // the active announcement, and the inventory category/item names from the FEED
 // public inventory feed.
 
-import { fetchFeedPublicInventory } from "@/lib/feed-public-inventory";
+import { fetchFeedPublicInventory, getFeedPublicInventoryUrl } from "@/lib/feed-public-inventory";
 import { stateManager } from "@/lib/state-manager";
 import { UI_STRINGS_EN } from "@/lib/ui-strings";
 import type { TranslationType } from "./types";
 
 export type ContentItem = { originalText: string; type: TranslationType };
+
+// Diagnostic for the inventory feed fetch — surfaced to the admin so a feed
+// failure on the server is visible (with the literal error + URL) instead of
+// silently producing zero inventory.
+export type InventorySourceResult = {
+  names: string[];
+  ok: boolean;
+  error: string | null;
+  url: string;
+};
+
+export type ContentResult = { items: ContentItem[]; inventory: InventorySourceResult };
 
 // Distinct English UI strings (multiple keys may share the same text; one
 // translation row covers them all, which is also how t() resolves them).
@@ -36,10 +48,12 @@ export const getAnnouncementSource = async (): Promise<string | null> => {
   return null;
 };
 
-// Distinct English inventory strings (category + item names) from the FEED feed.
-// Failure is non-fatal — inventory is the lowest-priority content domain, so a
-// feed hiccup must never break the UI-string / announcement audit.
-export const getInventorySources = async (): Promise<string[]> => {
+// Distinct English inventory strings (category + item names) from the FEED feed,
+// plus diagnostics. Failure is non-fatal — inventory is the lowest-priority
+// content domain, so a feed hiccup must never break the UI-string / announcement
+// audit — but the error/URL are captured so the admin can see *why* it failed.
+export const getInventorySource = async (): Promise<InventorySourceResult> => {
+  const url = getFeedPublicInventoryUrl();
   try {
     const inventory = await fetchFeedPublicInventory();
     const set = new Set<string>();
@@ -49,23 +63,28 @@ export const getInventorySources = async (): Promise<string[]> => {
         if (item.name?.trim()) set.add(item.name);
       }
     }
-    return [...set];
+    return { names: [...set], ok: true, error: null, url };
   } catch (error) {
-    console.warn("[Translation content] Unable to load FEED inventory for translation.", error);
-    return [];
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[Translation content] Unable to load FEED inventory (${url}): ${message}`);
+    return { names: [], ok: false, error: message, url };
   }
 };
 
-export const getContentItems = async (): Promise<ContentItem[]> => {
+// Back-compat: callers that only need the names.
+export const getInventorySources = async (): Promise<string[]> =>
+  (await getInventorySource()).names;
+
+export const getContentItems = async (): Promise<ContentResult> => {
   const items: ContentItem[] = getUiStringSources().map((originalText) => ({
     originalText,
     type: "ui_string" as const,
   }));
   const announcement = await getAnnouncementSource();
   if (announcement) items.push({ originalText: announcement, type: "announcement" });
-  const inventorySources = await getInventorySources();
-  for (const originalText of inventorySources) {
+  const inventory = await getInventorySource();
+  for (const originalText of inventory.names) {
     items.push({ originalText, type: "inventory" as const });
   }
-  return items;
+  return { items, inventory };
 };

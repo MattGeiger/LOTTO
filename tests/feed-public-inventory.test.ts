@@ -29,6 +29,7 @@ describe("FEED public inventory helpers", () => {
     expect(fetchMock).toHaveBeenCalledWith("https://example.test/inventory.json", {
       cache: "no-store",
       credentials: "omit",
+      headers: { "User-Agent": "LOTTO/1.0 (+https://williamtemple.app)", Accept: "application/json" },
     });
   });
 
@@ -52,14 +53,13 @@ describe("FEED public inventory helpers", () => {
 
     await fetchFeedPublicInventory("http://localhost:3001/api/public/inventory.json");
 
-    expect(fetchMock).toHaveBeenNthCalledWith(1, "http://localhost:3001/api/public/inventory.json", {
+    const expectedInit = {
       cache: "no-store",
       credentials: "omit",
-    });
-    expect(fetchMock).toHaveBeenNthCalledWith(2, "https://feed.williamtemple.app/api/public/inventory.json", {
-      cache: "no-store",
-      credentials: "omit",
-    });
+      headers: { "User-Agent": "LOTTO/1.0 (+https://williamtemple.app)", Accept: "application/json" },
+    };
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "http://localhost:3001/api/public/inventory.json", expectedInit);
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "https://feed.williamtemple.app/api/public/inventory.json", expectedInit);
   });
 
   it("formats practical limit labels", () => {

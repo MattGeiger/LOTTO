@@ -58,6 +58,7 @@ type MissingDetails = {
   byLanguage: Record<string, number>;
   sampleItems: string[];
   sourceCounts?: Record<string, number>;
+  inventorySource?: { ok: boolean; error: string | null; url: string };
 };
 
 const TYPE_META: Record<TranslationType, { label: string; icon: LucideIcon }> = {
@@ -244,11 +245,21 @@ export function FindMissingDialog({
                   {result.sourceCounts && (result.sourceCounts.inventory ?? 0) === 0 ? (
                     <div className="flex items-start gap-2 rounded-md border border-status-warning-border bg-status-warning-bg p-3 text-sm text-status-warning-text">
                       <XCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                      <span>
-                        No inventory items were found to translate. The server couldn&apos;t read the
-                        FEED inventory feed (so inventory names can&apos;t be localized). Check the
-                        inventory feed URL / availability, then scan again.
-                      </span>
+                      <div className="space-y-1">
+                        <p>
+                          No inventory items were found to translate. The server couldn&apos;t read the
+                          FEED inventory feed, so inventory names can&apos;t be localized.
+                        </p>
+                        {result.inventorySource ? (
+                          <p className="break-all font-mono text-xs opacity-90">
+                            {result.inventorySource.error
+                              ? `Error: ${result.inventorySource.error}`
+                              : "Feed returned no items."}
+                            {" — "}
+                            {result.inventorySource.url}
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
                   ) : null}
                   {result.count > 0 ? (

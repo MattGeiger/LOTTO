@@ -27,6 +27,8 @@ export type MissingDetails = {
    * yielded nothing to the server — the usual cause of "no inventory found".
    */
   sourceCounts: Record<string, number>;
+  /** Inventory feed health (literal error + URL) so failures are diagnosable. */
+  inventorySource: { ok: boolean; error: string | null; url: string };
 };
 
 // A pending row older than this is treated as stale (re-queue it).
@@ -43,7 +45,7 @@ export const auditMissing = async (): Promise<{ missing: TranslationKey[]; detai
   // FEED, so every enabled non-English language needs it.
   const nonCoreTargets = enabledNonEnglish.filter((name) => !base.has(name));
 
-  const content = await getContentItems();
+  const { items: content, inventory } = await getContentItems();
   const sourceCounts: Record<string, number> = {};
   for (const item of content) {
     sourceCounts[item.type] = (sourceCounts[item.type] ?? 0) + 1;
@@ -75,7 +77,17 @@ export const auditMissing = async (): Promise<{ missing: TranslationKey[]; detai
     }
   }
 
-  return { missing, details: { count: missing.length, byType, byLanguage, sampleItems, sourceCounts } };
+  return {
+    missing,
+    details: {
+      count: missing.length,
+      byType,
+      byLanguage,
+      sampleItems,
+      sourceCounts,
+      inventorySource: { ok: inventory.ok, error: inventory.error, url: inventory.url },
+    },
+  };
 };
 
 export const findMissing = async (
