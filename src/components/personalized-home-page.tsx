@@ -23,7 +23,10 @@ import {
 import type { RaffleState } from "@/lib/state-types";
 import { cn } from "@/lib/utils";
 import { hasSeenAnnouncement, isAnnouncementActive, markAnnouncementSeen } from "@/lib/announcement";
-import { getGettingReadyMessage } from "@/lib/translation/getting-ready-messages";
+import {
+  getChooseAnotherLanguageLabel,
+  getGettingReadyMessage,
+} from "@/lib/translation/getting-ready-messages";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -326,16 +329,16 @@ export function PersonalizedHomePage() {
                 </p>
                 <Button
                   type="button"
-                  variant="ghost"
                   haptic="uiToggle"
-                  className="mt-2"
+                  className="mt-2 h-11 w-full text-base"
                   onClick={() => {
                     setPendingLanguageCode(null);
                     setOnboardingStep("language");
                   }}
                 >
-                  {/* English label — at this point the chosen language isn't ready. */}
-                  Choose another language
+                  {/* Hardcoded per-language label so it reads in the chosen
+                      language even before any AI translations exist. */}
+                  {getChooseAnotherLanguageLabel(pendingLanguageCode ?? "")}
                 </Button>
               </div>
             </>

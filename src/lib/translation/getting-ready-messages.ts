@@ -70,3 +70,67 @@ const GETTING_READY_MESSAGES: Record<string, string> = {
 export function getGettingReadyMessage(code: string): string {
   return GETTING_READY_MESSAGES[code] ?? GETTING_READY_FALLBACK;
 }
+
+// "Choose another language" — the escape hatch on the getting-ready screen,
+// hardcoded per language so it reads in the visitor's chosen language even
+// before any AI translations exist.
+const CHOOSE_ANOTHER_FALLBACK = "Choose another language";
+
+const CHOOSE_ANOTHER_LANGUAGE: Record<string, string> = {
+  sq: "Zgjidhni një gjuhë tjetër",
+  am: "ሌላ ቋንቋ ይምረጡ",
+  hy: "Ընտրեք այլ լեզու",
+  bn: "অন্য ভাষা নির্বাচন করুন",
+  bs: "Odaberite drugi jezik",
+  bg: "Изберете друг език",
+  my: "အခြားဘာသာစကား ရွေးပါ",
+  ca: "Trieu un altre idioma",
+  hr: "Odaberite drugi jezik",
+  cs: "Vyberte jiný jazyk",
+  da: "Vælg et andet sprog",
+  nl: "Kies een andere taal",
+  et: "Valige teine keel",
+  fi: "Valitse toinen kieli",
+  fr: "Choisir une autre langue",
+  ka: "აირჩიეთ სხვა ენა",
+  de: "Andere Sprache wählen",
+  el: "Επιλέξτε άλλη γλώσσα",
+  gu: "બીજી ભાષા પસંદ કરો",
+  hi: "दूसरी भाषा चुनें",
+  hu: "Válasszon másik nyelvet",
+  is: "Veldu annað tungumál",
+  id: "Pilih bahasa lain",
+  it: "Scegli un'altra lingua",
+  ja: "別の言語を選択",
+  kn: "ಬೇರೆ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ",
+  kk: "Басқа тіл таңдаңыз",
+  ko: "다른 언어 선택",
+  lv: "Izvēlieties citu valodu",
+  lt: "Pasirinkite kitą kalbą",
+  mk: "Изберете друг јазик",
+  ms: "Pilih bahasa lain",
+  ml: "മറ്റൊരു ഭാഷ തിരഞ്ഞെടുക്കുക",
+  mr: "दुसरी भाषा निवडा",
+  mn: "Өөр хэл сонгох",
+  no: "Velg et annet språk",
+  pl: "Wybierz inny język",
+  pt: "Escolher outro idioma",
+  pa: "ਹੋਰ ਭਾਸ਼ਾ ਚੁਣੋ",
+  ro: "Alegeți altă limbă",
+  sr: "Изаберите други језик",
+  sk: "Vyberte iný jazyk",
+  sl: "Izberite drug jezik",
+  so: "Dooro luqad kale",
+  sw: "Chagua lugha nyingine",
+  sv: "Välj ett annat språk",
+  tl: "Pumili ng ibang wika",
+  ta: "வேறு மொழியைத் தேர்ந்தெடுக்கவும்",
+  te: "మరో భాషను ఎంచుకోండి",
+  th: "เลือกภาษาอื่น",
+  tr: "Başka bir dil seçin",
+  ur: "دوسری زبان منتخب کریں",
+};
+
+export function getChooseAnotherLanguageLabel(code: string): string {
+  return CHOOSE_ANOTHER_LANGUAGE[code] ?? CHOOSE_ANOTHER_FALLBACK;
+}
