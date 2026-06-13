@@ -108,6 +108,10 @@ export const isLanguageReady = async (name: string): Promise<boolean> => {
 // enabled catalog language — shown immediately with a `ready` flag so the picker
 // can present a newly enabled language right away and gate the experience behind
 // a "getting ready" screen until its translations complete.
+//
+// Readiness for all enabled languages is computed from a SINGLE query of
+// completed UI-string rows (grouped by language in memory) rather than one query
+// per language — the per-language version made the homepage language list slow.
 export const listClientLanguages = async (): Promise<ClientLanguageOption[]> => {
   const options: ClientLanguageOption[] = LANGUAGE_OPTIONS.map((option) => {
     const entry = getCatalogEntryByCode(option.code);
@@ -115,16 +119,36 @@ export const listClientLanguages = async (): Promise<ClientLanguageOption[]> => 
   });
 
   const enabled = await listEnabledLanguages();
-  for (const row of enabled) {
-    if (CORE_NAMES.has(row.name) || row.name === "English") continue;
+  const dynamic = enabled.filter(
+    (row) => !CORE_NAMES.has(row.name) && row.name !== "English",
+  );
+  if (dynamic.length === 0) return options;
+
+  const sources = distinctUiSources();
+  // One query for every completed UI-string row across all languages.
+  const completed = await store.list({ type: "ui_string", status: "completed" });
+  const doneByLanguage = new Map<string, Set<string>>();
+  for (const row of completed) {
+    let set = doneByLanguage.get(row.language);
+    if (!set) {
+      set = new Set<string>();
+      doneByLanguage.set(row.language, set);
+    }
+    set.add(row.originalText);
+  }
+  const isReady = (name: string): boolean => {
+    const done = doneByLanguage.get(name);
+    if (!done) return false;
+    for (const source of sources) {
+      if (!done.has(source)) return false;
+    }
+    return true;
+  };
+
+  for (const row of dynamic) {
     const entry = getCatalogEntryByName(row.name);
     if (!entry) continue;
-    options.push({
-      code: entry.code,
-      label: entry.label,
-      name: entry.name,
-      ready: await isLanguageReady(row.name),
-    });
+    options.push({ code: entry.code, label: entry.label, name: entry.name, ready: isReady(row.name) });
   }
   return options;
 };

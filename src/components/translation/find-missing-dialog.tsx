@@ -57,6 +57,7 @@ type MissingDetails = {
   byType: Record<string, number>;
   byLanguage: Record<string, number>;
   sampleItems: string[];
+  sourceCounts?: Record<string, number>;
 };
 
 const TYPE_META: Record<TranslationType, { label: string; icon: LucideIcon }> = {
@@ -240,6 +241,16 @@ export function FindMissingDialog({
             <TabsContent value="overview" className="min-h-0 flex-1">
               <ScrollArea className="h-[min(48vh,420px)]">
                 <div className="flex flex-col gap-4 p-1">
+                  {result.sourceCounts && (result.sourceCounts.inventory ?? 0) === 0 ? (
+                    <div className="flex items-start gap-2 rounded-md border border-status-warning-border bg-status-warning-bg p-3 text-sm text-status-warning-text">
+                      <XCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                      <span>
+                        No inventory items were found to translate. The server couldn&apos;t read the
+                        FEED inventory feed (so inventory names can&apos;t be localized). Check the
+                        inventory feed URL / availability, then scan again.
+                      </span>
+                    </div>
+                  ) : null}
                   {result.count > 0 ? (
                     <Card className="border-status-warning-border">
                       <CardHeader>

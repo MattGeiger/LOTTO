@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 ### Added
+- **Find Missing surfaces inventory-source health.** The auditor now reports how
+  many source strings it scanned per content type (`sourceCounts`), and the Find
+  Missing dialog shows a clear warning when the inventory feed yielded **zero**
+  items — i.e. the server couldn't read the FEED inventory — instead of silently
+  reporting "everything is translated." Turns a silent failure into a visible one.
+
+### Changed
+- **"Getting ready" screen polish.** The "choose another language" escape button
+  is now a primary button and is **localized** per language (hardcoded in all 52
+  non-core catalog languages, like the waiting message) so it reads in the
+  visitor's chosen language.
+- **Faster visitor language list.** `listClientLanguages` computes readiness for
+  every enabled language from a single query (grouped in memory) instead of one
+  query per language, cutting the homepage "Choose your language" load time.
+
+### Added — earlier this release
 - **Inventory translation domain (v2.0).** The "What's in stock" inventory feed
   is now a translatable content type. The auditor extracts English category and
   item names from the FEED public inventory and queues them for AI translation

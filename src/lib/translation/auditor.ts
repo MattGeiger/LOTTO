@@ -21,6 +21,12 @@ export type MissingDetails = {
   byType: Record<string, number>;
   byLanguage: Record<string, number>;
   sampleItems: string[];
+  /**
+   * How many source strings of each content type were scanned (before comparing
+   * against existing translations). `inventory: 0` means the FEED inventory feed
+   * yielded nothing to the server — the usual cause of "no inventory found".
+   */
+  sourceCounts: Record<string, number>;
 };
 
 // A pending row older than this is treated as stale (re-queue it).
@@ -38,6 +44,10 @@ export const auditMissing = async (): Promise<{ missing: TranslationKey[]; detai
   const nonCoreTargets = enabledNonEnglish.filter((name) => !base.has(name));
 
   const content = await getContentItems();
+  const sourceCounts: Record<string, number> = {};
+  for (const item of content) {
+    sourceCounts[item.type] = (sourceCounts[item.type] ?? 0) + 1;
+  }
   const existing = await store.list();
   const byKey = new Map(existing.map((r) => [`${r.type}::${r.language}::${r.originalText}`, r]));
   const now = Date.now();
@@ -65,7 +75,7 @@ export const auditMissing = async (): Promise<{ missing: TranslationKey[]; detai
     }
   }
 
-  return { missing, details: { count: missing.length, byType, byLanguage, sampleItems } };
+  return { missing, details: { count: missing.length, byType, byLanguage, sampleItems, sourceCounts } };
 };
 
 export const findMissing = async (
