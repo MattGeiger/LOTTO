@@ -19,6 +19,9 @@ const schema = z
   .object({
     process: z.boolean().optional(),
     types: z.array(z.enum(TRANSLATION_TYPES)).optional(),
+    // English inventory names bridged from the admin browser, which can reach
+    // FEED's public feed even when the server's egress to it is blocked.
+    inventoryNames: z.array(z.string()).optional(),
   })
   .optional();
 
@@ -32,9 +35,10 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(body);
   const process = parsed.success ? Boolean(parsed.data?.process) : false;
   const types = parsed.success ? parsed.data?.types : undefined;
+  const inventoryNames = parsed.success ? parsed.data?.inventoryNames : undefined;
 
   try {
-    const result = await findMissing(process, types);
+    const result = await findMissing(process, types, inventoryNames);
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
     if (error instanceof NoActiveConfigError) {

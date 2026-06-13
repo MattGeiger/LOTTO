@@ -106,6 +106,21 @@ export function getFeedDisplayName(entity: TranslatedFeedEntity, language: Langu
   return translatedName && translatedName.trim().length > 0 ? translatedName : entity.name;
 }
 
+// Flatten a feed payload into its distinct English category + item names — the
+// source set LOTTO's own AI pipeline translates into the languages FEED doesn't
+// carry. Used server-side (the content auditor) and client-side (the admin
+// browser bridges these names past a server-egress block to find-missing).
+export function collectFeedInventoryNames(inventory: FeedPublicInventory): string[] {
+  const set = new Set<string>();
+  for (const category of inventory.categories) {
+    if (category.name?.trim()) set.add(category.name);
+    for (const item of category.items) {
+      if (item.name?.trim()) set.add(item.name);
+    }
+  }
+  return [...set];
+}
+
 export function formatFeedLimit(limit: number | null | undefined, limitType: FeedLimitType | null | undefined): string {
   if (limit == null || !Number.isFinite(limit) || limit <= 0 || limit >= 100) return "";
   if (limitType === "person") return `Limit ${limit} per person`;

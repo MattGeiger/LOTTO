@@ -1,6 +1,17 @@
 # Changelog
 
 ## [Unreleased]
+### Fixed
+- **Inventory translations now work for languages FEED doesn't cover.** The FEED
+  public inventory feed is intentionally public (CORS `*`, no auth), but LOTTO's
+  server-side egress to it can be blocked, so the auditor saw zero inventory and
+  newly enabled languages rendered item names in English. Find Missing now reads
+  the feed in the **admin's browser** (the path that reaches it) and bridges the
+  English category/item names to the server, which translates them through
+  LOTTO's own AI pipeline and stores them — FEED supplies English names, LOTTO
+  supplies the dynamic-language translations FEED's feed never carried. The
+  server-side fetch remains a best-effort fallback for non-browser callers.
+
 ### Added
 - **Find Missing surfaces inventory-source health.** The auditor now reports how
   many source strings it scanned per content type (`sourceCounts`), and the Find
