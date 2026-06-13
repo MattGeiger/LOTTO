@@ -49,6 +49,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { runStagedTranslation, type TranslationProgress } from "@/lib/translation/run-translation";
 import { TRANSLATION_TYPES, type TranslationType } from "@/lib/translation/types";
 
 type MissingDetails = {
@@ -77,6 +78,7 @@ export function FindMissingDialog({
   const [progress, setProgress] = React.useState(0);
   const [result, setResult] = React.useState<MissingDetails | null>(null);
   const [processing, setProcessing] = React.useState(false);
+  const [queueProgress, setQueueProgress] = React.useState<TranslationProgress | null>(null);
   const [activeTab, setActiveTab] = React.useState("overview");
   const [selectedTypes, setSelectedTypes] = React.useState<Partial<Record<TranslationType, boolean>>>({});
 
@@ -131,19 +133,13 @@ export function FindMissingDialog({
       return;
     }
     setProcessing(true);
+    setQueueProgress({ total: 0, done: 0, remaining: 0, failed: 0 });
     try {
-      const res = await fetch("/api/translations/find-missing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ process: true, types }),
-      });
-      const data = (await res.json().catch(() => ({}))) as {
-        processed?: { translated: number; failed: number };
-        error?: string;
-      };
-      if (!res.ok) throw new Error(data.error ?? "Unable to queue translations.");
+      // Queue the selected types and drive the staged chunks to completion.
+      const result = await runStagedTranslation(setQueueProgress, types);
       toast.success(
-        `Translated ${data.processed?.translated ?? 0}, ${data.processed?.failed ?? 0} failed.`,
+        `Translated ${result.done} item${result.done === 1 ? "" : "s"}` +
+          (result.failed > 0 ? `, ${result.failed} failed.` : "."),
       );
       onProcessed();
       onOpenChange(false);
@@ -151,6 +147,7 @@ export function FindMissingDialog({
       toast.error(error instanceof Error ? error.message : "Unable to queue translations.");
     } finally {
       setProcessing(false);
+      setQueueProgress(null);
     }
   };
 
@@ -263,7 +260,11 @@ export function FindMissingDialog({
                       <CardFooter className="flex flex-col items-start gap-3 border-t pt-4">
                         <Button onClick={runQueue} disabled={processing || selectedCount === 0} className="w-full">
                           {processing ? <Loader2 className="mr-2 size-4 animate-spin" aria-hidden="true" /> : null}
-                          Queue &amp; translate{selectedCount > 0 ? ` (${selectedCount} type${selectedCount === 1 ? "" : "s"})` : ""}
+                          {processing
+                            ? queueProgress && queueProgress.total > 0
+                              ? `Translating… ${queueProgress.done}/${queueProgress.total}`
+                              : "Translating…"
+                            : `Queue & translate${selectedCount > 0 ? ` (${selectedCount} type${selectedCount === 1 ? "" : "s"})` : ""}`}
                         </Button>
                       </CardFooter>
                     </Card>

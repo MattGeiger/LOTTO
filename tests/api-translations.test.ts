@@ -32,8 +32,8 @@ vi.mock("@/lib/translation/translations-store", () => ({
 }));
 
 vi.mock("@/lib/translation/engine", () => ({
-  translateRowsByIds: vi.fn().mockResolvedValue({ translated: 1, failed: 0 }),
-  translatePending: vi.fn().mockResolvedValue({ translated: 1, failed: 0 }),
+  translateRowsByIds: vi.fn().mockResolvedValue({ translated: 1, failed: 0, remaining: 0 }),
+  translatePending: vi.fn().mockResolvedValue({ translated: 1, failed: 0, remaining: 3 }),
   NoActiveConfigError: class NoActiveConfigError extends Error {},
 }));
 
@@ -96,6 +96,15 @@ describe("/api/translations", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { details: { count: number } };
     expect(body.details.count).toBe(1);
+  });
+
+  it("process translates the next chunk and reports remaining", async () => {
+    const { POST } = await import("@/app/api/translations/process/route");
+    const res = await POST();
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { translated: number; remaining: number };
+    expect(body.translated).toBe(1);
+    expect(body.remaining).toBe(3);
   });
 
   it("recover-stuck runs recovery", async () => {

@@ -23,6 +23,7 @@ import {
   getCatalogEntryByName,
   LANGUAGE_CATALOG,
 } from "@/lib/languages";
+import { runStagedTranslation, type TranslationProgress } from "@/lib/translation/run-translation";
 import { cn } from "@/lib/utils";
 
 type LanguageRow = { name: string; isEnabled: boolean; sortOrder: number };
@@ -35,6 +36,8 @@ export function LanguageSettingsTab() {
   const [search, setSearch] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
+  const [translating, setTranslating] = React.useState(false);
+  const [progress, setProgress] = React.useState<TranslationProgress | null>(null);
   const searchIconRef = React.useRef<SearchIconHandle>(null);
 
   const load = React.useCallback(async () => {
@@ -112,6 +115,7 @@ export function LanguageSettingsTab() {
 
   const save = async () => {
     setSaving(true);
+    const previouslyEnabled = new Set(rows.filter((row) => row.isEnabled).map((row) => row.name));
     try {
       const payload = {
         languages: LANGUAGE_CATALOG.map((entry) => ({
@@ -128,10 +132,35 @@ export function LanguageSettingsTab() {
       const data = (await res.json()) as { languages: LanguageRow[] };
       setRows(data.languages);
       setSelected(new Set(data.languages.filter((row) => row.isEnabled).map((row) => row.name)));
+      const newlyEnabled = data.languages.filter(
+        (row) => row.isEnabled && !ALWAYS_ON.has(row.name) && !previouslyEnabled.has(row.name),
+      );
       toast.success("Language settings saved.");
+      setSaving(false);
+
+      // Auto-start staged translation for newly enabled languages, with live
+      // progress, so the admin sees what the wait is for (and need not run
+      // Find missing by hand).
+      if (newlyEnabled.length > 0) {
+        setTranslating(true);
+        setProgress({ total: 0, done: 0, remaining: 0, failed: 0 });
+        try {
+          const result = await runStagedTranslation(setProgress);
+          toast.success(
+            `Translated ${result.done} item${result.done === 1 ? "" : "s"}` +
+              (result.failed > 0 ? `, ${result.failed} failed (retry in Translation Management).` : "."),
+          );
+        } catch (error) {
+          toast.error(
+            error instanceof Error ? error.message : "Translation could not be completed.",
+          );
+        } finally {
+          setTranslating(false);
+          setProgress(null);
+        }
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to save languages.");
-    } finally {
       setSaving(false);
     }
   };
@@ -221,9 +250,38 @@ export function LanguageSettingsTab() {
         </div>
       </ScrollArea>
 
+      {translating ? (
+        <div className="space-y-2 rounded-md border border-status-warning-border bg-status-warning-bg/40 p-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-medium text-foreground">
+              Translating new languages… you can leave this open.
+            </span>
+            <span className="tabular-nums text-muted-foreground">
+              {progress && progress.total > 0 ? `${progress.done}/${progress.total}` : "starting…"}
+            </span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+            <div
+              className="h-full bg-primary transition-all duration-300"
+              style={{
+                width:
+                  progress && progress.total > 0
+                    ? `${Math.min(100, Math.round((progress.done / progress.total) * 100))}%`
+                    : "8%",
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
+
       <div className="flex justify-end">
-        <Button type="button" size="sm" onClick={save} disabled={loading || saving || !dirty}>
-          {saving ? "Saving…" : "Save changes"}
+        <Button
+          type="button"
+          size="sm"
+          onClick={save}
+          disabled={loading || saving || translating || !dirty}
+        >
+          {saving ? "Saving…" : translating ? "Translating…" : "Save changes"}
         </Button>
       </div>
     </div>
