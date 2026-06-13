@@ -1,6 +1,16 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- **Inventory translation domain (v2.0).** The "What's in stock" inventory feed
+  is now a translatable content type. The auditor extracts English category and
+  item names from the FEED public inventory and queues them for AI translation
+  (lowest priority, after announcements and UI strings) for newly enabled
+  (non-core) languages — core languages keep FEED's own translations. Inventory
+  translations ride in the language pack, and the inventory page resolves each
+  name FEED translation → LOTTO DB translation → English, so non-English visitors
+  see localized item names even for languages FEED doesn't cover.
+
 ### Fixed
 - **Animated icons replay on first hover after mount/view animation.** Fixed the
   FEED-documented `AnimateIcon` stuck-state bug where icons that animated on

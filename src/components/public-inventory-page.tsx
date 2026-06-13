@@ -83,10 +83,34 @@ function formatInventoryFreshness(input: string, language: string): string {
   }).format(date);
 }
 
-function matchesInventorySearch(category: FeedInventoryCategory, item: FeedInventoryItem, language: ReturnType<typeof useLanguage>["language"], query: string): boolean {
+type InventoryNameResolver = (
+  entity: { name: string; translations: Record<string, string> },
+) => string;
+
+// Resolve a category/item display name: FEED's own translation (authoritative
+// for FEED-enabled languages) → LOTTO's DB translation (dynamic languages) →
+// English. `getFeedDisplayName` returns the English `name` when FEED has no
+// translation, which is how we detect the fall-through to the LOTTO pack.
+function makeInventoryNameResolver(
+  language: ReturnType<typeof useLanguage>["language"],
+  translateInventory: (name: string) => string | null,
+): InventoryNameResolver {
+  return (entity) => {
+    const feedName = getFeedDisplayName(entity, language);
+    if (feedName !== entity.name) return feedName;
+    return translateInventory(entity.name) ?? entity.name;
+  };
+}
+
+function matchesInventorySearch(
+  category: FeedInventoryCategory,
+  item: FeedInventoryItem,
+  resolveName: InventoryNameResolver,
+  query: string,
+): boolean {
   if (!query) return true;
   const normalizedQuery = query.toLocaleLowerCase();
-  return [getFeedDisplayName(category, language), category.name, getFeedDisplayName(item, language), item.name]
+  return [resolveName(category), category.name, resolveName(item), item.name]
     .join(" ")
     .toLocaleLowerCase()
     .includes(normalizedQuery);
@@ -94,7 +118,7 @@ function matchesInventorySearch(category: FeedInventoryCategory, item: FeedInven
 
 function getFilteredCategories(
   inventory: FeedPublicInventory,
-  language: ReturnType<typeof useLanguage>["language"],
+  resolveName: InventoryNameResolver,
   query: string,
   selectedDietaryFlags: DietaryFlagKey[],
 ): FeedInventoryCategory[] {
@@ -103,7 +127,7 @@ function getFilteredCategories(
     .map((category) => ({
       ...category,
       items: category.items.filter((item) => {
-        const matchesSearch = matchesInventorySearch(category, item, language, trimmedQuery);
+        const matchesSearch = matchesInventorySearch(category, item, resolveName, trimmedQuery);
         const matchesDietaryFlags = selectedDietaryFlags.every((flag) => item.dietaryFlags[flag]);
         return matchesSearch && matchesDietaryFlags;
       }),
@@ -257,8 +281,12 @@ function InventoryLegend({
 }
 
 function InventoryCategoryTable({ category }: { category: FeedInventoryCategory }) {
-  const { language, t } = useLanguage();
-  const categoryName = getFeedDisplayName(category, language);
+  const { language, t, translateInventory } = useLanguage();
+  const resolveName = React.useMemo(
+    () => makeInventoryNameResolver(language, translateInventory),
+    [language, translateInventory],
+  );
+  const categoryName = resolveName(category);
   // Mirrors the sentinel logic in `formatFeedLimit` (lib): null/non-finite/≤0
   // and the ≥100 "no-limit" sentinel all render as empty.
   const formatLimit = (
@@ -299,7 +327,7 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
                   <td className="px-4 py-3 font-medium">
                     <div className="flex items-center gap-2">
                       <InventoryStatusBadges item={item} />
-                      <T text={getFeedDisplayName(item, language)} />
+                      <T text={resolveName(item)} />
                     </div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground"><T text={formatLimit(item.limit, item.limitType)} /></td>
@@ -316,7 +344,7 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
             <div key={item.id} className="space-y-2 px-4 py-4">
               <div className="flex items-center gap-2 font-medium">
                 <InventoryStatusBadges item={item} />
-                <T text={getFeedDisplayName(item, language)} />
+                <T text={resolveName(item)} />
               </div>
               {formatLimit(item.limit, item.limitType) ? (
                 <div className="text-sm text-muted-foreground"><T text={formatLimit(item.limit, item.limitType)} /></div>
@@ -331,7 +359,7 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
 }
 
 export function PublicInventoryPage() {
-  const { language, t } = useLanguage();
+  const { language, t, translateInventory } = useLanguage();
   const [inventory, setInventory] = React.useState<FeedPublicInventory | null>(null);
   const [query, setQuery] = React.useState("");
   const [selectedDietaryFlags, setSelectedDietaryFlags] = React.useState<DietaryFlagKey[]>([]);
@@ -354,9 +382,13 @@ export function PublicInventoryPage() {
     void loadInventory();
   }, [loadInventory]);
 
+  const resolveName = React.useMemo(
+    () => makeInventoryNameResolver(language, translateInventory),
+    [language, translateInventory],
+  );
   const filteredCategories = React.useMemo(
-    () => (inventory ? getFilteredCategories(inventory, language, query, selectedDietaryFlags) : []),
-    [inventory, language, query, selectedDietaryFlags],
+    () => (inventory ? getFilteredCategories(inventory, resolveName, query, selectedDietaryFlags) : []),
+    [inventory, resolveName, query, selectedDietaryFlags],
   );
   const freshness = inventory ? formatInventoryFreshness(getInventoryLastUpdatedAt(inventory), language) : "";
   const handleToggleDietaryFlag = React.useCallback((flag: DietaryFlagKey) => {

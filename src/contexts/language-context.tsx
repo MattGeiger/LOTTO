@@ -42,6 +42,12 @@ type LanguageContextType = {
   refreshAvailableLanguages: () => Promise<void>;
   /** Translated active announcement for the current language, when available. */
   announcementTranslation: string | null;
+  /**
+   * Translate an English inventory name (category/item) into the current
+   * language using the DB-translated pack. Returns null when there's no
+   * translation (caller should fall back to FEED's own translation / English).
+   */
+  translateInventory: (englishName: string) => string | null;
 };
 
 const LanguageContext = React.createContext<LanguageContextType | undefined>(undefined);
@@ -69,6 +75,7 @@ export function LanguageProvider({
   const [pack, setPack] = React.useState<{
     code: string;
     uiStrings: Record<string, string>;
+    inventory: Record<string, string>;
     announcement: string | null;
   } | null>(null);
   const packCacheRef = React.useRef(new Map<string, NonNullable<typeof pack>>());
@@ -166,12 +173,18 @@ export function LanguageProvider({
         });
         if (!res.ok) return;
         const data = (await res.json()) as {
-          pack?: { code?: string; uiStrings?: Record<string, string>; announcement?: string | null };
+          pack?: {
+            code?: string;
+            uiStrings?: Record<string, string>;
+            inventory?: Record<string, string>;
+            announcement?: string | null;
+          };
         };
         if (cancelled || typeof data.pack?.code !== "string") return;
         const next = {
           code: data.pack.code,
           uiStrings: data.pack.uiStrings ?? {},
+          inventory: data.pack.inventory ?? {},
           announcement: data.pack.announcement ?? null,
         };
         packCacheRef.current.set(language, next);
@@ -217,6 +230,14 @@ export function LanguageProvider({
   const announcementTranslation =
     language !== "en" && pack?.code === language ? pack.announcement : null;
 
+  const translateInventory = React.useCallback(
+    (englishName: string): string | null => {
+      if (language === "en" || pack?.code !== language) return null;
+      return pack.inventory[englishName] ?? null;
+    },
+    [language, pack],
+  );
+
   return (
     <LanguageContext.Provider
       value={{
@@ -232,6 +253,7 @@ export function LanguageProvider({
         isLanguageReady,
         refreshAvailableLanguages,
         announcementTranslation,
+        translateInventory,
       }}
     >
       {children}
