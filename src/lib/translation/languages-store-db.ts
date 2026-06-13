@@ -96,15 +96,24 @@ export const bulkSetEnabled = async (
 ): Promise<LanguageRow[]> => {
   await seedLanguagesIfEmpty(sql);
   const valid = new Set(LANGUAGE_CATALOG.map((entry) => entry.name));
+  // Batch into two set-based UPDATEs (enable / disable) instead of one round-trip
+  // per language — saving the full 60-language catalog was ~60 sequential Neon
+  // round-trips, which the admin felt as a long, silent wait.
+  const toEnable: string[] = [];
+  const toDisable: string[] = [];
   for (const update of updates) {
     if (!valid.has(update.name)) continue;
     const enabled = ALWAYS_ON.has(update.name) ? true : update.isEnabled;
+    (enabled ? toEnable : toDisable).push(update.name);
+  }
+  if (toEnable.length > 0) {
     await withTimeout(
-      sql`
-        UPDATE languages
-        SET is_enabled = ${enabled}, updated_at = now()
-        WHERE name = ${update.name}
-      ` as unknown as Promise<unknown>,
+      sql`UPDATE languages SET is_enabled = true, updated_at = now() WHERE name = ANY(${toEnable})` as unknown as Promise<unknown>,
+    );
+  }
+  if (toDisable.length > 0) {
+    await withTimeout(
+      sql`UPDATE languages SET is_enabled = false, updated_at = now() WHERE name = ANY(${toDisable})` as unknown as Promise<unknown>,
     );
   }
   return listLanguages(sql);
