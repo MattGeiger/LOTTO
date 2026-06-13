@@ -90,6 +90,20 @@ describe("language packs", () => {
     expect(pack?.announcement).toBe("Smočnica se zatvara u 15h.");
   });
 
+  it("includes completed inventory translations keyed by English name", async () => {
+    storeList.mockResolvedValue([
+      row("Now Serving", "Sada poslužujemo"),
+      row("Fresh Carrots", "Svježa mrkva", "inventory"),
+      row("Canned Beans", "Konzervirani grah", "inventory"),
+    ]);
+    const { buildLanguagePack } = await import("@/lib/translation/pack");
+    const pack = await buildLanguagePack("bs");
+    expect(pack?.inventory["Fresh Carrots"]).toBe("Svježa mrkva");
+    expect(pack?.inventory["Canned Beans"]).toBe("Konzervirani grah");
+    // UI-string rows don't leak into the inventory map.
+    expect(pack?.inventory["Now Serving"]).toBeUndefined();
+  });
+
   it("marks a language ready only when every UI source is completed", async () => {
     const { isLanguageReady } = await import("@/lib/translation/pack");
     // Missing "Your ticket" → not ready.

@@ -29,6 +29,8 @@ export type LanguagePack = {
   name: string;
   /** UI-string key → translated text (completed rows only). */
   uiStrings: Record<string, string>;
+  /** English inventory name → translated text (completed rows only). */
+  inventory: Record<string, string>;
   /** Translated active announcement markdown, when one exists. */
   announcement: string | null;
 };
@@ -67,6 +69,15 @@ export const buildLanguagePack = async (code: string): Promise<LanguagePack | nu
     if (row?.translatedText) uiStrings[key] = row.translatedText;
   }
 
+  // Inventory: keyed by the English name so the inventory page can look up a
+  // translation when FEED has none for this language.
+  const inventory: Record<string, string> = {};
+  for (const row of completed) {
+    if (row.type === "inventory" && row.translatedText) {
+      inventory[row.originalText] = row.translatedText;
+    }
+  }
+
   let announcement: string | null = null;
   const state = await stateManager.loadState();
   const active = state.announcement;
@@ -77,7 +88,7 @@ export const buildLanguagePack = async (code: string): Promise<LanguagePack | nu
     announcement = row?.translatedText ?? null;
   }
 
-  return { code: entry.code, name: entry.name, uiStrings, announcement };
+  return { code: entry.code, name: entry.name, uiStrings, inventory, announcement };
 };
 
 // A non-core language is client-ready when every distinct UI source string has a
