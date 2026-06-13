@@ -26,6 +26,8 @@ export const recoverStuck = async (): Promise<{ recovered: number } & ProcessRes
     });
   }
   const ids = stuck.map((row) => row.id);
-  const processed = ids.length > 0 ? await translateRowsByIds(ids) : { translated: 0, failed: 0 };
+  const processed = ids.length > 0
+    ? await translateRowsByIds(ids)
+    : { translated: 0, failed: 0, remaining: 0 };
   return { recovered: stuck.length, ...processed };
 };

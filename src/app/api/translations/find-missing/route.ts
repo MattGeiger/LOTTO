@@ -13,6 +13,7 @@ import { NoActiveConfigError } from "@/lib/translation/engine";
 import { TRANSLATION_TYPES } from "@/lib/translation/types";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const schema = z
   .object({
