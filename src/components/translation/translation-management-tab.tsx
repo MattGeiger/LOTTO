@@ -11,7 +11,6 @@ import * as React from "react";
 import type { Column, ColumnDef } from "@tanstack/react-table";
 import { toast } from "sonner";
 
-import { PlusIcon } from "@/components/animate-ui/icons/plus";
 import { RefreshCwIcon } from "@/components/animate-ui/icons/refresh-cw";
 import { RotateCcwIcon } from "@/components/animate-ui/icons/rotate-ccw";
 import { SearchCheckIcon } from "@/components/animate-ui/icons/search-check";
@@ -62,8 +61,6 @@ import { cn } from "@/lib/utils";
 import type { TableBulkAction } from "@/types/table";
 
 const ALL = "all";
-const ADD_TRANSLATION_MIN_LENGTH = 3;
-const ADD_TRANSLATION_MAX_LENGTH = 1800;
 
 function StatusBadge({ status }: { status: TranslationStatus }) {
   if (status === "completed") {
@@ -86,7 +83,7 @@ function StatusBadge({ status }: { status: TranslationStatus }) {
 function formatTranslationType(type: TranslationType) {
   if (type === "ui_string") return "UI string";
   if (type === "announcement") return "Announcement";
-  return "Custom";
+  return "Inventory";
 }
 
 function SortableHeader<TData>({
@@ -124,10 +121,6 @@ export function TranslationManagementTab() {
   const [filterStatus, setFilterStatus] = React.useState<string>(ALL);
   const [busy, setBusy] = React.useState(false);
   const tableRef = React.useRef<{ clearSelection?: () => void }>(null);
-
-  const [addOpen, setAddOpen] = React.useState(false);
-  const [addText, setAddText] = React.useState("");
-  const [addError, setAddError] = React.useState("");
 
   const [editRow, setEditRow] = React.useState<TranslationRecord | null>(null);
   const [editText, setEditText] = React.useState("");
@@ -173,65 +166,10 @@ export function TranslationManagementTab() {
     void load();
   }, [load]);
 
-  React.useEffect(() => {
-    if (!addOpen) {
-      setAddText("");
-      setAddError("");
-    }
-  }, [addOpen]);
-
   const openEdit = React.useCallback((row: TranslationRecord) => {
     setEditRow(row);
     setEditText(row.translatedText ?? "");
   }, []);
-
-  const runAdd = async () => {
-    const originalText = addText.trim();
-    if (originalText.length < ADD_TRANSLATION_MIN_LENGTH) {
-      setAddError("Translation text must be at least 3 characters.");
-      return;
-    }
-    if (originalText.length > ADD_TRANSLATION_MAX_LENGTH) {
-      setAddError("Translation text must be 1,800 characters or fewer.");
-      return;
-    }
-    const targetLanguages = languages.filter((name) => name !== "English");
-    if (targetLanguages.length === 0) {
-      const message = "No target languages found. Enable at least one non-English language first.";
-      setAddError(message);
-      toast.error(message);
-      return;
-    }
-    setAddError("");
-    setBusy(true);
-    try {
-      const res = await fetch("/api/translations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          originalText,
-          targetLanguages,
-          type: "custom",
-        }),
-      });
-      const data = (await res.json().catch(() => ({}))) as {
-        translations?: unknown[];
-        warning?: string;
-        error?: string;
-      };
-      if (!res.ok) throw new Error(data.error ?? "Unable to add the translation.");
-      toast[data.warning ? "warning" : "success"](
-        data.warning ??
-          `Translations initiated for ${data.translations?.length ?? targetLanguages.length} languages.`,
-      );
-      setAddOpen(false);
-      await load();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to add the translation.");
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const runEdit = async () => {
     if (!editRow) return;
@@ -545,8 +483,8 @@ export function TranslationManagementTab() {
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
         Review, correct, retry, and find missing translations for the enabled
-        languages. Translations cover UI strings, the active announcement, and any
-        custom strings you add.
+        languages. Translations cover UI strings, the active announcement, and
+        inventory item names.
       </p>
 
       <EnhancedDataTable
@@ -576,13 +514,6 @@ export function TranslationManagementTab() {
             disabled: busy,
           },
           {
-            label: "Add translation",
-            icon: PlusIcon,
-            variant: "outline",
-            action: () => setAddOpen(true),
-            disabled: busy,
-          },
-          {
             label: "Recover stuck",
             icon: RotateCcwIcon,
             variant: "ghost",
@@ -598,50 +529,6 @@ export function TranslationManagementTab() {
           },
         ]}
       />
-
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add translation</DialogTitle>
-            <DialogDescription>
-              Add a custom string and translate it into every enabled non-English language.
-              Text must be between 3 and 1,800 characters.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="tm-add-text">Original text (English)</Label>
-              <Textarea
-                id="tm-add-text"
-                value={addText}
-                onChange={(event) => setAddText(event.target.value)}
-                disabled={busy}
-                placeholder="Enter your translation here..."
-                rows={5}
-                maxLength={ADD_TRANSLATION_MAX_LENGTH}
-                className={cn(addError && "border-destructive focus-visible:ring-destructive/30")}
-              />
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-muted-foreground">
-                  Targets {languages.length} enabled non-English {languages.length === 1 ? "language" : "languages"}.
-                </span>
-                <span className="tabular-nums text-muted-foreground">
-                  {addText.length}/1,800
-                </span>
-              </div>
-              {addError ? <p className="text-sm font-medium text-destructive">{addError}</p> : null}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setAddOpen(false)} disabled={busy}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={runAdd} disabled={busy}>
-              {busy ? "Adding..." : "Add Translation"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={editRow !== null} onOpenChange={(open) => !open && setEditRow(null)}>
         <DialogContent className="max-w-md">

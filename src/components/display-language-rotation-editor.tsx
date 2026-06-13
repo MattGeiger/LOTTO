@@ -21,6 +21,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { LANGUAGE_OPTIONS, type Language } from "@/lib/languages";
 import type { DisplayLanguageRotation } from "@/lib/state-types";
+import { cn } from "@/lib/utils";
+
+type RotationLanguageOption = { code: Language; label: string };
 
 export const ROTATION_MIN_MINUTES = 1;
 export const ROTATION_MAX_MINUTES = 10;
@@ -44,6 +47,32 @@ export function DisplayLanguageRotationEditor({
   onChange,
   disabled = false,
 }: DisplayLanguageRotationEditorProps) {
+  // Offer the client-visible languages (core + completed dynamic), so a newly
+  // enabled language can be added to the /display rotation. Falls back to the
+  // static core options until the list loads.
+  const [options, setOptions] = React.useState<ReadonlyArray<RotationLanguageOption>>(LANGUAGE_OPTIONS);
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/languages?client", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { languages?: { code?: string; label?: string }[] };
+        if (cancelled || !Array.isArray(data.languages)) return;
+        const next = data.languages.filter(
+          (entry): entry is RotationLanguageOption =>
+            typeof entry?.code === "string" && typeof entry?.label === "string",
+        );
+        if (next.length >= LANGUAGE_OPTIONS.length) setOptions(next);
+      } catch {
+        /* keep core options */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const enabled = value?.enabled ?? false;
   const selected = React.useMemo(() => value?.languages ?? [], [value?.languages]);
   const intervalMinutes = value ? minutesFromSeconds(value.intervalSeconds) : DEFAULT_INTERVAL_MINUTES;
@@ -60,8 +89,8 @@ export function DisplayLanguageRotationEditor({
     const set = new Set(selected);
     if (checked) set.add(code);
     else set.delete(code);
-    // Persist in canonical LANGUAGE_OPTIONS order so the rotation is predictable.
-    const languages = LANGUAGE_OPTIONS.map((option) => option.code).filter((c) => set.has(c));
+    // Persist in the displayed (catalog) order; the API re-canonicalizes on save.
+    const languages = options.map((option) => option.code).filter((c) => set.has(c));
     emit({ languages });
   };
 
@@ -95,8 +124,13 @@ export function DisplayLanguageRotationEditor({
 
       <div className="space-y-2">
         <Label className={controlsDisabled ? "text-muted-foreground" : undefined}>Languages</Label>
-        <div className="grid grid-cols-2 gap-2">
-          {LANGUAGE_OPTIONS.map((option) => (
+        <div
+          className={cn(
+            "grid grid-cols-2 gap-2",
+            options.length > 10 && "max-h-64 overflow-y-auto rounded-md border p-1",
+          )}
+        >
+          {options.map((option) => (
             <label key={option.code} className="flex items-center gap-2 p-1 text-sm font-medium">
               <Checkbox
                 checked={selected.includes(option.code)}

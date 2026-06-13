@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { stateManager, type Mode } from "@/lib/state-manager";
-import { LANGUAGE_CODES, LANGUAGE_OPTIONS } from "@/lib/languages";
+import { isCatalogCode, LANGUAGE_CATALOG, LANGUAGE_OPTIONS } from "@/lib/languages";
 import { isUserInputError } from "@/lib/user-input-error";
 
 export const runtime = "nodejs";
@@ -51,7 +51,12 @@ const httpUrlSchema = z
 const displayLanguageRotationSchema = z
   .object({
     enabled: z.boolean(),
-    languages: z.array(z.enum(LANGUAGE_CODES)).min(1).max(LANGUAGE_CODES.length),
+    // Any supported catalog language code (core or admin-enabled dynamic), so the
+    // /display rotation can include newly enabled languages.
+    languages: z
+      .array(z.string().refine(isCatalogCode, { message: "Unknown language code" }))
+      .min(1)
+      .max(LANGUAGE_CATALOG.length),
     intervalSeconds: z.number().int().min(60).max(600),
   })
   .superRefine((config, ctx) => {
@@ -65,10 +70,17 @@ const displayLanguageRotationSchema = z
   })
   .transform((config) => {
     const selected = new Set<string>(config.languages);
-    return {
-      ...config,
-      languages: LANGUAGE_OPTIONS.map((option) => option.code).filter((code) => selected.has(code)),
-    };
+    // Canonical order: the core eight first (their familiar order), then any
+    // dynamic languages in catalog order — predictable and stable.
+    const coreCodes = LANGUAGE_OPTIONS.map((option) => option.code);
+    const coreSet = new Set<string>(coreCodes);
+    const ordered = [
+      ...coreCodes.filter((code) => selected.has(code)),
+      ...LANGUAGE_CATALOG.map((entry) => entry.code).filter(
+        (code) => selected.has(code) && !coreSet.has(code),
+      ),
+    ];
+    return { ...config, languages: ordered };
   })
   .nullable();
 
