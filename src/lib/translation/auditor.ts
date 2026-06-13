@@ -34,7 +34,9 @@ export type MissingDetails = {
 // A pending row older than this is treated as stale (re-queue it).
 const STALE_MS = 60_000;
 
-export const auditMissing = async (): Promise<{ missing: TranslationKey[]; details: MissingDetails }> => {
+export const auditMissing = async (
+  inventoryNames?: string[],
+): Promise<{ missing: TranslationKey[]; details: MissingDetails }> => {
   const base = new Set<string>(ALWAYS_ON_LANGUAGE_NAMES);
   const enabledNonEnglish = (await listEnabledLanguages())
     .map((l) => l.name)
@@ -45,7 +47,7 @@ export const auditMissing = async (): Promise<{ missing: TranslationKey[]; detai
   // FEED, so every enabled non-English language needs it.
   const nonCoreTargets = enabledNonEnglish.filter((name) => !base.has(name));
 
-  const { items: content, inventory } = await getContentItems();
+  const { items: content, inventory } = await getContentItems({ inventoryNames });
   const sourceCounts: Record<string, number> = {};
   for (const item of content) {
     sourceCounts[item.type] = (sourceCounts[item.type] ?? 0) + 1;
@@ -93,8 +95,9 @@ export const auditMissing = async (): Promise<{ missing: TranslationKey[]; detai
 export const findMissing = async (
   process: boolean,
   types?: TranslationType[],
+  inventoryNames?: string[],
 ): Promise<{ details: MissingDetails; processed?: ProcessResult }> => {
-  const { missing, details } = await auditMissing();
+  const { missing, details } = await auditMissing(inventoryNames);
   if (!process || missing.length === 0) return { details };
 
   // Optionally restrict queuing to the selected content types.

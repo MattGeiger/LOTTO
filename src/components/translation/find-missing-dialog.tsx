@@ -49,6 +49,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { collectFeedInventoryNames, fetchFeedPublicInventory } from "@/lib/feed-public-inventory";
 import { runStagedTranslation, type TranslationProgress } from "@/lib/translation/run-translation";
 import { TRANSLATION_TYPES, type TranslationType } from "@/lib/translation/types";
 
@@ -83,6 +84,9 @@ export function FindMissingDialog({
   const [queueProgress, setQueueProgress] = React.useState<TranslationProgress | null>(null);
   const [activeTab, setActiveTab] = React.useState("overview");
   const [selectedTypes, setSelectedTypes] = React.useState<Partial<Record<TranslationType, boolean>>>({});
+  // English inventory names read from FEED's public feed in *this* browser, then
+  // bridged to the server — which may not be able to reach the feed itself.
+  const [inventoryNames, setInventoryNames] = React.useState<string[] | undefined>(undefined);
 
   // Reset whenever the dialog opens.
   React.useEffect(() => {
@@ -93,6 +97,7 @@ export function FindMissingDialog({
       setProcessing(false);
       setActiveTab("overview");
       setSelectedTypes({});
+      setInventoryNames(undefined);
     }
   }, [open]);
 
@@ -102,10 +107,20 @@ export function FindMissingDialog({
     // Animate progress toward 90% while the scan runs; the response sets 100%.
     const timer = setInterval(() => setProgress((p) => (p < 90 ? p + 3 : p)), 80);
     try {
+      // Source inventory names from this browser (FEED's feed is public via CORS
+      // even when the server's egress to it is blocked). On failure, fall through
+      // without them and let the server attempt its own fetch + report why.
+      let names: string[] | undefined;
+      try {
+        names = collectFeedInventoryNames(await fetchFeedPublicInventory());
+      } catch {
+        names = undefined;
+      }
+      setInventoryNames(names);
       const res = await fetch("/api/translations/find-missing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ process: false }),
+        body: JSON.stringify({ process: false, ...(names ? { inventoryNames: names } : {}) }),
       });
       const data = (await res.json().catch(() => ({}))) as { details?: MissingDetails; error?: string };
       if (!res.ok) throw new Error(data.error ?? "Scan failed.");
@@ -137,8 +152,9 @@ export function FindMissingDialog({
     setProcessing(true);
     setQueueProgress({ total: 0, done: 0, remaining: 0, failed: 0 });
     try {
-      // Queue the selected types and drive the staged chunks to completion.
-      const result = await runStagedTranslation(setQueueProgress, types);
+      // Queue the selected types and drive the staged chunks to completion,
+      // re-bridging the browser-sourced inventory names so the server queues them.
+      const result = await runStagedTranslation(setQueueProgress, types, inventoryNames);
       toast.success(
         `Translated ${result.done} item${result.done === 1 ? "" : "s"}` +
           (result.failed > 0 ? `, ${result.failed} failed.` : "."),
@@ -247,8 +263,9 @@ export function FindMissingDialog({
                       <XCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                       <div className="space-y-1">
                         <p>
-                          No inventory items were found to translate. The server couldn&apos;t read the
-                          FEED inventory feed, so inventory names can&apos;t be localized.
+                          No inventory items were found to translate. The FEED inventory feed
+                          couldn&apos;t be read from this browser or the server, so inventory names
+                          can&apos;t be localized.
                         </p>
                         {result.inventorySource ? (
                           <p className="break-all font-mono text-xs opacity-90">

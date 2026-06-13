@@ -9,7 +9,11 @@
 // the active announcement, and the inventory category/item names from the FEED
 // public inventory feed.
 
-import { fetchFeedPublicInventory, getFeedPublicInventoryUrl } from "@/lib/feed-public-inventory";
+import {
+  collectFeedInventoryNames,
+  fetchFeedPublicInventory,
+  getFeedPublicInventoryUrl,
+} from "@/lib/feed-public-inventory";
 import { stateManager } from "@/lib/state-manager";
 import { UI_STRINGS_EN } from "@/lib/ui-strings";
 import type { TranslationType } from "./types";
@@ -56,14 +60,7 @@ export const getInventorySource = async (): Promise<InventorySourceResult> => {
   const url = getFeedPublicInventoryUrl();
   try {
     const inventory = await fetchFeedPublicInventory();
-    const set = new Set<string>();
-    for (const category of inventory.categories) {
-      if (category.name?.trim()) set.add(category.name);
-      for (const item of category.items) {
-        if (item.name?.trim()) set.add(item.name);
-      }
-    }
-    return { names: [...set], ok: true, error: null, url };
+    return { names: collectFeedInventoryNames(inventory), ok: true, error: null, url };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.warn(`[Translation content] Unable to load FEED inventory (${url}): ${message}`);
@@ -71,18 +68,35 @@ export const getInventorySource = async (): Promise<InventorySourceResult> => {
   }
 };
 
+// Wrap inventory names supplied by the caller (the admin browser, which can
+// reach the public feed even when the server's egress is blocked) as a healthy
+// inventory source — deduped, trimmed, with the feed URL for diagnostics.
+const fromInjectedInventoryNames = (names: string[]): InventorySourceResult => {
+  const set = new Set<string>();
+  for (const name of names) {
+    if (name?.trim()) set.add(name);
+  }
+  return { names: [...set], ok: true, error: null, url: getFeedPublicInventoryUrl() };
+};
+
 // Back-compat: callers that only need the names.
 export const getInventorySources = async (): Promise<string[]> =>
   (await getInventorySource()).names;
 
-export const getContentItems = async (): Promise<ContentResult> => {
+export const getContentItems = async (
+  options?: { inventoryNames?: string[] },
+): Promise<ContentResult> => {
   const items: ContentItem[] = getUiStringSources().map((originalText) => ({
     originalText,
     type: "ui_string" as const,
   }));
   const announcement = await getAnnouncementSource();
   if (announcement) items.push({ originalText: announcement, type: "announcement" });
-  const inventory = await getInventorySource();
+  // Prefer inventory names the caller bridged from the browser (FEED's feed is
+  // public but the server's egress can be blocked); otherwise fetch server-side.
+  const inventory = options?.inventoryNames
+    ? fromInjectedInventoryNames(options.inventoryNames)
+    : await getInventorySource();
   for (const originalText of inventory.names) {
     items.push({ originalText, type: "inventory" as const });
   }

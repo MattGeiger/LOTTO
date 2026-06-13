@@ -14,14 +14,23 @@ vi.mock("@/lib/translation/languages-store", () => ({
   ]),
 }));
 
+// Mirrors the real getContentItems: 2 UI strings plus whatever inventory names
+// the caller bridged in (the browser-sourced path), so the auditor's handling of
+// injected inventory can be asserted end-to-end.
+const getContentItems = vi.fn(async (options?: { inventoryNames?: string[] }) => {
+  const names = options?.inventoryNames ?? [];
+  const items: Array<{ originalText: string; type: string }> = [
+    { originalText: "Now Serving", type: "ui_string" },
+    { originalText: "Your ticket", type: "ui_string" },
+  ];
+  for (const name of names) items.push({ originalText: name, type: "inventory" });
+  return {
+    items,
+    inventory: { names, ok: true, error: null, url: "https://feed.example/inventory.json" },
+  };
+});
 vi.mock("@/lib/translation/content", () => ({
-  getContentItems: vi.fn().mockResolvedValue({
-    items: [
-      { originalText: "Now Serving", type: "ui_string" },
-      { originalText: "Your ticket", type: "ui_string" },
-    ],
-    inventory: { names: [], ok: true, error: null, url: "https://feed.example/inventory.json" },
-  }),
+  getContentItems: (...args: unknown[]) => getContentItems(...args),
 }));
 
 const storeList = vi.fn();
@@ -75,5 +84,17 @@ describe("translation auditor", () => {
     expect(storeUpsert).toHaveBeenCalledTimes(2);
     expect(translatePending).toHaveBeenCalled();
     expect(processed).toEqual({ translated: 2, failed: 0 });
+  });
+
+  it("scans browser-bridged inventory names as inventory translations", async () => {
+    const { findMissing } = await import("@/lib/translation/auditor");
+    const { details } = await findMissing(false, undefined, ["Apples", "Rice"]);
+    // The bridged names reach the content source unchanged.
+    expect(getContentItems).toHaveBeenCalledWith({ inventoryNames: ["Apples", "Rice"] });
+    // 2 UI strings + 2 inventory names, each missing for Bosnian (a non-core
+    // target that needs DB translations FEED doesn't carry).
+    expect(details.byType.inventory).toBe(2);
+    expect(details.byType.ui_string).toBe(2);
+    expect(details.byLanguage.Bosnian).toBe(4);
   });
 });
