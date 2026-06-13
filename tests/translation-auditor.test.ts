@@ -15,10 +15,13 @@ vi.mock("@/lib/translation/languages-store", () => ({
 }));
 
 vi.mock("@/lib/translation/content", () => ({
-  getContentItems: vi.fn().mockResolvedValue([
-    { originalText: "Now Serving", type: "ui_string" },
-    { originalText: "Your ticket", type: "ui_string" },
-  ]),
+  getContentItems: vi.fn().mockResolvedValue({
+    items: [
+      { originalText: "Now Serving", type: "ui_string" },
+      { originalText: "Your ticket", type: "ui_string" },
+    ],
+    inventory: { names: [], ok: true, error: null, url: "https://feed.example/inventory.json" },
+  }),
 }));
 
 const storeList = vi.fn();

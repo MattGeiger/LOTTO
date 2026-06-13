@@ -128,6 +128,10 @@ async function fetchFeedPublicInventoryFromUrl(url: string): Promise<FeedPublicI
   const response = await fetch(url, {
     cache: "no-store",
     credentials: "omit",
+    // Browsers and curl send a User-Agent; Node's fetch (undici) sends none,
+    // which some CDNs/WAFs block — that mismatch is why the server-side fetch can
+    // return nothing while the browser reaches the same public feed fine.
+    headers: { "User-Agent": "LOTTO/1.0 (+https://williamtemple.app)", Accept: "application/json" },
   });
 
   if (!response.ok) {
