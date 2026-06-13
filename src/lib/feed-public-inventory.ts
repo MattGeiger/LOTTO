@@ -135,7 +135,16 @@ async function fetchFeedPublicInventoryFromUrl(url: string): Promise<FeedPublicI
   });
 
   if (!response.ok) {
-    throw new Error("Unable to load current inventory.");
+    // Include the status (and a short body snippet) so a server-side block —
+    // e.g. a WAF/protection page returning 401/403/429 — is named precisely
+    // instead of hidden behind a generic message.
+    let snippet = "";
+    try {
+      snippet = (await response.text()).replace(/\s+/g, " ").trim().slice(0, 160);
+    } catch {
+      /* ignore body read errors */
+    }
+    throw new Error(`HTTP ${response.status}${snippet ? ` — ${snippet}` : ""}`);
   }
 
   const payload = await response.json();
