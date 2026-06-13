@@ -37,6 +37,8 @@ export type ClientLanguageOption = {
   code: string;
   label: string;
   name: string;
+  /** True once the language's UI strings are fully translated (core = always). */
+  ready: boolean;
 };
 
 const CORE_NAMES = new Set<string>(ALWAYS_ON_LANGUAGE_NAMES);
@@ -91,12 +93,14 @@ export const isLanguageReady = async (name: string): Promise<boolean> => {
   return true;
 };
 
-// Languages shown to visitors: the core eight (canonical order) plus enabled
-// catalog languages whose translation packs are complete.
+// Languages offered to visitors: the core eight (always ready) plus every
+// enabled catalog language — shown immediately with a `ready` flag so the picker
+// can present a newly enabled language right away and gate the experience behind
+// a "getting ready" screen until its translations complete.
 export const listClientLanguages = async (): Promise<ClientLanguageOption[]> => {
   const options: ClientLanguageOption[] = LANGUAGE_OPTIONS.map((option) => {
     const entry = getCatalogEntryByCode(option.code);
-    return { code: option.code, label: option.label, name: entry?.name ?? option.label };
+    return { code: option.code, label: option.label, name: entry?.name ?? option.label, ready: true };
   });
 
   const enabled = await listEnabledLanguages();
@@ -104,9 +108,12 @@ export const listClientLanguages = async (): Promise<ClientLanguageOption[]> => 
     if (CORE_NAMES.has(row.name) || row.name === "English") continue;
     const entry = getCatalogEntryByName(row.name);
     if (!entry) continue;
-    if (await isLanguageReady(row.name)) {
-      options.push({ code: entry.code, label: entry.label, name: entry.name });
-    }
+    options.push({
+      code: entry.code,
+      label: entry.label,
+      name: entry.name,
+      ready: await isLanguageReady(row.name),
+    });
   }
   return options;
 };

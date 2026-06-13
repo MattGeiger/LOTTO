@@ -14,7 +14,7 @@ import { UI_STRINGS_EN } from "@/lib/ui-strings";
 
 export type { Language };
 
-type LanguageOption = { code: Language; label: string };
+type LanguageOption = { code: Language; label: string; ready?: boolean };
 
 type LanguageContextType = {
   language: Language;
@@ -24,15 +24,22 @@ type LanguageContextType = {
   isLanguageHydrated: boolean;
   t: (key: string) => string;
   /**
-   * Visitor-selectable languages: the eight core options plus any admin-enabled
-   * catalog languages whose translation packs are complete (Feature 4).
+   * Visitor-selectable languages: the eight core options plus every admin-enabled
+   * catalog language. Each carries `ready` — false while its translation pack is
+   * still being prepared (Feature 4).
    */
   availableLanguages: ReadonlyArray<LanguageOption>;
+  /** True while the dynamic language list is being fetched (for skeletons). */
+  availableLanguagesLoading: boolean;
   /**
    * Request the dynamic language list. Surfaces that render a picker call this
    * on mount; it fetches once per provider lifetime.
    */
   ensureAvailableLanguagesLoaded: () => void;
+  /** Whether a given language's pack is complete (core = always true). */
+  isLanguageReady: (code: Language) => boolean;
+  /** Re-fetch the dynamic language list (e.g. while polling a "getting ready" gate). */
+  refreshAvailableLanguages: () => Promise<void>;
   /** Translated active announcement for the current language, when available. */
   announcementTranslation: string | null;
 };
@@ -95,26 +102,49 @@ export function LanguageProvider({
   // languages). Called by surfaces that render a language picker, so pages
   // without one never pay the request — and tests with ordered fetch mocks
   // aren't disturbed. Failures keep the static core options.
+  const [availableLanguagesLoading, setAvailableLanguagesLoading] = React.useState(false);
+
+  const fetchAvailableLanguages = React.useCallback(async () => {
+    setAvailableLanguagesLoading(true);
+    try {
+      const res = await fetch("/api/languages?client", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = (await res.json()) as {
+        languages?: { code?: string; label?: string; ready?: boolean }[];
+      };
+      if (!Array.isArray(data.languages)) return;
+      const options = data.languages.filter(
+        (entry): entry is LanguageOption =>
+          typeof entry?.code === "string" && typeof entry?.label === "string",
+      );
+      if (options.length >= LANGUAGE_OPTIONS.length) setAvailableLanguages(options);
+    } catch {
+      // Offline/unavailable — keep the core options.
+    } finally {
+      setAvailableLanguagesLoading(false);
+    }
+  }, []);
+
   const languagesRequestedRef = React.useRef(false);
   const ensureAvailableLanguagesLoaded = React.useCallback(() => {
     if (languagesRequestedRef.current) return;
     languagesRequestedRef.current = true;
-    (async () => {
-      try {
-        const res = await fetch("/api/languages?client", { cache: "no-store" });
-        if (!res.ok) return;
-        const data = (await res.json()) as { languages?: { code?: string; label?: string }[] };
-        if (!Array.isArray(data.languages)) return;
-        const options = data.languages.filter(
-          (entry): entry is LanguageOption =>
-            typeof entry?.code === "string" && typeof entry?.label === "string",
-        );
-        if (options.length >= LANGUAGE_OPTIONS.length) setAvailableLanguages(options);
-      } catch {
-        // Offline/unavailable — keep the core options.
-      }
-    })();
-  }, []);
+    void fetchAvailableLanguages();
+  }, [fetchAvailableLanguages]);
+
+  const refreshAvailableLanguages = React.useCallback(async () => {
+    languagesRequestedRef.current = true;
+    await fetchAvailableLanguages();
+  }, [fetchAvailableLanguages]);
+
+  const isLanguageReady = React.useCallback(
+    (code: Language) => {
+      if (code === "en" || isLanguageCode(code)) return true;
+      const option = availableLanguages.find((entry) => entry.code === code);
+      return option?.ready ?? false;
+    },
+    [availableLanguages],
+  );
 
   // Load the translation pack for any non-English language: dynamic languages
   // need it for UI strings; core languages need it for the announcement.
@@ -197,7 +227,10 @@ export function LanguageProvider({
         isLanguageHydrated,
         t,
         availableLanguages,
+        availableLanguagesLoading,
         ensureAvailableLanguagesLoaded,
+        isLanguageReady,
+        refreshAvailableLanguages,
         announcementTranslation,
       }}
     >

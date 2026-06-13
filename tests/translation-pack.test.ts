@@ -110,8 +110,8 @@ describe("language packs", () => {
     expect(await isLanguageReady("Spanish")).toBe(true);
   });
 
-  it("listClientLanguages = core eight plus ready dynamic languages", async () => {
-    // Bosnian fully translated.
+  it("listClientLanguages = core eight (ready) plus every enabled dynamic language with a ready flag", async () => {
+    // Bosnian fully translated → ready.
     storeList.mockResolvedValue([
       row("Now Serving", "x"),
       row("Close", "y"),
@@ -120,15 +120,17 @@ describe("language packs", () => {
     const { listClientLanguages } = await import("@/lib/translation/pack");
     const options = await listClientLanguages();
     expect(options).toHaveLength(9);
-    expect(options[0].code).toBe("en");
-    expect(options.at(-1)).toMatchObject({ code: "bs", name: "Bosnian", label: "Bosanski" });
+    expect(options[0]).toMatchObject({ code: "en", ready: true });
+    expect(options.at(-1)).toMatchObject({ code: "bs", name: "Bosnian", label: "Bosanski", ready: true });
   });
 
-  it("listClientLanguages excludes enabled-but-incomplete languages", async () => {
+  it("listClientLanguages includes enabled-but-incomplete languages flagged not ready", async () => {
     storeList.mockResolvedValue([row("Now Serving", "x")]); // incomplete
     const { listClientLanguages } = await import("@/lib/translation/pack");
     const options = await listClientLanguages();
-    expect(options).toHaveLength(8);
-    expect(options.some((o) => o.code === "bs")).toBe(false);
+    // Shown immediately (the picker gates the experience), but not yet ready.
+    expect(options).toHaveLength(9);
+    expect(options.find((o) => o.code === "bs")).toMatchObject({ ready: false });
+    expect(options.every((o) => o.code === "bs" || o.ready === true)).toBe(true);
   });
 });
