@@ -7,6 +7,18 @@
 
 import type { Language } from "@/contexts/language-context";
 
+// Localized number+unit for any non-core language via Intl (e.g. "ja" → "30分",
+// "30 分"). Returns null for English/unknown so the caller keeps the existing
+// hand-tuned English phrasing. Core languages never reach this (they have cases).
+function formatUnitViaIntl(n: number, lang: Language, unit: "hour" | "minute"): string | null {
+  if (!lang || lang === "en") return null;
+  try {
+    return new Intl.NumberFormat(lang, { style: "unit", unit, unitDisplay: "long" }).format(n);
+  } catch {
+    return null;
+  }
+}
+
 export function formatWaitTime(minutes: number, language: Language): string {
   if (minutes < 60) {
     return formatMinutes(minutes, language);
@@ -51,7 +63,7 @@ function formatMinutes(n: number, lang: Language): string {
     case "ar":
       return `${n} ${n === 1 ? "دقيقة" : "دقائق"}`;
     default:
-      return `${n} minute${n === 1 ? "" : "s"}`;
+      return formatUnitViaIntl(n, lang, "minute") ?? `${n} minute${n === 1 ? "" : "s"}`;
   }
 }
 
@@ -72,7 +84,7 @@ function formatHours(n: number, lang: Language): string {
     case "ar":
       return `${n} ${n === 1 ? "ساعة" : "ساعات"}`;
     default:
-      return `${n} hour${n === 1 ? "" : "s"}`;
+      return formatUnitViaIntl(n, lang, "hour") ?? `${n} hour${n === 1 ? "" : "s"}`;
   }
 }
 

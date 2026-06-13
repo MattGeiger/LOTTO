@@ -41,6 +41,24 @@ describe("formatWaitTime", () => {
     });
   });
 
+  describe("Dynamic (non-core) languages via Intl units", () => {
+    it("localizes Japanese minutes and hours instead of falling back to English", () => {
+      expect(formatWaitTime(30, "ja")).toContain("30");
+      expect(formatWaitTime(30, "ja")).not.toMatch(/minute/);
+      // Japanese minute unit (分) should appear.
+      expect(formatWaitTime(30, "ja")).toContain("分");
+      const twoThirty = formatWaitTimeAsHoursAndMinutes(150, "ja");
+      expect(twoThirty).toContain("時間"); // hour
+      expect(twoThirty).toContain("分"); // minute
+      expect(twoThirty).not.toMatch(/hour|minute/);
+    });
+
+    it("falls back to English phrasing for English and unknown codes", () => {
+      expect(formatWaitTime(30, "en")).toBe("30 minutes");
+      expect(formatWaitTime(30, "zzz")).toBe("30 minutes");
+    });
+  });
+
   describe("Chinese (invariant form)", () => {
     it("formats minutes", () => {
       expect(formatWaitTime(5, "zh")).toBe("5分钟");

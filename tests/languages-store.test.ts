@@ -25,9 +25,13 @@ const mockSql = vi.fn(async (strings: TemplateStringsArray, ...values: unknown[]
     return [];
   }
   if (/UPDATE languages/i.test(text)) {
-    const [enabled, name] = values as [boolean, string];
-    const row = seeded.find((r) => r.name === name);
-    if (row) row.is_enabled = enabled;
+    // Batched set-based updates: `SET is_enabled = true|false ... WHERE name = ANY($1)`.
+    const enabled = /is_enabled = true/i.test(text);
+    const names = (values[0] as string[]) ?? [];
+    for (const name of names) {
+      const row = seeded.find((r) => r.name === name);
+      if (row) row.is_enabled = enabled;
+    }
     return [];
   }
   if (/SELECT/i.test(text)) {
