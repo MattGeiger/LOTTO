@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 ### Fixed
+- **Inventory page fetches from FEED again (CORS preflight regression).** A
+  `User-Agent` header that had been added to the shared FEED-inventory fetch
+  (intended for the server) was also being sent from the browser, where it is not
+  a CORS-safelisted header. That promoted the cross-origin GET to a preflighted
+  request, and FEED's preflight only allows `Content-Type`, so the browser blocked
+  the request — breaking both the public `/inventory` page and the admin
+  inventory-name bridge. `User-Agent` is now sent **server-side only**; the browser
+  fetch is back to a CORS "simple request." See `docs/ISSUES.md` Issue 23 and
+  `docs/FEED_PUBLIC_INVENTORY.md`.
+- **iPadOS 15.8 login/home no longer inert (legacy WebKit).** `remark-gfm`'s
+  autolink regex used lookbehind, which JavaScriptCore only supports from Safari
+  16.4, so the chunk parse-failed on iPadOS 15.8 (Safari and Chrome) and aborted
+  React hydration — the login and home pages rendered but were not interactive.
+  Replaced with a legacy-safe GFM plugin (no autolink-literal), added a
+  `browserslist` floor and a build-time bundle guard. See `docs/BROWSER_SUPPORT.md`
+  and `docs/ISSUES.md` Issue 22.
 - **Inventory translations now work for languages FEED doesn't cover.** The FEED
   public inventory feed is intentionally public (CORS `*`, no auth), but LOTTO's
   server-side egress to it can be blocked, so the auditor saw zero inventory and
