@@ -14,7 +14,7 @@
 import * as React from "react";
 import Link from "next/link";
 import ReactMarkdown, { type Components } from "react-markdown";
-import remarkGfm from "remark-gfm";
+import remarkGfmSafe from "@/lib/remark-gfm-safe";
 
 import { cn } from "@/lib/utils";
 import { getGuideHeadingIdsByLine, rewriteGuideLink } from "@/lib/user-guides";
@@ -160,7 +160,7 @@ export function MarkdownGuideContent({ content }: MarkdownGuideProps) {
   };
 
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+    <ReactMarkdown remarkPlugins={[remarkGfmSafe]} components={components}>
       {content}
     </ReactMarkdown>
   );

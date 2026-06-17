@@ -812,3 +812,85 @@ The `AnimatePresence initial={false}` flag (already present on all render paths)
 2. Wait ~5 seconds — cycling animation starts with smooth whole-text transitions.
 3. Change language — animation works correctly.
 4. Open `/` and `/display` — no regressions to morph text on public board pages.
+
+---
+
+## Issue 22: Login and home pages are inert on iPadOS 15.8 (renders but not interactive)
+
+### Status
+- Fixed by replacing `remark-gfm` with a legacy-safe GFM plugin (no autolink-literal),
+  declaring a `browserslist` floor, and adding a build-time bundle guard + tests
+  (pending on-device verification).
+
+### Observed
+On iPadOS 15.8.8, in **both Safari and Chrome**, recent builds render the login
+screen but it is completely inert: the email field won't accept input and the
+OTP / Magic Link tabs don't switch. Newer devices are unaffected. The same defect
+also affects the public visitor home page `/`.
+
+### Root Cause (Code References)
+- On iOS/iPadOS **every** browser uses Apple's WebKit, so an identical failure in
+  Safari and Chrome points to a WebKit-version incompatibility. "Renders but not
+  interactive" is the signature of **failed React hydration**: SSR HTML paints, but
+  a script error aborts before event handlers attach.
+- `remark-gfm` (via `micromark-extension-gfm-autolink-literal`) ships an email
+  autolink **regex literal** using **lookbehind** `(?<=^|\s|\p{P}|\p{S})…@…`.
+  JavaScriptCore only supports regex lookbehind from **Safari 16.4**; iPadOS 15.8
+  is WebKit ~15.x → it throws a `SyntaxError` at script **parse** time, taking down
+  the entire chunk before any code runs.
+- The renderer that pulls in `remark-gfm`, `MarkdownGuideContent`
+  (`src/components/help/markdown-guide.tsx`), is **statically imported** by both the
+  login footer's Release Notes dialog (`src/components/release-notes-dialog.tsx` via
+  `src/components/staff-links-footer.tsx`) and the home page's announcements
+  (`src/components/personalized-home-page.tsx`). So the lookbehind chunk loaded
+  eagerly on `/login` and `/`, bricking hydration on both.
+- Contributing: no `browserslist` config existed, so the toolchain targeted only
+  modern browsers. Note this is necessary-but-not-sufficient — SWC/Babel **cannot**
+  downlevel a regex *literal*, so a target alone would not have fixed this.
+
+### Approaches
+1) **Code-split the markdown dialogs off the critical path** (`next/dynamic`).
+   - Pros: smallest unblock for sign-in; smaller login bundle.
+   - Cons: containment only — announcements are core visitor content, and Help/Admin
+     markdown still break on iOS 15. Doesn't fix the syntax.
+2) **Remove the lookbehind at the source** — replace `remark-gfm` with a composed GFM
+   plugin that omits autolink-literal (keep tables/strikethrough/task-lists).
+   - Pros: fixes the actual incompatible syntax everywhere markdown is used; keeps
+     full markdown functionality on iOS 15; single chokepoint.
+   - Cons: drops bare-URL/email autolinking (explicit links still work).
+3) **Declare a `browserslist` floor including iOS/Safari 15 + Android/Chrome 80.**
+   - Pros: establishes a real support contract; guards the broad class of
+     untranspiled-syntax regressions.
+   - Cons: does NOT fix this regex literal; larger bundles/polyfills.
+
+### Recommendation
+**Approach 2 as the fix** (full functionality is required on iPadOS 15.8 and on the
+public visitor flow), **plus Approach 3** for a durable contract, **plus a recurrence
+guard** because a regex literal slips past every transpiler and will return on the
+next dependency bump.
+
+### Fix Applied
+- `src/lib/remark-gfm-safe.ts` — new legacy-safe GFM remark plugin (tables,
+  strikethrough, task lists; **no** autolink-literal).
+- `src/components/help/markdown-guide.tsx` — use `remarkGfmSafe` instead of `remark-gfm`.
+- `package.json` — promote the GFM sub-extensions to direct deps; drop the now-unused
+  `remark-gfm`; add a `browserslist` floor (iOS/Safari 15, Chrome/Android 80, FF 78,
+  Edge 80).
+- `scripts/check-legacy-safe-bundles.mjs` + `npm run check:legacy-bundles` — fails the
+  build if forbidden regex syntax (lookbehind, `v`-flag) reappears in any chunk.
+- `scripts/smoke-legacy-compat.mjs` + `npm run smoke:legacy` — loads `/` and `/login`
+  and asserts hydration completed (tabs switch, email accepts input, no uncaught
+  errors); documented for real-device runs on BrowserStack/Sauce.
+- Tests: `tests/legacy-bundle-guard.test.ts`, `tests/markdown-guide-legacy-safe.test.tsx`.
+- See `docs/BROWSER_SUPPORT.md` for the full matrix and rationale.
+
+### Validation
+1. `npm run build && npm run check:legacy-bundles` → 0 chunks contain lookbehind.
+2. `npm test` → markdown subset renders; bare URLs/emails are not autolinked; guard
+   rules detect lookbehind and ignore named groups / polyfilled paths.
+3. `npm start && npm run smoke:legacy` → `/` and `/login` hydrate and are interactive.
+4. On-device: load `/login` and `/` on a real iPadOS 15.8 (Safari + Chrome) and an
+   Android 8 / Chrome 80 device — sign-in form and tabs work.
+
+---
+
