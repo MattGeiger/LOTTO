@@ -140,13 +140,27 @@ export async function fetchFeedPublicInventory(
 }
 
 async function fetchFeedPublicInventoryFromUrl(url: string): Promise<FeedPublicInventory> {
+  // Header policy is split by runtime ON PURPOSE — do not send `User-Agent` from
+  // the browser:
+  //   • `Accept` is a CORS-safelisted request header, so it never triggers a
+  //     preflight — safe to send everywhere.
+  //   • `User-Agent` is NOT safelisted. Setting it on a cross-origin *browser*
+  //     fetch promotes the request to a preflighted one; FEED's CORS only allows
+  //     `Content-Type` in `Access-Control-Allow-Headers`, so the preflight fails
+  //     and the browser blocks the GET — breaking both the visitor inventory page
+  //     and the admin inventory-name bridge. We therefore attach `User-Agent`
+  //     ONLY on the server (Node/undici sends none by default; harmless there and
+  //     never subject to CORS). See docs/FEED_PUBLIC_INVENTORY.md and ISSUES.md
+  //     Issue 23.
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (typeof window === "undefined") {
+    headers["User-Agent"] = "LOTTO/1.0 (+https://williamtemple.app)";
+  }
+
   const response = await fetch(url, {
     cache: "no-store",
     credentials: "omit",
-    // Browsers and curl send a User-Agent; Node's fetch (undici) sends none,
-    // which some CDNs/WAFs block — that mismatch is why the server-side fetch can
-    // return nothing while the browser reaches the same public feed fine.
-    headers: { "User-Agent": "LOTTO/1.0 (+https://williamtemple.app)", Accept: "application/json" },
+    headers,
   });
 
   if (!response.ok) {

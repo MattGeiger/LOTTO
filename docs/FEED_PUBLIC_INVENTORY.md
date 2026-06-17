@@ -67,6 +67,20 @@ The endpoint is mounted in FEED before credentialed CORS and authentication
 middleware. This is intentional so public browser clients can read it without a
 FEED session.
 
+### CORS preflight constraint (important)
+
+FEED returns `Access-Control-Allow-Origin: *` but its preflight response only
+advertises `Access-Control-Allow-Headers: Content-Type`. Therefore the browser
+fetch **must stay a CORS "simple request"** — it may only send
+[CORS-safelisted request headers](https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_request_header)
+(`Accept`, `Accept-Language`, `Content-Language`, `Content-Type`, `Range`).
+Adding any non-safelisted header (e.g. **`User-Agent`**) promotes the GET to a
+preflighted request whose `OPTIONS` FEED rejects, so the browser blocks the
+fetch. This regressed both the visitor inventory page and the admin
+inventory-name bridge — see `docs/ISSUES.md` Issue 23. `User-Agent` is attached
+**server-side only** (Node/`undici` sends none by default and is never subject
+to CORS).
+
 ## Update Behavior
 
 The endpoint is live backend output, not a generated static file. Each request
@@ -252,12 +266,22 @@ URL. This protects production from stale local-development overrides such as
 
 ## Fetch Contract
 
-Preferred client fetch:
+The same helper (`fetchFeedPublicInventory`) runs both in the visitor's browser
+and on the server (the translation auditor). Headers are split by runtime so the
+browser request stays a CORS simple request (see the CORS preflight constraint
+above):
 
 ```ts
+const headers: Record<string, string> = { Accept: "application/json" }; // safelisted
+if (typeof window === "undefined") {
+  // Server-only: Node/undici sends no UA by default; never subject to CORS.
+  headers["User-Agent"] = "LOTTO/1.0 (+https://williamtemple.app)";
+}
+
 const response = await fetch(feedPublicInventoryUrl, {
   cache: "no-store",
   credentials: "omit",
+  headers,
 });
 ```
 
@@ -268,6 +292,9 @@ Implementation expectations:
 3. Do not send cookies or credentials.
 4. Do not proxy through `/api/state`.
 5. Do not add FEED inventory to LOTTO's raffle state schema.
+6. **Never send a non-CORS-safelisted request header (e.g. `User-Agent`) from
+   the browser.** It triggers a preflight FEED rejects. `tests/feed-public-inventory.test.ts`
+   guards this.
 
 Production CSP must allow this public FEED origin in `connect-src`:
 

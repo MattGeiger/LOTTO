@@ -894,3 +894,74 @@ next dependency bump.
 
 ---
 
+
+## Issue 23: Inventory page (and admin name bridge) stopped fetching from FEED — CORS preflight regression
+
+### Status
+- Fixed by sending the `User-Agent` header on the **server only**; the browser
+  fetch is restored to a CORS "simple request" (pending production verification).
+
+### Observed
+The public `/inventory` page ("What's in stock") renders but shows
+"Current inventory could not be loaded." The FEED endpoint is reachable
+(`https://feed.williamtemple.app/api/public/inventory.json` returns 200 from a
+browser). The same break silently disabled the admin **inventory-name bridge**
+in Find Missing (also a browser fetch).
+
+### Root Cause (Code References)
+- A cross-origin browser `fetch()` is a CORS **"simple request"** (no preflight)
+  only if every header is CORS-safelisted. `Accept` is safelisted; **`User-Agent`
+  is not**.
+- Commit `7eda979` ("send a User-Agent on server fetch") added
+  `headers: { "User-Agent": …, Accept: … }` to the **shared**
+  `fetchFeedPublicInventoryFromUrl` in `src/lib/feed-public-inventory.ts`. The
+  intent was server-only, but the function is also called from the browser:
+  - `src/components/public-inventory-page.tsx` (visitor page), and
+  - `src/components/translation/find-missing-dialog.tsx` (admin name bridge).
+- Adding `User-Agent` promoted the browser GET to a **preflighted** request.
+  FEED's preflight response advertises only `Access-Control-Allow-Headers: Content-Type`
+  (verified live), so the `user-agent` preflight fails and the browser blocks the
+  GET → `fetch()` rejects → the page shows the load-failure state.
+- The header also helped nothing it targeted: `7eda979`'s own probe found the
+  server fetch "returns nothing … with and without a UA" (the server path is
+  Cloudflare-blocked — see the cloudflare-block note / FEED ISSUES.md #45).
+
+### Approaches
+1) **Send custom headers server-side only** (`typeof window === "undefined"`);
+   browser sends a simple GET (keep safelisted `Accept`).
+   - Pros: surgical; restores the verified-working simple GET on both browser
+     paths; preserves the server intent at zero browser risk; self-documenting.
+   - Cons: env branch in a shared fn; the server UA is an unproven no-op.
+2) **Remove the `User-Agent` header entirely.**
+   - Pros: simplest full revert; the UA demonstrably never helped.
+   - Cons: drops the (unproven) defensive server UA.
+3) **Same-origin server proxy (`/api/inventory`).**
+   - Pros: no browser CORS at all; could add server caching/translation.
+   - Cons: reintroduces the Cloudflare datacenter-egress block (FEED #45) → would
+     likely break the page in production; adds edge-request volume/latency
+     (cf. Issue 4). Net worse.
+
+### Recommendation
+**Approach 1.** It targets the proven mechanism (the browser fetch must stay a
+simple request), fixes both broken browser paths at once, preserves the original
+server-side intent with no browser risk, documents the constraint to prevent
+recurrence, and avoids Approach 3's reintroduction of the Cloudflare block.
+
+### Fix Applied
+- `src/lib/feed-public-inventory.ts` — build `headers` per runtime: always
+  `Accept: application/json`; attach `User-Agent` only when `typeof window ===
+  "undefined"` (server).
+- `tests/feed-public-inventory.test.ts` — browser branch sends no `User-Agent`;
+  added a regression guard asserting only CORS-safelisted headers leave the
+  browser, plus a server-branch test that keeps the `User-Agent`.
+- `docs/FEED_PUBLIC_INVENTORY.md` — documented the CORS preflight constraint and
+  the runtime-split header policy. CHANGELOG updated.
+
+### Validation
+1. `npm test` → browser fetch sends only `Accept`; server branch sends `User-Agent`;
+   regression guard passes.
+2. Live CORS check: `OPTIONS` preflight requesting `user-agent` returns
+   `Access-Control-Allow-Headers: Content-Type` (rejected); a header-less GET
+   returns 200 + `Access-Control-Allow-Origin: *`.
+3. On deploy: `/inventory` loads current stock; admin Find Missing bridges
+   inventory names again.
