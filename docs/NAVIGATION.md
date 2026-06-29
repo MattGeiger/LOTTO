@@ -85,6 +85,12 @@ Four destinations, in this fixed order:
   (`sm:bottom-6` in the core and arcade tab bars).
 - Sits *above* page content; always visible regardless of scroll.
 - Full-pill shape, subtle vertical gradient, layered shadow, hairline lit edge.
+- The fixed `<nav>` wrapper spans the full viewport width (`inset-x-0`) so the
+  pill can center, but the pill itself is only `sm:w-auto`. The wrapper is
+  therefore `pointer-events-none` and the `<ul>` pill is `pointer-events-auto`,
+  so the transparent flanks beside the capsule never intercept clicks on
+  content sharing the bottom row. (Mobile is `w-full`, so the whole bar stays
+  interactive.) Applies to both the core and arcade tab bars.
 
 ### Auto-hide (display board only)
 - `BottomTabBar` accepts an optional `autoHideAfterSeconds` prop. When set and

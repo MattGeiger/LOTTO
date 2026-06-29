@@ -86,11 +86,15 @@ export function ArcadeBottomTabBar() {
     <nav
       aria-label={t("navPrimaryLabel")}
       dir={isRTL(language) ? "rtl" : "ltr"}
-      className="fixed inset-x-0 bottom-0 z-40 flex justify-center sm:bottom-6 sm:px-4"
+      // Full-width wrapper centers the pill, but on desktop the pill is only
+      // `sm:w-auto`; `pointer-events-none` keeps the transparent flanks from
+      // intercepting clicks on content sharing this row (the `<ul>` re-enables
+      // events with `pointer-events-auto`). See docs/NAVIGATION.md.
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center sm:bottom-6 sm:px-4"
     >
       <ul
         className={cn(
-          "flex w-full items-stretch border-t-2 border-[var(--arcade-wall)] bg-[var(--arcade-menu-card-bg)] px-2 pt-2 pb-[max(env(safe-area-inset-bottom),0.6rem)] backdrop-blur-sm",
+          "pointer-events-auto flex w-full items-stretch border-t-2 border-[var(--arcade-wall)] bg-[var(--arcade-menu-card-bg)] px-2 pt-2 pb-[max(env(safe-area-inset-bottom),0.6rem)] backdrop-blur-sm",
           "sm:w-auto sm:gap-2 sm:border-2 sm:px-3 sm:pb-2 sm:shadow-[0_0_0_2px_rgba(255,109,232,0.3)]"
         )}
       >
