@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 ### Fixed
+- **Bottom tab bar no longer blocks clicks across its row on wide screens.** The
+  fixed `<nav>` wrapper spans the full viewport width so the pill can center, but
+  on desktop/iPad the pill is only `sm:w-auto` — leaving large transparent flanks
+  that intercepted pointer events, so any control sharing the bottom row was
+  unclickable until scrolled out of that band. The wrapper is now
+  `pointer-events-none` with the `<ul>` pill `pointer-events-auto`, so only the
+  visible capsule is interactive (mobile `w-full` is unaffected). Applied to both
+  the core (`bottom-tab-bar.tsx`) and arcade (`arcade-bottom-tab-bar.tsx`) bars.
+  See `docs/NAVIGATION.md`.
 - **Inventory page fetches from FEED again (CORS preflight regression).** A
   `User-Agent` header that had been added to the shared FEED-inventory fetch
   (intended for the server) was also being sent from the browser, where it is not

@@ -110,7 +110,13 @@ export function BottomTabBar({ autoHideAfterSeconds }: BottomTabBarProps = {}) {
       inert={isHidden || undefined}
       data-auto-hidden={isHidden ? "true" : undefined}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 flex justify-center sm:bottom-6 sm:px-4",
+        // The wrapper spans the full viewport width (inset-x-0) so the pill can
+        // center, but on desktop the pill is only `sm:w-auto` — leaving large
+        // transparent flanks that would otherwise intercept clicks on anything
+        // sharing this bottom row. `pointer-events-none` makes those flanks
+        // click-through; the `<ul>` pill re-enables events with
+        // `pointer-events-auto`. See docs/NAVIGATION.md.
+        "pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center sm:bottom-6 sm:px-4",
         autoHideEnabled &&
           (reducedMotionRef.current ? "" : "transition-[opacity,transform] duration-300 ease-out"),
         isHidden && "pointer-events-none translate-y-full opacity-0 sm:translate-y-[calc(100%+1.5rem)]"
@@ -118,7 +124,7 @@ export function BottomTabBar({ autoHideAfterSeconds }: BottomTabBarProps = {}) {
     >
       <ul
         className={cn(
-          "flex w-full items-stretch gap-1 border-border bg-card/[45%] backdrop-blur-[6px]",
+          "pointer-events-auto flex w-full items-stretch gap-1 border-border bg-card/[45%] backdrop-blur-[6px]",
           "border-t px-2 pt-1 pb-[max(env(safe-area-inset-bottom),0.5rem)]",
           "sm:w-auto sm:rounded-full sm:border sm:p-2 sm:shadow-[var(--base-shadow-lg)]"
         )}
