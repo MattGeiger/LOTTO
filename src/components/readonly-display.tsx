@@ -258,10 +258,12 @@ export const ReadOnlyDisplay = ({
   }, []);
 
 
-  React.useEffect(() => {
-    document.title = `${t("foodPantryServiceFor")} ${formattedDate}`;
-  }, [formattedDate, t]);
-
+  // The browser tab / document title is intentionally left to the static,
+  // server-rendered `metadata.title` ("William Temple House App" in
+  // src/app/layout.tsx). Do NOT set `document.title` to the pantry date here:
+  // this component renders on the indexed home page ("/"), and a client-side
+  // dated title gets crawled by Googlebot and frozen as a stale date in search
+  // results. The live service date is still shown in-page (service-date below).
   React.useEffect(() => {
     if (!showQrCode) return;
     // The QR target comes from the live polled state, so an admin change to the
