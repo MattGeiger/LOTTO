@@ -1,6 +1,19 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- **Home-screen / PWA app icon (WTH emblem) for iOS and Android.** Adding the
+  site to a phone home screen previously showed a generic glyph on black, because
+  the only icon was a 48×48 transparent `favicon.ico` and iOS fills transparency
+  with black. Added a dedicated, opaque WTH emblem icon (layered faces + sun on
+  white), cropped at full resolution from `public/wth-logo-horizontal.png`:
+  `src/app/apple-icon.png` (180×180, iOS apple-touch-icon), `src/app/icon.png`
+  (512×512, browsers), and a Web App Manifest (`src/app/manifest.ts` →
+  `/manifest.webmanifest`) with 192/512/maskable icons in `public/icons/` for
+  Android "Add to Home Screen" / installable PWA (`display: standalone`,
+  `theme_color: #2762a2`). `favicon.ico` is retained for legacy desktop tabs.
+  See `docs/ISSUES.md` Issue 26.
+
 ### Fixed
 - **Browser tab and search-result title are now static (no stale pantry date).**
   `ReadOnlyDisplay` set `document.title` to the live pantry date on the client.

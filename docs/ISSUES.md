@@ -1092,3 +1092,67 @@ in the page body, not the indexed `<title>`. Static text chosen: the existing
    live pantry date.
 3. Post-deploy, Google will pick up the static title on its next crawl (no
    action needed; the stale dated title disappears once re-indexed).
+
+---
+
+## Issue 26: "Add to Home Screen" icon is a generic glyph on black (no app icon)
+
+### Status
+- Fixed (pending push/deploy).
+
+### Observed
+Adding the site to an iOS home screen produced a generic "W" on a black
+background instead of the WTH brand mark. Android / installable-PWA had no
+defined icon either.
+
+### Root Cause (Code References)
+- The repo had **no** `apple-touch-icon`, no `icon.png`, and no Web App Manifest
+  — only `src/app/favicon.ico` (48×48, **transparent** RGBA).
+- iOS "Add to Home Screen" ignores `favicon.ico` and looks for an
+  `apple-touch-icon` link. With none present, Safari fell back to the tiny
+  transparent favicon, scaled it up, and **filled the transparency with black**
+  (iOS does not support alpha for home-screen icons) — the "W on black."
+- Not an iOS limitation; a missing/oversized asset.
+
+### Approaches
+1) **Add a dedicated opaque icon set + manifest (iOS + Android/PWA).**
+   - Pros: correct, cross-platform brand alignment; uses Next.js file
+     conventions (`apple-icon.png`, `icon.png`, `manifest.ts`) so links are
+     auto-emitted; the WTH emblem crops cleanly at high resolution.
+   - Cons: a few new binary assets to maintain.
+2) **iOS-only `apple-touch-icon`.**
+   - Pros: smallest change; fixes the reported iPhone case.
+   - Cons: leaves Android / PWA installs with no defined icon.
+3) **Regenerate a higher-res, opaque `favicon.ico` only.**
+   - Pros: one file.
+   - Cons: iOS still won't use favicon for the home screen; does not solve the
+     reported problem.
+
+### Recommendation
+**Approach 1** — the only option that actually fixes iOS and gives consistent
+Android/PWA branding. Source: the WTH emblem (layered faces + sun) cropped
+~603×603 from `public/wth-logo-horizontal.png` (2314×606), centered on opaque
+white with ~12% padding (maskable variant uses ~22% for the Android safe zone).
+Background white chosen to match the official logo presentation; user-approved.
+
+### Fix Applied
+- `src/app/apple-icon.png` (180×180) — iOS apple-touch-icon (Next auto-links).
+- `src/app/icon.png` (512×512) — browser/general icon (Next auto-links).
+- `public/icons/icon-192.png`, `icon-512.png` (purpose `any`),
+  `icon-maskable-512.png` (purpose `maskable`) — Android/PWA manifest icons.
+- `src/app/manifest.ts` — Web App Manifest (`/manifest.webmanifest`): name
+  "William Temple House App", short_name "Temple House", `display: standalone`,
+  `background_color: #ffffff`, `theme_color: #2762a2`.
+- `favicon.ico` retained for legacy desktop tabs.
+- `docs/icon-candidates/` holds the review-only PNGs + README (not wired in).
+- `CHANGELOG.md` — `[Unreleased] → Added` entry.
+
+### Validation
+1. `npm run build` → `✓ Compiled successfully`; `/manifest.webmanifest`
+   prerendered.
+2. Live preview on `/`: head emits `<link rel="apple-touch-icon" sizes="180x180">`,
+   `<link rel="icon" sizes="512x512">`, and `<link rel="manifest">`;
+   `/manifest.webmanifest` returns 200 with the expected name/theme/icons; all
+   five icon assets return 200.
+3. On-device check after deploy: iOS and Android "Add to Home Screen" show the
+   WTH emblem on white.
