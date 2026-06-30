@@ -15,7 +15,12 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "William Temple House App",
-    short_name: "Temple House",
+    // short_name is what iOS/Android pre-fill as the home-screen label (the OS
+    // prefers short_name over name for the launcher). Kept equal to name so the
+    // "Add to Home Screen" default reads "William Temple House App" rather than a
+    // truncated brand mark. The OS may still visually truncate long labels under
+    // the icon, but the editable default name is the full string.
+    short_name: "William Temple House App",
     description:
       "See your place in line, check what's in stock, and play a few retro games while you wait at William Temple House.",
     start_url: "/",
