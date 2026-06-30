@@ -965,3 +965,130 @@ recurrence, and avoids Approach 3's reintroduction of the Cloudflare block.
    returns 200 + `Access-Control-Allow-Origin: *`.
 3. On deploy: `/inventory` loads current stock; admin Find Missing bridges
    inventory names again.
+
+---
+
+## Issue 24: Bottom tab bar swallows clicks across its whole row on wide screens
+
+### Status
+- Fixed and deployed (commit `e2deebf`, pushed to `main`/production).
+
+### Observed
+On wide viewports (desktop, iPad), the entire horizontal band where the bottom
+navigation sits was unresponsive. A control on the left or right side of the
+viewport that happened to share that row with the centered nav pill could not be
+clicked/tapped until the user scrolled it out of the band. On mobile the bar
+behaved normally.
+
+### Root Cause (Code References)
+- The bar is a two-element structure: a fixed `<nav>` wrapper and an inner
+  `<ul>` pill (`src/components/navigation/bottom-tab-bar.tsx`; arcade copy in
+  `src/arcade/components/arcade-bottom-tab-bar.tsx`).
+- The `<nav>` wrapper is `fixed inset-x-0 bottom-0 z-40 flex justify-center` —
+  i.e. it spans the **full viewport width** so the pill can center.
+- On mobile the `<ul>` is `w-full`, so the visible bar fills the wrapper. On
+  `sm:` and up the pill becomes `sm:w-auto` (a centered capsule), leaving large
+  **transparent but pointer-opaque flanks** on either side that belonged to the
+  wrapper. With `z-40` above page content and no `pointer-events-none`, those
+  flanks intercepted every click in the bottom row.
+
+### Approaches
+1) **`pointer-events-none` on the wrapper, `pointer-events-auto` on the pill.**
+   - Pros: one line per bar; within an existing pattern (the wrapper already
+     gets `pointer-events-none` in the display auto-hide state); preserves the
+     documented floating-capsule layout, z-index, RTL, safe-area, and a11y;
+     lowest regression surface; composes with `inert` so the hidden auto-hide
+     state stays non-interactive.
+   - Cons: patches a too-wide box rather than shrinking it.
+2) **Shrink the fixed box to the pill** (`sm:left-1/2 -translate-x-1/2 w-auto`).
+   - Pros: hit-area equals visible area; no pointer-events trickery.
+   - Cons: more invasive; the auto-hide `translate-y-full` hide animation must
+     compose with the centering transform (footgun); re-test RTL/safe-area;
+     larger diff across two components.
+3) **In-flow sticky footer in a per-page column shell.**
+   - Pros: eliminates the overlay entirely.
+   - Cons: contradicts the documented "floating capsule above content, always
+     visible" design and the display auto-hide overlay; touches every consumer.
+     Overkill.
+
+### Recommendation
+**Approach 1** — smallest, lowest-risk, within existing patterns, and preserves
+the `docs/NAVIGATION.md` source-of-truth design. A hybrid of 1+2 was considered
+and rejected as redundant (each fully closes the defect on the same axis).
+
+### Fix Applied
+- `src/components/navigation/bottom-tab-bar.tsx` — `pointer-events-none` on the
+  `<nav>` wrapper; `pointer-events-auto` on the `<ul>` pill.
+- `src/arcade/components/arcade-bottom-tab-bar.tsx` — same change (shared defect).
+- `docs/NAVIGATION.md` — documented the wrapper/pill pointer-events contract.
+- `CHANGELOG.md` — `[Unreleased] → Fixed` entry.
+
+### Validation
+1. `npm run build` → `✓ Compiled successfully`; `/arcade` prerendered cleanly.
+2. Live DOM hit-test at 1280×800 on the nav row: the four flank x-positions
+   resolved to page content (clicks fall through); the centered pill positions
+   resolved to `NAV-LINK` (still interactive). Mobile `w-full` unaffected.
+3. `npm run lint` clean on both components.
+4. Confirmed working in production after deploy (no issues found).
+
+---
+
+## Issue 25: Stale pantry date in browser tab title and Google search results
+
+### Status
+- Fixed (pending push/deploy).
+
+### Observed
+A Google search for the site showed a search-result title with a stale pantry
+date — "Food Pantry Service For Thursday, June 25th, 2026" — while the live
+browser tab read "Food Pantry Service For Tuesday, June 30th, 2026". The static
+meta description ("See your place in line…") was correct; only the dated title
+was stale, causing date confusion for searchers.
+
+### Root Cause (Code References)
+- `src/components/readonly-display.tsx` set the document title on the client:
+  `document.title = \`${t("foodPantryServiceFor")} ${formattedDate}\``.
+- `ReadOnlyDisplay` renders on the indexed home page (`/` →
+  `PersonalizedHomePage` → `ReadOnlyDisplay`), so the dated, client-set `<title>`
+  was what Googlebot rendered and indexed. Google re-crawls/JS-renders
+  infrequently, so it froze the date from the crawl day (June 25th) into the
+  result, independent of the live value.
+- The static `metadata.title.default` ("William Temple House App") and
+  `metadata.description` in `src/app/layout.tsx` were correct and
+  server-rendered; the client override was shadowing the title.
+
+### Approaches
+1) **Remove the client `document.title` override; rely on static
+   server-rendered `metadata.title`.**
+   - Pros: title becomes stable and reliably crawlable; no date can go stale;
+     one-effect deletion; in-page service date is unaffected.
+   - Cons: the tab no longer reflects the live date (intended — the date lives
+     in-page).
+2) **Keep a dynamic title but expose it via server `generateMetadata`.**
+   - Pros: server-rendered date would at least be crawlable.
+   - Cons: still stale between Google crawls; the date depends on per-request
+     "today" and timezone, adding server-render complexity for no SEO benefit.
+3) **Static, descriptive page title with no date** (e.g. a custom string).
+   - Pros: descriptive in search.
+   - Cons: chose the existing static default instead to keep one source of truth
+     (`metadata.title` in layout).
+
+### Recommendation
+**Approach 1.** Public title/description should be stable; the live date belongs
+in the page body, not the indexed `<title>`. Static text chosen: the existing
+`metadata.title.default` "William Temple House App".
+
+### Fix Applied
+- `src/components/readonly-display.tsx` — removed the `document.title` effect;
+  added a comment explaining why the title is intentionally static (prevents a
+  re-add that would reintroduce stale Google indexing). The in-page
+  `service-date` heading still renders the live date.
+- `CHANGELOG.md` — `[Unreleased] → Fixed` entry.
+
+### Validation
+1. `npm run lint` clean.
+2. Live preview on `/`: `document.title === "William Temple House App"` (no
+   date); meta description unchanged; the in-page `service-date` still shows the
+   live pantry date.
+3. Post-deploy, Google will pick up the static title on its next crawl (no
+   action needed; the stale dated title disappears once re-indexed).

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 ### Fixed
+- **Browser tab and search-result title are now static (no stale pantry date).**
+  `ReadOnlyDisplay` set `document.title` to the live pantry date on the client.
+  Because it renders on the indexed home page (`/`), Googlebot crawled and froze
+  that date into the search result (e.g. "Food Pantry Service For Thursday, June
+  25th, 2026" while the tab read June 30th). Removed the client-side
+  `document.title` override so the tab and search title fall back to the static,
+  server-rendered `metadata.title` ("William Temple House App"); the meta
+  `description` was already static. The live service date is still shown in-page
+  (`service-date`). See `docs/ISSUES.md` Issue 25.
 - **Bottom tab bar no longer blocks clicks across its row on wide screens.** The
   fixed `<nav>` wrapper spans the full viewport width so the pill can center, but
   on desktop/iPad the pill is only `sm:w-auto` — leaving large transparent flanks
