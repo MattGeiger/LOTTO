@@ -5,9 +5,12 @@ range of guests and lighting conditions.
 
 ## Supported Languages
 
-English, Spanish, Chinese, Russian, Ukrainian, Vietnamese, Persian (Farsi), and
-Arabic. Persian and Arabic display right-to-left, with numbers kept in their
-natural order.
+Eight core languages are built in: English, Spanish, Chinese, Russian,
+Ukrainian, Vietnamese, Persian (Farsi), and Arabic. Persian and Arabic display
+right-to-left, with numbers kept in their natural order.
+
+Staff can enable many more languages, auto-translated with AI — see
+[AI-Powered Translation](11-ai-translation.md).
 
 ## Choosing A Language
 
@@ -36,4 +39,5 @@ page header to change it.
 ## What To Read Next
 
 - Display setup: [The Display Board](03-display-board.md).
+- Enabling more languages: [AI-Powered Translation](11-ai-translation.md).
 - Trouble with text or layout: [Troubleshooting](08-troubleshooting.md).

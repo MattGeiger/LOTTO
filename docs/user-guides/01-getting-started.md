@@ -13,10 +13,12 @@ arcade to keep waiting guests entertained.
 
 ## The Three Surfaces
 
-LOTTO has three main areas, each reachable from the staff home page:
+LOTTO has three main areas:
 
 - **Staff Dashboard** (`/admin`) — where staff set the ticket range, call
-  numbers, and manage the day. See [Staff Controls](02-staff-controls.md).
+  numbers, and manage the day. Staff sign in first at `/staff` (email magic
+  link or a 6-digit code); an unauthenticated visit to `/admin` also prompts
+  sign-in. See [Staff Controls](02-staff-controls.md).
 - **Public Board** (`/display`) — the big screen clients watch to see the number
   being served now. See [The Display Board](03-display-board.md).
 - **Arcade** (`/arcade`) — optional games for waiting guests. See

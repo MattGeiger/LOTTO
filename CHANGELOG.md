@@ -1,6 +1,18 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- **Help content for the Announcement builder and AI translation stack.** These
+  shipped in v1.18.0 with no guide coverage. Added
+  `docs/user-guides/10-announcements.md` and `11-ai-translation.md` (Language
+  Settings, AI Configuration, Translation Management); corrected stale
+  pre-login copy in `01-getting-started.md` and `02-staff-controls.md` to
+  describe the `/staff` sign-in gate; cross-linked `06-languages-themes.md` to
+  the new AI-translation guide. See `docs/V2.0_PLANNED_FEATURES.md` Feature 7.
+- **`AGENTS.md` now requires help-guide updates alongside UX changes.** Any
+  feature/change that alters a user-facing interaction or workflow must also
+  update `docs/user-guides/`, not just `CHANGELOG.md`/`docs/ISSUES.md` — closes
+  the gap that let the above content fall behind.
 
 ## [1.18.0] - 2026-06-30
 ### Added

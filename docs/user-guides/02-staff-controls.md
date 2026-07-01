@@ -1,7 +1,9 @@
 # Staff Controls
 
-Everything you do to run the queue happens on the **Staff Dashboard**. Open it
-from the staff home page with **Open Staff Dashboard**, or go to `/admin`.
+Everything you do to run the queue happens on the **Staff Dashboard**. Go to
+`/staff` and sign in with your email (a magic link or a 6-digit code) — you'll
+land on the dashboard at `/admin`. Already signed in? Going straight to
+`/admin` works too.
 
 ## Setting Today's Ticket Range
 
@@ -44,8 +46,17 @@ returns to normal without changing who's currently being served.
 - The **display URL / QR code** can point clients to wherever you like; by
   default the board's QR sends them to the home screen to look up their ticket.
 
+## The Advanced Section
+
+Expand **Advanced** on the dashboard for less-frequent setup tasks: operating
+hours, display-language rotation, writing an
+[announcement](10-announcements.md), and
+[AI-powered translation](11-ai-translation.md).
+
 ## What To Read Next
 
 - How clients see all this: [Tickets & the Queue](04-tickets-queue.md).
 - Putting the board on a screen: [The Display Board](03-display-board.md).
+- Greeting guests with a message: [Announcements](10-announcements.md).
+- Adding more languages: [AI-Powered Translation](11-ai-translation.md).
 - Something not working? [Troubleshooting](08-troubleshooting.md).
