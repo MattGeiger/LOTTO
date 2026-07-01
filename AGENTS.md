@@ -61,6 +61,17 @@ consistent with existing patterns and workflows.
 - `docs/TRANSLATION_AI_FEED_PARITY.md` should be kept aligned with the live
   Translation AI implementation and any approved FEED deviations.
 - `CHANGELOG.md` must capture both implementation changes and significant documentation updates.
+- **Any feature or change that alters a user-facing interaction or workflow
+  (new screen, new control, changed flow, changed copy that changes meaning)
+  must also update the relevant guide(s) in `docs/user-guides/`** — not just
+  `CHANGELOG.md`/`docs/ISSUES.md`. Those two capture *what changed and why* for
+  developers; `docs/user-guides/` is what staff actually read in the app's
+  searchable Help section (`/help`), and it does not update itself. Add a new
+  `NN-slug.md` guide for a new surface, or add/revise a section in an existing
+  guide for a changed one, in the same change that ships the feature — do not
+  defer it. See `docs/HELP_SYSTEM.md` for authoring conventions and
+  `docs/V2.0_PLANNED_FEATURES.md` Feature 7 for the backlog this rule exists to
+  prevent recurring.
 
 ## Arcade Guardrails
 - Keep Arcade explicitly separated from raffle/display features in both code and UX.
