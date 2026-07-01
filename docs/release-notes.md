@@ -1,6 +1,23 @@
 
 ## Unreleased
 
+## Version 1.18.0 — June 30, 2026
+
+- **Staff now sign in through one login screen.** Signing in takes you straight
+  to a dedicated staff navigation — Admin, Dashboard, What's in stock, and
+  Games — instead of the public menu.
+- **Write an announcement that greets every guest.** Admins can now compose a
+  homepage announcement, with simple formatting like bold, bullets, and titles,
+  that appears as part of the welcome a guest sees when they arrive.
+- **Way more languages, powered by AI.** Beyond the original eight languages,
+  staff can turn on AI-assisted translation to add many more on the fly — the
+  whole guest experience, including "What's in stock," can now be automatically
+  translated.
+- **Undo a returned or unclaimed ticket.** If a ticket was marked Returned or
+  Unclaimed by mistake, staff can now revert it back to normal instead of
+  starting over.
+- **Find answers without leaving the app.** The Staff page now has a searchable
+  Help section, plus About and Release Notes (this page!), all one tap away.
 - **Confetti follows you.** When your ticket number is called, the celebration
   (confetti + "Ticket Called!") now appears no matter which page you're on —
   your ticket status, the display board, or the inventory list — not just the
@@ -10,6 +27,17 @@
 - **Tidier display board.** On the `/display` board the bottom navigation now
   fades away after a period of quiet and reappears the moment anyone interacts,
   keeping the big screen clean between language cycles.
+- **Fixed: older iPads couldn't tap anything.** Login and the home screen would
+  load but not respond to taps on iPadOS 15.8 — fixed.
+- **Fixed: buttons near the bottom nav bar were unclickable on wide screens.**
+  On desktop and iPad, anything sharing a row with the floating navigation bar
+  couldn't be tapped — fixed.
+- **Fixed: the browser tab and Google search title no longer go stale.** The
+  tab and search-result title now read a stable "William Temple House App"
+  instead of a pantry date that could fall out of date between Google's crawls.
+- **New: a real home-screen icon.** Adding the site to a phone's home screen
+  (iPhone or Android) now shows the William Temple House logo instead of a
+  generic letter on a black square.
 
 ## Version 1.17.0 — June 4, 2026
 
