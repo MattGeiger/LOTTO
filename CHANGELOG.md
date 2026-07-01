@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.18.0] - 2026-06-30
 ### Added
 - **Home-screen / PWA app icon (WTH emblem) for iOS and Android.** Adding the
   site to a phone home screen previously showed a generic glyph on black, because
