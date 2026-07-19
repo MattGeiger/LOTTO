@@ -226,7 +226,7 @@ export function PersonalizedHomePage() {
       >
         <LanguageSwitcher enableHaptics />
         <div className="flex-1 flex justify-center px-2">
-          <BrandLogo className="w-full max-w-[220px]" />
+          <BrandLogo className="w-full max-w-[220px]" imageClassName="h-12 w-auto max-w-full" />
         </div>
         <div className="flex items-center gap-2">
           <ThemeSwitcher enableHaptics />
