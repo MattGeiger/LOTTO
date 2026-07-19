@@ -66,9 +66,10 @@
   `docs/WHITE_LABEL_BRANDING_PLAN.md` plus multi-project deployment guidance.
 - **St. Johns Food Share queue-only profile.** Added the authorized agency logo,
   protected dark logo plate in light mode, transparent white-outline logo
-  treatment in dark mode, agency copy, and a dedicated 32–512 px PNG icon set
-  for browser tabs, Apple touch metadata, and installed web apps. Its
-  deliberately compact color system is built from brand teal (`#33A478`),
+  treatment in dark mode, agency copy, a rounded-corner scalable SVG browser
+  icon, and a dedicated padded 32–512 px PNG fallback/install set for browser
+  tabs, Apple touch metadata, and installed web apps. Its deliberately compact
+  color system is built from brand teal (`#33A478`),
   off-white (`#F7F7F7`), and charcoal (`#2D2D2D`). Neutral surfaces now carry
   the layout while teal is reserved for emphasis. The operational **Now
   Serving** state uses `#319A72` in light mode and luminous mint in dark mode;
