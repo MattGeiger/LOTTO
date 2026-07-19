@@ -9,7 +9,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import AdminPage from "@/app/admin/page";
+import AdminPage from "@/app/admin/admin-page-client";
 import { SESSION_EXPIRED_MESSAGE } from "@/lib/session-expired";
 
 const toastError = vi.fn();
