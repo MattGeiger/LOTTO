@@ -154,7 +154,7 @@ export const BRAND_PROFILES: Record<BrandProfileId, BrandProfile> = {
     id: "st-johns-food-share",
     organizationName: "St. Johns Food Share",
     appName: "St. Johns Food Share Queue",
-    shortName: "Food Share Queue",
+    shortName: "St Johns Food Share App",
     tagline: "Bridging the food gap since 1988",
     organizationWebsite: "https://stjohnsfoodshare.org/",
     publicAppUrl: "https://stjohnsfoodshare.app",
