@@ -7,9 +7,7 @@
 
 import type { Language } from "@/contexts/language-context";
 import { getCatalogEntryByCode } from "@/lib/languages";
-
-export const DEFAULT_FEED_PUBLIC_INVENTORY_URL =
-  "https://feed.williamtemple.app/api/public/inventory.json";
+import { brandProfile, inventoryIntegration } from "@/config/brand";
 
 export type FeedLimitType = "household" | "person" | string;
 
@@ -74,27 +72,8 @@ type TranslatedFeedEntity = {
   translations: Record<string, string>;
 };
 
-export function getFeedPublicInventoryUrl(): string {
-  return normalizeFeedPublicInventoryUrl(process.env.NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL);
-}
-
-function normalizeFeedPublicInventoryUrl(configuredUrl: string | undefined): string {
-  const trimmedUrl = configuredUrl?.trim();
-  if (!trimmedUrl) return DEFAULT_FEED_PUBLIC_INVENTORY_URL;
-
-  if (typeof window !== "undefined") {
-    try {
-      const parsedUrl = new URL(trimmedUrl);
-      const appHost = window.location.hostname;
-      const appIsLocal = appHost === "localhost" || appHost === "127.0.0.1" || appHost === "::1";
-      const feedIsLocal = parsedUrl.hostname === "localhost" || parsedUrl.hostname === "127.0.0.1" || parsedUrl.hostname === "::1";
-      if (feedIsLocal && !appIsLocal) return DEFAULT_FEED_PUBLIC_INVENTORY_URL;
-    } catch {
-      return DEFAULT_FEED_PUBLIC_INVENTORY_URL;
-    }
-  }
-
-  return trimmedUrl;
+export function getFeedPublicInventoryUrl(): string | null {
+  return inventoryIntegration.url;
 }
 
 export function getFeedDisplayName(entity: TranslatedFeedEntity, language: Language): string {
@@ -129,14 +108,10 @@ export function formatFeedLimit(limit: number | null | undefined, limitType: Fee
 }
 
 export async function fetchFeedPublicInventory(
-  url: string = getFeedPublicInventoryUrl(),
+  url: string | null = getFeedPublicInventoryUrl(),
 ): Promise<FeedPublicInventory> {
-  try {
-    return await fetchFeedPublicInventoryFromUrl(url);
-  } catch (error) {
-    if (url === DEFAULT_FEED_PUBLIC_INVENTORY_URL) throw error;
-    return fetchFeedPublicInventoryFromUrl(DEFAULT_FEED_PUBLIC_INVENTORY_URL);
-  }
+  if (!url) throw new Error("Inventory integration is disabled for this deployment.");
+  return fetchFeedPublicInventoryFromUrl(url);
 }
 
 async function fetchFeedPublicInventoryFromUrl(url: string): Promise<FeedPublicInventory> {
@@ -154,7 +129,7 @@ async function fetchFeedPublicInventoryFromUrl(url: string): Promise<FeedPublicI
   //     Issue 23.
   const headers: Record<string, string> = { Accept: "application/json" };
   if (typeof window === "undefined") {
-    headers["User-Agent"] = "LOTTO/1.0 (+https://williamtemple.app)";
+    headers["User-Agent"] = `LOTTO/1.0 (+${brandProfile.publicAppUrl})`;
   }
 
   const response = await fetch(url, {

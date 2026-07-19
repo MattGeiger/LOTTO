@@ -85,23 +85,25 @@ describe("FEED public inventory helpers", () => {
     expect(getFeedDisplayName({ name: "Rice", translations: {} }, "es")).toBe("Rice");
   });
 
-  it("falls back to the production FEED endpoint when a configured endpoint fails", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockRejectedValueOnce(new Error("local FEED is unavailable"))
-      .mockResolvedValueOnce(okInventory());
+  it("never falls back to another agency's FEED endpoint when a configured endpoint fails", async () => {
+    const fetchMock = vi.fn().mockRejectedValueOnce(new Error("configured FEED is unavailable"));
     vi.stubGlobal("fetch", fetchMock);
 
-    await fetchFeedPublicInventory("http://localhost:3001/api/public/inventory.json");
+    await expect(
+      fetchFeedPublicInventory("https://feed.example.test/api/public/inventory.json"),
+    ).rejects.toThrow("configured FEED is unavailable");
 
-    // Browser branch (jsdom): no User-Agent on either attempt.
+    // Browser branch (jsdom): no User-Agent and exactly one agency-scoped attempt.
     const expectedInit = {
       cache: "no-store",
       credentials: "omit",
       headers: { Accept: "application/json" },
     };
-    expect(fetchMock).toHaveBeenNthCalledWith(1, "http://localhost:3001/api/public/inventory.json", expectedInit);
-    expect(fetchMock).toHaveBeenNthCalledWith(2, "https://feed.williamtemple.app/api/public/inventory.json", expectedInit);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://feed.example.test/api/public/inventory.json",
+      expectedInit,
+    );
   });
 
   it("formats practical limit labels", () => {

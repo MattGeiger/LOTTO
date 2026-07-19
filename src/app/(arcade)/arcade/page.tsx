@@ -64,7 +64,7 @@ export default function ArcadeHomePage() {
               return (
                 <article
                   key={game.id}
-                  className={`relative flex h-full w-full flex-col justify-between gap-4 border-2 border-[var(--arcade-wall)] bg-[var(--arcade-menu-card-bg)] p-4 shadow-[0_0_0_2px_rgba(255,215,92,0.4)] ${isComingSoon ? "md:col-span-2 md:mx-auto md:max-w-[calc((100%-1.25rem)/2)]" : ""}`}
+                  className={`relative flex h-full w-full flex-col justify-between gap-4 border-2 border-[var(--arcade-wall)] bg-[var(--arcade-menu-card-bg)] p-4 shadow-[0_0_0_2px_var(--arcade-menu-card-shadow)] ${isComingSoon ? "md:col-span-2 md:mx-auto md:max-w-[calc((100%-1.25rem)/2)]" : ""}`}
                 >
                   {isComingSoon ? (
                     <div className="flex h-full items-center justify-center text-center">

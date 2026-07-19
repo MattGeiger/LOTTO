@@ -8,8 +8,9 @@ where to go for each task. If you're new, start here.
 LOTTO runs a fair, transparent ticket queue for events like a food pantry
 distribution. Clients hold a numbered ticket; the system shows who is being
 served now, who's next, and roughly how long the wait is. It also offers a
-multilingual public board, a "what's in stock" inventory list, and a small
-arcade to keep waiting guests entertained.
+multilingual public board, an optional "what's in stock" inventory list when
+the organization connects FEED, and a small arcade to keep waiting guests
+entertained.
 
 ## The Three Surfaces
 

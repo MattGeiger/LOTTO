@@ -9,7 +9,6 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import QRCode from "react-qr-code";
 import {
   CalendarClock,
@@ -42,6 +41,7 @@ import {
   AccordionTrigger,
 } from "@/components/animate-ui/components/radix/accordion";
 import { AdminAnimatedIcon } from "@/components/admin-animated-icon";
+import { BrandLogo } from "@/components/brand-logo";
 
 import { ConfirmAction } from "@/components/confirm-action";
 import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
@@ -2025,21 +2025,7 @@ const AdminPage = () => {
       <div className="min-h-screen w-full bg-gradient-display">
         <main className="relative mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-6 py-10 pb-28 sm:pb-32">
         <div className="w-full">
-          <Image
-            src="/wth-logo-horizontal.png"
-            alt="William Temple House"
-            width={2314}
-            height={606}
-            className="block h-auto w-full max-w-[320px] dark:hidden"
-            priority
-          />
-          <Image
-            src="/wth-logo-horizontal-reverse.png"
-            alt="William Temple House"
-            width={2333}
-            height={641}
-            className="hidden h-auto w-full max-w-[320px] dark:block"
-          />
+          <BrandLogo className="w-full max-w-[320px]" priority />
         </div>
         <div className="flex items-center gap-3">
           <HelpNavButton />
@@ -2280,7 +2266,8 @@ const AdminPage = () => {
                   description={`This will mark ${returnedTicketLabel} as returned so it no longer counts in the active queue. You can undo this action.`}
                   onConfirm={handleMarkReturned}
                   disabled={!canMarkReturned || loading || nonDrawActionPending}
-                  variant="default"
+                  variant="operational-danger"
+                  confirmVariant="operational-danger"
                 />
               </div>
             </div>
@@ -2318,7 +2305,8 @@ const AdminPage = () => {
                   description={`This will mark ${unclaimedTicketLabel} as unclaimed so it no longer counts in the active queue. You can undo this action.`}
                   onConfirm={handleMarkUnclaimed}
                   disabled={!canMarkUnclaimed || loading || nonDrawActionPending}
-                  variant="default"
+                  variant="operational-warning"
+                  confirmVariant="operational-warning"
                 />
               </div>
             </div>

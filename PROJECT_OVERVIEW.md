@@ -1,14 +1,14 @@
-# William Temple House — Digital Raffle System
+# LOTTO — Configurable Queue Management System
 ## Project Overview & Architecture Documentation
 
-**Status:** Production (v1.2.0)  
-**Deployment:** https://williamtemple.app  
+**Status:** v1.19.0 release candidate; v1.18.0 remains in production
+**Originating deployment:** https://williamtemple.app
 
 ---
 
 ## 1. Executive Summary
 
-The William Temple House Digital Raffle system replaces a manual coffee-can raffle with a production-grade web application. Built through collaborative AI agent development, the system is designed to serve ~150 daily pantry clients with:
+LOTTO replaces a manual coffee-can raffle or sequential line with a production-grade web application. It began at William Temple House and now supports multiple agency deployments from one repository through typed brand profiles. Built through collaborative AI agent development, the system is designed to serve pantry clients with:
 
 - **Fair, transparent queue management** via randomized ticket drawing
 - **Multi-device access** (wall screens + mobile via QR codes)  
@@ -16,7 +16,7 @@ The William Temple House Digital Raffle system replaces a manual coffee-can raff
 - **Enterprise-grade security** (magic link + OTP authentication, domain-restricted)
 - **Automated data hygiene** (snapshot cleanup, retention policies)
 - **Multilingual public display** with language switcher (English, 中文, Español, Русский, Українська, Tiếng Việt, فارسی, العربية) and RTL support for Arabic/Farsi
-- **Public pantry inventory lookup** using FEED's read-only inventory endpoint, with current in-stock items grouped by category and translated item/category names when available
+- **Optional public pantry inventory lookup** using the selected agency's FEED read-only endpoint, with current in-stock items grouped by category and translated item/category names when available
 
 **Tech Stack:** Next.js 16, React 19, Neon Postgres, Resend email, Vercel hosting
 
@@ -43,7 +43,7 @@ The William Temple House Digital Raffle system replaces a manual coffee-can raff
 
 ### 3.1 Frontend (Next.js 16 App Router)
 - **Public Display** (`/`) — High-contrast wall-screen UI, adaptive polling with visibility pause and operating-hours backoff
-- **Public Inventory** (`/inventory`) — Client-facing FEED inventory lookup, fetched read-only without credentials and rendered as category tables with limits, status tags, dietary flags, and freshness
+- **Optional Public Inventory** (`/inventory`) — Capability-gated FEED inventory lookup, fetched read-only without credentials and rendered as category tables with limits, status tags, dietary flags, and freshness; queue-only deployments omit the route and nav item
 - **Staff Dashboard** (`/admin`) — Range management, append, mode toggle, undo/redo
 - **Authentication** (`/login`) — Magic link + OTP fallback
 - **Staff Landing** (`/staff`) — Welcome page with dashboard link
@@ -69,7 +69,9 @@ The William Temple House Digital Raffle system replaces a manual coffee-can raff
 - **Fallback:** Local MailDev SMTP for Docker development
 
 ### 3.5 Deployment (Vercel)
-- **Production:** `williamtemple.app` (custom domain, Vercel DNS)
+- **Production model:** One Vercel project, Neon database, auth/email configuration, and public domain per agency; all build the same repository
+- **William Temple House:** `williamtemple.app` (custom domain, Vercel DNS; default brand profile)
+- **St. Johns Food Share:** Local profile implemented; production infrastructure deferred for agency/webmaster coordination
 - **Runtime:** Node.js (proxy.ts, API routes)
 - **Monitoring:** Vercel Speed Insights, build logs
 - **CI/CD:** GitHub main branch auto-deploy
@@ -115,6 +117,12 @@ The William Temple House Digital Raffle system replaces a manual coffee-can raff
 - **Status legend:** Legend clarifies not called / now serving / called / unclaimed / returned tickets
 - **Ticket detail messaging:** Tapping a ticket shows called-time context or returned/unclaimed guidance
 - **Empty state:** Welcoming message when no tickets issued
+
+### 4.7 Configurable Branding and Capabilities
+- **Build-time profile:** `NEXT_PUBLIC_LOTTO_BRAND` selects typed identity, logo, metadata, PWA, staff copy, theme tokens, and integration defaults
+- **Safe default:** An omitted profile selects William Temple House so the originating production project is unchanged
+- **Queue-only mode:** Inventory is hidden and no FEED request/CSP origin is added unless the selected profile or environment supplies an endpoint
+- **Tenant isolation:** Agency data and secrets are isolated by separate infrastructure rather than shared database rows
 
 ---
 
@@ -181,7 +189,7 @@ The William Temple House Digital Raffle system replaces a manual coffee-can raff
 
 ### 7.1 Authentication
 - **No personal data:** Only ticket numbers (anonymous)
-- **Domain allowlist:** `@williamtemple.org` enforced in sign-in callback
+- **Domain allowlist:** `ADMIN_EMAIL_DOMAIN` enforces the selected agency's approved staff domain when configured
 - **Token security:** SHA-256 hashed, 10-minute expiry, single-use
 - **OTP lockout:** 5 failed attempts → 5-minute cooldown; 1 request per minute throttle
 
@@ -199,11 +207,11 @@ The William Temple House Digital Raffle system replaces a manual coffee-can raff
 
 ## 8. Deployment & Operations
 
-### 8.1 Production Environment
+### 8.1 Production Environment (per agency)
 - **Hosting:** Vercel (Node.js runtime, serverless functions)
 - **Database:** Neon Postgres (512 MB free tier, shared pool)
 - **Email:** Resend (100 emails/day free tier)
-- **Domain:** `williamtemple.app` (Vercel DNS, custom domain)
+- **Domain:** Agency-specific custom domain (`williamtemple.app` for the originating deployment)
 - **Monitoring:** Vercel Speed Insights, build logs
 
 ### 8.2 Local Development
@@ -212,11 +220,11 @@ The William Temple House Digital Raffle system replaces a manual coffee-can raff
 - **File storage:** Falls back to `data/state.json` when `DATABASE_URL` absent
 
 ### 8.3 CI/CD Pipeline
-1. Push to GitHub `main` branch
-2. Vercel auto-builds (Next.js 16, Turbopack)
-3. Environment variables injected from Vercel dashboard
-4. Deploy to production (`williamtemple.app`)
-5. Verify Speed Insights collecting data
+1. Merge an intentionally reviewed shared change to the deployment branch
+2. Each connected Vercel project builds Next.js with its own brand and secrets
+3. Agency-specific environment variables are injected from each Vercel project
+4. Deploy to the corresponding agency domain
+5. Verify identity, authentication, persistence, optional Inventory, and Speed Insights
 
 ---
 
@@ -270,6 +278,7 @@ The William Temple House Digital Raffle system replaces a manual coffee-can raff
 - `CHANGELOG.md` — Version history, feature timeline
 - `PROJECT_OVERVIEW.md` — This document (architecture, design decisions)
 - `docs/UI_DESIGN.md` — Theme system, design tokens
+- `docs/WHITE_LABEL_BRANDING_PLAN.md` — Profile architecture, St. Johns visual reference, and validation plan
 
 ### 11.2 Key Files
 - `/src/proxy.ts` — Authentication middleware (Next.js 16)
@@ -295,6 +304,6 @@ Built through collaborative AI agent development:
 
 ---
 
-**Version:** 1.2.0 
-**Last Updated:** January 20, 2026  
-**Status:** Production, serving William Temple House food pantry operations
+**Version:** 1.18.0
+**Last Updated:** July 17, 2026
+**Status:** Production at William Temple House; configurable St. Johns profile ready for local evaluation

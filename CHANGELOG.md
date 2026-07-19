@@ -1,7 +1,101 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.19.0] - 2026-07-18
+### Documentation
+- Added `docs/CSS_THEME_ARCHITECTURE.md` with the implementation plan, cascade
+  contract, OKLCH-only CSS authoring standard, brand source boundaries, and
+  deployment-aware Arcade theme architecture.
+
+### Changed
+- **CSS colors now use an enforced OKLCH-only authoring standard.** Converted
+  every authored core and Arcade CSS color literal from hex/RGB/HSL or named
+  black/white to precise `oklch()` values while retaining alpha, gradients,
+  selector order, and visual output. Added a reusable conversion script and a
+  repository-wide CSS regression test that rejects legacy color notation.
+- **Core and Arcade brand palettes now have explicit source boundaries.**
+  Reduced `globals.css` to an ordered import manifest; extracted shared
+  foundations, protected operational status semantics, Hi-viz behavior, and
+  component rules from the WTH default and St. Johns identity layers. Arcade
+  remains isolated in its own stylesheet while loading separate WTH and St.
+  Johns `--arcade-*` palette files. Updated brand tests to enforce import order,
+  WTH's no-configuration default, operational-token isolation, and both Arcade
+  palettes.
+
+### Fixed
+- **Admin status actions no longer inherit agency branding.** The Returned and
+  Unclaimed “Mark ticket” triggers and confirmation actions now use protected
+  red/gold operational variants across light, dark, and Hi-viz themes. Their
+  disabled state uses explicit neutral fill, text, and border tokens at full
+  opacity instead of blending a translucent brand-primary button into its
+  status card. Added component, Admin integration, and brand-boundary
+  regression coverage plus staff/design documentation.
+- **Public display logo no longer touches the mobile search toolbar.** The
+  shared public-board container now reserves additional mobile-only top
+  clearance for the absolutely positioned language/search/theme row, while
+  retaining the existing desktop offset. The fix applies equally to surfaced
+  white-label logos and the transparent William Temple House mark without
+  changing reusable logo padding or sizing.
+- **White-label branding no longer changes universal Returned/Unclaimed status
+  colors.** Removed warning/danger fills, borders, gradients, and ticket-text
+  overrides from the St. Johns light/dark profile. The light profile selector
+  had higher specificity than the base `.dark` theme, causing pale light-mode
+  Admin badges to combine with near-white dark-mode text while also replacing
+  the standard red/gold alert gradients. Returned/danger and
+  Unclaimed/warning now inherit LOTTO's standard per-theme semiotics across
+  Admin, display cells, legends, badges, and alerts. Added agent/design
+  guardrails and a selector-level regression test to prevent brand profiles
+  from overriding protected operational tokens.
+
 ### Added
+- **Exact-address staff authorization.** Added server-only
+  `ADMIN_EMAIL_ALLOWLIST` support for agencies using public email providers.
+  The comma-separated allowlist may be combined with `ADMIN_EMAIL_DOMAIN`; an
+  address is accepted when it matches either restriction. Both are enforced
+  consistently for OTP issuance, OTP verification, and Magic Link sign-in.
+  Production fails closed when neither is configured; focused security tests
+  and deployment guidance cover the policy.
+- **One-repository configurable branding.** Added typed William Temple House
+  and St. Johns Food Share deployment profiles selected by
+  `NEXT_PUBLIC_LOTTO_BRAND`, a shared brand-logo component, profile-aware page
+  metadata, PWA identity, login/OTP/About copy, and semantic light/dark theme
+  tokens. William Temple House remains the no-variable default, so its current
+  Vercel production identity and FEED integration do not change. Added the
+  detailed architecture and validation plan in
+  `docs/WHITE_LABEL_BRANDING_PLAN.md` plus multi-project deployment guidance.
+- **St. Johns Food Share queue-only profile.** Added the authorized agency logo,
+  protected dark logo plate in light mode, transparent white-outline logo
+  treatment in dark mode, agency copy, a rounded-corner scalable SVG browser
+  icon, and a dedicated padded 32–512 px PNG fallback/install set for browser
+  tabs, Apple touch metadata, and installed web apps. Its deliberately compact
+  color system is built from brand teal (`#33A478`),
+  off-white (`#F7F7F7`), and charcoal (`#2D2D2D`). Neutral surfaces now carry
+  the layout while teal is reserved for emphasis. The operational **Now
+  Serving** state uses `#319A72` in light mode and luminous mint in dark mode;
+  called tickets use quieter teal-derived tints/shades so the active ticket is
+  unmistakable.
+  The production profile targets `https://stjohnsfoodshare.app`; dedicated
+  Vercel, Neon, Resend, DNS, and staff-email values remain deployment-specific.
+- **St. Johns brand-aligned Hi-viz themes.** Added flat, contrast-first light
+  and dark Hi-viz identity layers based on the approved mockups: off-white or
+  charcoal foundations, teal/mint focus and queue-progression treatments,
+  high-contrast neutral cards, and profile-aware navigation accents. The new
+  selectors intentionally omit protected operational status tokens, so
+  Returned/Unclaimed and other universal semiotics remain standard.
+- **St. Johns brand-aligned Arcade themes.** Added Arcade-scoped light and dark
+  deployment palettes based on the approved mockups: pale neutral or deep
+  green-charcoal foundations, teal/mint pixel borders and headings, vivid teal
+  light-mode actions, off-white dark-mode actions, and matching banner, grid,
+  navigation, game chrome, control, and leaderboard treatments. Decorative
+  colors that were previously embedded in Arcade selectors are now semantic
+  `--arcade-*` tokens. William Temple House retains the original
+  blue/pink/cyan/yellow defaults when no profile is configured.
+- **Inventory is now an optional deployment capability.** Profiles without a
+  FEED endpoint omit Inventory from public/authenticated core and Arcade nav,
+  return not found from `/inventory`, skip inventory translation auditing, and
+  omit FEED from CSP. A configured endpoint failure no longer falls back to
+  William Temple House's feed, preventing cross-agency inventory leakage.
 - **Help content for the Announcement builder and AI translation stack.** These
   shipped in v1.18.0 with no guide coverage. Added
   `docs/user-guides/10-announcements.md` and `11-ai-translation.md` (Language

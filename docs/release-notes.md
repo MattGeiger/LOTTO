@@ -1,6 +1,30 @@
 
 ## Unreleased
 
+## Version 1.19.0 — July 18, 2026
+
+- **LOTTO can now serve more than one organization from the same codebase.**
+  Deployments can carry their own name, logos, colors, install identity, staff
+  guidance, database, and integrations while sharing queue improvements.
+- **Welcome, St. Johns Food Share.** A complete St. Johns profile adds its
+  teal, off-white, and charcoal identity across light, dark, high-visibility,
+  and Arcade views, plus its own rounded browser-tab and padded home-screen
+  icons. Its production home is `stjohnsfoodshare.app`.
+- **Inventory is optional.** Queue-only agencies no longer see “What's in
+  stock” unless their deployment is connected to its own FEED inventory app.
+- **Safer staff access for small organizations.** A deployment may authorize
+  individual email addresses instead of opening staff login to an entire public
+  provider such as Gmail, and may combine those exceptions with a trusted staff
+  domain. The restrictions cover both one-time codes and Magic Links.
+- **Status colors keep their operational meaning.** Returned actions remain
+  red, Unclaimed actions remain gold, and unavailable actions remain neutral
+  regardless of agency branding.
+- **Cleaner mobile display layout.** Branded logos now reserve enough room
+  below the language, ticket-search, and theme controls on narrow screens.
+- **A maintainable color system underneath.** Core and Arcade palettes are
+  separated by responsibility, and authored CSS colors now use a consistent
+  OKLCH format with automated regression protection.
+
 ## Version 1.18.0 — June 30, 2026
 
 - **Staff now sign in through one login screen.** Signing in takes you straight

@@ -13,12 +13,12 @@
 
 A fun, fair, and simple **queue-management and ticketing** system for chance-based
 or sequential lines — built for [William Temple House](https://www.williamtemple.org/)
-and shared as an open-source reference for other nonprofits running ticketed
-distributions (food pantries, clinics, giveaways, and similar).
+and shared as a configurable open-source app for other nonprofits running
+ticketed distributions (food pantries, clinics, giveaways, and similar).
 
 **Production deployment:** https://williamtemple.app
 **License:** [AGPL-3.0-or-later](./LICENSE)
-**Status:** v1.18.0 — in production use
+**Status:** v1.19.0 — release candidate; v1.18.0 remains in production
 
 ---
 
@@ -38,7 +38,7 @@ on their own phone, in their own language.
 - **Staff dashboard** (`/admin`) — set ticket ranges (random or sequential), call
   numbers, mark tickets returned/unclaimed, configure operating hours, and
   undo/restore from timestamped snapshots.
-- **What's in stock** (`/inventory`) — a read-only public inventory (categories,
+- **Optional What's in stock** (`/inventory`) — a read-only public inventory (categories,
   limits, stock status, dietary flags) sourced from the
   [FEED](https://feed.williamtemple.app) public endpoint, localized where FEED
   provides translations.
@@ -65,6 +65,13 @@ on their own phone, in their own language.
 
 If LOTTO looks useful, you can fork it, modify it, and deploy your own instance —
 see [LICENSE](./LICENSE) and [TRADEMARKS.md](./TRADEMARKS.md) for the terms.
+
+LOTTO supports deployment-selected brand profiles from one repository. Each
+agency can have its own logo, colors, copy, metadata, install identity, database,
+authentication allowlist/domain policy, and optional FEED integration while continuing to share
+queue logic and future updates. See
+[`docs/WHITE_LABEL_BRANDING_PLAN.md`](./docs/WHITE_LABEL_BRANDING_PLAN.md) and
+[`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md).
 
 ---
 
@@ -213,9 +220,11 @@ plain English:
 4. The **William Temple House name, logos, visual identity, and domain are *not*
    open source** and may not be reused without separate written permission. See
    [TRADEMARKS.md](./TRADEMARKS.md).
-5. **Anyone deploying LOTTO should replace the William Temple House branding** —
-   name, logo, colors, domain, and contact information — with their own before
-   any public deployment.
+5. **Anyone deploying LOTTO must select or add an authorized brand profile** and
+   use their own name, logo, colors, domain, and contact information before a
+   public deployment. The no-configuration William Temple House profile exists
+   to preserve the originating production deployment; it is not permission to
+   reuse that identity.
 
 ---
 

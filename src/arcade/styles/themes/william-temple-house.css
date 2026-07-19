@@ -1,0 +1,167 @@
+/*  William Temple House Arcade palette (default).  */
+.arcade-scope {
+  --arcade-bg: oklch(0.128846 0.020139 262.898);
+  --arcade-bg-alt: oklch(0.179375 0.032969 264.336);
+  --arcade-wall: oklch(0.617202 0.206468 262.294);
+  --arcade-neon: oklch(0.753457 0.223858 334.113);
+  --arcade-snake-head: oklch(0.776001 0.158964 59.237);
+  --arcade-dot: oklch(0.89096 0.145886 91.051);
+  --arcade-snake-body: oklch(0.89096 0.145886 91.051);
+  --arcade-ghost: oklch(0.896631 0.100355 207.395);
+  --arcade-brick-ball: oklch(1 0 0);
+  --arcade-pellet: oklch(0.871627 0.239348 139.262);
+  --arcade-snake-grid-line: oklch(0.617202 0.206468 262.294 / 0.22);
+  --arcade-panel: oklch(0.175007 0.030717 265.705 / 0.94);
+  --arcade-panel-border: oklch(0.617202 0.206468 262.294);
+  --arcade-menu-card-bg: oklch(0.156637 0.029176 266.237 / 0.88);
+  --arcade-slider-track: oklch(0.496789 0.115671 257.717);
+  --arcade-slider-track-border: oklch(0.771095 0.116229 262.874);
+  --arcade-slider-range: oklch(0.89096 0.145886 91.051);
+  --arcade-slider-thumb-bg: oklch(0.128846 0.020139 262.898);
+  --arcade-slider-thumb-border: oklch(0.89096 0.145886 91.051);
+  --arcade-slider-thumb-shadow: oklch(0.771095 0.116229 262.874 / 0.55);
+  --arcade-text: oklch(0.975409 0.011499 264.511);
+  --arcade-action-bg: oklch(0.89096 0.145886 91.051);
+  --arcade-action-hover: oklch(0.753457 0.223858 334.113);
+  --arcade-action-text: oklch(0 0 0);
+  --arcade-ghost-contrast: oklch(0 0 0);
+  --arcade-shell-glow-primary: oklch(0.753457 0.223858 334.113 / 0.2);
+  --arcade-shell-glow-secondary: oklch(0.617202 0.206468 262.294 / 0.22);
+  --arcade-grid-dot: oklch(0.89096 0.145886 91.051 / 0.24);
+  --arcade-grid-line-x: oklch(0.617202 0.206468 262.294 / 0.18);
+  --arcade-grid-line-y: oklch(0.617202 0.206468 262.294 / 0.15);
+  --arcade-menu-card-shadow: oklch(0.89096 0.145886 91.051 / 0.4);
+  --arcade-nav-shadow: oklch(0.753457 0.223858 334.113 / 0.3);
+  --arcade-banner-background:
+    linear-gradient(90deg, oklch(0.165853 0.031167 265.236 / 0.98), oklch(0.201888 0.038676 263.185 / 0.98)),
+    linear-gradient(90deg, oklch(0.617202 0.206468 262.294 / 0.2), oklch(0.753457 0.223858 334.113 / 0.2));
+  --arcade-banner-highlight: oklch(0.89096 0.145886 91.051 / 0.55);
+  --arcade-banner-shadow: oklch(0 0 0 / 0.35);
+  --arcade-serving-border: oklch(0.617202 0.206468 262.294 / 0.6);
+  --arcade-serving-background: oklch(0.128846 0.020139 262.898 / 0.55);
+  --arcade-serving-color: var(--arcade-ghost);
+  --arcade-serving-inset: oklch(0.89096 0.145886 91.051 / 0.2);
+  --arcade-readout-background: linear-gradient(180deg, oklch(0.128846 0.020139 262.898 / 0.88), oklch(0.128846 0.020139 262.898 / 0.45));
+  --arcade-readout-border: oklch(0.617202 0.206468 262.294 / 0.45);
+  --arcade-board-background:
+    linear-gradient(180deg, oklch(0.134851 0.019297 264.324 / 0.95), oklch(0.155542 0.022552 266.614 / 0.95)),
+    linear-gradient(
+      90deg,
+      oklch(0.89096 0.145886 91.051 / 0.12) 0 2px,
+      transparent 2px calc(100% - 2px),
+      oklch(0.89096 0.145886 91.051 / 0.12) calc(100% - 2px)
+    );
+  --arcade-board-shadow:
+    inset 0 0 0 2px oklch(0.896631 0.100355 207.395 / 0.2),
+    0 0 0 2px oklch(0.753457 0.223858 334.113 / 0.3);
+  --arcade-control-dock-background:
+    linear-gradient(180deg, oklch(0.128846 0.020139 262.898 / 0.1), oklch(0.128846 0.020139 262.898 / 0.96) 28%),
+    linear-gradient(90deg, oklch(0.617202 0.206468 262.294 / 0.12), oklch(0.753457 0.223858 334.113 / 0.12));
+  --arcade-control-dock-border: oklch(0.617202 0.206468 262.294 / 0.5);
+  --arcade-control-dock-shadow: oklch(0.753457 0.223858 334.113 / 0.2);
+  --arcade-dot-glow: oklch(0.89096 0.145886 91.051 / 0.35);
+  --arcade-neon-glow: oklch(0.753457 0.223858 334.113 / 0.4);
+  --arcade-called-overlay-background: oklch(0.128846 0.020139 262.898 / 0.62);
+  --arcade-cabinet-overlay-background: oklch(0.128846 0.020139 262.898 / 0.8);
+  --arcade-score-panel-background:
+    linear-gradient(180deg, oklch(0.89096 0.145886 91.051 / 0.08), transparent 34%),
+    linear-gradient(180deg, oklch(0.128846 0.020139 262.898 / 0.96), oklch(0.128846 0.020139 262.898 / 0.68));
+  --arcade-score-panel-border: oklch(0.617202 0.206468 262.294 / 0.62);
+  --arcade-score-panel-shadow:
+    0 0 0 2px oklch(0.89096 0.145886 91.051 / 0.18),
+    0 0 16px oklch(0.617202 0.206468 262.294 / 0.22);
+  --arcade-score-champion-background: oklch(0.89096 0.145886 91.051 / 0.1);
+  --arcade-score-champion-border: oklch(0.89096 0.145886 91.051 / 0.38);
+  --arcade-score-champion-shadow: oklch(0.89096 0.145886 91.051 / 0.08);
+  --arcade-input-background: oklch(0.128846 0.020139 262.898 / 0.86);
+  --arcade-type-bold-shadow:
+    0.45px 0 0 currentColor,
+    -0.45px 0 0 currentColor,
+    0 0.45px 0 currentColor,
+    0 -0.45px 0 currentColor,
+    0.45px 0.45px 0 currentColor,
+    -0.45px 0.45px 0 currentColor,
+    0.45px -0.45px 0 currentColor,
+    -0.45px -0.45px 0 currentColor;
+}
+
+html.light .arcade-scope {
+  --arcade-bg: oklch(0.963118 0.01733 264.486);
+  --arcade-bg-alt: oklch(0.923413 0.036982 258.371);
+  --arcade-wall: oklch(0.500319 0.15634 263.085);
+  --arcade-neon: oklch(0.432654 0.157922 349.629);
+  --arcade-snake-head: oklch(0.720857 0.162408 55.288);
+  --arcade-dot: oklch(0.45437 0.099626 68.129);
+  --arcade-snake-body: oklch(0.825337 0.170579 79.939);
+  --arcade-ghost: oklch(0.4344 0.13704 256.084);
+  --arcade-brick-ball: oklch(0 0 0);
+  --arcade-pellet: oklch(0.752488 0.20667 145.242);
+  --arcade-snake-grid-line: oklch(0.500319 0.15634 263.085 / 0.2);
+  --arcade-panel: oklch(0.988903 0.005838 239.817 / 0.96);
+  --arcade-panel-border: oklch(0.500319 0.15634 263.085);
+  --arcade-menu-card-bg: oklch(0.983506 0.00791 253.852 / 0.98);
+  --arcade-slider-track: oklch(0.500319 0.15634 263.085);
+  --arcade-slider-track-border: oklch(0.347425 0.12004 261.859);
+  --arcade-slider-range: oklch(0.825337 0.170579 79.939);
+  --arcade-slider-thumb-bg: oklch(1 0 0);
+  --arcade-slider-thumb-border: oklch(0.347425 0.12004 261.859);
+  --arcade-slider-thumb-shadow: oklch(0.347425 0.12004 261.859 / 0.26);
+  --arcade-text: oklch(0.234604 0.062584 260.024);
+  --arcade-action-bg: oklch(0.89096 0.145886 91.051);
+  --arcade-action-hover: oklch(0.789558 0.159767 342.539);
+  --arcade-action-text: oklch(0 0 0);
+  --arcade-ghost-contrast: oklch(1 0 0);
+  --arcade-shell-glow-primary: oklch(0.642795 0.204349 348.221 / 0.18);
+  --arcade-shell-glow-secondary: oklch(0.500319 0.15634 263.085 / 0.2);
+  --arcade-grid-dot: oklch(0.500319 0.15634 263.085 / 0.18);
+  --arcade-grid-line-x: oklch(0.500319 0.15634 263.085 / 0.14);
+  --arcade-grid-line-y: oklch(0.500319 0.15634 263.085 / 0.12);
+  --arcade-menu-card-shadow: oklch(0.89096 0.145886 91.051 / 0.4);
+  --arcade-nav-shadow: oklch(0.753457 0.223858 334.113 / 0.3);
+  --arcade-banner-background:
+    linear-gradient(90deg, oklch(0.955502 0.021173 259.191 / 0.98), oklch(0.924126 0.036488 259.814 / 0.98)),
+    linear-gradient(90deg, oklch(0.500319 0.15634 263.085 / 0.18), oklch(0.642795 0.204349 348.221 / 0.16));
+  --arcade-banner-highlight: oklch(0.500319 0.15634 263.085 / 0.4);
+  --arcade-banner-shadow: oklch(0.250322 0.068299 262.544 / 0.18);
+  --arcade-serving-border: oklch(0.500319 0.15634 263.085 / 0.56);
+  --arcade-serving-background: oklch(1 0 0 / 0.74);
+  --arcade-serving-color: oklch(0.537198 0.14174 252.928);
+  --arcade-serving-inset: oklch(0.500319 0.15634 263.085 / 0.22);
+  --arcade-readout-background: linear-gradient(180deg, oklch(1 0 0 / 0.97), oklch(0.955502 0.021173 259.191 / 0.93));
+  --arcade-readout-border: oklch(0.500319 0.15634 263.085 / 0.5);
+  --arcade-board-background:
+    linear-gradient(180deg, oklch(0.974663 0.011947 259.823 / 0.98), oklch(0.934395 0.031295 261.745 / 0.96)),
+    linear-gradient(
+      90deg,
+      oklch(0.500319 0.15634 263.085 / 0.12) 0 2px,
+      transparent 2px calc(100% - 2px),
+      oklch(0.500319 0.15634 263.085 / 0.12) calc(100% - 2px)
+    );
+  --arcade-board-shadow:
+    inset 0 0 0 2px oklch(0.500319 0.15634 263.085 / 0.2),
+    0 0 0 2px oklch(0.217699 0.061084 265.278 / 0.12);
+  --arcade-control-dock-background:
+    linear-gradient(180deg, oklch(0.97588 0.01197 247.949 / 0.38), oklch(0.932953 0.032255 258.369 / 0.96) 30%),
+    linear-gradient(90deg, oklch(0.500319 0.15634 263.085 / 0.1), oklch(0.642795 0.204349 348.221 / 0.1));
+  --arcade-control-dock-border: oklch(0.500319 0.15634 263.085 / 0.42);
+  --arcade-control-dock-shadow: oklch(0.753457 0.223858 334.113 / 0.2);
+  --arcade-dot-glow: oklch(0.500319 0.15634 263.085 / 0.28);
+  --arcade-neon-glow: oklch(0.432654 0.157922 349.629 / 0.32);
+  --arcade-called-overlay-background: oklch(0.963607 0.017626 253.338 / 0.78);
+  --arcade-cabinet-overlay-background: oklch(0.963607 0.017626 253.338 / 0.86);
+  --arcade-score-panel-background:
+    linear-gradient(180deg, oklch(0.89096 0.145886 91.051 / 0.18), transparent 34%),
+    linear-gradient(180deg, oklch(1 0 0 / 0.98), oklch(0.955502 0.021173 259.191 / 0.94));
+  --arcade-score-panel-border: oklch(0.500319 0.15634 263.085 / 0.5);
+  --arcade-score-panel-shadow:
+    0 0 0 2px oklch(0.89096 0.145886 91.051 / 0.18),
+    0 0 16px oklch(0.500319 0.15634 263.085 / 0.18);
+  --arcade-score-champion-background: oklch(0.89096 0.145886 91.051 / 0.18);
+  --arcade-score-champion-border: oklch(0.45437 0.099626 68.129 / 0.42);
+  --arcade-score-champion-shadow: oklch(0.89096 0.145886 91.051 / 0.12);
+  --arcade-input-background: oklch(1 0 0 / 0.96);
+  background:
+    radial-gradient(circle at 14% -6%, var(--arcade-shell-glow-primary), transparent 36%),
+    radial-gradient(circle at 88% -10%, var(--arcade-shell-glow-secondary), transparent 40%),
+    linear-gradient(180deg, var(--arcade-bg), var(--arcade-bg-alt));
+}

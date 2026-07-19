@@ -12,6 +12,7 @@ import { Gamepad2Icon } from "@/components/lucide-animated/gamepad-2";
 import { GripIcon } from "@/components/lucide-animated/grip";
 import { LayoutPanelTopIcon } from "@/components/lucide-animated/layout-panel-top";
 import { TicketIcon } from "@/components/lucide-animated/ticket";
+import { inventoryIntegration } from "@/config/brand";
 
 // Shared imperative handle exposed by every nav icon. Core nav icons in
 // `@/components/lucide-animated` implement this exact shape, so they are
@@ -38,7 +39,7 @@ export type NavItem = {
 };
 
 // Fixed order: Your ticket · Dashboard · What's in stock · Games. See docs/NAVIGATION.md.
-export const navItems: NavItem[] = [
+const allNavItems: NavItem[] = [
   {
     id: "ticket",
     labelKey: "navTicket",
@@ -70,10 +71,14 @@ export const navItems: NavItem[] = [
   },
 ];
 
+export const navItems: NavItem[] = inventoryIntegration.enabled
+  ? allNavItems
+  : allNavItems.filter((item) => item.id !== "inventory");
+
 // Authenticated staff variant: Admin · Dashboard · What's in stock · Games.
 // Same component + animation rules as the public bar (see docs/NAVIGATION.md);
 // only the destinations differ. Rendered when the viewer is signed in.
-export const authNavItems: NavItem[] = [
+const allAuthNavItems: NavItem[] = [
   {
     id: "admin",
     labelKey: "navAdmin",
@@ -103,3 +108,7 @@ export const authNavItems: NavItem[] = [
     icon: Gamepad2Icon,
   },
 ];
+
+export const authNavItems: NavItem[] = inventoryIntegration.enabled
+  ? allAuthNavItems
+  : allAuthNavItems.filter((item) => item.id !== "inventory");

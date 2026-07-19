@@ -8,7 +8,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import QRCode from "qrcode";
 import { MorphingText } from "@/components/animate-ui/primitives/texts/morphing";
 import { RollingText } from "@/components/animate-ui/primitives/texts/rolling";
@@ -17,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrambleOnLanguageChange, T } from "@/components/core/scramble-text";
+import { BrandLogo } from "@/components/brand-logo";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TicketDetailDialog } from "@/components/ticket-detail-dialog";
 import { useLanguage, type Language } from "@/contexts/language-context";
@@ -259,8 +259,8 @@ export const ReadOnlyDisplay = ({
 
 
   // The browser tab / document title is intentionally left to the static,
-  // server-rendered `metadata.title` ("William Temple House App" in
-  // src/app/layout.tsx). Do NOT set `document.title` to the pantry date here:
+  // server-rendered, brand-aware `metadata.title` in src/app/layout.tsx. Do NOT
+  // set `document.title` to the pantry date here:
   // this component renders on the indexed home page ("/"), and a client-side
   // dated title gets crawled by Googlebot and frozen as a stale date in search
   // results. The live service date is still shown in-page (service-date below).
@@ -410,10 +410,12 @@ export const ReadOnlyDisplay = ({
         dir={isRTL(language) ? "rtl" : "ltr"}
         lang={language}
         className={cn(
-          "min-h-screen w-full bg-gradient-display px-6 pt-14 text-foreground sm:px-8 lg:px-10",
+          "min-h-screen w-full bg-gradient-display px-6 text-foreground sm:px-8 lg:px-10",
           // Extra scroll clearance so the fixed bottom tab bar does not trap
-          // the ticket grid/card behind the dock.
-          isPersonalized ? "pb-28" : "pb-32",
+          // the ticket grid/card behind the dock. The public board also reserves
+          // extra mobile clearance for its absolutely positioned utility/search
+          // toolbar; the desktop toolbar already clears the header at `pt-14`.
+          isPersonalized ? "pb-28 pt-14" : "pb-32 pt-20 sm:pt-14",
         )}
         >
         <div data-testid="readonly-display-content" className="mx-auto flex w-full flex-col gap-4" dir="ltr">
@@ -434,27 +436,14 @@ export const ReadOnlyDisplay = ({
           {/* Logo - left */}
           {showHeaderLogo ? (
             <div className="flex justify-center sm:justify-start">
-              <Image
-                src="/wth-logo-horizontal.png"
-                alt="William Temple House"
-                width={2314}
-                height={606}
-                className="block h-auto w-full max-w-[400px] dark:hidden"
-              />
-              <Image
-                src="/wth-logo-horizontal-reverse.png"
-                alt="William Temple House"
-                width={2333}
-                height={641}
-                className="hidden h-auto w-full max-w-[400px] dark:block"
-              />
+              <BrandLogo className="w-full max-w-[400px]" />
             </div>
           ) : null}
 
           {/* NOW SERVING - center */}
           <div className="flex justify-center">
             <div dir={textDirection} className="text-center">
-              <p className="mb-1 text-lg uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="mb-1 text-lg uppercase tracking-[0.14em] text-[color:var(--serving-label-color)]">
                 <T text={t("nowServing")} />
               </p>
               {!animateServingValue ? (

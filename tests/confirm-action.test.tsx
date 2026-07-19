@@ -161,10 +161,22 @@ describe("ConfirmAction", () => {
     expect(screen.getByText("Delete?")).toBeInTheDocument();
   });
 
-  it("applies variant and size props to trigger button", () => {
-    renderConfirm({ variant: "destructive", size: "sm" });
-    const btn = screen.getByRole("button", { name: "Reset" });
-    expect(btn).toBeInTheDocument();
-    // The button should be rendered (variant/size applied as className from shadcn)
-  });
+  it.each([
+    ["operational-danger", "--operational-danger-action-bg"],
+    ["operational-warning", "--operational-warning-action-bg"],
+  ] as const)(
+    "applies the %s status treatment to both trigger and confirmation",
+    async (variant, backgroundToken) => {
+      renderConfirm({ variant, confirmVariant: variant, size: "sm" });
+      const user = userEvent.setup();
+      const trigger = screen.getByRole("button", { name: "Reset" });
+
+      expect(trigger.className).toContain(`bg-[var(${backgroundToken})]`);
+      expect(trigger.className).toContain("disabled:opacity-100");
+
+      await user.click(trigger);
+      const confirm = screen.getByRole("button", { name: "Confirm" });
+      expect(confirm.className).toContain(`bg-[var(${backgroundToken})]`);
+    },
+  );
 });

@@ -2,14 +2,15 @@
 
 ## Summary
 
-LOTTO can consume FEED's public inventory endpoint to show pantry clients which
-items are currently available. FEED is the source of truth for inventory
+LOTTO can optionally consume an agency's FEED public inventory endpoint to show
+pantry clients which items are currently available. FEED is the source of truth for inventory
 availability, categories, limits, dietary flags, and translated item/category
 names.
 
 This document captures the data contract and the LOTTO integration shape.
-Runtime integration is implemented as a standalone public inventory lookup at
-`/inventory`, linked from the personalized homepage at `/`.
+Runtime integration is implemented as a capability-gated public inventory
+lookup at `/inventory`. Deployments without FEED omit Inventory navigation and
+return not found for that route.
 
 ## Pattern Alignment
 
@@ -245,7 +246,7 @@ tests/feed-public-inventory.test.ts
 tests/public-inventory-page.test.tsx
 ```
 
-Proposed optional environment variable:
+Optional environment variable:
 
 ```text
 NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL=https://feed.williamtemple.app/api/public/inventory.json
@@ -257,12 +258,14 @@ Local development can point this at FEED on port 3001:
 NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL=http://localhost:3001/api/public/inventory.json
 ```
 
-Default behavior uses the production FEED URL when the environment variable is
-absent.
+Default behavior comes from the selected brand profile. William Temple House
+declares its production FEED endpoint; queue-only profiles such as St. Johns
+Food Share declare no endpoint. An explicit environment URL enables or
+overrides inventory for the selected deployment.
 
-If a configured endpoint fails, LOTTO retries once against the production FEED
-URL. This protects production from stale local-development overrides such as
-`http://localhost:3001/api/public/inventory.json`.
+If a configured endpoint fails, LOTTO reports that failure and does not try any
+other endpoint. Cross-agency fallback is prohibited because it could display
+another pantry's stock.
 
 ## Fetch Contract
 
@@ -275,7 +278,7 @@ above):
 const headers: Record<string, string> = { Accept: "application/json" }; // safelisted
 if (typeof window === "undefined") {
   // Server-only: Node/undici sends no UA by default; never subject to CORS.
-  headers["User-Agent"] = "LOTTO/1.0 (+https://williamtemple.app)";
+  headers["User-Agent"] = `LOTTO/1.0 (+${brandProfile.publicAppUrl})`;
 }
 
 const response = await fetch(feedPublicInventoryUrl, {
@@ -296,7 +299,9 @@ Implementation expectations:
    the browser.** It triggers a preflight FEED rejects. `tests/feed-public-inventory.test.ts`
    guards this.
 
-Production CSP must allow this public FEED origin in `connect-src`:
+Production CSP adds only the enabled deployment's public FEED origin to
+`connect-src`. Queue-only deployments add no FEED origin. For William Temple
+House this is:
 
 ```text
 https://feed.williamtemple.app
@@ -352,11 +357,13 @@ Inventory lookup should remain separate from raffle/display features:
 - Do not integrate inventory into Arcade routes.
 - A link from the public board top bar to `/inventory` is acceptable if it uses
   existing public navigation patterns and does not disrupt queue lookup.
-- The public bottom navigation now owns top-level client movement:
+- When FEED is enabled, the public bottom navigation owns top-level client movement:
   **Your ticket** (`/`), **Dashboard** (`/display`), **What's in stock**
   (`/inventory`), and **Games** (`/arcade`). Do not reintroduce separate
   inventory/arcade action buttons inside the personalized ticket-card action
   stack.
+- When FEED is disabled, both the core and Arcade navigation omit **What's in
+  stock**, and `/inventory` returns the standard not-found response.
 - The earlier personalized-homepage blockers have been resolved:
   - Translated public text on `/` now uses TextScramble instead of the
     retired aggressive morph effect.
@@ -390,6 +397,10 @@ Focused tests should cover:
 8. Empty response renders a client-friendly empty state.
 9. Fetch failure renders a client-friendly error state and retry affordance.
 10. Arabic/Persian selected languages apply RTL direction.
+11. A queue-only profile makes no FEED request, omits Inventory navigation, and
+    returns not found for `/inventory`.
+12. A failed custom endpoint is attempted once and never falls back to William
+    Temple House's FEED.
 
 ## Open Decisions
 
@@ -404,7 +415,8 @@ Focused tests should cover:
 
 ## Acceptance Criteria for First Implementation
 
-1. `/inventory` loads the FEED public endpoint without credentials.
+1. When enabled, `/inventory` loads the selected deployment's FEED public
+   endpoint without credentials.
 2. Inventory is grouped by category and shows only FEED-included items.
 3. Selected LOTTO language maps to FEED language names and falls back to English
    per category/item.
@@ -414,3 +426,6 @@ Focused tests should cover:
 6. Tests cover the fetch helper, language fallback, and primary UI states.
 7. `README.md`, `.env.example`, `PROJECT_OVERVIEW.md`, and `CHANGELOG.md` are
    updated when runtime integration is implemented.
+8. When disabled, Inventory is absent from navigation, `/inventory` returns
+   not found, translation auditing skips the source, and CSP contains no FEED
+   origin.
