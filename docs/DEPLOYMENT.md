@@ -48,8 +48,9 @@ docker compose up --build
    - `AUTH_SECRET` (required) and `AUTH_TRUST_HOST=true`
    - `DATABASE_URL=postgresql://postgres:postgres@db:5432/neondb?sslmode=disable`
    - `EMAIL_FROM=login@localhost`, `EMAIL_SERVER_HOST=maildev`, `EMAIL_SERVER_PORT=1025`
-   - `ADMIN_EMAIL_ALLOWLIST` (exact addresses) or `ADMIN_EMAIL_DOMAIN`
-     (domain-wide fallback); production fails closed when neither is set
+   - `ADMIN_EMAIL_ALLOWLIST` (exact addresses) and/or `ADMIN_EMAIL_DOMAIN`
+     (managed domain); when both are set either path is accepted, and production
+     fails closed when neither is set
    - Optional: `RESEND_API_KEY` + production `EMAIL_FROM` to test Resend instead of MailDev
 
 See `.env.example` for the full list.
@@ -135,8 +136,9 @@ default is `william-temple-house`. It may also be set explicitly to that value.
 ### St. Johns Food Share production
 
 The profile targets `https://stjohnsfoodshare.app` in its own Vercel project.
-Until managed `@stjohnsfoodshare.org` mailboxes exist, use an exact Gmail
-allowlist rather than authorizing the entire `gmail.com` domain:
+Until managed `@stjohnsfoodshare.org` mailboxes exist, authorize the shared Gmail
+address exactly and combine it with the trusted Temple PDX administrative
+domain. Do not authorize the entire `gmail.com` domain:
 
 ```text
 NEXT_PUBLIC_LOTTO_BRAND=st-johns-food-share
@@ -146,16 +148,17 @@ AUTH_TRUST_HOST=true
 DATABASE_URL=<new St. Johns Neon connection>
 EMAIL_FROM=<verified St. Johns sender>
 RESEND_API_KEY=<St. Johns-capable Resend key>
-ADMIN_EMAIL_ALLOWLIST=<approved address@gmail.com>
-ADMIN_EMAIL_DOMAIN=
+ADMIN_EMAIL_ALLOWLIST=stjohnsfoodshare@gmail.com
+ADMIN_EMAIL_DOMAIN=templepdx.com
 AUTH_URL=https://stjohnsfoodshare.app
 NODE_ENV=production
 ```
 
 Leave `NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL` unset for queue-only deployment.
 Set `EMAIL_FROM=login@stjohnsfoodshare.app` after Resend verifies the purchased
-domain. When individual organizational mailboxes are available, remove the
-allowlist and set `ADMIN_EMAIL_DOMAIN=stjohnsfoodshare.org`.
+domain. This policy also authorizes `matt@templepdx.com`. When individual
+organizational mailboxes are available, remove the temporary Gmail exception
+and replace the domain with `ADMIN_EMAIL_DOMAIN=stjohnsfoodshare.org`.
 
 ### Postgres schema (run once)
 

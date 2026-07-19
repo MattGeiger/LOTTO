@@ -13,8 +13,8 @@
   stock” unless their deployment is connected to its own FEED inventory app.
 - **Safer staff access for small organizations.** A deployment may authorize
   individual email addresses instead of opening staff login to an entire public
-  provider such as Gmail. The restriction covers both one-time codes and Magic
-  Links.
+  provider such as Gmail, and may combine those exceptions with a trusted staff
+  domain. The restrictions cover both one-time codes and Magic Links.
 - **Status colors keep their operational meaning.** Returned actions remain
   red, Unclaimed actions remain gold, and unavailable actions remain neutral
   regardless of agency branding.

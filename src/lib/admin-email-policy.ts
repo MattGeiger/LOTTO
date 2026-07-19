@@ -11,8 +11,11 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DOMAIN_PATTERN = /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i;
 
 export type AdminEmailPolicy =
-  | { mode: "allowlist"; allowedEmails: ReadonlySet<string> }
-  | { mode: "domain"; allowedDomain: string }
+  | {
+      mode: "restricted";
+      allowedEmails: ReadonlySet<string>;
+      allowedDomain: string | null;
+    }
   | { mode: "development-open" }
   | { mode: "production-closed" };
 
@@ -20,8 +23,9 @@ const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
 export function getAdminEmailPolicy(env: AdminEmailPolicyEnv = process.env): AdminEmailPolicy {
   const allowlistValue = env.ADMIN_EMAIL_ALLOWLIST?.trim();
+  let allowedEmails: string[] = [];
   if (allowlistValue) {
-    const allowedEmails = allowlistValue
+    allowedEmails = allowlistValue
       .split(",")
       .map(normalizeEmail)
       .filter(Boolean);
@@ -31,8 +35,6 @@ export function getAdminEmailPolicy(env: AdminEmailPolicyEnv = process.env): Adm
         "ADMIN_EMAIL_ALLOWLIST must be a comma-separated list of complete email addresses.",
       );
     }
-
-    return { mode: "allowlist", allowedEmails: new Set(allowedEmails) };
   }
 
   const domainValue = env.ADMIN_EMAIL_DOMAIN?.trim().toLowerCase().replace(/^@/, "");
@@ -40,7 +42,14 @@ export function getAdminEmailPolicy(env: AdminEmailPolicyEnv = process.env): Adm
     if (!DOMAIN_PATTERN.test(domainValue)) {
       throw new Error("ADMIN_EMAIL_DOMAIN must be a valid domain name without an email address.");
     }
-    return { mode: "domain", allowedDomain: domainValue };
+  }
+
+  if (allowedEmails.length > 0 || domainValue) {
+    return {
+      mode: "restricted",
+      allowedEmails: new Set(allowedEmails),
+      allowedDomain: domainValue || null,
+    };
   }
 
   return env.NODE_ENV === "production"
@@ -57,10 +66,11 @@ export function isAdminEmailAllowed(
 
   const policy = getAdminEmailPolicy(env);
   switch (policy.mode) {
-    case "allowlist":
-      return policy.allowedEmails.has(normalizedEmail);
-    case "domain":
-      return normalizedEmail.endsWith(`@${policy.allowedDomain}`);
+    case "restricted":
+      return (
+        policy.allowedEmails.has(normalizedEmail) ||
+        (policy.allowedDomain !== null && normalizedEmail.endsWith(`@${policy.allowedDomain}`))
+      );
     case "development-open":
       return true;
     case "production-closed":

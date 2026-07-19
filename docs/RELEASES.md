@@ -8,10 +8,11 @@ St. Johns Food Share queue-only profile supplies its own visual identity,
 metadata, install assets, public URL, and optional-integration policy.
 
 This release also separates shared operational status semantics from agency
-identity colors, adds exact-address staff authorization for organizations using
-public email providers, and restructures core and Arcade palettes around an
-OKLCH-only CSS authoring standard. Full details are in `CHANGELOG.md`,
-`docs/WHITE_LABEL_BRANDING_PLAN.md`, and `docs/CSS_THEME_ARCHITECTURE.md`.
+identity colors, adds additive exact-address and managed-domain staff
+authorization for organizations using public email providers, and restructures
+core and Arcade palettes around an OKLCH-only CSS authoring standard. Full
+details are in `CHANGELOG.md`, `docs/WHITE_LABEL_BRANDING_PLAN.md`, and
+`docs/CSS_THEME_ARCHITECTURE.md`.
 
 ---
 

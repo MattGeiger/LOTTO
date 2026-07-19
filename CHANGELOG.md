@@ -51,11 +51,11 @@
 ### Added
 - **Exact-address staff authorization.** Added server-only
   `ADMIN_EMAIL_ALLOWLIST` support for agencies using public email providers.
-  The comma-separated allowlist takes precedence over a domain policy and is
-  enforced consistently for OTP issuance, OTP verification, and Magic Link
-  sign-in. Production now fails closed when neither an allowlist nor
-  `ADMIN_EMAIL_DOMAIN` is configured; focused security tests and deployment
-  guidance cover the policy.
+  The comma-separated allowlist may be combined with `ADMIN_EMAIL_DOMAIN`; an
+  address is accepted when it matches either restriction. Both are enforced
+  consistently for OTP issuance, OTP verification, and Magic Link sign-in.
+  Production fails closed when neither is configured; focused security tests
+  and deployment guidance cover the policy.
 - **One-repository configurable branding.** Added typed William Temple House
   and St. Johns Food Share deployment profiles selected by
   `NEXT_PUBLIC_LOTTO_BRAND`, a shared brand-logo component, profile-aware page
