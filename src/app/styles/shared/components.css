@@ -1,0 +1,256 @@
+/*  Shared Tailwind token mapping and component-level rules.  */
+@custom-variant dark (&:is(.dark *));
+@theme inline {
+  /* Core Shadcn colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Chart colors */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Sidebar colors */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Status colors */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-success-border: var(--status-success-border);
+  --color-status-success-text: var(--status-success-text);
+  --color-status-warning-bg: var(--status-warning-bg);
+  --color-status-warning-border: var(--status-warning-border);
+  --color-status-warning-text: var(--status-warning-text);
+  --color-status-danger-bg: var(--status-danger-bg);
+  --color-status-danger-border: var(--status-danger-border);
+  --color-status-danger-text: var(--status-danger-text);
+  --color-status-neutral-bg: var(--status-neutral-bg);
+  --color-status-neutral-border: var(--status-neutral-border);
+  --color-status-neutral-text: var(--status-neutral-text);
+
+  /* Radius system */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Shadows for Tailwind utilities */
+  --shadow-2xs: var(--base-shadow-2xs);
+  --shadow-xs: var(--base-shadow-xs);
+  --shadow-sm: var(--base-shadow-sm);
+  --shadow: var(--base-shadow);
+  --shadow-md: var(--base-shadow-md);
+  --shadow-lg: var(--base-shadow-lg);
+  --shadow-xl: var(--base-shadow-xl);
+  --shadow-2xl: var(--base-shadow-2xl);
+
+  /* Fonts */
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-mono: var(--app-font-mono);
+
+  /* Motion tokens */
+  --duration-fast: 250ms;
+  --duration-normal: 400ms;
+  --duration-slow: 600ms;
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Respect user motion preferences globally */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+body {
+  margin: 0;
+  font-family: var(--app-font-sans), system-ui, -apple-system, sans-serif;
+}
+a {
+  text-decoration: none;
+}
+/* Eliminate ~300ms tap delay on iOS Safari (iPad Mini 4 / iPadOS 15) */
+a, button, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+}
+::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+@layer components {
+  /* Universal card gradient (FEED "Prism" pattern, adapted).
+     Every surface carrying data-slot="card" gets a subtle, theme-aware brand
+     gradient. The stops are translucent (see --card-gradient), so this overlays
+     each card's own background-color rather than replacing it — opaque cards and
+     translucent (bg-card/80) cards both keep their fill. Arcade cards use a
+     separate component without data-slot="card" and are unaffected. */
+  [data-slot="card"] {
+    background-image: var(--card-gradient);
+  }
+}
+@layer utilities {
+  /* Motion enhancements — Phase 3 */
+  @keyframes fade-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes slide-in-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-subtle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+  }
+  .animate-fade-in {
+    animation: fade-in var(--duration-fast) var(--ease-default) both;
+  }
+  .animate-slide-in-up {
+    animation: slide-in-up var(--duration-normal) var(--ease-default) both;
+  }
+  .animate-pulse-subtle {
+    animation: pulse-subtle var(--duration-slow) var(--ease-default) infinite;
+  }
+
+  .bg-gradient-display {
+    background: var(--gradient-display-bg);
+  }
+
+  .bg-gradient-serving-text {
+    background-image: var(--serving-text-gradient);
+  }
+
+  .ticket-serving {
+    background: var(--ticket-serving);
+    border-color: var(--ticket-serving-border);
+    color: var(--ticket-serving-text);
+  }
+
+  .ticket-served {
+    background: var(--ticket-served);
+    border-color: var(--ticket-served-border);
+    color: var(--ticket-served-text);
+  }
+
+  .ticket-upcoming {
+    background: var(--ticket-upcoming);
+    border-color: var(--ticket-upcoming-border);
+    color: var(--muted-foreground);
+    opacity: 0.85;
+  }
+
+  .ticket-unclaimed {
+    background: var(--gradient-status-warning);
+    border-color: var(--status-warning-border);
+    color: var(--ticket-unclaimed-text, var(--status-warning-text));
+  }
+
+  .ticket-returned {
+    background: var(--gradient-status-danger);
+    border-color: var(--status-danger-border);
+    color: var(--ticket-returned-text, var(--status-danger-text));
+  }
+
+  /* Status badge variants */
+  .badge-success {
+    border-color: var(--status-success-border);
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+  }
+
+  .badge-success:hover {
+    background: var(--status-success-bg);
+  }
+
+  /* Card gradient backgrounds */
+  .bg-gradient-card-info {
+    background: var(--gradient-card-info);
+  }
+
+.bg-gradient-card-accent {
+  background: var(--gradient-card-accent);
+}
+
+.bg-gradient-card-blue {
+  background: var(--gradient-card-blue);
+}
+
+.bg-gradient-card-emerald {
+  background: var(--gradient-card-emerald);
+}
+
+.bg-gradient-card-warning {
+  background: var(--gradient-card-warning);
+}
+
+.bg-gradient-card-danger {
+  background: var(--gradient-card-danger);
+}
+
+.bg-gradient-status-warning {
+  background: var(--gradient-status-warning);
+}
+
+.bg-gradient-status-danger {
+  background: var(--gradient-status-danger);
+}
+
+.bg-gradient-status-success {
+  background: var(--gradient-status-success);
+}
+
+.text-card-title {
+  color: var(--card-title-color);
+}
+
+.text-card-icon {
+  color: var(--card-icon-color);
+}
+
+.text-icon-blue {
+  color: var(--icon-blue);
+}
+
+.text-icon-emerald {
+  color: var(--icon-emerald);
+}
+
+}
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

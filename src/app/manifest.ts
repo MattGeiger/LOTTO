@@ -6,46 +6,20 @@
 // is not covered by this license; see TRADEMARKS.md.
 
 import type { MetadataRoute } from "next";
+import { brandProfile } from "@/config/brand";
 
-// Web App Manifest — drives Android "Add to Home Screen" / installable PWA so the
-// home-screen icon is the WTH emblem (layered faces + sun) on white rather than a
-// generic glyph. iOS uses src/app/apple-icon.png instead (Next auto-links it).
-// Colors sampled from the brand logo: navy #2762a2, white surface. See
-// docs/ISSUES.md (Issue 26) and public/icons/.
+// Web App Manifest — identity and install assets come from the deployment's
+// selected brand profile. See docs/WHITE_LABEL_BRANDING_PLAN.md.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "William Temple House App",
-    // short_name is what iOS/Android pre-fill as the home-screen label (the OS
-    // prefers short_name over name for the launcher). Kept equal to name so the
-    // "Add to Home Screen" default reads "William Temple House App" rather than a
-    // truncated brand mark. The OS may still visually truncate long labels under
-    // the icon, but the editable default name is the full string.
-    short_name: "William Temple House App",
-    description:
-      "See your place in line, check what's in stock, and play a few retro games while you wait at William Temple House.",
+    name: brandProfile.appName,
+    // short_name is what iOS/Android prefer for the launcher label.
+    short_name: brandProfile.shortName,
+    description: brandProfile.metadata.description,
     start_url: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#2762a2",
-    icons: [
-      {
-        src: "/icons/icon-192.png",
-        sizes: "192x192",
-        type: "image/png",
-        purpose: "any",
-      },
-      {
-        src: "/icons/icon-512.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "any",
-      },
-      {
-        src: "/icons/icon-maskable-512.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "maskable",
-      },
-    ],
+    background_color: brandProfile.pwa.backgroundColor,
+    theme_color: brandProfile.pwa.themeColor,
+    icons: brandProfile.pwa.manifestIcons,
   };
 }

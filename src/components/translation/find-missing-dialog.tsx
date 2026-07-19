@@ -52,6 +52,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { collectFeedInventoryNames, fetchFeedPublicInventory } from "@/lib/feed-public-inventory";
 import { runStagedTranslation, type TranslationProgress } from "@/lib/translation/run-translation";
 import { TRANSLATION_TYPES, type TranslationType } from "@/lib/translation/types";
+import { inventoryIntegration } from "@/config/brand";
 
 type MissingDetails = {
   count: number;
@@ -67,6 +68,10 @@ const TYPE_META: Record<TranslationType, { label: string; icon: LucideIcon }> = 
   announcement: { label: "Announcement", icon: Megaphone },
   inventory: { label: "Inventory", icon: Package },
 };
+
+const AVAILABLE_TRANSLATION_TYPES = inventoryIntegration.enabled
+  ? TRANSLATION_TYPES
+  : TRANSLATION_TYPES.filter((type) => type !== "inventory");
 
 export function FindMissingDialog({
   open,
@@ -111,10 +116,12 @@ export function FindMissingDialog({
       // even when the server's egress to it is blocked). On failure, fall through
       // without them and let the server attempt its own fetch + report why.
       let names: string[] | undefined;
-      try {
-        names = collectFeedInventoryNames(await fetchFeedPublicInventory());
-      } catch {
-        names = undefined;
+      if (inventoryIntegration.enabled) {
+        try {
+          names = collectFeedInventoryNames(await fetchFeedPublicInventory());
+        } catch {
+          names = undefined;
+        }
       }
       setInventoryNames(names);
       const res = await fetch("/api/translations/find-missing", {
@@ -128,7 +135,7 @@ export function FindMissingDialog({
       setResult(details);
       // Default-select every type that has missing items.
       const defaults: Partial<Record<TranslationType, boolean>> = {};
-      for (const type of TRANSLATION_TYPES) {
+      for (const type of AVAILABLE_TRANSLATION_TYPES) {
         if ((details.byType[type] ?? 0) > 0) defaults[type] = true;
       }
       setSelectedTypes(defaults);
@@ -169,7 +176,7 @@ export function FindMissingDialog({
     }
   };
 
-  const typeCards = TRANSLATION_TYPES.map((type) => ({
+  const typeCards = AVAILABLE_TRANSLATION_TYPES.map((type) => ({
     type,
     count: result?.byType[type] ?? 0,
     ...TYPE_META[type],
@@ -258,7 +265,7 @@ export function FindMissingDialog({
             <TabsContent value="overview" className="min-h-0 flex-1">
               <ScrollArea className="h-[min(48vh,420px)]">
                 <div className="flex flex-col gap-4 p-1">
-                  {result.sourceCounts && (result.sourceCounts.inventory ?? 0) === 0 ? (
+                  {inventoryIntegration.enabled && result.sourceCounts && (result.sourceCounts.inventory ?? 0) === 0 ? (
                     <div className="flex items-start gap-2 rounded-md border border-status-warning-border bg-status-warning-bg p-3 text-sm text-status-warning-text">
                       <XCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                       <div className="space-y-1">

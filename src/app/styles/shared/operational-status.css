@@ -1,0 +1,88 @@
+/*  Brand-independent queue semantics. Do not move these tokens into a brand profile.  */
+:root {
+
+  /* Shared operational status colors */
+  --success: oklch(0.7 0.16 152);
+  --success-foreground: oklch(0.98 0.02 152);
+  --status-success-bg: oklch(0.97 0.05 152);
+  --status-success-border: oklch(0.7 0.16 152);
+  --status-success-text: oklch(0.55 0.1 152);
+
+  --status-warning-bg: oklch(0.95 0.08 80);
+  --status-warning-border: oklch(0.78 0.16 80);
+  --status-warning-text: oklch(0.45 0.12 80);
+
+  --status-danger-bg: oklch(0.96 0.08 25);
+  --status-danger-border: oklch(0.65 0.2 25);
+  --status-danger-text: oklch(0.48 0.14 25);
+
+  --status-neutral-bg: oklch(0.95 0.02 250);
+  --status-neutral-border: oklch(0.72 0.02 250);
+  --status-neutral-text: oklch(0.55 0.02 250);
+
+  /* Operational actions are part of LOTTO's status semiotics, not agency
+     branding. These tokens intentionally live outside every [data-brand]
+     block and use explicit disabled colors instead of translucent brand fills. */
+  --operational-danger-action-bg: oklch(0.50 0.18 25);
+  --operational-danger-action-hover: oklch(0.44 0.18 25);
+  --operational-danger-action-fg: oklch(0.98 0.01 25);
+  --operational-danger-action-border: oklch(0.38 0.15 25);
+  --operational-warning-action-bg: oklch(0.78 0.16 80);
+  --operational-warning-action-hover: oklch(0.70 0.16 80);
+  --operational-warning-action-fg: oklch(0.22 0.07 80);
+  --operational-warning-action-border: oklch(0.52 0.13 80);
+  --operational-action-disabled-bg: oklch(0.90 0.01 250);
+  --operational-action-disabled-fg: oklch(0.42 0.02 250);
+  --operational-action-disabled-border: oklch(0.65 0.02 250);
+  /* Saturated status fills rendered as bottom→top gradients (deeper at the base),
+     theme-aware via the referenced status tokens. Used by the /admin Live State
+     returned/unclaimed alert boxes. */
+  --gradient-status-warning: linear-gradient(to top, color-mix(in oklch, var(--status-warning-bg), var(--status-warning-border) 30%), var(--status-warning-bg));
+  --gradient-status-danger: linear-gradient(to top, color-mix(in oklch, var(--status-danger-bg), var(--status-danger-border) 30%), var(--status-danger-bg));
+  --gradient-status-success: linear-gradient(to top, color-mix(in oklch, var(--status-success-bg), var(--status-success-border) 30%), var(--status-success-bg));
+  /* Bright cell-number text tokens: default to the status text in light, dark
+     overrides with high-contrast colors (see .dark). Used by the display ticket
+     cells and the /admin Live State alert-box titles and number badges. */
+  --ticket-unclaimed-text: var(--status-warning-text);
+  --ticket-returned-text: var(--status-danger-text)
+}
+.dark {
+
+  /* Shared operational status colors (dark) */
+  --status-success-bg: oklch(0.22 0.04 152);
+  --status-success-border: oklch(0.4 0.1 152);
+  --status-success-text: oklch(0.75 0.12 152);
+
+  --status-warning-bg: oklch(0.25 0.05 80);
+  --status-warning-border: oklch(0.45 0.12 80);
+  --status-warning-text: oklch(0.8 0.14 80);
+
+  --status-danger-bg: oklch(0.22 0.05 25);
+  --status-danger-border: oklch(0.42 0.14 25);
+  --status-danger-text: oklch(0.75 0.16 25);
+
+  --status-neutral-bg: oklch(0.24 0.01 250);
+  --status-neutral-border: oklch(0.4 0.02 250);
+  --status-neutral-text: oklch(0.7 0.02 250);
+
+  --operational-danger-action-bg: oklch(0.75 0.16 25);
+  --operational-danger-action-hover: oklch(0.82 0.14 25);
+  --operational-danger-action-fg: oklch(0.16 0.04 25);
+  --operational-danger-action-border: oklch(0.88 0.10 25);
+  --operational-warning-action-bg: oklch(0.84 0.16 88);
+  --operational-warning-action-hover: oklch(0.90 0.14 88);
+  --operational-warning-action-fg: oklch(0.17 0.05 88);
+  --operational-warning-action-border: oklch(0.94 0.10 88);
+  --operational-action-disabled-bg: oklch(0.28 0.01 250);
+  --operational-action-disabled-fg: oklch(0.72 0.02 250);
+  --operational-action-disabled-border: oklch(0.48 0.02 250);
+  /* Dark overrides: unclaimed = lighter→darker gold; returned = lighter→darker rich red.
+     Shared with the /admin alert boxes in dark mode. */
+  --gradient-status-warning: linear-gradient(to top, oklch(0.42 0.10 88), oklch(0.62 0.13 88));
+  --gradient-status-danger: linear-gradient(to top, oklch(0.42 0.18 25), oklch(0.58 0.16 28));
+  --gradient-status-success: linear-gradient(to top, oklch(0.42 0.12 152), oklch(0.60 0.14 152));
+  /* High-contrast vibrant yellow (oklch(0.981045 0.105806 108.201)) for unclaimed cell numbers, dark only. */
+  --ticket-unclaimed-text: oklch(0.98 0.10 108);
+  /* High-contrast soft pink (oklch(0.962568 0.018456 17.478)) for returned cell numbers, dark only. */
+  --ticket-returned-text: oklch(0.95 0.03 19)
+}

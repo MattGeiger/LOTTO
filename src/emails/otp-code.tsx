@@ -16,6 +16,7 @@ import {
   Section,
   Text,
 } from "@react-email/components";
+import { brandProfile } from "@/config/brand";
 
 type OtpCodeProps = {
   code: string;
@@ -35,11 +36,11 @@ export const OtpCode = ({ code }: OtpCodeProps) => (
         fontStyle="normal"
       />
     </Head>
-    <Preview>William Temple House login code</Preview>
+    <Preview>{brandProfile.organizationName} login code</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>Your Login Code</Heading>
-        <Text style={text}>Use this code to sign in to William Temple House:</Text>
+        <Text style={text}>Use this code to sign in to {brandProfile.organizationName}:</Text>
         <Section style={codeContainer}>
           <Text style={codeText}>{code}</Text>
         </Section>

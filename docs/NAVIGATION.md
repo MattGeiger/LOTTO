@@ -1,8 +1,8 @@
 # Navigation System
 
 **Status:** Shipped; current public navigation source of truth.
-**Scope:** Persistent bottom tab bar across the four top-level public surfaces.
-**Last updated:** 2026-06-04
+**Scope:** Persistent bottom tab bar across enabled top-level public surfaces.
+**Last updated:** 2026-07-17
 
 ---
 
@@ -15,6 +15,19 @@ presentations (desktop dock + mobile tab bar).
 > **Not in the tab bar:** the staff-facing **Help** section (`/help`,
 > `/help/[slug]`) is reached from a link on the Staff page, not the public bottom
 > tab bar. See `docs/HELP_SYSTEM.md`.
+
+### Capability-gated Inventory
+
+The selected brand profile determines whether FEED inventory is enabled. When
+disabled, `navItems`, `authNavItems`, and the Arcade equivalents filter out the
+Inventory destination. Public navigation becomes **Your ticket · Dashboard ·
+Games** and authenticated navigation becomes **Admin · Dashboard · Games**.
+`/inventory` also returns not found; hiding only the tab is insufficient.
+
+William Temple House enables Inventory through its profile default. St. Johns
+Food Share is queue-only until its deployment explicitly supplies
+`NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL`. See
+`docs/WHITE_LABEL_BRANDING_PLAN.md` and `docs/FEED_PUBLIC_INVENTORY.md`.
 
 ### Authenticated staff variant (v2.0)
 
@@ -55,7 +68,7 @@ Two inputs informed this direction:
 
 ## Information Architecture
 
-Four destinations, in this fixed order:
+Up to four destinations, in this fixed order:
 
 | # | Label             | Route        | Icon               | Icon source |
 |---|-------------------|--------------|--------------------|-------------|
@@ -66,7 +79,8 @@ Four destinations, in this fixed order:
 
 **Labels are friendly, not formal.** Keep "Your ticket" / "Dashboard" /
 "What's in stock" / "Games". Do **not** shorten "What's in stock" to
-"Inventory" in the visible label.
+"Inventory" in the visible label. When Inventory is disabled, remove that item
+without reordering the other destinations.
 
 ### Route notes
 - `/` is the personalized homepage (`src/app/page.tsx`).
@@ -380,6 +394,7 @@ should follow once the bar is live:
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | Nav pattern | Bottom tab bar (Option B) | Works desktop + mobile from one model; keeps centered marquee header; always visible |
+| Optional Inventory | Filter from both nav variants and 404 the route | Keeps queue-only deployments free of FEED assumptions or dead links |
 | Inventory icon | **Cart** (`shopping-cart`) | User selection (over the handoff's box suggestion) |
 | Dashboard tab | **Route `/display` with `grip` icon** | Gives clients and staff a direct public-board entry point between ticket lookup and inventory |
 | Icon system | Imperative-ref (`lucide-animated/`) | Trigger zone is the whole tab, larger than the icon; parent holds refs for mount animation |

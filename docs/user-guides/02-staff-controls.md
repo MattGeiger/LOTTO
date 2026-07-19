@@ -3,7 +3,8 @@
 Everything you do to run the queue happens on the **Staff Dashboard**. Go to
 `/staff` and sign in with your email (a magic link or a 6-digit code) — you'll
 land on the dashboard at `/admin`. Already signed in? Going straight to
-`/admin` works too.
+`/admin` works too. Only email addresses authorized by your agency administrator
+can receive or complete a staff sign-in.
 
 ## Setting Today's Ticket Range
 
@@ -34,6 +35,9 @@ Not every called number shows up. You can mark a ticket:
 - **Returned** — pulled out of the drawing entirely; it will not be called.
 
 Mark these from the dashboard; the board updates with the matching status color.
+The **Mark ticket** action is red for Returned and gold for Unclaimed. Until a
+valid ticket number is entered, the action stays neutral to show that it is not
+yet available.
 
 **Made a mistake?** In the **Returned tickets** and **Unclaimed tickets** lists,
 tap any ticket number and confirm **Revert** to clear its status — the ticket

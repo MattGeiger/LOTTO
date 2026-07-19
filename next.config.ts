@@ -1,17 +1,27 @@
 import type { NextConfig } from "next";
+import { getBrandProfile, getInventoryIntegration } from "./src/config/brand";
 
 const enableTweakcnPreview = process.env.VERCEL !== "1";
 const speedInsightsScriptHost = "https://va.vercel-scripts.com";
 const speedInsightsConnectHost = "https://vitals.vercel-insights.com";
-const feedPublicInventoryHost = "https://feed.williamtemple.app";
+const brandProfile = getBrandProfile(process.env.NEXT_PUBLIC_LOTTO_BRAND);
+const inventoryIntegration = getInventoryIntegration(brandProfile);
+const feedPublicInventoryHost = inventoryIntegration.url
+  ? new URL(inventoryIntegration.url).origin
+  : null;
 
 const scriptSrc = enableTweakcnPreview
   ? `script-src 'self' 'unsafe-inline' ${speedInsightsScriptHost} https://tweakcn.com https://*.tweakcn.com`
   : `script-src 'self' 'unsafe-inline' ${speedInsightsScriptHost}`;
 
-const connectSrc = enableTweakcnPreview
-  ? `connect-src 'self' ${speedInsightsConnectHost} ${speedInsightsScriptHost} ${feedPublicInventoryHost} https://tweakcn.com https://*.tweakcn.com`
-  : `connect-src 'self' ${speedInsightsConnectHost} ${speedInsightsScriptHost} ${feedPublicInventoryHost}`;
+const connectSrcHosts = [
+  "'self'",
+  speedInsightsConnectHost,
+  speedInsightsScriptHost,
+  feedPublicInventoryHost,
+  ...(enableTweakcnPreview ? ["https://tweakcn.com", "https://*.tweakcn.com"] : []),
+].filter(Boolean);
+const connectSrc = `connect-src ${connectSrcHosts.join(" ")}`;
 
 const frameAncestors = enableTweakcnPreview
   ? "frame-ancestors 'self' https://tweakcn.com https://*.tweakcn.com"

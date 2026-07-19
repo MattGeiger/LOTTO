@@ -1,0 +1,186 @@
+/*  William Temple House is the unscoped production default. Keep these selectors unscoped so existing deployments remain unchanged.  */
+:root {
+  /* Core Shadcn colors (generator theme) */
+  --background: oklch(1.0000 0 0);
+  --foreground: oklch(0.5078 0.1369 257.6669);
+  --card: oklch(1.0000 0 0);
+  /* Subtle "Prism" card gradient (FEED-aligned). Translucent overlay so it
+     augments each card's own fill (opaque or bg-card/80) instead of replacing
+     it: faint brand tint at the base lifting to a light highlight at the top. */
+  --card-gradient: linear-gradient(to top, color-mix(in oklch, var(--primary) 8%, transparent), color-mix(in oklch, oklch(1 0 0) 10%, transparent));
+  --card-foreground: oklch(0.5078 0.1369 257.6669);
+  --popover: oklch(1.0000 0 0);
+  --popover-foreground: oklch(0.5078 0.1369 257.6669);
+  --primary: oklch(0.5078 0.1369 257.6669);
+  --primary-foreground: oklch(1.0000 0 0);
+  --secondary: oklch(0.9670 0.0040 264.0000);
+  --secondary-foreground: oklch(0.2100 0.0060 264.0000);
+  --muted: oklch(0.9751 0.0127 244.2507);
+  --muted-foreground: oklch(0.5510 0.0234 264.3637);
+  --accent: oklch(0.8828 0.1811 94.4604);
+  --accent-foreground: oklch(0.5078 0.1369 257.6669);
+  --destructive: oklch(0.5771 0.2152 27.3250);
+  --destructive-foreground: oklch(1.0000 0 0);
+  --border: oklch(0.9276 0.0058 264.5313);
+  --input: oklch(0.869 0.022 252.894);
+  --ring: oklch(0.5078 0.1369 257.6669);
+
+  /* Chart colors */
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+
+  /* Sidebar colors */
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+
+  /* Shadow values - OKLCH format */
+  --base-shadow-color: oklch(0 0 0);
+
+  /* WTH Custom: Ticket display states */
+  --ticket-serving: linear-gradient(to top, oklch(0.62 0.21 255), oklch(0.7 0.22 255));
+  --ticket-serving-border: oklch(0.56 0.18 255);
+  --ticket-serving-text: oklch(0.98 0 0);
+  --ticket-served: linear-gradient(to top, oklch(0.80 0.13 170), oklch(0.91 0.08 188));
+  --ticket-served-border: oklch(0.65 0.12 160);
+  --ticket-served-text: oklch(0.34 0.10 175);
+  --ticket-upcoming: oklch(0.92 0.01 250);
+  --ticket-upcoming-border: oklch(0.8 0.01 250);
+
+  --serving-text-gradient: linear-gradient(135deg, oklch(0.62 0.21 255), oklch(0.7 0.22 255));
+  --serving-label-color: var(--muted-foreground);
+
+  /* WTH Custom: Gradients */
+  --gradient-display-bg:
+    radial-gradient(circle at 20% 20%, oklch(0.62 0.21 255 / 0.12), transparent 32%),
+    radial-gradient(circle at 80% 0%, oklch(0.62 0.21 255 / 0.08), transparent 28%),
+    linear-gradient(145deg, oklch(1 0 0), oklch(0.96 0.02 255) 45%, oklch(0.99 0.01 255));
+
+  --gradient-card-info: linear-gradient(to top, oklch(0.96 0.04 250), oklch(0.99 0.01 250));
+  --gradient-card-accent: linear-gradient(to top, oklch(0.96 0.05 155), oklch(0.99 0.01 155));
+  --gradient-card-warning: linear-gradient(
+    to top,
+    color-mix(in oklch, var(--card), var(--status-warning-bg) 12%),
+    var(--card)
+  );
+  --gradient-card-danger: linear-gradient(
+    to top,
+    color-mix(in oklch, var(--card), var(--status-danger-bg) 12%),
+    var(--card)
+  );
+  --card-title-color: oklch(0.08 0 0);
+  --card-icon-color: var(--foreground);
+  /* Card feature gradients */
+  --gradient-card-blue: linear-gradient(to top, oklch(0.97 0.02 250), oklch(1.0 0 0));
+  --gradient-card-emerald: linear-gradient(to top, oklch(0.97 0.03 165), oklch(1.0 0 0));
+
+  /* Feature icon colors */
+  --icon-blue: oklch(0.55 0.22 264);
+  --icon-emerald: oklch(0.58 0.16 165);
+
+  /* Fonts */
+  --app-font-sans: var(--font-lato);
+  --app-font-serif: var(--font-lato);
+  --app-font-mono: var(--font-geist-mono);
+  --brand-logo-surface: transparent
+}
+.dark {
+  /* Core Shadcn colors - dark mode (generator theme) */
+  --background: oklch(0.1470 0.0040 49.2500);
+  --foreground: oklch(0.9067 0 0);
+  --card: oklch(0.1470 0.0040 49.2500);
+  /* Dark: brand tint at the base deepening toward the top (matches FEED dark). */
+  --card-gradient: linear-gradient(to top, color-mix(in oklch, var(--primary) 10%, transparent), color-mix(in oklch, oklch(0 0 0) 12%, transparent));
+  --card-foreground: oklch(0.9067 0 0);
+  --popover: oklch(0.2520 0 0);
+  --popover-foreground: oklch(0.9067 0 0);
+  --primary: oklch(0.5078 0.1369 257.6669);
+  --primary-foreground: oklch(1.0000 0 0);
+  --secondary: oklch(0.2740 0.0060 264.0000);
+  --secondary-foreground: oklch(0.9850 0 0);
+  --muted: oklch(0.3211 0 0);
+  --muted-foreground: oklch(0.7137 0.0192 261.3246);
+  --accent: oklch(0.8828 0.1811 94.4604);
+  --accent-foreground: oklch(0.2178 0 0);
+  --destructive: oklch(0.6370 0.2370 25.3310);
+  --destructive-foreground: oklch(1.0000 0 0);
+  --border: oklch(0.3729 0.0306 259.7328);
+  --input: oklch(0.279 0.041 260.031);
+  --ring: oklch(0.5078 0.1369 257.6669);
+
+  /* Chart colors (dark) */
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+
+  /* Sidebar colors (dark) */
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+
+  /* Shadow values - dark mode OKLCH */
+  --base-shadow-color: oklch(0.746 0.16 232.661);
+
+  /* WTH Custom: Ticket states (dark) */
+  /* Now Serving (dark): powder blue at top → richer saturated blue at base, white numbers. */
+  --ticket-serving: linear-gradient(to top, oklch(0.34 0.15 260), oklch(0.54 0.18 252));
+  --ticket-serving-border: oklch(0.62 0.15 250);
+  --ticket-serving-text: oklch(1 0 0);
+  /* Called (dark): lighter green/teal at top → darker green/teal at base. */
+  --ticket-served: linear-gradient(to top, oklch(0.32 0.09 168), oklch(0.48 0.10 178));
+  --ticket-served-border: oklch(0.28 0.08 160);
+  /* High-contrast soft mint (oklch(0.982878 0.028575 145.354)) for called cell numbers (dark). */
+  --ticket-served-text: oklch(0.98 0.03 146);
+  --ticket-upcoming: oklch(0.24 0.01 250);
+  --ticket-upcoming-border: oklch(0.32 0.02 250);
+  /* Now Serving page numerals (dark): light powder blue. */
+  --serving-text-gradient: linear-gradient(135deg, oklch(0.84 0.07 245), oklch(0.90 0.05 235));
+
+  /* WTH Custom: Gradients (dark) */
+  --gradient-display-bg:
+    radial-gradient(circle at 20% 20%, oklch(0.55 0.18 255 / 0.15), transparent 32%),
+    radial-gradient(circle at 80% 0%, oklch(0.55 0.18 255 / 0.1), transparent 28%),
+    linear-gradient(145deg, oklch(0.147 0.004 49.25), oklch(0.18 0.01 255) 45%, oklch(0.16 0.005 260));
+
+  --gradient-card-info: linear-gradient(to top, oklch(0.20 0.02 250), oklch(0.24 0.04 250));
+  --gradient-card-accent: linear-gradient(to top, oklch(0.20 0.02 155), oklch(0.24 0.04 155));
+  --gradient-card-warning: linear-gradient(
+    to top,
+    color-mix(in oklch, var(--card), var(--status-warning-bg) 14%),
+    var(--card)
+  );
+  --gradient-card-danger: linear-gradient(
+    to top,
+    color-mix(in oklch, var(--card), var(--status-danger-bg) 14%),
+    var(--card)
+  );
+  --card-title-color: var(--card-foreground);
+  --card-icon-color: var(--card-foreground);
+  /* Card feature gradients (dark) */
+  --gradient-card-blue: linear-gradient(to top, oklch(0.16 0.02 250), oklch(0.20 0.01 250));
+  --gradient-card-emerald: linear-gradient(to top, oklch(0.16 0.02 165), oklch(0.20 0.01 165));
+
+  /* Feature icon colors (dark) */
+  --icon-blue: oklch(0.65 0.20 264);
+  --icon-emerald: oklch(0.68 0.14 165);
+
+  /* Fonts */
+  --app-font-sans: var(--font-lato);
+  --app-font-serif: var(--font-lato);
+  --app-font-mono: var(--font-geist-mono)
+}

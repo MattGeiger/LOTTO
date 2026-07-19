@@ -23,6 +23,10 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground shadow-sm hover:bg-accent hover:text-accent-foreground",
         destructive:
           "border border-transparent bg-destructive text-destructive-foreground shadow-sm hover:border-destructive hover:bg-background hover:text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:hover:bg-background dark:hover:text-destructive dark:focus-visible:ring-destructive/40",
+        "operational-danger":
+          "border border-[var(--operational-danger-action-border)] bg-[var(--operational-danger-action-bg)] text-[var(--operational-danger-action-fg)] shadow-sm hover:bg-[var(--operational-danger-action-hover)] hover:text-[var(--operational-danger-action-fg)] focus-visible:border-[var(--operational-danger-action-border)] focus-visible:ring-[var(--operational-danger-action-border)] disabled:border-[var(--operational-action-disabled-border)] disabled:bg-[var(--operational-action-disabled-bg)] disabled:text-[var(--operational-action-disabled-fg)] disabled:opacity-100",
+        "operational-warning":
+          "border border-[var(--operational-warning-action-border)] bg-[var(--operational-warning-action-bg)] text-[var(--operational-warning-action-fg)] shadow-sm hover:bg-[var(--operational-warning-action-hover)] hover:text-[var(--operational-warning-action-fg)] focus-visible:border-[var(--operational-warning-action-border)] focus-visible:ring-[var(--operational-warning-action-border)] disabled:border-[var(--operational-action-disabled-border)] disabled:bg-[var(--operational-action-disabled-bg)] disabled:text-[var(--operational-action-disabled-fg)] disabled:opacity-100",
         outline:
           "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-accent dark:hover:text-accent-foreground",
         secondary:

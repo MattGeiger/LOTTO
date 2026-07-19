@@ -2,6 +2,10 @@
 **Last Updated:** November 2025 (updated with generator palette + Shadcn refresh)  
 **Versions:** Shadcn/UI v2.5+, Tailwind CSS v4, React 19, Next.js 16+
 
+The physical CSS source boundaries, cascade order, OKLCH-only authoring rule,
+and deployment-aware Arcade theme contract are documented in
+`docs/CSS_THEME_ARCHITECTURE.md`.
+
 ## Philosophy & Core Principles
 
 Shadcn/UI is not a traditional component library - it's a code distribution platform where you own the component code directly. Components are copied into your project, giving you full control to customize without library constraints.
@@ -101,6 +105,15 @@ Custom WTH tokens (status, ticket gradients, display/admin gradients) live along
 
 ### Display/QR Styling
 - Display background and serving text gradients are exposed as utilities (`bg-gradient-display`, `bg-gradient-serving-text`) instead of inline styles.
+- The public display's utility/search toolbar is absolutely positioned. Its
+  shared board container reserves `pt-20` on mobile and returns to `pt-14` at
+  `sm` and above, keeping both transparent and surfaced agency logos clear of
+  the toolbar without adding logo-specific padding.
+- `BrandLogo` may protect a light-theme logo with the profile's dark surface.
+  When that profile supplies a dedicated dark-outline asset, dark mode swaps
+  images and removes the wrapper fill and shadow so the outline sits directly
+  against the page background. Profiles marked `transparent` (including WTH)
+  never receive the protective wrapper treatment.
 - Ticket states use utility classes mapped to tokens (`ticket-serving`, `ticket-served`, `ticket-upcoming`) with dedicated text/border/background tokens (including `--ticket-served-text`).
 - Public display QR uses a canvas implementation (`qrcode` library) to avoid SVG viewBox scaling issues on long URLs; the QR points to the admin-configured `displayUrl` when set, falling back to the current origin.
 - Serving headline uses `bg-gradient-serving-text`; blue gradient in light mode, gold gradient in dark mode for readability and brand fit.
@@ -132,6 +145,47 @@ Custom WTH tokens (status, ticket gradients, display/admin gradients) live along
   --color-warning-foreground: var(--warning-foreground);
 }
 ```
+
+---
+
+## Universal Operational Status Colors
+
+Returned/danger, Unclaimed/warning, success, and neutral are a shared LOTTO
+semiotics system—not agency branding. Their colors must remain stable across
+white-label profiles so staff and visitors can transfer the same meaning from
+Admin controls to display cells, legends, badges, and alerts.
+
+Agency `[data-brand]` selectors must not override:
+
+- `--status-success-*`, `--status-warning-*`, `--status-danger-*`, or
+  `--status-neutral-*`;
+- `--gradient-status-success`, `--gradient-status-warning`, or
+  `--gradient-status-danger`;
+- `--ticket-unclaimed-text` or `--ticket-returned-text`;
+- `--operational-danger-action-*`, `--operational-warning-action-*`, or
+  `--operational-action-disabled-*`.
+
+The light/dark and high-visibility theme blocks own these tokens. This cascade
+boundary is important: a light brand selector also matches in dark mode and is
+more specific than `.dark`, so putting status tokens in a brand block can
+silently defeat the standard dark values and create inaccessible combinations.
+Brand profiles may configure identity colors and explicitly approved queue
+progression treatments such as Now Serving/Called, but not the protected
+warning/danger vocabulary.
+
+Admin actions that directly assign these statuses use the corresponding
+`operational-danger` and `operational-warning` button variants. Their enabled
+fills reinforce the red Returned and gold Unclaimed contexts. Their disabled
+state uses explicit neutral fill, text, and border tokens with full opacity;
+it must not blend a brand primary color into the surrounding status card. The
+same variant is carried into each confirmation dialog so the action retains
+its meaning through the complete workflow.
+
+Hi-viz remains flat and contrast-first, but it may have a profile-specific
+identity layer after the shared Hi-viz blocks. That layer may override neutral
+surfaces, primary/accent/focus colors, and approved Now Serving/Called/pending
+tokens. It remains subject to the protected-status list above: brand-aware
+Hi-viz selectors must never redefine universal status tokens.
 
 ---
 
@@ -226,6 +280,13 @@ GPU-costed, so the material taxonomy stays small and effects stay cheap.
 The arcade bottom bar is intentionally **not** part of this system — it uses its
 own pixel-art material (`--arcade-menu-card-bg`, `backdrop-blur-sm`) to keep the
 retro section visually separate per the Arcade guardrails.
+
+Arcade deployment branding follows the same separation rule: agency-specific
+color profiles live in `src/arcade/styles/arcade.css` and override only
+`--arcade-*` tokens under the deployment's `[data-brand]` selector. They must
+not consume or redefine raffle ticket/status variables. The unqualified
+`.arcade-scope` declarations are the William Temple House defaults and are a
+production compatibility contract.
 
 ### Rules
 

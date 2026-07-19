@@ -8,8 +8,8 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import { ArrowLeft, Loader2, X } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 import { ReadOnlyDisplay } from "@/components/readonly-display";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -226,22 +226,7 @@ export function PersonalizedHomePage() {
       >
         <LanguageSwitcher enableHaptics />
         <div className="flex-1 flex justify-center px-2">
-          <div className="w-full max-w-[220px]">
-            <Image
-              src="/wth-logo-horizontal.png"
-              alt="William Temple House"
-              width={2314}
-              height={606}
-              className="block h-auto w-full dark:hidden"
-            />
-            <Image
-              src="/wth-logo-horizontal-reverse.png"
-              alt="William Temple House"
-              width={2333}
-              height={641}
-              className="hidden h-auto w-full dark:block"
-            />
-          </div>
+          <BrandLogo className="w-full max-w-[220px]" />
         </div>
         <div className="flex items-center gap-2">
           <ThemeSwitcher enableHaptics />
@@ -289,7 +274,9 @@ export function PersonalizedHomePage() {
                 className={cn(
                   "grid grid-cols-2 gap-3",
                   // With dynamic languages enabled (>10 options), bound and scroll.
-                  availableLanguages.length > 10 && "max-h-[min(55vh,24rem)] overflow-y-auto pr-1",
+                  // Padding keeps button focus rings and drop shadows inside the
+                  // scroll viewport instead of clipping its right/bottom edges.
+                  availableLanguages.length > 10 && "max-h-[min(55vh,24rem)] overflow-y-auto p-2",
                 )}
               >
                 {availableLanguages.map((option) => (

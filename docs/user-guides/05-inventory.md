@@ -1,7 +1,10 @@
 # What's In Stock
 
-The inventory page (`/inventory`, "What's in stock") shows clients which items
-are available today, with search and dietary filters.
+The optional inventory page (`/inventory`, "What's in stock") shows clients
+which items are available today, with search and dietary filters. It appears
+only when your organization has connected LOTTO to its own FEED inventory
+deployment. If there is no Inventory tab, your LOTTO deployment is currently
+queue-only; use the ticket, display, and games pages normally.
 
 ## Browsing Inventory
 

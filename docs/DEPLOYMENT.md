@@ -8,7 +8,7 @@ overview see the [README](../README.md); for release history see
 
 - Personalized homepage (client): http://localhost:3000/
 - Public board: http://localhost:3000/display
-- Inventory lookup: http://localhost:3000/inventory
+- Inventory lookup (only when FEED is configured): http://localhost:3000/inventory
 - Arcade: http://localhost:3000/arcade
 - Staff dashboard (admin): http://localhost:3000/admin
 - Staff landing: http://localhost:3000/staff
@@ -48,16 +48,45 @@ docker compose up --build
    - `AUTH_SECRET` (required) and `AUTH_TRUST_HOST=true`
    - `DATABASE_URL=postgresql://postgres:postgres@db:5432/neondb?sslmode=disable`
    - `EMAIL_FROM=login@localhost`, `EMAIL_SERVER_HOST=maildev`, `EMAIL_SERVER_PORT=1025`
-   - `ADMIN_EMAIL_DOMAIN` (optional; restrict sign-ins)
+   - `ADMIN_EMAIL_ALLOWLIST` (exact addresses) or `ADMIN_EMAIL_DOMAIN`
+     (domain-wide fallback); production fails closed when neither is set
    - Optional: `RESEND_API_KEY` + production `EMAIL_FROM` to test Resend instead of MailDev
 
 See `.env.example` for the full list.
 
+### Select a brand profile
+
+`NEXT_PUBLIC_LOTTO_BRAND` selects a typed, public brand profile at build/start
+time. If it is omitted, LOTTO uses `william-temple-house` to preserve the
+existing production project. The included values are:
+
+```text
+william-temple-house
+st-johns-food-share
+```
+
+Run the St. Johns queue-only profile while retaining every database, Resend,
+auth, and storage value already present in `.env.local`:
+
+```bash
+NEXT_PUBLIC_LOTTO_BRAND=st-johns-food-share \
+NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL= \
+npm run dev
+```
+
+An unknown profile or malformed FEED URL fails early instead of silently using
+another agency's identity or inventory. The profile schema, assets, and process
+for adding another organization are documented in
+[`WHITE_LABEL_BRANDING_PLAN.md`](./WHITE_LABEL_BRANDING_PLAN.md).
+
 ## Read-only board options
 
 - Built-in: `/display` is the QR-enabled public board.
-- FEED inventory: `/inventory` reads `NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL` when
-  set, otherwise defaults to `https://feed.williamtemple.app/api/public/inventory.json`.
+- FEED inventory: `/inventory` is available only when the selected profile has
+  a default FEED endpoint or `NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL` is set. The
+  William Temple House profile declares its current production endpoint. The
+  St. Johns profile is queue-only by default, so its Inventory nav item is
+  omitted and `/inventory` returns not found.
 - Optional standalone server: `npm run readonly` (port `4000`), polling
   `data/state.json` for legacy/edge hosting. Configure via `READONLY_PORT`,
   `READONLY_POLL_MS`, `READONLY_DATA_DIR`.
@@ -70,7 +99,16 @@ See `.env.example` for the full list.
 - Production: Neon Postgres (the file store is only used when `DATABASE_URL` is
   absent in development).
 
-## Production deployment (Vercel + Neon + Resend)
+## Production deployment (one Vercel project per agency)
+
+All agencies deploy the same repository and branch. Each agency must have a
+separate Vercel project, Neon database, auth secret, Resend sender/domain,
+allowed staff-email policy, and public domain. Do not share databases or secrets
+between agencies. Set `NEXT_PUBLIC_LOTTO_BRAND` independently in each Vercel
+project; set `NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL` only if that agency has its
+own FEED deployment.
+
+### William Temple House production
 
 - **Live:** https://williamtemple.app (Vercel, custom domain).
 - **Auth:** NextAuth magic link + OTP fallback; sign-ins restricted to
@@ -90,6 +128,34 @@ RESEND_API_KEY=re_...
 ADMIN_EMAIL_DOMAIN=williamtemple.org
 NODE_ENV=production
 ```
+
+`NEXT_PUBLIC_LOTTO_BRAND` may remain unset for this existing project; the safe
+default is `william-temple-house`. It may also be set explicitly to that value.
+
+### St. Johns Food Share production
+
+The profile targets `https://stjohnsfoodshare.app` in its own Vercel project.
+Until managed `@stjohnsfoodshare.org` mailboxes exist, use an exact Gmail
+allowlist rather than authorizing the entire `gmail.com` domain:
+
+```text
+NEXT_PUBLIC_LOTTO_BRAND=st-johns-food-share
+AUTH_BYPASS=false
+AUTH_SECRET=<new St. Johns secret>
+AUTH_TRUST_HOST=true
+DATABASE_URL=<new St. Johns Neon connection>
+EMAIL_FROM=<verified St. Johns sender>
+RESEND_API_KEY=<St. Johns-capable Resend key>
+ADMIN_EMAIL_ALLOWLIST=<approved address@gmail.com>
+ADMIN_EMAIL_DOMAIN=
+AUTH_URL=https://stjohnsfoodshare.app
+NODE_ENV=production
+```
+
+Leave `NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL` unset for queue-only deployment.
+Set `EMAIL_FROM=login@stjohnsfoodshare.app` after Resend verifies the purchased
+domain. When individual organizational mailboxes are available, remove the
+allowlist and set `ADMIN_EMAIL_DOMAIN=stjohnsfoodshare.org`.
 
 ### Postgres schema (run once)
 
@@ -116,15 +182,22 @@ create index if not exists raffle_snapshots_created_at_idx on raffle_snapshots (
 
 ### Deploy checklist
 
-1. Provision Neon (Vercel Marketplace) and note `DATABASE_URL`; create the tables above.
-2. Set all env vars in the Vercel project.
-3. Deploy; verify `/display` (public), `/admin` (auth required), and `/api/state`
+1. Create or select the agency's dedicated Vercel project.
+2. Provision that agency's Neon database and note `DATABASE_URL`; create the tables above.
+3. Set the brand, auth, email, and optional FEED variables in that Vercel project.
+4. Deploy; verify `/display` (public), `/admin` (auth required), and `/api/state`
    reads/writes against Neon.
-4. Confirm magic-link delivery for an `@williamtemple.org` address.
+5. Confirm OTP and magic-link delivery for an address allowed by that agency's
+   exact-address or domain policy, and confirm another address is rejected.
+6. For queue-only deployments, confirm the nav omits Inventory, `/inventory`
+   returns 404, and CSP does not include a FEED origin. For FEED-enabled
+   deployments, confirm the agency-specific inventory and CSP origin.
 
 ## Theme / design tokens
 
-Global palette and design tokens live in `src/app/globals.css`
-(`--color-primary`, surfaces, borders, focus, status colors). UI components
-consume those tokens rather than hard-coded colors — change the tokens to restyle
-app-wide. See [`docs/UI_DESIGN.md`](./UI_DESIGN.md) for the design system.
+`src/app/globals.css` is the ordered theme import manifest. Shared foundations,
+protected operational semantics, and component rules live under
+`src/app/styles/shared/`; deployment identity layers live under
+`src/app/styles/brands/`. Agency selectors must not replace universal status
+semantics. See [`docs/CSS_THEME_ARCHITECTURE.md`](./CSS_THEME_ARCHITECTURE.md)
+and [`docs/UI_DESIGN.md`](./UI_DESIGN.md).
