@@ -17,6 +17,12 @@ import {
 const readCss = (relativePath: string) =>
   readFileSync(path.resolve(process.cwd(), relativePath), "utf8");
 
+const readPngDimensions = (relativePublicPath: string) => {
+  const png = readFileSync(path.resolve(process.cwd(), "public", relativePublicPath.slice(1)));
+  expect(png.subarray(1, 4).toString("ascii")).toBe("PNG");
+  return [png.readUInt32BE(16), png.readUInt32BE(20)];
+};
+
 const getCssBlock = (css: string, selector: string) => {
   const start = css.indexOf(`${selector} {`);
   const end = css.indexOf("\n}", start);
@@ -50,6 +56,25 @@ describe("white-label brand configuration", () => {
       "/brands/st-johns-food-share/logo_darkmode_outline.png",
     );
     expect([profile.logo.darkWidth, profile.logo.darkHeight]).toEqual([3142, 1340]);
+    expect(profile.pwa.browserIcons).toEqual([
+      {
+        src: "/brands/st-johns-food-share/Icon_32.png",
+        sizes: "32x32",
+        type: "image/png",
+      },
+      {
+        src: "/brands/st-johns-food-share/Icon_64.png",
+        sizes: "64x64",
+        type: "image/png",
+      },
+    ]);
+    expect(profile.pwa.appleIcons).toEqual([
+      {
+        src: "/brands/st-johns-food-share/Icon_256.png",
+        sizes: "256x256",
+        type: "image/png",
+      },
+    ]);
     expect(getInventoryIntegration(profile, undefined)).toEqual({ enabled: false, url: null });
   });
 
@@ -76,13 +101,28 @@ describe("white-label brand configuration", () => {
       const assetPaths = [
         profile.logo.lightSrc,
         profile.logo.darkSrc,
-        profile.pwa.browserIcon,
-        profile.pwa.appleIcon,
+        ...profile.pwa.browserIcons.map((icon) => icon.src),
+        ...profile.pwa.appleIcons.map((icon) => icon.src),
         ...profile.pwa.manifestIcons.map((icon) => icon.src),
       ];
       for (const assetPath of new Set(assetPaths)) {
         expect(existsSync(path.resolve(process.cwd(), "public", assetPath.slice(1)))).toBe(true);
       }
+    }
+  });
+
+  it("matches every St. Johns PNG declaration to the supplied file dimensions", () => {
+    const profile = getBrandProfile("st-johns-food-share");
+    const icons = [
+      ...profile.pwa.browserIcons,
+      ...profile.pwa.appleIcons,
+      ...profile.pwa.manifestIcons,
+    ];
+
+    for (const icon of icons) {
+      const declaredSize = icon.sizes?.split("x").map(Number);
+      expect(declaredSize).toHaveLength(2);
+      expect(readPngDimensions(icon.src)).toEqual(declaredSize);
     }
   });
 
@@ -105,6 +145,13 @@ describe("white-label brand configuration", () => {
       short_name: "Food Share Queue",
       theme_color: "#33a478",
       background_color: "#2d2d2d",
+      icons: [
+        { src: "/brands/st-johns-food-share/Icon_32.png", sizes: "32x32" },
+        { src: "/brands/st-johns-food-share/Icon_64.png", sizes: "64x64" },
+        { src: "/brands/st-johns-food-share/Icon_128.png", sizes: "128x128" },
+        { src: "/brands/st-johns-food-share/Icon_256.png", sizes: "256x256" },
+        { src: "/brands/st-johns-food-share/Icon_512.png", sizes: "512x512" },
+      ],
     });
   });
 

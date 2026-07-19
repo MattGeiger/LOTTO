@@ -58,8 +58,14 @@ export const metadata: Metadata = {
   },
   description: brandProfile.metadata.description,
   icons: {
-    icon: brandProfile.pwa.browserIcon,
-    apple: brandProfile.pwa.appleIcon,
+    icon: brandProfile.pwa.browserIcons.map(({ src, ...icon }) => ({
+      url: src,
+      ...icon,
+    })),
+    apple: brandProfile.pwa.appleIcons.map(({ src, ...icon }) => ({
+      url: src,
+      ...icon,
+    })),
   },
 };
 
