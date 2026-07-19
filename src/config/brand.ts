@@ -182,6 +182,11 @@ export const BRAND_PROFILES: Record<BrandProfileId, BrandProfile> = {
       themeColor: "#33a478",
       browserIcons: [
         {
+          src: "/brands/st-johns-food-share/icon.svg",
+          sizes: "any",
+          type: "image/svg+xml",
+        },
+        {
           src: "/brands/st-johns-food-share/Icon_32.png",
           sizes: "32x32",
           type: "image/png",

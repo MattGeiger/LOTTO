@@ -8,8 +8,8 @@
   guidance, database, and integrations while sharing queue improvements.
 - **Welcome, St. Johns Food Share.** A complete St. Johns profile adds its
   teal, off-white, and charcoal identity across light, dark, high-visibility,
-  and Arcade views, plus its own browser-tab and home-screen icons. Its
-  production home is `stjohnsfoodshare.app`.
+  and Arcade views, plus its own rounded browser-tab and padded home-screen
+  icons. Its production home is `stjohnsfoodshare.app`.
 - **Inventory is optional.** Queue-only agencies no longer see “What's in
   stock” unless their deployment is connected to its own FEED inventory app.
 - **Safer staff access for small organizations.** A deployment may authorize

@@ -235,8 +235,9 @@ Measured acceptance:
 
 1. Generate root, display, inventory, and admin descriptions from the profile.
 2. Generate the web manifest name, colors, browser-tab icons, Apple touch icon,
-   and install icons from the profile. St. Johns supplies PNG assets from 32 px
-   through 512 px; WTH retains its existing favicon, Apple icon, and PWA set.
+   and install icons from the profile. St. Johns supplies a rounded-corner SVG
+   browser icon plus padded PNG assets from 32 px through 512 px; WTH retains
+   its existing favicon, Apple icon, and PWA set.
 3. Keep WTH manifest output byte-for-byte equivalent in identity and colors
    where practical.
 

@@ -58,6 +58,11 @@ describe("white-label brand configuration", () => {
     expect([profile.logo.darkWidth, profile.logo.darkHeight]).toEqual([3142, 1340]);
     expect(profile.pwa.browserIcons).toEqual([
       {
+        src: "/brands/st-johns-food-share/icon.svg",
+        sizes: "any",
+        type: "image/svg+xml",
+      },
+      {
         src: "/brands/st-johns-food-share/Icon_32.png",
         sizes: "32x32",
         type: "image/png",
@@ -117,13 +122,27 @@ describe("white-label brand configuration", () => {
       ...profile.pwa.browserIcons,
       ...profile.pwa.appleIcons,
       ...profile.pwa.manifestIcons,
-    ];
+    ].filter((icon) => icon.type === "image/png");
 
     for (const icon of icons) {
       const declaredSize = icon.sizes?.split("x").map(Number);
       expect(declaredSize).toHaveLength(2);
       expect(readPngDimensions(icon.src)).toEqual(declaredSize);
     }
+  });
+
+  it("keeps the St. Johns scalable browser icon self-contained", () => {
+    const svg = readFileSync(
+      path.resolve(process.cwd(), "public/brands/st-johns-food-share/icon.svg"),
+      "utf8",
+    );
+
+    expect(svg).toContain('viewBox="0 0 5120 5120"');
+    expect(svg).toContain('id="Background"');
+    expect(svg).toContain('xmlns="http://www.w3.org/2000/svg"');
+    expect(svg.replace('http://www.w3.org/2000/svg', "")).not.toMatch(
+      /<script|foreignObject|javascript:|data:|https?:\/\/|on[a-z]+=/i,
+    );
   });
 
   it("removes inventory navigation for the St. Johns profile", async () => {
