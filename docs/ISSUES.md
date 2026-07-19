@@ -1293,3 +1293,258 @@ Harden the centralized API schema rather than relying on the editor:
 Overnight operating windows are not supported by the current UX. If they
 become a requirement, model them explicitly rather than weakening the
 same-day ordering rule.
+
+---
+
+## Issue 29: New-agency Neon databases don't get schema applied automatically, and the doc previously encouraged skipping it
+
+### Status
+- Fixed for St. Johns (schema applied against production); documentation fixed
+  to prevent recurrence for future agencies.
+
+### Observed
+St. Johns Food Share deployed successfully — the build passed, `/display`
+loaded and showed brand-correct content — but staff sign-in was completely
+broken. OTP requests returned "Unable to issue code. Please try again." and
+Magic Link returned NextAuth's generic "Configuration" error page. Neither
+error message mentions a database at all, making this look like an auth
+misconfiguration (wrong `AUTH_SECRET`, wrong `AUTH_URL`, etc.) rather than a
+missing-tables problem.
+
+### Root Cause (Code References)
+- `src/app/api/auth/otp/request/route.ts` does
+  `DELETE FROM verification_token WHERE identifier = $1` unconditionally; if
+  that table doesn't exist, Postgres throws `relation "verification_token"
+  does not exist`, caught by the route's outer `try/catch` and surfaced as the
+  generic "Unable to issue code" message.
+- `@auth/pg-adapter` (used for Magic Link) requires `users`, `accounts`,
+  `sessions`, and `verification_token` to exist; NextAuth's generic
+  "Configuration" error is what it shows for any adapter-level failure,
+  including missing tables.
+- The actual required schema lives in `schema.sql` at the repo root and is
+  applied idempotently by `scripts/apply-schema.mjs` (`npm run db:migrate`).
+  It defines 13 tables: the two raffle tables, five NextAuth/OTP tables
+  (`verification_token`, `users`, `accounts`, `sessions`, `otp_failures`), and
+  six AI-translation tables (`languages`, `ai_configurations`,
+  `system_prompts`, `translations`, `usage_records`, plus indexes).
+- **This doc (`docs/DEPLOYMENT.md`) previously embedded a stale, partial copy**
+  of the schema — only `raffle_state` and `raffle_snapshots` — under a
+  "Postgres schema (run once)" heading, predating the NextAuth/OTP/AI-
+  translation tables being added to `schema.sql`. Following that snippet
+  instead of the real file reproduced exactly the gap that broke St. Johns'
+  launch: the raffle tables existed, so `/display` worked; the auth tables
+  didn't, so sign-in didn't.
+
+### Fix
+- Ran every `CREATE TABLE`/`CREATE INDEX` statement from `schema.sql` against
+  the St. Johns Neon database (see Issue 30 for *how*, since the connection
+  string wasn't directly accessible). Verified via Neon's Schema tab that all
+  13 `public`-schema tables exist, then confirmed both OTP and Magic Link
+  succeed end-to-end.
+- `docs/DEPLOYMENT.md`'s "Postgres schema" section no longer embeds a copy of
+  the schema at all — it points at `schema.sql` and `npm run db:migrate` by
+  reference, with an explicit warning not to re-embed a subset here again.
+
+### Prevention
+- The new-agency runbook in `docs/DEPLOYMENT.md` (`New agency deployment
+  runbook`, step 3) makes schema application an explicit, checked step with
+  its own failure-mode writeup, rather than a one-line item easy to skim past
+  in a checklist.
+- If this recurs: check `otp_failures`/`verification_token`/`users` exist in
+  the `public` schema before assuming it's an `AUTH_SECRET`/`AUTH_URL`/DNS
+  problem — the error messages give no indication either way.
+
+---
+
+## Issue 30: Vercel "Sensitive" environment variables cannot be revealed after creation, including by the project owner
+
+### Status
+- Documented; not a bug to fix, a platform constraint to work around.
+
+### Observed
+`DATABASE_URL` (and its siblings — `DATABASE_URL_UNPOOLED`, `POSTGRES_*`,
+`PGHOST`, etc.) created by Vercel's Neon Marketplace integration are stored as
+**Sensitive** environment variables. Every attempted way to read the actual
+value back out failed:
+- Vercel dashboard → Environment Variables: the row shows a lock icon, not an
+  eye/reveal icon (contrast with non-sensitive vars like `AUTH_BYPASS`, which
+  do show an eye icon and can be revealed).
+- `vercel env pull --environment=production`: writes the literal string
+  `"[SENSITIVE]"` into the `.env` file in place of the value — including with
+  `--yes`, and including when run from an actual interactive terminal (faked
+  via `script -q /dev/null`, to rule out "non-interactive mode" as the cause).
+- The Neon integration's own embedded "Guides" page (Storage tab → Getting
+  Started → `.env.local` snippet with a "Show secret" toggle): also renders
+  the value as asterisks, not the real string.
+
+### Root Cause
+This is intentional behavior for Vercel's "Sensitive Environment Variables"
+feature, not a bug or a permissions issue — sensitive vars are encrypted such
+that even the project owner cannot view the value again through any of
+Vercel's own surfaces once it's created. It is not something to "try harder"
+to work around (e.g. don't spend time hunting for another CLI flag).
+
+### Fix / Workaround
+For a database provisioned through Vercel's own "Create Database" flow, run
+SQL directly against it without ever needing the connection string, via the
+Neon integration's embedded **Query** tool (Vercel dashboard → project →
+**Storage** → the database → **Query**, in the left nav under "Database"):
+- The first write query in a session requires **2FA** confirmation (the
+  account's own security — have the account owner complete it; don't attempt
+  to bypass it).
+- Toggle **Read-only** off before running write statements.
+- **The query box only accepts one SQL statement per execution** — see
+  Issue 29's fix and `docs/DEPLOYMENT.md` step 3 for the resulting
+  one-statement-at-a-time schema-application workflow.
+- A **Schema** tab (same left nav) lets you inspect tables per-schema; it
+  defaults to Neon's own internal `neon_auth` schema in the URL, not the
+  app's `public` schema — switch the schema selector explicitly.
+
+### Prevention / Recommendation
+For future agencies, consider provisioning the Neon database directly at
+[console.neon.tech](https://console.neon.tech) (outside Vercel's Marketplace
+flow) and connecting it to Vercel as an *existing* database instead of using
+"Create Database." That path gives permanent access to the real connection
+string from Neon's own console, which means `npm run db:migrate` works locally
+against production without the embedded-query workaround. This wasn't done for
+St. Johns because the database already existed via the Marketplace flow before
+this constraint was discovered.
+
+---
+
+## Issue 31: Vercel Framework Preset silently defaulting to "Other" causes every route to 404 despite a successful build
+
+### Status
+- Fixed for St. Johns (redeployed after correcting the setting); added as an
+  explicit check to the new-agency runbook so it isn't rediscovered by
+  accident again.
+
+### Observed
+After the St. Johns Vercel project's first production deployment showed
+**Ready** with no errors in the build log, every route on `stjohnsfoodshare.app`
+— including `/`, `/display`, and even the apex — returned Vercel's generic
+`404: NOT_FOUND` page (format: `Code: NOT_FOUND`, `ID: <region>::<hash>`).
+Confirmed the domain and SSL were correctly pointed at the deployment (DNS and
+TLS were fine); the deployment itself just didn't route to anything.
+
+### Root Cause
+**Settings → Build and Deployment → Framework Preset** was set to **"Other"**
+instead of **"Next.js"** for this project. `npm run build` (via `next build`)
+still succeeds under "Other" — Vercel just doesn't know to wire the resulting
+`.next` output up as a Next.js app's routing/serverless functions, so nothing
+is actually reachable. There is no warning or error anywhere in the build log
+or deployment summary pointing at this; the only symptom is every route 404ing
+in production while the build itself reports success. Likely cause: the
+project was originally created via the Storage/"Create Database" flow before a
+Git repository was ever connected, so Next.js auto-detection (which normally
+inspects the connected repo's `package.json`/`next.config.ts`) never ran
+against real project files at creation time.
+
+### Fix
+1. **Settings → Build and Deployment → Framework Preset** → change to
+   **Next.js** (this repopulates the Build/Output/Install/Dev Command fields
+   with Next.js defaults) → **Save**.
+2. Saving the setting does **not** retroactively fix the already-Ready
+   deployment — a new deployment must be triggered. Used **Deployments → ⋯ →
+   Redeploy**, which explicitly offers "with the latest Project Settings," and
+   left **Use existing Build Cache** unchecked to avoid reusing any
+   "Other"-preset build artifacts.
+3. Confirmed the new deployment's Environment showed **Current** with the
+   domain attached, then loaded `/display`, `/`, `/inventory` (expected 404 —
+   queue-only profile), and `/admin` (expected redirect to sign-in) to confirm
+   real Next.js routing was active, not just a bare 404 for everything.
+
+### Prevention
+`docs/DEPLOYMENT.md`'s new-agency runbook (step 1.4) makes verifying Framework
+Preset an explicit, named check before the first deployment, specifically
+because nothing else in the setup flow surfaces this failure.
+
+---
+
+## Issue 32: Personalized-homepage header logo can overlap "NOW SERVING" on mobile for brands with a taller-than-wide logo lockup
+
+### Status
+- Fixed (`src/components/personalized-home-page.tsx`); merged and deployed.
+
+### Observed
+On a real iPhone, the St. Johns personalized homepage showed the header logo
+("ST. JOHNS FOOD SHARE" wordmark + icon) sitting almost flush against the
+"NOW SERVING" label directly below it, with very little clearance — reported
+by comparing directly against the William Temple House variant on the same
+device, where the equivalent gap is clearly visible. Did **not** reproduce in
+an initial local check at a 375×812 mobile viewport with generous measured
+clearance, which is a useful data point on its own: a quick local viewport
+resize is not sufficient verification for this class of bug — check on an
+actual device, or at least take and inspect a real screenshot rather than
+reasoning from computed CSS box measurements alone.
+
+### Root Cause (Code References)
+- `src/components/personalized-home-page.tsx`: the header (`LanguageSwitcher` +
+  `BrandLogo` + `ThemeSwitcher`) is rendered in an `absolute` positioned
+  container (`absolute left-6 right-6 top-4 z-30`), overlaid on top of
+  `ReadOnlyDisplay`'s normal document flow rather than pushing it down.
+- `src/components/readonly-display.tsx`: the personalized-mode wrapper reserves
+  a **fixed** top clearance (`pt-14` plus `mt-10`/`mt-12` on the first content
+  row) sized to comfortably fit William Temple House's very wide horizontal
+  wordmark (`wth-logo-horizontal.png`, declared 2314×606 → ~3.82:1 aspect
+  ratio at any given width).
+- `src/components/brand-logo.tsx` previously sized the header logo by a fixed
+  **width** (`className="w-full max-w-[220px]"`) with `h-auto`, so its
+  rendered height was purely a function of each brand's own aspect ratio.
+  St. Johns' logo (icon above/beside a two-line "ST. JOHNS" / "FOOD SHARE"
+  wordmark, ~2.3:1 at the light-mode asset's declared dimensions) renders
+  noticeably taller than WTH's at the same width — enough, in practice, to
+  exceed the reserved clearance and overlap the flowed content below it.
+
+### Fix
+Changed the header logo instance in `personalized-home-page.tsx` to size by a
+fixed **height** instead: `imageClassName="h-12 w-auto max-w-full"`. This caps
+the rendered logo to the same height for every brand regardless of its
+lockup's aspect ratio, so the fixed clearance below it is guaranteed to be
+sufficient without needing to be retuned per brand. Verified locally at a
+375×812 mobile viewport for both `st-johns-food-share` (no more overlap) and
+`william-temple-house` (visually unaffected — its logo was already under the
+new height cap).
+
+### Prevention
+Documented in `docs/WHITE_LABEL_BRANDING_PLAN.md` under "Header logo sizing:
+fixed height, not fixed width" as required reading before integrating a new
+brand's logo assets, including the "don't trust a quick localhost check"
+lesson from how this one was actually found.
+
+---
+
+## Issue 33: St. Johns light-mode primary-button text had poor contrast
+
+### Status
+- Fixed (`src/app/styles/brands/st-johns-food-share.css`, light mode only);
+  merged and deployed.
+
+### Observed
+Filled primary buttons in St. Johns' light theme (e.g. "Enter a new ticket
+number") showed dark, low-contrast text against the mid-green button fill —
+hard to read.
+
+### Root Cause (Code References)
+- `src/app/styles/brands/st-johns-food-share.css`, `:root[data-brand="st-johns-food-share"]`
+  block: `--primary-foreground` was set to a near-black green
+  (`oklch(0.270912 0.040942 166.051)`), which sits too close in lightness to
+  `--primary` (`oklch(0.644157 0.121025 163.057)`) for comfortable contrast on
+  a filled `bg-primary text-primary-foreground` surface.
+- No automated check catches this: the existing branding regression tests
+  (see `docs/CSS_THEME_ARCHITECTURE.md`) verify that agency selectors don't
+  override *protected operational-status* tokens, but they don't assert
+  contrast between a brand's own `--primary`/`--primary-foreground` pair.
+
+### Fix
+Changed light-mode `--primary-foreground` to
+`oklch(0.953 0.051 180.801)` (a crisp near-white) per explicit design
+direction. Dark mode's `--primary-foreground` was left unchanged — it wasn't
+reported as a problem, and the fix intentionally stayed scoped to the theme
+block that was actually observed to be broken rather than "fixing" an
+unconfirmed pairing preemptively.
+
+### Prevention
+Documented in `docs/WHITE_LABEL_BRANDING_PLAN.md` under "Primary/foreground
+contrast" as a manual check to perform when authoring or reviewing a new
+brand's token blocks, since there's no automated gate for it today.

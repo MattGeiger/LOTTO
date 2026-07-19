@@ -2,7 +2,9 @@
 
 ## Status
 
-Implemented and validated locally on 2026-07-17. This document defines the
+Implemented and validated locally on 2026-07-17; St. Johns Food Share went
+live in production on 2026-07-18 (see
+[St. Johns Launch Work](#st-johns-launch-work)). This document defines the
 measurable migration from a William Temple House-specific deployment to one
 shared LOTTO codebase with deployment-selected brand profiles. William Temple
 House remains the no-configuration default so the existing Vercel project does
@@ -94,6 +96,43 @@ Environment configuration selects the profile with
 `NEXT_PUBLIC_LOTTO_BRAND`. Profile selection is public by design; credentials,
 database URLs, Resend keys, and auth secrets remain separate server-only Vercel
 variables.
+
+### Header logo sizing: fixed height, not fixed width
+
+The personalized homepage (`src/components/personalized-home-page.tsx`) draws
+its header logo in an absolutely-positioned overlay, with the flowed content
+below it (`ReadOnlyDisplay`'s "NOW SERVING" block) reserving a fixed clearance
+to avoid the overlay. `BrandLogo` now sizes that header slot by a fixed
+**height** (`imageClassName="h-12 w-auto max-w-full"`) rather than a fixed
+width, specifically so this can't break for any future brand: a logo lockup
+that's tall relative to its width (icon-over-wordmark, multi-line text baked
+into the image) renders at the same height as one that's wide and flat
+(a single-line horizontal wordmark), instead of overflowing past the reserved
+clearance.
+
+This was St. Johns' actual launch bug: its lockup is roughly 2.3:1
+(icon + two-line "ST. JOHNS / FOOD SHARE" wordmark), versus William Temple
+House's ~3.8:1 wide horizontal wordmark. At the same rendered *width*, St.
+Johns' logo was taller — enough to overlap "NOW SERVING" on mobile. It did not
+reproduce in a quick local viewport check; it only showed up on a real phone,
+so don't treat "looks fine on localhost" as sufficient — check on-device or at
+minimum a properly sized mobile-viewport screenshot before calling a new
+brand's logo integration done. **When adding a new brand's logo:** don't
+assume its natural aspect ratio is safe — it renders through the same
+height-capped slot regardless, so the acceptance check is simply "does it
+still look reasonable at the capped height," not "does it avoid a layout bug."
+
+### Primary/foreground contrast
+
+Each theme block sets `--primary` and `--primary-foreground` independently;
+nothing enforces that the pair is readable against each other for a *new*
+brand. St. Johns' light-mode launch shipped with a near-black green
+`--primary-foreground` on a mid-green `--primary` fill — poor contrast on
+filled buttons (e.g. "Enter a new ticket number"). There's no automated
+contrast check for this pairing (only the protected-token isolation test
+described below), so when authoring or reviewing a new brand's light and dark
+token blocks, visually check every `bg-primary text-primary-foreground`
+surface, not just the brand's marketing/logo colors.
 
 ## Inventory Capability Contract
 
@@ -335,13 +374,31 @@ Run in order:
 
 ## St. Johns Launch Work
 
-The implementation profile is complete. Launch coordination now covers:
+**Status: launched 2026-07-18.** `stjohnsfoodshare.app` is live in its own
+Vercel project, database, and Resend sender identity. What launch coordination
+actually involved — including two non-obvious infrastructure failures
+(a Vercel Framework Preset defaulting to "Other" and a missing database schema
+migration) — is written up as a full step-by-step runbook in
+[`DEPLOYMENT.md`](./DEPLOYMENT.md#new-agency-deployment-runbook). That's the
+canonical reference for launching the *next* agency; don't re-derive the
+process from scratch. Completed items:
 
-- Pointing the purchased `stjohnsfoodshare.app` domain to its dedicated Vercel
-  project.
-- Resend sender-domain verification and `EMAIL_FROM`.
+- Pointed the purchased `stjohnsfoodshare.app` domain at its dedicated Vercel
+  project (Namecheap DNS, replacing the registrar's default parking records).
+- Resend sender-domain verification and `EMAIL_FROM=login@stjohnsfoodshare.app`.
 - `ADMIN_EMAIL_ALLOWLIST=stjohnsfoodshare@gmail.com` combined with the trusted
-  `ADMIN_EMAIL_DOMAIN=templepdx.com` administrative path, followed later by an
-  `ADMIN_EMAIL_DOMAIN=stjohnsfoodshare.org` migration.
-- St. Johns Neon database provisioning and production secrets.
-- FEED deployment and endpoint, if St. Johns adopts FEED later.
+  `ADMIN_EMAIL_DOMAIN=templepdx.com` administrative path. Still pending:
+  migrating to `ADMIN_EMAIL_DOMAIN=stjohnsfoodshare.org` once individual
+  organizational mailboxes exist, and removing the temporary Gmail exception.
+- St. Johns Neon database provisioned (via Vercel's Marketplace integration)
+  and its schema applied.
+- Post-launch fixes shipped the same day: PWA home-screen label corrected to
+  "St Johns Food Share App" (was defaulting to the internal `appName`
+  fragment "Food Share Queue"); a mobile-only header-logo/"NOW SERVING"
+  overlap (see [Header logo sizing](#header-logo-sizing-fixed-height-not-fixed-width)
+  below); and a light-mode primary-button contrast fix
+  (`--primary-foreground`).
+
+Not yet done, deferred until St. Johns needs it:
+
+- FEED deployment and endpoint (St. Johns remains queue-only).
