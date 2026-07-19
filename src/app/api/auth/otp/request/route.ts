@@ -16,6 +16,8 @@ import { render } from "@react-email/components";
 
 import { getPool } from "@/lib/db";
 import { OtpCode } from "@/emails/otp-code";
+import { brandProfile } from "@/config/brand";
+import { isAdminEmailAllowed } from "@/lib/admin-email-policy";
 
 export const runtime = "nodejs";
 
@@ -47,9 +49,8 @@ export async function POST(request: Request) {
     }
 
     const email = parsed.data.email.toLowerCase();
-    const allowedDomain = process.env.ADMIN_EMAIL_DOMAIN?.toLowerCase();
-    if (allowedDomain && !email.endsWith(`@${allowedDomain}`)) {
-      return NextResponse.json({ error: "Email domain is not allowed." }, { status: 403 });
+    if (!isAdminEmailAllowed(email)) {
+      return NextResponse.json({ error: "Email address is not authorized." }, { status: 403 });
     }
 
     const fromAddress = process.env.EMAIL_FROM ?? "login@localhost";
@@ -119,7 +120,7 @@ export async function POST(request: Request) {
       await transporter.sendMail({
         from: fromAddress,
         to: email,
-        subject: "Your William Temple House login code",
+        subject: `Your ${brandProfile.organizationName} login code`,
         html: htmlContent,
       });
     };
@@ -132,7 +133,7 @@ export async function POST(request: Request) {
         const { error } = await resend.emails.send({
           from: fromAddress,
           to: [email],
-          subject: "Your William Temple House login code",
+          subject: `Your ${brandProfile.organizationName} login code`,
           html: htmlContent,
         });
         if (error) {

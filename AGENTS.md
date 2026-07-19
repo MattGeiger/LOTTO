@@ -36,6 +36,22 @@ consistent with existing patterns and workflows.
 - User-facing notifications should use `sonner` toasts unless an existing
   pattern dictates otherwise.
 
+## White-label Color Guardrails
+- Agency brand selectors may override identity/presentation tokens, but must
+  not override LOTTO's universal operational status vocabulary.
+- Returned and danger remain red; Unclaimed and warning remain gold; success
+  and neutral status meanings also remain consistent across every agency.
+- Do not place `--status-success-*`, `--status-warning-*`,
+  `--status-danger-*`, `--status-neutral-*`, `--gradient-status-*`,
+  `--ticket-unclaimed-text`, `--ticket-returned-text`, or `--operational-*`
+  action tokens inside a
+  `[data-brand]` selector. These shared tokens feed Admin controls, display
+  cells, legends, badges, and alerts, so a brand-local override has broad and
+  potentially inaccessible effects.
+- Any deliberate change to operational status semiotics requires explicit user
+  approval, corresponding updates to `docs/UI_DESIGN.md`, and regression tests
+  covering every shared consumer.
+
 ## Translation AI / FEED Parity
 - The Translation card's AI surfaces are a FEED-first parity area. For
   Language Settings, AI Configuration, System Prompts, and Translation
@@ -112,3 +128,19 @@ consistent with existing patterns and workflows.
 ## Testing
 Run relevant tests when changing behavior. If tests are skipped, say why and
 suggest how to validate.
+
+**Known flake pattern — full-suite-only test failures.** If a test fails only
+under the full `npm test` run but passes when run alone
+(`npx vitest run <file>`), do not assume the test is broken, stale, or
+asserting outdated behavior. Reproduce first: run the file in isolation, then
+re-run the full suite once more with no changes. If it passes both times, it
+is very likely Vitest worker-pool timing/resource contention, not a logic
+bug — document it (see `docs/ISSUES.md` Issue 27 for a worked example) and
+leave the test as-is. Only change a test's assertions, add `waitFor` guards,
+or reduce worker parallelism if the failure **reproduces** or **recurs**, not
+from a single occurrence. This matters especially for tests whose name/intent
+overlaps with an abandoned design decision (e.g. Issue 27 concerned RTL grid
+layout, which LOTTO used to reverse and later deliberately made static/LTR) —
+a superficial read can make a correct regression test look stale when it is
+actually guarding the current, intended behavior. Read the assertions before
+concluding either way.

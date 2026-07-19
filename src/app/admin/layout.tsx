@@ -10,10 +10,11 @@ import React from "react";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
+import { brandProfile } from "@/config/brand";
 
 export const metadata: Metadata = {
   title: "Admin",
-  description: "Operator controls for the William Temple House queue and display.",
+  description: brandProfile.metadata.adminDescription,
 };
 
 export default async function AdminLayout({

@@ -6,14 +6,17 @@
 // is not covered by this license; see TRADEMARKS.md.
 
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { PublicInventoryPage } from "@/components/public-inventory-page";
+import { brandProfile, inventoryIntegration } from "@/config/brand";
 
 export const metadata: Metadata = {
   title: "What's in Stock",
-  description: "See what's available today at the William Temple House food pantry.",
+  description: brandProfile.metadata.inventoryDescription,
 };
 
 export default function InventoryPage() {
+  if (!inventoryIntegration.enabled) notFound();
   return <PublicInventoryPage />;
 }

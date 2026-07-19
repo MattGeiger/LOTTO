@@ -116,6 +116,14 @@ describe("ReadOnlyDisplay (public variant)", () => {
     expect(fives.length).toBeGreaterThanOrEqual(1);
   });
 
+  it("reserves mobile clearance below the public search toolbar", async () => {
+    renderPublicDisplay();
+    await screen.findByText("Drawing Order");
+    const displayContent = screen.getByTestId("readonly-display-content");
+
+    expect(displayContent.parentElement).toHaveClass("pt-20", "sm:pt-14");
+  });
+
   it("shows Drawing Order card heading for public variant", async () => {
     renderPublicDisplay();
     await waitFor(() => {

@@ -10,12 +10,41 @@
 - On localhost development (`npm run dev`), authentication is bypassed automatically.
 - OTP and Magic Link flows are required in production deployments.
 
-## Email Restriction
+## Staff Email Authorization
 
-- Only `@williamtemple.org` email addresses are accepted.
-- All other email domains are rejected automatically.
+Every production deployment must configure at least one server-side staff-email
+restriction:
 
-## Important IT Limitation
+1. `ADMIN_EMAIL_ALLOWLIST` — comma-separated complete addresses.
+2. `ADMIN_EMAIL_DOMAIN` — an optional managed domain.
+
+When both are configured, authorization is additive: an address is accepted if
+it appears in the exact allowlist **or** belongs to the managed domain. This
+supports an agency that uses a shared Gmail account while also authorizing a
+trusted administrative domain.
+
+If neither is configured, production fails closed. Local development remains
+available because localhost uses the documented authentication bypass.
+
+Examples:
+
+```text
+# Exact-address policy for an agency temporarily using Gmail
+ADMIN_EMAIL_ALLOWLIST=director@gmail.com,operations@gmail.com
+
+# Domain policy for an agency with managed organizational email
+ADMIN_EMAIL_DOMAIN=williamtemple.org
+
+# Combined policy for St. Johns launch administration
+ADMIN_EMAIL_ALLOWLIST=stjohnsfoodshare@gmail.com
+ADMIN_EMAIL_DOMAIN=templepdx.com
+```
+
+Do not set `ADMIN_EMAIL_DOMAIN=gmail.com`; that would authorize every Gmail
+address. The shared policy gates OTP issuance, OTP verification, and Magic Link
+sign-in so one method cannot bypass another.
+
+## William Temple House IT Limitation
 
 - Magic links are currently not viable. CCSI uses Microsoft Defender, which screens all links
   contained in an email body. This inspection protocol is automatic and burns the single-use token
@@ -29,7 +58,7 @@
 
 ## OTP Flow
 
-1. User enters their `@williamtemple.org` email address.
+1. User enters an address allowed by that deployment's staff-email policy.
 2. A 6-digit numeric code is emailed.
 3. User copies and pastes the code into the app.
 4. A secure authentication cookie is stored in the browser.
@@ -38,5 +67,9 @@ Users do not need to repeat this process each time.
 
 ## Maintenance Notes
 
-- This document was updated alongside small non-functional code cleanups to resolve lint warnings
-  (unused imports/variables and Next.js image component guidance).
+- St. Johns launches with `stjohnsfoodshare@gmail.com` as an exact-address
+  exception and `templepdx.com` as a managed administrative domain. When
+  individual `@stjohnsfoodshare.org` mailboxes are available, replace the
+  temporary policy with that organizational domain.
+- Prefer individual staff addresses over one shared mailbox for clearer
+  offboarding and accountability.

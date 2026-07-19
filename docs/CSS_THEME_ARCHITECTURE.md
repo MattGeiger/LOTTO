@@ -1,0 +1,131 @@
+# CSS Theme Architecture and OKLCH Migration
+
+## Purpose
+
+LOTTO keeps application behavior, operational color meaning, deployment
+branding, accessibility themes, and Arcade presentation separate while still
+shipping one compiled global cascade. Every authored color literal in a CSS
+file uses `oklch()`; `transparent`, `currentColor`, `inherit`, CSS variables,
+and non-color keywords remain valid.
+
+This architecture supports multiple agencies from one repository without
+allowing agency identity colors to replace universal queue/status semantics.
+
+## Source Boundaries
+
+### Core application
+
+- `src/app/globals.css` is only the ordered import manifest. It should not
+  accumulate tokens, component rules, or deployment palettes.
+- `src/app/styles/shared/foundations.css` defines shared geometry and the
+  reusable shadow recipes that consume each brand's shadow-color token.
+- `src/app/styles/shared/operational-status.css` defines Returned/danger,
+  Unclaimed/warning, success, neutral, and operational-action semantics.
+  Agency selectors must not override its protected token families. Queue
+  progression colors, including the brand-specific presentation of Now
+  Serving, remain in brand files while preserving their shared state meaning.
+- `src/app/styles/shared/high-visibility.css` defines the shared flat,
+  contrast-first Hi-viz behavior and protected status values.
+- `src/app/styles/shared/components.css` contains shared component and utility
+  selectors that consume semantic tokens rather than choosing agency colors.
+- `src/app/styles/brands/william-temple-house.css` owns WTH identity values.
+  During the initial extraction its existing unqualified `:root` and `.dark`
+  selectors remain the no-configuration production default.
+- `src/app/styles/brands/st-johns-food-share.css` owns St. Johns standard light
+  and dark identity values.
+- `src/app/styles/brands/st-johns-food-share-high-visibility.css` owns only the
+  St. Johns identity refinements applied after the shared Hi-viz themes.
+
+### Arcade
+
+- `src/arcade/styles/arcade.css` remains the Arcade-only entry point and owns
+  pixel-art components, layout, animation, and game presentation rules.
+- `src/arcade/styles/themes/william-temple-house.css` owns the default WTH
+  `--arcade-*` palette.
+- `src/arcade/styles/themes/st-johns-food-share.css` owns the scoped St. Johns
+  `--arcade-*` palette.
+
+Arcade is visually and technically isolated from core raffle styling, but it
+is deployment-brand-aware. Arcade theme files may assign only `--arcade-*`
+tokens; they must not redefine core raffle/status variables or game mechanics.
+
+## Cascade Contract
+
+Core imports preserve this exact order:
+
+1. Tailwind
+2. shared foundations and shadow recipes
+3. WTH/default light and dark identity values
+4. shared operational status semantics
+5. St. Johns standard light/dark identity overrides
+6. shared Hi-viz themes
+7. St. Johns identity-only Hi-viz overrides
+8. Tailwind token exposure and shared component/base utilities
+
+Arcade imports preserve this order:
+
+1. WTH/default dark and light Arcade tokens
+2. St. Johns dark and light Arcade overrides
+3. Arcade component and game rules
+
+Selector specificity and order are part of the compatibility contract. A file
+move must not change either one.
+
+## OKLCH Authoring Contract
+
+- Hex, `rgb()`/`rgba()`, `hsl()`/`hsla()`, and named `black`/`white` literals
+  are not allowed in `src/**/*.css`.
+- Alpha is written with OKLCH slash syntax, for example
+  `oklch(0.5 0.1 200 / 0.25)`.
+- Neutral colors use zero chroma and a zero hue for consistency.
+- Gradients preserve their original geometry and stop positions; only the
+  color notation changes during migration.
+- Brand source colors may be documented in Markdown as hex for coordination
+  with external agencies, but CSS stores their converted OKLCH values.
+- CSS color conversion must retain enough precision for an sRGB round trip to
+  differ by no more than one 8-bit channel value.
+
+## Implemented Migration and Validation Plan
+
+### Phase 1: baselines and enforcement — complete
+
+1. Record local WTH and St. Johns computed tokens and visual references for
+   `/`, `/display`, `/admin`, and `/arcade` in light, dark, and Hi-viz.
+2. Sanity-check the live WTH production surfaces before local changes.
+3. Add a regression test that rejects non-OKLCH authored color literals in all
+   CSS files.
+
+### Phase 2: notation-only conversion — complete
+
+1. Convert colors in the existing `globals.css` and `arcade.css` in place.
+2. Preserve selectors, declaration order, gradients, alpha, and token names.
+3. Run focused CSS/brand/Arcade tests, lint, build, and local visual checks.
+
+### Phase 3: source extraction — complete
+
+1. Extract core declarations into the source boundaries above without changing
+   their relative order.
+2. Extract Arcade palette blocks while leaving component rules in the Arcade
+   entry stylesheet.
+3. Verify that production-default WTH and scoped St. Johns computed values are
+   unchanged from Phase 2.
+
+### Phase 4: final validation — complete
+
+1. Run the full test suite, lint, production build, and `git diff --check`.
+2. Test both brands in standard light/dark and Hi-viz.
+3. Check enabled and disabled operational controls to confirm brand profiles
+   cannot affect protected semiotics.
+4. Recheck `williamtemple.app`; do not commit or push changes that would alter
+   the current production deployment without explicit approval.
+
+## Measured Acceptance Criteria
+
+- No forbidden color literals remain in `src/**/*.css`.
+- WTH remains the default when `NEXT_PUBLIC_LOTTO_BRAND` is absent.
+- St. Johns continues to activate only through its deployment profile.
+- Computed core and Arcade tokens match the pre-refactor visual values within
+  conversion precision.
+- Operational status colors remain identical across brands for a given theme.
+- Arcade remains absent from core raffle component/style dependencies.
+- All automated checks and production builds pass.

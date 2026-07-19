@@ -20,6 +20,7 @@ import { useStaffAuthenticated } from "@/components/staff-auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { isRTL } from "@/lib/rtl-utils";
 import { cn } from "@/lib/utils";
+import { inventoryIntegration } from "@/config/brand";
 
 type ArcadeNavItem = {
   id: string;
@@ -31,7 +32,7 @@ type ArcadeNavItem = {
 
 // Same public destinations and shared `nav*` labels as the core bar, but with
 // arcade pixel icons and arcade styling. See docs/NAVIGATION.md.
-const ARCADE_NAV_ITEMS: ArcadeNavItem[] = [
+const ALL_ARCADE_NAV_ITEMS: ArcadeNavItem[] = [
   { id: "ticket", labelKey: "navTicket", href: "/", Icon: ReceiptIcon, isActive: (p) => p === "/" },
   {
     id: "dashboard",
@@ -56,6 +57,10 @@ const ARCADE_NAV_ITEMS: ArcadeNavItem[] = [
   },
 ];
 
+const ARCADE_NAV_ITEMS = inventoryIntegration.enabled
+  ? ALL_ARCADE_NAV_ITEMS
+  : ALL_ARCADE_NAV_ITEMS.filter((item) => item.id !== "inventory");
+
 // Authenticated staff variant: Admin · Dashboard · What's in stock · Games,
 // mirroring the core bar's auth variant in arcade pixel style.
 const ARCADE_AUTH_NAV_ITEMS: ArcadeNavItem[] = [
@@ -66,9 +71,7 @@ const ARCADE_AUTH_NAV_ITEMS: ArcadeNavItem[] = [
     Icon: AdminIcon,
     isActive: (p) => p === "/admin" || p.startsWith("/admin/"),
   },
-  ARCADE_NAV_ITEMS[1],
-  ARCADE_NAV_ITEMS[2],
-  ARCADE_NAV_ITEMS[3],
+  ...ARCADE_NAV_ITEMS.filter((item) => item.id !== "ticket"),
 ];
 
 /**
@@ -95,7 +98,7 @@ export function ArcadeBottomTabBar() {
       <ul
         className={cn(
           "pointer-events-auto flex w-full items-stretch border-t-2 border-[var(--arcade-wall)] bg-[var(--arcade-menu-card-bg)] px-2 pt-2 pb-[max(env(safe-area-inset-bottom),0.6rem)] backdrop-blur-sm",
-          "sm:w-auto sm:gap-2 sm:border-2 sm:px-3 sm:pb-2 sm:shadow-[0_0_0_2px_rgba(255,109,232,0.3)]"
+          "sm:w-auto sm:gap-2 sm:border-2 sm:px-3 sm:pb-2 sm:shadow-[0_0_0_2px_var(--arcade-nav-shadow)]"
         )}
       >
         {items.map(({ id, labelKey, href, Icon, isActive }) => {

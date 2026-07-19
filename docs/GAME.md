@@ -37,6 +37,9 @@
 - Keep shared global tokens in `src/app/globals.css`.
 - Add Arcade-specific tokens/utilities in Arcade-scoped CSS.
 - Avoid broad global changes for Arcade-only visuals.
+- Deployment branding may override `--arcade-*` tokens only inside
+  `src/arcade/styles/arcade.css`; the no-profile defaults remain the William
+  Temple House Arcade palette, and gameplay/status meanings stay universal.
 
 ### Data Boundary
 - MVP game state is local client state.
@@ -115,9 +118,14 @@ public/
 - Verify frame stability on lower-powered emulated devices.
 - Verify accessibility basics (focus order, contrast, reduced motion handling).
 
-## Current Build State (2026-02-18)
+## Current Build State (2026-07-18)
 - Completed: isolated Arcade routes and layout (`/arcade`, `/arcade/snake`) with persistent `NOW SERVING` banner.
 - Completed: Arcade-scoped 8-bit visual system and Press Start 2P font.
+- Completed: Deployment-scoped Arcade color profiles. St. Johns uses
+  off-white/charcoal foundations with teal and luminous mint retro accents in
+  light/dark mode, including the menu, persistent banner, navigation dock,
+  game chrome, controls, and leaderboard surfaces. William Temple House keeps
+  its original blue/pink/yellow defaults.
 - Completed: Arcade home `PLAY SNAKE` CTA supports per-word wrapping for multi-word translations, avoiding overflow while preserving centered button layout.
 - Completed: Arcade top-bar mode switcher now uses the full 8bitcn retro icon geometry and consistent theme semantics (sun in light mode, moon in dark mode).
 - Completed: Snake movement shell with stable square board container and on-screen D-pad controls.
