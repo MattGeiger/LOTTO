@@ -161,7 +161,7 @@ describe("white-label brand configuration", () => {
     const { default: manifest } = await import("@/app/manifest");
     expect(manifest()).toMatchObject({
       name: "St. Johns Food Share Queue",
-      short_name: "Food Share Queue",
+      short_name: "St Johns Food Share App",
       theme_color: "#33a478",
       background_color: "#2d2d2d",
       icons: [
