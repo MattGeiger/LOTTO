@@ -337,7 +337,8 @@ The implementation profile is complete. Launch coordination now covers:
 - Pointing the purchased `stjohnsfoodshare.app` domain to its dedicated Vercel
   project.
 - Resend sender-domain verification and `EMAIL_FROM`.
-- An exact Gmail `ADMIN_EMAIL_ALLOWLIST`, followed later by an optional
+- `ADMIN_EMAIL_ALLOWLIST=stjohnsfoodshare@gmail.com` combined with the trusted
+  `ADMIN_EMAIL_DOMAIN=templepdx.com` administrative path, followed later by an
   `ADMIN_EMAIL_DOMAIN=stjohnsfoodshare.org` migration.
 - St. Johns Neon database provisioning and production secrets.
 - FEED deployment and endpoint, if St. Johns adopts FEED later.

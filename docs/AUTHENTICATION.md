@@ -12,11 +12,16 @@
 
 ## Staff Email Authorization
 
-Every production deployment must configure one server-side staff-email policy:
+Every production deployment must configure at least one server-side staff-email
+restriction:
 
-1. `ADMIN_EMAIL_ALLOWLIST` — comma-separated complete addresses. When present,
-   this is authoritative and `ADMIN_EMAIL_DOMAIN` is ignored.
-2. `ADMIN_EMAIL_DOMAIN` — domain-wide fallback when no exact allowlist exists.
+1. `ADMIN_EMAIL_ALLOWLIST` — comma-separated complete addresses.
+2. `ADMIN_EMAIL_DOMAIN` — an optional managed domain.
+
+When both are configured, authorization is additive: an address is accepted if
+it appears in the exact allowlist **or** belongs to the managed domain. This
+supports an agency that uses a shared Gmail account while also authorizing a
+trusted administrative domain.
 
 If neither is configured, production fails closed. Local development remains
 available because localhost uses the documented authentication bypass.
@@ -29,6 +34,10 @@ ADMIN_EMAIL_ALLOWLIST=director@gmail.com,operations@gmail.com
 
 # Domain policy for an agency with managed organizational email
 ADMIN_EMAIL_DOMAIN=williamtemple.org
+
+# Combined policy for St. Johns launch administration
+ADMIN_EMAIL_ALLOWLIST=stjohnsfoodshare@gmail.com
+ADMIN_EMAIL_DOMAIN=templepdx.com
 ```
 
 Do not set `ADMIN_EMAIL_DOMAIN=gmail.com`; that would authorize every Gmail
@@ -58,8 +67,9 @@ Users do not need to repeat this process each time.
 
 ## Maintenance Notes
 
-- St. Johns may launch with an exact Gmail allowlist and migrate later to
-  individual `@stjohnsfoodshare.org` addresses without changing application
-  code.
+- St. Johns launches with `stjohnsfoodshare@gmail.com` as an exact-address
+  exception and `templepdx.com` as a managed administrative domain. When
+  individual `@stjohnsfoodshare.org` mailboxes are available, replace the
+  temporary policy with that organizational domain.
 - Prefer individual staff addresses over one shared mailbox for clearer
   offboarding and accountability.
