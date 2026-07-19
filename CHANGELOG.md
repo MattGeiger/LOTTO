@@ -2,6 +2,45 @@
 
 ## [Unreleased]
 
+### Fixed
+- **St. Johns personalized-homepage header logo could overlap "NOW SERVING" on
+  mobile.** The header logo was sized by a fixed width, so a brand whose logo
+  lockup is taller relative to its width than William Temple House's wide
+  horizontal wordmark could exceed the fixed vertical clearance reserved below
+  it. The header logo is now capped to a fixed height instead, guaranteeing
+  clearance for any brand's aspect ratio. See `docs/ISSUES.md` Issue 32.
+- **St. Johns light-mode primary-button text had poor contrast.** Filled
+  primary buttons (e.g. "Enter a new ticket number") showed near-black text on
+  a mid-green fill. `--primary-foreground` for St. Johns light mode is now a
+  crisp near-white; dark mode is unchanged. See `docs/ISSUES.md` Issue 33.
+- **St. Johns PWA home-screen label was "Food Share Queue" instead of the
+  organization's proper name.** `shortName` now reads "St Johns Food Share
+  App" (no apostrophe, per organization naming).
+
+### Documentation
+- **Rewrote `docs/DEPLOYMENT.md`'s production section into a full new-agency
+  deployment runbook**, replacing a stale two-table Postgres schema snippet
+  that predated the NextAuth/OTP/AI-translation tables in `schema.sql` — an
+  older version of that snippet directly caused a production incident during
+  the St. Johns launch (schema never applied to the new database; see
+  `docs/ISSUES.md` Issue 29). The runbook is written from what actually
+  happened launching St. Johns Food Share into production on 2026-07-18,
+  including several non-obvious Vercel/Neon/Resend/Namecheap failure modes:
+  Vercel's Framework Preset silently defaulting to "Other" (full 404 despite a
+  successful build; Issue 31), Vercel's "Sensitive" environment variables
+  being unrecoverable after creation and the resulting workflow for applying a
+  schema without ever seeing the connection string (Issue 30), and DNS/mail
+  setup gotchas at Namecheap. Also documents a known, deferred, non-blocking
+  issue where WTH's own PR preview builds fail due to Preview-scoped database
+  env vars (production is unaffected).
+- Updated `docs/WHITE_LABEL_BRANDING_PLAN.md`: marked St. Johns Launch Work
+  complete (2026-07-18) with a pointer to the new runbook, and added two new
+  brand-authoring guardrails for future agencies — logo header sizing (fixed
+  height, not fixed width) and a manual primary/foreground contrast check,
+  since neither is caught by the existing automated brand tests.
+- Appended `docs/ISSUES.md` Issues 29–33 covering the above with root cause,
+  fix, and prevention for each.
+
 ## [1.19.0] - 2026-07-18
 ### Documentation
 - Added `docs/CSS_THEME_ARCHITECTURE.md` with the implementation plan, cascade
