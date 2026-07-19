@@ -20,6 +20,12 @@ export type BrandManifestIcon = {
   purpose?: "any" | "maskable" | "monochrome";
 };
 
+export type BrandMetadataIcon = {
+  src: string;
+  sizes?: string;
+  type?: string;
+};
+
 export type BrandProfile = {
   id: BrandProfileId;
   organizationName: string;
@@ -46,8 +52,8 @@ export type BrandProfile = {
   pwa: {
     backgroundColor: string;
     themeColor: string;
-    browserIcon: string;
-    appleIcon: string;
+    browserIcons: BrandMetadataIcon[];
+    appleIcons: BrandMetadataIcon[];
     manifestIcons: BrandManifestIcon[];
   };
   staff: {
@@ -97,8 +103,19 @@ export const BRAND_PROFILES: Record<BrandProfileId, BrandProfile> = {
     pwa: {
       backgroundColor: "#ffffff",
       themeColor: "#2762a2",
-      browserIcon: "/brands/william-temple-house/favicon.ico",
-      appleIcon: "/brands/william-temple-house/apple-icon.png",
+      browserIcons: [
+        {
+          src: "/brands/william-temple-house/favicon.ico",
+          type: "image/x-icon",
+        },
+      ],
+      appleIcons: [
+        {
+          src: "/brands/william-temple-house/apple-icon.png",
+          sizes: "180x180",
+          type: "image/png",
+        },
+      ],
       manifestIcons: [
         {
           src: "/icons/icon-192.png",
@@ -163,13 +180,54 @@ export const BRAND_PROFILES: Record<BrandProfileId, BrandProfile> = {
     pwa: {
       backgroundColor: "#2d2d2d",
       themeColor: "#33a478",
-      browserIcon: "/brands/st-johns-food-share/icon.svg",
-      appleIcon: "/brands/st-johns-food-share/icon.svg",
+      browserIcons: [
+        {
+          src: "/brands/st-johns-food-share/Icon_32.png",
+          sizes: "32x32",
+          type: "image/png",
+        },
+        {
+          src: "/brands/st-johns-food-share/Icon_64.png",
+          sizes: "64x64",
+          type: "image/png",
+        },
+      ],
+      appleIcons: [
+        {
+          src: "/brands/st-johns-food-share/Icon_256.png",
+          sizes: "256x256",
+          type: "image/png",
+        },
+      ],
       manifestIcons: [
         {
-          src: "/brands/st-johns-food-share/icon.svg",
-          sizes: "any",
-          type: "image/svg+xml",
+          src: "/brands/st-johns-food-share/Icon_32.png",
+          sizes: "32x32",
+          type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: "/brands/st-johns-food-share/Icon_64.png",
+          sizes: "64x64",
+          type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: "/brands/st-johns-food-share/Icon_128.png",
+          sizes: "128x128",
+          type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: "/brands/st-johns-food-share/Icon_256.png",
+          sizes: "256x256",
+          type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: "/brands/st-johns-food-share/Icon_512.png",
+          sizes: "512x512",
+          type: "image/png",
           purpose: "any",
         },
       ],
