@@ -55,6 +55,11 @@ Relevant FEED frontend paths:
   table headers while also using FEED-style pagination controls.
 - LOTTO removes the unused Endpoint URL input from the AI key step because the
   current provider adapters call the default provider endpoints.
+- On queue-only brand profiles, LOTTO omits the Inventory category from **Find
+  Missing**, performs no FEED preflight fetch, and suppresses the empty-source
+  warning. This is a deployment-capability boundary, not a replacement of
+  FEED's Translation Management interaction pattern. Inventory remains present
+  unchanged for FEED-enabled profiles.
 
 ## Current LOTTO Implementation Map
 

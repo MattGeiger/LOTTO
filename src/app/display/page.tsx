@@ -9,10 +9,11 @@ import type { Metadata } from "next";
 
 import { PublicDisplayPage } from "@/components/public-display-page";
 import { LanguageProvider } from "@/contexts/language-context";
+import { brandProfile } from "@/config/brand";
 
 export const metadata: Metadata = {
   title: "Display",
-  description: "The live ticket board showing who's being served at William Temple House.",
+  description: brandProfile.metadata.displayDescription,
 };
 
 export default function DisplayPage() {

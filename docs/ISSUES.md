@@ -1156,3 +1156,140 @@ Background white chosen to match the official logo presentation; user-approved.
    five icon assets return 200.
 3. On-device check after deploy: iOS and Android "Add to Home Screen" show the
    WTH emblem on white.
+
+---
+
+## Issue 27: Intermittent full-suite-only failure in `readonly-display-public.test.tsx` (confirmed flake, not a stale test)
+
+### Status
+- Documented as a known flake pattern; no code or test changes made. Not a bug.
+
+### Observed
+`npm test` (full suite, `vitest run`) failed once on
+`tests/readonly-display-public.test.tsx` → `"keeps ticket grid layout LTR for
+RTL languages"`, at the assertion:
+```
+expect(screen.getByText("لم يُنادى").closest("[dir='rtl']")).toContainElement(...)
+```
+635/636 tests passed; only this one failed, in that one run.
+
+### Why this looked suspicious (and wasn't)
+The failing test's name ("keeps ticket grid layout LTR for RTL languages")
+and the surrounding design history — LOTTO used to reverse the ticket grid's
+physical layout for RTL languages (Arabic/Farsi), a design later abandoned
+because it was confusing; the grid, ticket buttons, and status key are now
+pinned `dir="ltr"` regardless of language, with only individual localized text
+nodes getting their own nested `dir="rtl"` scope for correct glyph shaping —
+made it worth checking whether the test was stale (asserting the old,
+abandoned reversed-layout behavior) rather than actually broken.
+
+**It is not stale.** Reading the test directly confirms it asserts exactly the
+*current*, intended design:
+- `ticket-grid`, the ticket button, and `ticket-status-key` are all asserted
+  `dir="ltr"`.
+- The Arabic status label (`"لم يُنادى"`) is asserted to be nested inside its
+  own `dir="rtl"` element — confirming text-level RTL shaping coexists with a
+  structurally-LTR grid.
+
+This is a regression guard *for* the abandon-the-reversed-layout decision, not
+a leftover assertion of the old one. If the old reversed-grid behavior ever
+crept back in, this test would fail loudly and correctly.
+
+### Root Cause (confirmed via reproduction, not assumed)
+1. Ran the single file in isolation (`npx vitest run
+   tests/readonly-display-public.test.tsx`) → **12/12 passed**, including this
+   test, with no code changes.
+2. Re-ran the **full suite** a second time, again with zero code changes in
+   between → **636/636 passed**, including this test.
+
+Same test, same assertions, same code, two different full-suite outcomes.
+That rules out a stale/incorrect assertion (which would fail deterministically
+every time) and points to **test-parallelism/resource contention** across the
+82 test files running concurrently under Vitest's worker pool — e.g. timing
+pressure on an async `findByText`/DOM query under load — not a logic bug in
+the test or the component.
+
+### Approaches considered
+1) **Treat as a one-off flake; document the reasoning; take no action.**
+   - Pros: matches the evidence (passes in isolation, passes on full-suite
+     rerun); avoids touching a correct, well-targeted regression test based on
+     a single non-reproducing failure.
+   - Cons: does not reduce whatever timing pressure exists, if it's real.
+2) **Modify the test to reduce timing sensitivity** (e.g. wrap the
+   `getByText`/`closest` assertion in `waitFor`).
+   - Pros: could pre-empt a real race if the async find above it resolves the
+     element before rendering finishes settling.
+   - Cons: speculative — there is no reproduction to confirm this is the
+     actual mechanism; changing a passing, correct test without a reproducing
+     failure risks masking a future real regression instead of catching it.
+3) **Reduce Vitest worker parallelism** to eliminate cross-file resource
+   contention as a variable.
+   - Pros: would address the suspected root cause directly if contention is
+     real.
+   - Cons: slows the whole suite for a single non-reproducing failure; not
+     justified without a reproduction or a pattern of recurrence.
+
+### Recommendation
+**Approach 1.** One non-reproducing failure, immediately followed by a clean
+full-suite rerun with no changes, is not enough signal to justify modifying a
+correct test or the suite's parallelism settings. Documenting the reasoning
+here (and in `AGENTS.md`) means a future recurrence gets evaluated with this
+context instead of being re-investigated from scratch or, worse, assumed to
+mean the test is stale and "fixed" by loosening/removing its assertions.
+
+### If this recurs
+- **Don't assume the test is stale or wrong** — re-read it first; compare
+  against the current design intent (check `docs/user-guides/06-*.md` /
+  relevant RTL docs, not memory).
+- **Reproduce before changing anything:** run the single file in isolation,
+  then re-run the full suite once more. A failure that doesn't reproduce
+  either way is still most likely parallelism/timing, not logic.
+- **Only escalate to a real fix** (e.g. `waitFor` around the assertion,
+  reduced worker parallelism) if it fails **repeatedly** or **reproducibly**,
+  not from a single occurrence.
+
+---
+
+## Issue 28: Operating-hours API accepts malformed or conflicting time values
+
+### Status
+- Open; documented for a later hardening milestone. No runtime behavior changed.
+
+### Observed
+The Admin operating-hours editor uses native time inputs, but the persisted
+state contract does not independently prove that each `openTime` and
+`closeTime` is a valid 24-hour `HH:mm` value. It also does not reject an open
+day whose closing time is equal to or earlier than its opening time.
+
+### Root Cause (Code References)
+- `src/app/api/state/route.ts` validates the seven-day operating-hours object
+  and timezone, but its day-level schema accepts arbitrary strings for
+  `openTime` and `closeTime`.
+- `src/components/operating-hours-editor.tsx` normally supplies valid values
+  through `<input type="time">`, but UI controls are not a server-side data
+  integrity boundary. Direct API callers, stale clients, imported state, or
+  future editor changes can bypass those browser constraints.
+
+### Risk
+- Malformed strings can make open/closed-window calculations unreliable.
+- A closing time before the opening time creates a conflicting schedule that
+  can distort operating-hours-aware polling and any future time-window
+  analytics.
+- Invalid state can persist successfully and become harder to diagnose later
+  because the editor itself appears constrained.
+
+### Recommended Fix
+Harden the centralized API schema rather than relying on the editor:
+
+1. Require exact 24-hour `HH:mm` values (`00:00` through `23:59`) for every
+   stored opening and closing time.
+2. For days marked open, require `closeTime > openTime`.
+3. Continue retaining time values for closed days so reopening a day does not
+   erase the prior schedule.
+4. Return actionable validation copy identifying the affected day and field.
+5. Add route tests for malformed time strings, equal times, closing-before-
+   opening, closed-day retention, and a valid seven-day schedule.
+
+Overnight operating windows are not supported by the current UX. If they
+become a requirement, model them explicitly rather than weakening the
+same-day ordering rule.

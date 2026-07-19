@@ -14,9 +14,10 @@ import ResendProvider from "next-auth/providers/resend";
 import { createHash } from "node:crypto";
 
 import { getPool } from "./db";
+import { isAdminEmailAllowed } from "./admin-email-policy";
 
-const allowedDomain = process.env.ADMIN_EMAIL_DOMAIN?.toLowerCase();
-const fromAddress = process.env.EMAIL_FROM ?? "login@williamtemple.app";
+const fromAddress =
+  process.env.EMAIL_FROM ?? (process.env.NODE_ENV === "production" ? "" : "login@localhost");
 const resendApiKey = process.env.RESEND_API_KEY;
 const hasResendApiKey =
   typeof resendApiKey === "string" && resendApiKey.trim().startsWith("re_");
@@ -132,8 +133,8 @@ export const { handlers: authHandlers, auth } = NextAuth(() => {
           if (!email || !code) {
             throw new Error("Email and code are required.");
           }
-          if (allowedDomain && !email.endsWith(`@${allowedDomain}`)) {
-            throw new Error("Email domain is not allowed.");
+          if (!isAdminEmailAllowed(email)) {
+            throw new Error("Email address is not authorized.");
           }
           const now = new Date();
           const failureRow = await pool.query<{
@@ -200,11 +201,11 @@ export const { handlers: authHandlers, auth } = NextAuth(() => {
           : "unknown";
         console.log("[Auth] signIn callback", { email: maskedEmail });
         const email = user.email?.toLowerCase();
-        if (allowedDomain && email && email.endsWith(`@${allowedDomain}`)) {
+        if (email && isAdminEmailAllowed(email)) {
           console.log("[Auth] signIn approved");
           return true;
         }
-        console.log("[Auth] signIn rejected - domain mismatch");
+        console.log("[Auth] signIn rejected - email policy mismatch");
         return false;
       },
     },

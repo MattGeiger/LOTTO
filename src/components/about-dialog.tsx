@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { brandProfile } from "@/config/brand";
 
 type AboutDialogProps = {
   version: string;
@@ -112,12 +113,12 @@ export function AboutDialog({ version }: AboutDialogProps) {
                 <dt className="text-right font-medium text-foreground">Made for</dt>
                 <dd className="text-muted-foreground">
                   <a
-                    href="https://williamtemple.org/"
+                    href={brandProfile.organizationWebsite}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-medium text-foreground underline-offset-4 hover:underline"
                   >
-                    William Temple House
+                    {brandProfile.organizationName}
                   </a>
                 </dd>
               </div>
@@ -136,9 +137,7 @@ export function AboutDialog({ version }: AboutDialogProps) {
             </dl>
 
             <p className="max-w-md text-xs leading-5 text-muted-foreground">
-              The application code is open source under AGPL-3.0-or-later. William
-              Temple House branding is not open source and may not be reused without
-              separate permission.
+              The application code is open source under AGPL-3.0-or-later. {brandProfile.brandingNotice}
             </p>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">

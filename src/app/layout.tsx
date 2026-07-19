@@ -5,7 +5,7 @@
 // licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
 // is not covered by this license; see TRADEMARKS.md.
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Bodoni_Moda_SC,
   Geist_Mono,
@@ -20,6 +20,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { LanguageProvider } from "@/contexts/language-context";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { brandProfile } from "@/config/brand";
 
 const lato = Lato({
   variable: "--font-lato",
@@ -52,11 +53,18 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "William Temple House App",
-    template: "%s | William Temple House App",
+    default: brandProfile.appName,
+    template: `%s | ${brandProfile.appName}`,
   },
-  description:
-    "See your place in line, check what's in stock, and play a few retro games while you wait at William Temple House.",
+  description: brandProfile.metadata.description,
+  icons: {
+    icon: brandProfile.pwa.browserIcon,
+    apple: brandProfile.pwa.appleIcon,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: brandProfile.pwa.themeColor,
 };
 
 export default function RootLayout({
@@ -69,6 +77,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-brand={brandProfile.id}
       suppressHydrationWarning
       className={`${lato.variable} ${geistMono.variable} ${openSans.variable} ${bodoniModaSc.variable} ${ibmPlexMono.variable}`}
     >

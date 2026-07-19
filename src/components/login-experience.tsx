@@ -8,7 +8,6 @@
 "use client";
 
 import React, { Suspense } from "react";
-import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { KeyRound, Mail } from "lucide-react";
@@ -28,6 +27,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { BrandLogo } from "@/components/brand-logo";
+import { brandProfile } from "@/config/brand";
 
 const LOGIN_TABS_IDS = {
   otpTrigger: "login-tabs-trigger-otp",
@@ -124,8 +125,8 @@ function LoginForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="px-8 pt-7 sm:px-10 sm:pt-8">
-        <CardTitle>Sign in to William Temple House</CardTitle>
-        <CardDescription>Staff access only — use your @williamtemple.org email.</CardDescription>
+        <CardTitle>{brandProfile.staff.signInTitle}</CardTitle>
+        <CardDescription>{brandProfile.staff.emailGuidance}</CardDescription>
       </CardHeader>
 
       <CardContent className="px-8 pb-7 sm:px-10 sm:pb-8">
@@ -174,7 +175,7 @@ function LoginForm() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@williamtemple.org"
+                    placeholder={brandProfile.staff.emailPlaceholder}
                     className="px-4"
                     required
                   />
@@ -210,7 +211,7 @@ function LoginForm() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@williamtemple.org"
+                      placeholder={brandProfile.staff.emailPlaceholder}
                       className="px-4"
                       required
                     />
@@ -273,7 +274,7 @@ function LoginForm() {
 }
 
 /**
- * The shared staff login screen (WTH logo + magic-link/OTP form), used by both
+ * The shared staff login screen (brand logo + magic-link/OTP form), used by both
  * `/login` and `/staff`. An optional `footer` slot carries the version /
  * About / Help links.
  */
@@ -281,22 +282,7 @@ export function LoginExperience({ footer }: { footer?: React.ReactNode }) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-4xl flex-col items-center justify-start gap-6 px-6 py-8 sm:justify-center sm:py-12">
       <div className="flex justify-center">
-        <Image
-          src="/wth-logo-horizontal.png"
-          alt="William Temple House"
-          width={900}
-          height={240}
-          className="block h-auto w-full max-w-md dark:hidden"
-          priority
-        />
-        <Image
-          src="/wth-logo-horizontal-reverse.png"
-          alt="William Temple House"
-          width={900}
-          height={240}
-          className="hidden h-auto w-full max-w-md dark:block"
-          priority
-        />
+        <BrandLogo className="w-full max-w-md" priority />
       </div>
       <Suspense fallback={<div className="text-sm text-muted-foreground">Loading login...</div>}>
         <LoginForm />

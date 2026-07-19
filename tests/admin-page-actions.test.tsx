@@ -5,7 +5,7 @@
 // licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
 // is not covered by this license; see TRADEMARKS.md.
 
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -287,6 +287,35 @@ describe("Admin page actions", () => {
     // "Draw position" appears in the card — use getAllByText and check at least one
     const drawPosElements = screen.getAllByText(/Draw position/);
     expect(drawPosElements.length).toBeGreaterThan(0);
+  });
+
+  it("locks returned and unclaimed actions to operational status variants", async () => {
+    render(<AdminPage />);
+    await screen.findByText("Now Serving");
+
+    const returnedCard = screen.getByText("Mark ticket as returned").closest(".ticket-returned");
+    const unclaimedCard = screen
+      .getByText("Mark ticket as unclaimed")
+      .closest(".ticket-unclaimed");
+
+    expect(returnedCard).not.toBeNull();
+    expect(unclaimedCard).not.toBeNull();
+
+    const returnedButton = within(returnedCard as HTMLElement).getByRole("button", {
+      name: "Mark ticket",
+    });
+    const unclaimedButton = within(unclaimedCard as HTMLElement).getByRole("button", {
+      name: "Mark ticket",
+    });
+
+    expect(returnedButton.className).toContain(
+      "bg-[var(--operational-danger-action-bg)]",
+    );
+    expect(unclaimedButton.className).toContain(
+      "bg-[var(--operational-warning-action-bg)]",
+    );
+    expect(returnedButton.className).toContain("disabled:opacity-100");
+    expect(unclaimedButton.className).toContain("disabled:opacity-100");
   });
 
   it("displays Ticket Range & Order section", async () => {
