@@ -2049,11 +2049,6 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <ReleaseNotesDialog version={version} content={releaseNotes} />
-          <AboutDialog version={version} />
-        </div>
-
         <div className="absolute right-6 top-10 z-50 lg:right-8">
           <ThemeSwitcher />
         </div>
@@ -2857,6 +2852,11 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
             Loading state from datastore...
           </div>
         )}
+
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 pb-4 text-xs text-muted-foreground">
+          <ReleaseNotesDialog version={version} content={releaseNotes} />
+          <AboutDialog version={version} />
+        </div>
         </main>
         <BottomTabBar />
       </div>
