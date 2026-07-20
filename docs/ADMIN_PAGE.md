@@ -24,6 +24,42 @@ accordion:
 - Announcement
 - Translation
 
+### Performance constraint: inputs must own their own state
+
+`src/app/admin/admin-page-client.tsx` is a single large client component
+(~2,800 lines of JSX). **Any state that changes on every keystroke must live in
+an isolated child component, not in `AdminPageClient`.** Lifting a
+high-frequency input to the root re-renders the whole page per character, which
+is imperceptible on modern hardware but produces multi-second input lag on the
+iPad mini 4 class devices staff actually use.
+
+This has now caused two separate production defects — `docs/ISSUES.md`
+Issue 14 (range/reset fields) and Issue 35 (Announcement editor).
+
+Existing isolated sections, to copy from when adding a new input:
+
+| Section | Component |
+|---------|-----------|
+| Start/End range inputs | `RangeGenerationControls` (in `admin-page-client.tsx`) |
+| Reset confirmation phrase | `ResetActionControls` (in `admin-page-client.tsx`) |
+| Draw position controls | `DrawPositionControls` (in `admin-page-client.tsx`) |
+| Announcement draft | `src/components/announcement-section.tsx` |
+
+The pattern: a `React.memo` component owns the value in local state, renders
+its own action button, and calls a stable `onSave`/`onCommit` callback with the
+value only when the user commits. The root's callback must take the value as an
+**argument** rather than closing over root state, so its `useCallback` identity
+stays stable.
+
+The cost is highest for inputs inside the **Advanced** accordion, because its
+children are mounted while it is open — and `TranslationCard` is built on
+`animate-ui`'s `TabsContents`, which renders *all* of its tabs, not just the
+visible one.
+
+When adding an input, add a test asserting that heavy siblings do not re-render
+while typing (see `tests/announcement-input-isolation.test.tsx`). A timing
+assertion will not catch this defect class on a development machine.
+
 ### Appearance card
 
 The Appearance card (`src/components/appearance/appearance-card.tsx`) manages

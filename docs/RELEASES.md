@@ -1,3 +1,30 @@
+# LOTTO v1.20.1
+
+**Release Date:** July 20, 2026
+
+A patch release fixing severe input lag when editing Announcement copy on
+older staff devices (iPad mini 4 class hardware).
+
+The announcement draft was held in the root `/admin` component's state, so
+every keystroke re-rendered the entire Admin page — including the Translation
+card (which mounts all three of its tabs, not just the visible one), the
+Appearance card, the operating-hours and language-rotation editors, and one
+dialog per returned/unclaimed ticket. On A8-class hardware this produced
+multi-second latency between a keypress and the character appearing. The
+development machine is fast enough that the same fan-out is imperceptible,
+which is why it survived testing — the same blind spot recorded in Issue 14.
+
+The draft now lives in an isolated, memoized `AnnouncementSection` that
+notifies the root only when Save is pressed, and draft persistence to browser
+storage is debounced off the keystroke path. Measured sibling re-renders per
+keystroke dropped from one-per-character to zero, locked in by
+`tests/announcement-input-isolation.test.tsx`. No user-facing behavior changed.
+
+Details in `CHANGELOG.md`, `docs/ISSUES.md` Issue 35, and
+`docs/V1.5_OPTIMIZATIONS.md` §2M.
+
+---
+
 # LOTTO v1.20.0
 
 **Release Date:** July 20, 2026

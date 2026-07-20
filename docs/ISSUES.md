@@ -1593,3 +1593,126 @@ clean browser profile with a stable dev server, treat it as real: bisect by
 commenting regions of `admin-page-client.tsx` and diff the SSR HTML
 (`curl /admin`) against the hydrated DOM's Radix id sequence to locate the
 first divergent sibling.
+
+---
+
+## Issue 35: Severe input lag typing in the Announcement editor on older devices (iPad mini 4)
+
+### Status
+- **Resolved in v1.20.1 (2026-07-20).**
+- This is a recurrence of the Issue 14 class of defect (page-wide keystroke
+  fan-out) in a surface added *after* the v1.5 input-isolation work.
+
+### Observed
+- On iPad mini 4 class hardware, editing the Announcement copy in
+  `/admin` → Advanced → Announcement produced multi-second latency between
+  pressing a key and seeing the character appear.
+- Not reproducible on the development machine (Apple silicon, 128 GB), which
+  is exactly the blind spot recorded in Issue 14: the fan-out is identical on
+  both machines, but only A8-class hardware is slow enough for it to be felt.
+
+### Root Cause (Code References)
+The announcement draft was lifted into root `AdminPageClient` state, so **every
+keystroke re-rendered the entire `/admin` component tree**.
+
+- `src/app/admin/admin-page-client.tsx` held
+  `const [pendingAnnouncement, setPendingAnnouncement] = React.useState(...)`
+  and passed `setPendingAnnouncement` straight into `AnnouncementEditor`.
+- `AnnouncementEditor.emit()` (`src/components/announcement-editor.tsx`)
+  constructs a **new** `Announcement` object per change, so the state identity
+  changed on every character and no bail-out was possible.
+- `AdminPageClient` is a ~2,870-line component. Only three subtrees
+  (`RangeGenerationControls`, `ResetActionControls`, `DrawPositionControls`)
+  were memoized by the v1.5 work; everything else re-reconciled per keystroke.
+
+This was the **worst-case** input on the page, because the Announcement card
+lives inside the Advanced accordion, and `AccordionContent` mounts its children
+when open (`keepRendered = false`, but the section *is* open while editing).
+So typing an announcement re-rendered, per character:
+
+- `TranslationCard` — and because `TabsContents`
+  (`src/components/animate-ui/primitives/animate/tabs.tsx`) renders **all**
+  children rather than only the active tab, that means `LanguageSettingsTab`,
+  `AiConfigTab`, **and** `TranslationManagementTab` (~1,360 lines combined) all
+  re-rendered even though only one is visible.
+- `AppearanceCard` (+ the always-mounted `AppearanceWizard`).
+- `OperatingHoursEditor`, `DisplayLanguageRotationEditor`.
+- The Live State / History / QR cards, including a `react-qr-code` re-render.
+- One `ConfirmAction` (Radix `AlertDialog`) per returned and per unclaimed
+  ticket.
+
+Three secondary costs compounded it, all on the synchronous keystroke path:
+
+1. **Synchronous `localStorage` write per character.** The draft-persistence
+   effect was keyed on `[pendingAnnouncement, state?.announcement]`, so every
+   keystroke ran two `JSON.stringify` calls plus a blocking
+   `localStorage.setItem`.
+2. **Full-document Markdown serialization per character.** Tiptap's `onUpdate`
+   calls `getEditorMarkdown()`, which re-serializes the whole ProseMirror
+   document. Cost scales with announcement length, and the field allows up to
+   `ANNOUNCEMENT_MAX_LENGTH = 1800` characters — so the lag is worst on exactly
+   the long announcements staff actually write.
+3. **An extra editor re-render per ProseMirror transaction**, from the
+   `editor.on("transaction", forceTick)` toolbar-state subscription in
+   `src/components/markdown-editor.tsx`.
+
+### Measurement
+An instrumented render-count harness (now kept as
+`tests/announcement-input-isolation.test.tsx`) counted sibling re-renders while
+typing into the announcement field:
+
+| | `TranslationCard` | `AppearanceCard` | `DisplayLanguageRotationEditor` |
+|---|---|---|---|
+| Before | 1 per keystroke | 1 per keystroke | 1 per keystroke |
+| After | 0 | 0 | 0 |
+
+Note that a wall-clock assertion would be useless here — the development
+machine renders the whole tree fast enough that the bug is invisible. The
+regression test therefore asserts the **isolation property** (heavy siblings do
+not re-render at all while typing), which fails on any machine if the draft is
+re-lifted to root state.
+
+### Fix
+- Added `src/components/announcement-section.tsx`: a `React.memo` component
+  that owns the announcement draft in local state, renders the editor and the
+  Save button, and calls `onSave(draft)` only when Save is pressed. This is the
+  same input-isolation pattern as `RangeGenerationControls` /
+  `ResetActionControls` (docs/V1.5_OPTIMIZATIONS.md §2C).
+- Removed `pendingAnnouncement` state, the draft-hydration effect, and the
+  draft-persistence effect from `AdminPageClient`. `handleSaveAnnouncement` now
+  takes the draft as an argument instead of closing over root state, so its
+  `useCallback` identity is stable across renders.
+- Draft persistence moved into the isolated section and **debounced**
+  (`DRAFT_PERSIST_DEBOUNCE_MS = 500`), with a flush on `pagehide` and on
+  unmount so a pending write is never lost when the accordion collapses or the
+  tab is backgrounded. The synchronous storage write no longer lands on the
+  keystroke path.
+- Draft/server reconciliation semantics are unchanged: an unsaved draft still
+  survives reload and tab-refocus, and a genuine server-side change (saved on
+  another device) is still adopted.
+
+### Verification
+- `tests/announcement-input-isolation.test.tsx` — 4 tests: isolation, save,
+  debounced draft persistence, draft hydration on mount.
+- Full suite: 707 passing. The 3 remaining full-suite-only failures
+  (`public-inventory-page`, `readonly-display-public`) reproduce on `main`
+  without this change and pass in isolation — the known worker-pool contention
+  flake documented in Issue 27 and AGENTS.md.
+- `npm run build`, `npm run lint`, and `npm run check:legacy-bundles` clean.
+- On-device dev verification: typed into the WYSIWYG editor with a
+  PerformanceObserver armed for `longtask`; **zero long tasks** recorded across
+  37 characters in an unminified dev build. Draft persistence and
+  reload-recovery confirmed against the running app.
+
+### Prevention
+- **Any new text input added to `/admin` must own its own state.** The root
+  `AdminPageClient` tree is large enough that lifting a high-frequency input to
+  it is a performance defect by construction, regardless of how cheap the
+  individual input looks.
+- Prefer extending an existing isolated section, or add a new memoized section
+  component, rather than adding a `useState` to `AdminPageClient`.
+- When adding an input, add an isolation assertion alongside it. Timing-based
+  tests will not catch this class of bug on modern development hardware.
+- Note the `TabsContents` behavior: any card using
+  `components/animate-ui/primitives/animate/tabs` mounts **all** of its tabs,
+  so its render cost is the sum of every tab, not just the visible one.
