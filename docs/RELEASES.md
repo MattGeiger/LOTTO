@@ -1,3 +1,31 @@
+# LOTTO v1.20.0
+
+**Release Date:** July 20, 2026
+
+LOTTO v1.20.0 ships database-backed, runtime-configurable branding for every
+agency deployment. Staff can create, preview, save, and activate an appearance
+configuration from Admin without editing source code. The seven-step wizard
+covers identity, logos and generated install icons, a semiotics-aware color
+story, staff copy, optional inventory capability, and final review.
+
+The release adds automatic logo-palette recommendations, reserved operational
+status-color protection, derived light/dark/Hi-viz themes with contrast
+validation and correction, safe vector-logo handling, a configurable public
+service heading, and fail-closed resolution back to the compiled William Temple
+House or St. Johns profile. Both production Neon databases received the
+additive `brand_configurations` table and one-active-row index before rollout.
+
+Custom uploaded brand assets still use the documented filesystem fallback and
+are therefore not durable on Vercel until the planned Blob storage integration
+ships. Built-in profile/template assets and database-backed appearance settings
+are production-ready.
+
+Full implementation details are in `CHANGELOG.md`,
+`docs/CONFIGURABLE_BRANDING_PLAN.md`, `docs/COLOR_SEMIOTICS.md`, and
+`docs/user-guides/12-appearance.md`.
+
+---
+
 # LOTTO v1.19.0
 
 **Release Date:** July 18, 2026

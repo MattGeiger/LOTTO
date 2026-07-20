@@ -9,14 +9,18 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { PublicInventoryPage } from "@/components/public-inventory-page";
-import { brandProfile, inventoryIntegration } from "@/config/brand";
+import { getResolvedBrand } from "@/lib/brand-config/resolve";
 
-export const metadata: Metadata = {
-  title: "What's in Stock",
-  description: brandProfile.metadata.inventoryDescription,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const brand = await getResolvedBrand();
+  return {
+    title: "What's in Stock",
+    description: brand.metadata.inventoryDescription,
+  };
+}
 
-export default function InventoryPage() {
-  if (!inventoryIntegration.enabled) notFound();
+export default async function InventoryPage() {
+  const brand = await getResolvedBrand();
+  if (!brand.inventory.enabled) notFound();
   return <PublicInventoryPage />;
 }

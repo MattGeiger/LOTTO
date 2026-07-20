@@ -19,6 +19,7 @@ import { ScrambleOnLanguageChange, T } from "@/components/core/scramble-text";
 import { BrandLogo } from "@/components/brand-logo";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TicketDetailDialog } from "@/components/ticket-detail-dialog";
+import { useBrand } from "@/contexts/brand-context";
 import { useLanguage, type Language } from "@/contexts/language-context";
 import { formatDate } from "@/lib/date-format";
 import { getPollingIntervalMs } from "@/lib/polling-strategy";
@@ -157,6 +158,7 @@ export const ReadOnlyDisplay = ({
   const burstUntilRef = React.useRef<number | null>(null);
   const lastSearchRequestRef = React.useRef(0);
   const [deviceNowMs, setDeviceNowMs] = React.useState(() => Date.now());
+  const { serviceLabel } = useBrand();
 
   const formattedDate = formatDate(language, deviceNowMs);
 
@@ -511,7 +513,7 @@ export const ReadOnlyDisplay = ({
             <CardHeader className="pb-0">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-lg uppercase tracking-[0.14em] text-muted-foreground">
-                  <T text={t("foodPantryServiceFor")} />
+                  <T text={serviceLabel ?? t("foodPantryServiceFor")} />
                 </CardTitle>
               </div>
             </CardHeader>
@@ -532,7 +534,17 @@ export const ReadOnlyDisplay = ({
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-semibold text-foreground">
-                  <span data-testid="service-time" dir="ltr" className="[unicode-bidi:isolate]">
+                  {/* Wall-clock text can differ between the server render and
+                      hydration (minute boundary, or Node vs. browser ICU
+                      spacing before AM/PM); the mounted clock interval
+                      corrects it immediately, so suppress the boot-time
+                      mismatch warning. */}
+                  <span
+                    data-testid="service-time"
+                    dir="ltr"
+                    className="[unicode-bidi:isolate]"
+                    suppressHydrationWarning
+                  >
                     {formattedServiceTime}
                   </span>
                 </p>

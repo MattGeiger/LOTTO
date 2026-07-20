@@ -20,7 +20,7 @@ import { useStaffAuthenticated } from "@/components/staff-auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { isRTL } from "@/lib/rtl-utils";
 import { cn } from "@/lib/utils";
-import { inventoryIntegration } from "@/config/brand";
+import { useBrand } from "@/contexts/brand-context";
 
 type ArcadeNavItem = {
   id: string;
@@ -57,13 +57,14 @@ const ALL_ARCADE_NAV_ITEMS: ArcadeNavItem[] = [
   },
 ];
 
-const ARCADE_NAV_ITEMS = inventoryIntegration.enabled
-  ? ALL_ARCADE_NAV_ITEMS
-  : ALL_ARCADE_NAV_ITEMS.filter((item) => item.id !== "inventory");
+const arcadeNavItems = (inventoryEnabled: boolean) =>
+  inventoryEnabled
+    ? ALL_ARCADE_NAV_ITEMS
+    : ALL_ARCADE_NAV_ITEMS.filter((item) => item.id !== "inventory");
 
 // Authenticated staff variant: Admin · Dashboard · What's in stock · Games,
 // mirroring the core bar's auth variant in arcade pixel style.
-const ARCADE_AUTH_NAV_ITEMS: ArcadeNavItem[] = [
+const arcadeAuthNavItems = (inventoryEnabled: boolean): ArcadeNavItem[] => [
   {
     id: "admin",
     labelKey: "navAdmin",
@@ -71,7 +72,7 @@ const ARCADE_AUTH_NAV_ITEMS: ArcadeNavItem[] = [
     Icon: AdminIcon,
     isActive: (p) => p === "/admin" || p.startsWith("/admin/"),
   },
-  ...ARCADE_NAV_ITEMS.filter((item) => item.id !== "ticket"),
+  ...arcadeNavItems(inventoryEnabled).filter((item) => item.id !== "ticket"),
 ];
 
 /**
@@ -83,7 +84,10 @@ export function ArcadeBottomTabBar() {
   const pathname = usePathname() ?? "";
   const { language, t } = useLanguage();
   const isStaff = useStaffAuthenticated();
-  const items = isStaff ? ARCADE_AUTH_NAV_ITEMS : ARCADE_NAV_ITEMS;
+  const inventoryEnabled = useBrand().inventory.enabled;
+  const items = isStaff
+    ? arcadeAuthNavItems(inventoryEnabled)
+    : arcadeNavItems(inventoryEnabled);
 
   return (
     <nav

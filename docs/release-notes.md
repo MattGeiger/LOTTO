@@ -1,6 +1,31 @@
 
 ## Unreleased
 
+## Version 1.20.0 — July 20, 2026
+
+- **Create an agency appearance without changing code.** Staff can now open
+  Appearance under Admin's Advanced section and build a complete identity from
+  a template or from scratch: organization and app names, logos, install icon,
+  colors, staff sign-in copy, inventory access, and the public service heading.
+- **Get a safe color recommendation from a logo.** LOTTO extracts a logo's
+  palette, recommends the main, accent, ambient, and neutral colors, and keeps
+  universal Returned-red and Unclaimed-gold meanings out of brand signaling.
+  Staff can review every recommendation and adjust it before activation.
+- **Preview every important mode before activation.** The wizard shows the
+  derived identity in light, dark, and high-visibility themes, checks contrast,
+  and keeps operational status colors consistent across organizations.
+- **Use sharper, safer brand assets.** SVG logos remain crisp and are validated
+  as self-contained files; uploaded square marks generate a complete browser,
+  Apple, and install-icon set automatically.
+- **Adapt LOTTO beyond food pantries.** The public board's “Food Pantry Service
+  For” heading can now be replaced with organization-specific wording such as
+  “Clinic Hours For” or “Equipment Checkout For.” Leaving it blank preserves
+  the translated standard heading.
+- **A quieter, more reliable Admin experience.** Advanced-card shadows no
+  longer clip, derived contrast problems are corrected automatically when staff
+  have no direct control to fix them, and the public service clock no longer
+  causes harmless hydration warnings during page startup.
+
 ## Version 1.19.0 — July 18, 2026
 
 - **LOTTO can now serve more than one organization from the same codebase.**

@@ -6,20 +6,22 @@
 // is not covered by this license; see TRADEMARKS.md.
 
 import type { MetadataRoute } from "next";
-import { brandProfile } from "@/config/brand";
+import { getResolvedBrand } from "@/lib/brand-config/resolve";
 
-// Web App Manifest — identity and install assets come from the deployment's
-// selected brand profile. See docs/WHITE_LABEL_BRANDING_PLAN.md.
-export default function manifest(): MetadataRoute.Manifest {
+// Web App Manifest — identity and install assets come from the resolved
+// runtime brand (saved configuration or compiled deployment profile). See
+// docs/WHITE_LABEL_BRANDING_PLAN.md and docs/CONFIGURABLE_BRANDING_PLAN.md.
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const brand = await getResolvedBrand();
   return {
-    name: brandProfile.appName,
+    name: brand.appName,
     // short_name is what iOS/Android prefer for the launcher label.
-    short_name: brandProfile.shortName,
-    description: brandProfile.metadata.description,
+    short_name: brand.shortName,
+    description: brand.metadata.description,
     start_url: "/",
     display: "standalone",
-    background_color: brandProfile.pwa.backgroundColor,
-    theme_color: brandProfile.pwa.themeColor,
-    icons: brandProfile.pwa.manifestIcons,
+    background_color: brand.pwa.backgroundColor,
+    theme_color: brand.pwa.themeColor,
+    icons: brand.pwa.manifestIcons,
   };
 }

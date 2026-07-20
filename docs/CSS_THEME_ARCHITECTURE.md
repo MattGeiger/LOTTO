@@ -129,3 +129,25 @@ move must not change either one.
 - Operational status colors remain identical across brands for a given theme.
 - Arcade remains absent from core raffle component/style dependencies.
 - All automated checks and production builds pass.
+
+## Runtime Custom Brand Layer (Configurable Branding)
+
+When a saved brand configuration is active
+(docs/CONFIGURABLE_BRANDING_PLAN.md), the root layout server-renders one
+inline `<style data-brand-theme="runtime">` block containing the derived
+token sets for `[data-brand="custom"]` light, dark, Hi-viz light, and Hi-viz
+dark. Cascade rules for this layer:
+
+1. The inline block is generated (`src/lib/brand-theme/serialize.ts`), never
+   hand-authored, and is OKLCH-only by construction.
+2. Its selectors double the `[data-brand="custom"]` attribute so they sit one
+   specificity step above every compiled brand layer, making the runtime
+   theme win regardless of stylesheet-link order.
+3. It may assign only the derivable token vocabulary in
+   `src/lib/brand-theme/tokens.ts`. Protected operational status families are
+   excluded from that vocabulary, so the shared
+   `operational-status.css` semantics always win for a custom brand exactly
+   as they do for compiled brands.
+4. Compiled brand files are unchanged by this layer; with no active
+   configuration the inline block is absent and the compiled cascade is
+   byte-identical to the pre-runtime behavior.

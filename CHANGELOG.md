@@ -2,7 +2,160 @@
 
 ## [Unreleased]
 
+## [1.20.0] - 2026-07-20
+
+### Added
+- **Configurable branding, Phases 0–1 (derivation core + runtime delivery).**
+  Implements the first two phases of `docs/CONFIGURABLE_BRANDING_PLAN.md`:
+  - `src/lib/brand-theme/`: zod-validated brand-configuration schema
+    (`schemaVersion` 1, sparse Advanced-tier `overrides` map), a pure OKLCH
+    derivation module that produces the complete light/dark/Hi-viz token sets
+    from 3–6 compact color inputs (rules reverse-engineered from the
+    hand-authored St. Johns identity; verified against it within documented
+    tolerance), post-merge contrast validation (4.5:1 text pairs; 2.5:1 floor
+    for color-on-color emphasis pairs, calibrated so both shipped identities
+    pass — see the Issue 33 analysis in `src/lib/brand-theme/validate.ts`),
+    and OKLCH-only CSS serialization behind double-specificity
+    `[data-brand="custom"]` selectors. Protected operational status tokens are
+    structurally absent from the schema, generator output, and override
+    allowlist.
+  - `src/lib/brand-config/`: `brand_configurations` JSONB store (Neon + local
+    file fallback, `BRAND_CONFIG_FILE` test isolation), read-only WTH and
+    St. Johns template rows generated from the compiled profiles, and a
+    fail-closed per-request resolver implementing the resolution order
+    (active configuration → `NEXT_PUBLIC_LOTTO_BRAND` profile → WTH default).
+  - Runtime delivery: the root layout, metadata, viewport, manifest, admin/
+    display/inventory pages, OTP email identity, CSP-independent FEED gating,
+    and all client brand consumers (logo, login, About, nav bars, translation
+    surfaces) now read the resolved runtime brand; a custom theme ships as a
+    server-rendered inline style block with no flash of the default brand.
+  - Staff-gated `/api/brand-config` CRUD (save/activate/deactivate/delete)
+    that refuses to persist or activate any configuration failing schema,
+    override-allowlist, or contrast validation.
+  - Weak-form brand-swap acceptance verified: activating the St. Johns
+    template on a WTH deployment (and vice versa) fully displaces the
+    compiled identity at runtime, confirmed by unit tests and in-browser
+    light/dark review on localhost.
+- **Configurable branding, Phase 2 (Appearance wizard) + capstone.** A
+  seven-step Appearance wizard in the Admin Advanced section (Start from
+  template or scratch / Identity / Logos & icons / Colors / Staff copy /
+  Capabilities / Review), mirroring the Translation AI wizard's step-dialog
+  mechanics. Uploads are staff-gated, re-encoded, and measured server-side
+  (`sharp`), with the full 32–512 px browser/Apple/maskable install-icon set
+  generated from one square mark; logos preview at the real capped header
+  height (Issue 32 lesson). Colors edit as OKLCH (picker + text) with the
+  full derived theme previewed live and contrast issues explained inline;
+  operational status colors are shown in the preview specifically because
+  they cannot change. The Appearance card lists saved configurations with
+  Edit / Activate / Delete / revert-to-built-in, and is the prominent
+  no-configuration call to action (no auto-open). New
+  `docs/user-guides/12-appearance.md` Help guide. **Capstone brand-swap test
+  passed in both directions on localhost**: starting from scratch in the
+  wizard only, a WTH dev deployment was made on-brand for St. Johns
+  (dark-plate logo treatment, teal derivation, queue-only nav) and a
+  St. Johns-profile deployment was made on-brand for WTH (blue/gold six-color
+  identity, transparent logos, inventory tab restored), each verified in
+  light, dark, and Hi-viz against the hand-authored references.
+
+### Added
+- **Color-story configurator with logo eye-dropper.** The Appearance
+  wizard's Colors step is rebuilt around the semiotic model in
+  `docs/COLOR_SEMIOTICS.md`: operators list their brand's colors in
+  hierarchy order (1–5) and the system classifies each (chromatic vs.
+  neutral anchor) and assigns roles in plain language under the two-hue
+  signal ceiling — main (state + identity), accent, ambient texture, and
+  surface anchors — with warnings when a signaling color enters the hue
+  bands reserved for the universal Returned-red/Unclaimed-gold status
+  colors. Colors can be typed as OKLCH/hex, tapped from an auto-extracted
+  logo palette (median-cut over the uploaded logo's opaque pixels), picked
+  off the logo canvas directly, or eyedropped from anywhere on screen via
+  the native EyeDropper API where available. Derivation changes shipping
+  with it: every mode's Now Serving and Called variant now derives from the
+  serving color's own hue (closing the documented continuity gap — the
+  original WTH blue-by-day/gold-by-night class of bug — with a regression
+  test enforcing ≤8° cross-mode hue drift), and new optional
+  `colors.ambient` inputs (backward-compatible schema-v1 extension) feed
+  their hues to card tints only, making four-color brands like WTH's
+  blue/gold/teal/teal fully expressible; the WTH template now authors its
+  two teals. St. Johns fidelity tests confirm hand-authored output is
+  unchanged.
+
+### Added
+- **Automatic appearance recommendation from the uploaded logo.** Reaching
+  the color step with an untouched palette and a real logo now builds the
+  entire color story automatically — palette extracted from the logo
+  (median-cut, population-ranked), roles assigned under the signal ceiling,
+  anchors from the logo's neutrals — so staff only correct what they
+  dislike; a "Recommend from logo" button re-runs it on demand. The
+  recommender is semiotics-aware (docs/COLOR_SEMIOTICS.md, "Automatic
+  recommendation"): colors in the reserved Returned-red/Unclaimed-gold hue
+  bands are never auto-placed in signaling roles, with a three-step
+  workaround ladder (safe chromatics first; a tonal two-rung identity from
+  the logo's dark neutral when every chromatic collides; hue demoted to a
+  sub-signal-chroma tone when there is nothing else) and plain-language
+  notes explaining each workaround. Manual choices still get warnings, not
+  vetoes.
+- **Configurable service heading.** The board's "Food Pantry Service For"
+  heading is now an Appearance setting (`identity.serviceLabel`) — LOTTO is
+  queue management generally, so clinics, libraries, or equipment counters
+  can define their own line ("Clinic Hours For"). Blank keeps the standard
+  translated heading; a configured heading renders verbatim.
+
 ### Fixed
+- **Public-board service clock no longer triggers hydration warnings.** The
+  clock initialized from `Date.now()` and rendered `Intl.DateTimeFormat`
+  text that can legitimately differ between server render and hydration
+  (minute boundary; Node vs. browser ICU spacing before AM/PM) — exactly the
+  class React's hydration-error message names. The clock text now carries
+  `suppressHydrationWarning`; the mounted interval corrects it immediately.
+  A separately reported page-wide Radix-id hydration mismatch on `/admin`
+  could not be reproduced on a consistent build and is documented with its
+  full analysis and reopening criteria as `docs/ISSUES.md` Issue 34.
+- **SVG logo uploads stay vector.** Uploaded logos were universally
+  re-encoded to PNG, which rasterized SVGs and threw away crisp edges and
+  hi-DPI scalability. Logo storage is now format-aware, sniffing the real
+  format from the bytes (never the claimed MIME type): SVGs are validated as
+  self-contained and inert — no scripts, event handlers, external or `data:`
+  references, or embedded documents; violations are rejected with actionable
+  messages — then stored **verbatim**; PNGs re-encode as PNG and JPEGs as
+  JPEG (the sanitizing re-encode remains, in each format's own container).
+  The asset route now serves extension-correct content types with `nosniff`,
+  and brand assets get a dedicated `default-src 'none'; sandbox` CSP (via a
+  more-specific header rule, since route-set headers are overridden by the
+  site-wide policy) so a directly-navigated SVG document can never execute
+  anything even if upload validation were bypassed. `next/image` is
+  configured with `dangerouslyAllowSVG` plus the same sandboxing CSP so
+  vector logos render through the existing `BrandLogo` slot. Install-icon
+  generation still (correctly) rasterizes SVG marks to PNG, but now renders
+  the vector at target density first — a 512 px icon from a small-viewBox
+  SVG is truly 512 px, not upscaled. Covered by `tests/brand-assets.test.ts`
+  (verbatim vector round-trip, viewBox measurement, format preservation,
+  seven hostile-SVG rejections, crisp icon output).
+- **The Appearance wizard no longer blocks on contrast errors the operator
+  cannot act on.** Starting a theme from scratch (and several other primary
+  colors, e.g. very dark or very light ones) surfaced blocking errors like
+  "In Hi-viz light mode, text on filled primary buttons measures 2.28:1" —
+  but the Hi-viz layers are fully derived and expose no direct inputs, so
+  there was nothing the operator could change. The derivation now
+  auto-corrects every contrast pair whose two sides are both derived: it
+  nudges only lightness, in small steps, away from the opposing color (with a
+  direction-flip fallback when one direction can't reach the floor, e.g. a
+  near-black fill against near-black text), keeping hue and chroma in the
+  brand family. Correction is a no-op for pairs that already pass — the
+  St. Johns/WTH fidelity tests pin that down — and pairs built from
+  operator-typed colors (page surface vs. text, etc.) still surface as
+  actionable errors rather than being silently overridden. Regression tests
+  cover the scratch defaults and a sweep of extreme primaries.
+- **Advanced-accordion cards no longer have their shadows clipped.** The
+  accordion's animating wrapper requires `overflow-hidden` for its height
+  animation, which cut off the drop shadows of cards inside the panel at the
+  panel edges. The wrapper now extends 16px past the content on the sides and
+  bottom via symmetric negative margin + padding, so shadows render inside
+  the clip region — correct both while animating and at rest (a state-driven
+  overflow toggle was rejected because AnimatePresence snapshots the exiting
+  element's props during the close animation). The host page must provide
+  ≥16px horizontal padding; `/admin` uses 24px. Also moved the Appearance
+  card beneath the Translation card in the Advanced grid.
 - **St. Johns personalized-homepage header logo could overlap "NOW SERVING" on
   mobile.** The header logo was sized by a fixed width, so a brand whose logo
   lockup is taller relative to its width than William Temple House's wide
@@ -18,6 +171,25 @@
   App" (no apostrophe, per organization naming).
 
 ### Documentation
+- **Added `docs/COLOR_SEMIOTICS.md` — the design rationale for LOTTO's
+  systematic use of color.** Documents the three axioms (hue signifies role,
+  value signifies mode, saturation signifies loudness; a two-hue signal
+  ceiling; tiers expand outward from the semiotic center), the layer model
+  from the untouchable operational layer to ambient texture, the value-ladder
+  concept behind the derivation offsets, color-story tiers from monochrome to
+  five colors with strategies for each, reserved hue bands around the
+  operational red/gold, and how the three real deployments (WTH, St. Johns,
+  Lift Up) map onto the model. Also records two model violations found by
+  auditing the current derivation against the axioms — the serving-hue
+  cross-mode continuity gap and unreachable ambient hues — scoped into the
+  next-iteration color-story configurator in
+  `docs/CONFIGURABLE_BRANDING_PLAN.md` Phase 3.
+- **Added and completed `docs/CONFIGURABLE_BRANDING_PLAN.md` for self-service
+  brand theming.** The document now records the shipped derivation,
+  persistence, runtime-delivery, Appearance-wizard, color-story, and capstone
+  brand-swap work, while keeping the Advanced semantic-slot tier and Arcade
+  palette derivation explicitly deferred. WTH remains the compiled
+  no-configuration default throughout.
 - **Rewrote `docs/DEPLOYMENT.md`'s production section into a full new-agency
   deployment runbook**, replacing a stale two-table Postgres schema snippet
   that predated the NextAuth/OTP/AI-translation tables in `schema.sql` — an

@@ -18,10 +18,28 @@ The default admin view keeps these cards visible:
 The following configuration cards live inside the collapsed **Advanced**
 accordion:
 
+- Appearance (configurable branding; see below)
 - Set operating hours
 - Rotate display languages
 - Announcement
 - Translation
+
+### Appearance card
+
+The Appearance card (`src/components/appearance/appearance-card.tsx`) manages
+runtime brand configurations (docs/CONFIGURABLE_BRANDING_PLAN.md). It shows
+whether the built-in brand or a saved custom appearance is live, lists saved
+configurations with Edit / Activate / Delete, offers **Use built-in
+appearance** to revert instantly, and launches the seven-step Appearance
+wizard (`src/components/appearance/appearance-wizard.tsx`, mirroring the
+Translation AI wizard's step-dialog mechanics). When no configuration exists
+the card is the prominent "Set up your organization's appearance" call to
+action — deliberately not an auto-opening modal. Wizard saves go through
+staff-gated `/api/brand-config`, which refuses any configuration failing
+schema, override-allowlist, or contrast validation; activation applies
+instantly (the brand resolves per request) and the wizard's Colors step
+previews the protected Returned/Unclaimed status colors precisely because
+branding cannot change them.
 
 This keeps setup/localization tools available without cluttering the daily
 workflow. The accordion uses the local animate-ui radix wrapper at

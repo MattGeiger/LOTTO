@@ -10,12 +10,15 @@ import React from "react";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
-import { brandProfile } from "@/config/brand";
+import { getResolvedBrand } from "@/lib/brand-config/resolve";
 
-export const metadata: Metadata = {
-  title: "Admin",
-  description: brandProfile.metadata.adminDescription,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const brand = await getResolvedBrand();
+  return {
+    title: "Admin",
+    description: brand.metadata.adminDescription,
+  };
+}
 
 export default async function AdminLayout({
   children,

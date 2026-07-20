@@ -12,12 +12,11 @@
 import {
   collectFeedInventoryNames,
   fetchFeedPublicInventory,
-  getFeedPublicInventoryUrl,
 } from "@/lib/feed-public-inventory";
+import { getResolvedBrand } from "@/lib/brand-config/resolve";
 import { stateManager } from "@/lib/state-manager";
 import { UI_STRINGS_EN } from "@/lib/ui-strings";
 import type { TranslationType } from "./types";
-import { inventoryIntegration } from "@/config/brand";
 
 export type ContentItem = { originalText: string; type: TranslationType };
 
@@ -58,12 +57,15 @@ export const getAnnouncementSource = async (): Promise<string | null> => {
 // content domain, so a feed hiccup must never break the UI-string / announcement
 // audit — but the error/URL are captured so the admin can see *why* it failed.
 export const getInventorySource = async (): Promise<InventorySourceResult> => {
-  const url = getFeedPublicInventoryUrl();
-  if (!inventoryIntegration.enabled || !url) {
+  // Inventory enablement and URL come from the resolved runtime brand (saved
+  // configuration or compiled profile) — never from a cross-agency fallback.
+  const { inventory: integration } = await getResolvedBrand();
+  const url = integration.url;
+  if (!integration.enabled || !url) {
     return { names: [], ok: true, error: null, url: "" };
   }
   try {
-    const inventory = await fetchFeedPublicInventory();
+    const inventory = await fetchFeedPublicInventory(url);
     return { names: collectFeedInventoryNames(inventory), ok: true, error: null, url };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -75,15 +77,18 @@ export const getInventorySource = async (): Promise<InventorySourceResult> => {
 // Wrap inventory names supplied by the caller (the admin browser, which can
 // reach the public feed even when the server's egress is blocked) as a healthy
 // inventory source — deduped, trimmed, with the feed URL for diagnostics.
-const fromInjectedInventoryNames = (names: string[]): InventorySourceResult => {
-  if (!inventoryIntegration.enabled) {
+const fromInjectedInventoryNames = async (
+  names: string[],
+): Promise<InventorySourceResult> => {
+  const { inventory: integration } = await getResolvedBrand();
+  if (!integration.enabled) {
     return { names: [], ok: true, error: null, url: "" };
   }
   const set = new Set<string>();
   for (const name of names) {
     if (name?.trim()) set.add(name);
   }
-  return { names: [...set], ok: true, error: null, url: getFeedPublicInventoryUrl() ?? "" };
+  return { names: [...set], ok: true, error: null, url: integration.url ?? "" };
 };
 
 // Back-compat: callers that only need the names.
@@ -102,7 +107,7 @@ export const getContentItems = async (
   // Prefer inventory names the caller bridged from the browser (FEED's feed is
   // public but the server's egress can be blocked); otherwise fetch server-side.
   const inventory = options?.inventoryNames
-    ? fromInjectedInventoryNames(options.inventoryNames)
+    ? await fromInjectedInventoryNames(options.inventoryNames)
     : await getInventorySource();
   for (const originalText of inventory.names) {
     items.push({ originalText, type: "inventory" as const });

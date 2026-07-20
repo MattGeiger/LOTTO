@@ -180,9 +180,17 @@ function AccordionContent({
             }}
             exit={{ height: 0, opacity: 0, filter: "blur(4px)" }}
             transition={transition}
-            className="overflow-hidden"
+            // overflow-hidden is required for the height animation but would
+            // clip the shadows of cards inside the panel. Widening the clip
+            // region with negative margins while padding the content back
+            // into place gives shadows 16px of room on the sides/bottom
+            // (pt-6 already provides it above) without changing layout, and
+            // stays correct mid-animation — unlike state-driven overflow,
+            // which AnimatePresence snapshots during exit. The host page must
+            // have ≥16px horizontal padding (admin main uses px-6).
+            className="-mx-4 -mb-4 overflow-hidden"
           >
-            <div className={cn("pt-6", className)}>{children}</div>
+            <div className={cn("px-4 pb-4 pt-6", className)}>{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
