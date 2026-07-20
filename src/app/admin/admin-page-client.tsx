@@ -51,7 +51,7 @@ import { ConfirmAction } from "@/components/confirm-action";
 import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
 import { OperatingHoursEditor } from "@/components/operating-hours-editor";
 import { DisplayLanguageRotationEditor } from "@/components/display-language-rotation-editor";
-import { AnnouncementEditor } from "@/components/announcement-editor";
+import { AnnouncementSection } from "@/components/announcement-section";
 import { TranslationCard } from "@/components/translation/translation-card";
 import { ArchiveIcon, type ArchiveIconHandle } from "@/components/lucide-animated/archive";
 import {
@@ -111,8 +111,6 @@ type ActionPayload =
   | { action: "setDisplayLanguageRotation"; config: DisplayLanguageRotation | null }
   | { action: "setAnnouncement"; announcement: Announcement | null }
   | { action: "generateBatch"; startNumber: number; endNumber: number; batchSize: number };
-
-const ANNOUNCEMENT_DRAFT_KEY = "lotto:announcement-draft";
 
 type Snapshot = {
   id: string;
@@ -1038,13 +1036,9 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
   const [pendingTimezone, setPendingTimezone] = React.useState<string>("America/Los_Angeles");
   const [pendingRotation, setPendingRotation] =
     React.useState<DisplayLanguageRotation | null>(null);
-  const [pendingAnnouncement, setPendingAnnouncement] = React.useState<Announcement | null>(null);
-  // Tracks whether the announcement draft has been hydrated from localStorage,
-  // and the server announcement we last reconciled the draft against. Together
-  // these keep an unsaved draft from being wiped when the tab regains focus and
-  // re-fetches state, while still adopting genuine server-side changes.
-  const announcementHydratedRef = React.useRef(false);
-  const syncedAnnouncementRef = React.useRef<string | null>(null);
+  // The announcement draft deliberately does NOT live here — it is owned by the
+  // keystroke-isolated `AnnouncementSection` so typing does not re-render this
+  // component. See docs/ISSUES.md Issue 35.
   const [timezoneMismatchOpen, setTimezoneMismatchOpen] = React.useState(false);
   const browserOriginRef = React.useRef<string | null>(null);
   const stateRef = React.useRef<RaffleState | null>(null);
@@ -1244,50 +1238,6 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
   React.useEffect(() => {
     setPendingRotation(state?.displayLanguageRotation ?? null);
   }, [state?.displayLanguageRotation]);
-
-  // Reconcile the announcement draft with server state without discarding
-  // unsaved edits. On first load we hydrate from a persisted draft (so it
-  // survives reloads and app switches); afterward we only adopt the server
-  // value when it genuinely changes (e.g., saved on another device).
-  React.useEffect(() => {
-    const server = state?.announcement ?? null;
-    const serverKey = JSON.stringify(server);
-
-    if (!announcementHydratedRef.current) {
-      announcementHydratedRef.current = true;
-      syncedAnnouncementRef.current = serverKey;
-      let draft: Announcement | null = null;
-      try {
-        const raw = window.localStorage.getItem(ANNOUNCEMENT_DRAFT_KEY);
-        if (raw) draft = JSON.parse(raw) as Announcement;
-      } catch {
-        draft = null;
-      }
-      setPendingAnnouncement(draft ?? server);
-      return;
-    }
-
-    if (serverKey !== syncedAnnouncementRef.current) {
-      syncedAnnouncementRef.current = serverKey;
-      setPendingAnnouncement(server);
-    }
-  }, [state?.announcement]);
-
-  // Persist the announcement draft to browser storage while it diverges from
-  // the saved server value; clear it once they match (e.g., after saving).
-  React.useEffect(() => {
-    try {
-      const serverKey = JSON.stringify(state?.announcement ?? null);
-      const draftKey = JSON.stringify(pendingAnnouncement ?? null);
-      if (draftKey === serverKey) {
-        window.localStorage.removeItem(ANNOUNCEMENT_DRAFT_KEY);
-      } else {
-        window.localStorage.setItem(ANNOUNCEMENT_DRAFT_KEY, draftKey);
-      }
-    } catch {
-      // Ignore storage failures (private mode, quota, etc.).
-    }
-  }, [pendingAnnouncement, state?.announcement]);
 
   const postAction = React.useCallback(async (payload: ActionPayload) => {
     const response = await fetch("/api/state", {
@@ -1600,8 +1550,9 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
     await sendAction({ action: "setDisplayLanguageRotation", config: next });
   }, [pendingRotation, sendAction]);
 
-  const handleSaveAnnouncement = React.useCallback(async () => {
-    const draft = pendingAnnouncement;
+  // Receives the draft from the keystroke-isolated `AnnouncementSection`, which
+  // owns it locally so typing does not re-render `/admin` (docs/ISSUES.md #35).
+  const handleSaveAnnouncement = React.useCallback(async (draft: Announcement | null) => {
     if (draft?.enabled && draft.markdown.trim().length === 0) {
       toast.error("Add a message to show an announcement.");
       return;
@@ -1615,7 +1566,7 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
     const next: Announcement | null =
       draft && draft.markdown.trim().length > 0 ? { ...draft, updatedAt: Date.now() } : null;
     await sendAction({ action: "setAnnouncement", announcement: next });
-  }, [pendingAnnouncement, sendAction]);
+  }, [sendAction]);
 
   const handleCleanup = async (days: number) => {
     setCleanupMessage(null);
@@ -2803,20 +2754,11 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex flex-1 flex-col gap-4">
-                    <AnnouncementEditor
-                      value={pendingAnnouncement}
-                      onChange={setPendingAnnouncement}
+                    <AnnouncementSection
+                      serverAnnouncement={state?.announcement ?? null}
+                      onSave={handleSaveAnnouncement}
                       disabled={loading || nonDrawActionPending}
                     />
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="mt-auto self-start"
-                      onClick={handleSaveAnnouncement}
-                      disabled={loading || nonDrawActionPending}
-                    >
-                      Save announcement
-                    </Button>
                   </CardContent>
                 </Card>
 

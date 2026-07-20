@@ -2,6 +2,43 @@
 
 ## [Unreleased]
 
+## [1.20.1] - 2026-07-20
+
+### Fixed
+- **Severe input lag when editing Announcement copy on older devices
+  (iPad mini 4).** The announcement draft was held in root `AdminPageClient`
+  state, so every keystroke re-rendered the entire `/admin` tree — including
+  `TranslationCard` (which mounts all three of its tabs, not just the visible
+  one), `AppearanceCard`, the operating-hours and language-rotation editors,
+  the QR card, and one Radix dialog per returned/unclaimed ticket. On A8-class
+  hardware this produced multi-second latency between a keypress and the
+  character appearing; the development machine is fast enough that the fan-out
+  is invisible. This is a recurrence of the Issue 14 defect class in a surface
+  added after the v1.5 input-isolation work. See `docs/ISSUES.md` Issue 35.
+  - Added `src/components/announcement-section.tsx`, a memoized component that
+    owns the draft locally and only notifies the root on Save — the same
+    pattern as `RangeGenerationControls` / `ResetActionControls`.
+  - Removed `pendingAnnouncement` state and its two per-keystroke effects from
+    `AdminPageClient`; `handleSaveAnnouncement` now receives the draft as an
+    argument so its identity is stable across renders.
+  - Draft persistence to `localStorage` is now debounced (500 ms) with a flush
+    on `pagehide`/unmount, taking the synchronous storage write off the
+    keystroke path. Draft-recovery and server-reconciliation behavior is
+    unchanged.
+  - Measured effect: sibling re-renders per keystroke went from 1-per-character
+    to 0. Covered by `tests/announcement-input-isolation.test.tsx`, which
+    asserts the isolation property rather than a wall-clock timing (a timing
+    assertion cannot catch this class of bug on modern development hardware).
+
+### Documentation
+- `docs/ISSUES.md`: added Issue 35 with root-cause analysis, the render-count
+  measurement, and prevention guidance for future `/admin` inputs.
+- `docs/V1.5_OPTIMIZATIONS.md`: recorded the Announcement editor under the
+  Phase 4 input-isolation follow-up and noted the `TabsContents` all-tabs
+  render-cost characteristic.
+- `docs/ADMIN_PAGE.md`: documented the keystroke-isolation requirement for
+  admin inputs.
+
 ## [1.20.0] - 2026-07-20
 
 ### Added

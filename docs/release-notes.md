@@ -1,6 +1,17 @@
 
 ## Unreleased
 
+## Version 1.20.1 — July 20, 2026
+
+- **Typing an announcement is fast again on older iPads.** Editing the
+  Announcement message on an iPad mini 4 could leave several seconds between
+  pressing a key and the letter appearing. Every keystroke was redrawing the
+  whole Admin page — including the Translation and Appearance cards hidden
+  behind other tabs. The announcement text now updates on its own, so typing
+  stays responsive no matter how long the message is. Nothing about the
+  Announcement workflow changed: the toolbar, live preview, character limit,
+  scheduling, and unsaved-draft recovery all behave exactly as before.
+
 ## Version 1.20.0 — July 20, 2026
 
 - **Create an agency appearance without changing code.** Staff can now open
