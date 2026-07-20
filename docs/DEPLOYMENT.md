@@ -180,6 +180,17 @@ whatever registrar/host the agency actually uses.
 
 ### 0. Prerequisites
 
+> **Configurable branding (shipped in v1.20.0):** with the
+> [`CONFIGURABLE_BRANDING_PLAN.md`](./CONFIGURABLE_BRANDING_PLAN.md) work, a new
+> agency no longer needs a compiled brand profile at all — identity, logos,
+> icons, and colors are configured in the Admin **Appearance** wizard after
+> first sign-in, and the deployment starts as the WTH-shaped default. The
+> compiled-profile path below remains valid as a fallback and template source.
+> For the configurable path, `schema.sql` must be applied
+> (it now includes `brand_configurations`), and hosted asset uploads still
+> require the Vercel Blob storage work planned in the branding plan — until
+> then uploaded assets persist only on filesystem-backed deployments.
+
 - The agency's brand profile already exists in `src/config/brand.ts` (see
   [`WHITE_LABEL_BRANDING_PLAN.md`](./WHITE_LABEL_BRANDING_PLAN.md) for the
   schema and asset requirements) and its code has already merged to `main`.
@@ -293,10 +304,11 @@ silently reproduced the same gap. Always point at the file.
      `sessions`; `ai_configurations`/`translations` before `usage_records`),
      and run each with the ⌘+Enter / Run button.
   5. Verify: **Schema** tab in the same left nav, switch the schema selector
-     from Neon's own default (`neon_auth`) to **`public`**, and confirm all 13
-     tables from `schema.sql` are listed (`accounts`, `ai_configurations`,
-     `languages`, `otp_failures`, `raffle_snapshots`, `raffle_state`,
-     `sessions`, `system_prompts`, `translations`, `usage_records`, `users`,
+     from Neon's own default (`neon_auth`) to **`public`**, and confirm all 12
+     pre-v1.20 tables plus `brand_configurations` from `schema.sql` are listed
+     (`accounts`, `ai_configurations`, `brand_configurations`, `languages`,
+     `otp_failures`, `raffle_snapshots`, `raffle_state`, `sessions`,
+     `system_prompts`, `translations`, `usage_records`, `users`, and
      `verification_token`).
 
 ### 4. Set environment variables

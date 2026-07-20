@@ -44,6 +44,7 @@ import {
   AccordionTrigger,
 } from "@/components/animate-ui/components/radix/accordion";
 import { AdminAnimatedIcon } from "@/components/admin-animated-icon";
+import { AppearanceCard } from "@/components/appearance/appearance-card";
 import { BrandLogo } from "@/components/brand-logo";
 
 import { ConfirmAction } from "@/components/confirm-action";
@@ -2699,7 +2700,7 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
               <span className="flex flex-col gap-1">
                 <span>Advanced</span>
                 <span className="text-sm font-normal text-muted-foreground">
-                  Configuration tools for hours, languages, announcements, and translation.
+                  Configuration tools for appearance, hours, languages, announcements, and translation.
                 </span>
               </span>
             </AccordionTrigger>
@@ -2822,6 +2823,8 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
                 <div className="lg:col-span-2">
                   <TranslationCard />
                 </div>
+
+                <AppearanceCard />
               </div>
             </AccordionContent>
           </AccordionItem>

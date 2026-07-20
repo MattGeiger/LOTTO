@@ -1,7 +1,7 @@
 # LOTTO — Configurable Queue Management System
 ## Project Overview & Architecture Documentation
 
-**Status:** v1.19.0 release candidate; v1.18.0 remains in production
+**Status:** v1.20.0 production release
 **Originating deployment:** https://williamtemple.app
 
 ---
@@ -304,6 +304,6 @@ Built through collaborative AI agent development:
 
 ---
 
-**Version:** 1.18.0
-**Last Updated:** July 17, 2026
-**Status:** Production at William Temple House; configurable St. Johns profile ready for local evaluation
+**Version:** 1.20.0
+**Last Updated:** July 20, 2026
+**Status:** Production at William Temple House and St. Johns Food Share

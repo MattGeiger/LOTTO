@@ -9,12 +9,15 @@ import type { Metadata } from "next";
 
 import { PublicDisplayPage } from "@/components/public-display-page";
 import { LanguageProvider } from "@/contexts/language-context";
-import { brandProfile } from "@/config/brand";
+import { getResolvedBrand } from "@/lib/brand-config/resolve";
 
-export const metadata: Metadata = {
-  title: "Display",
-  description: brandProfile.metadata.displayDescription,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const brand = await getResolvedBrand();
+  return {
+    title: "Display",
+    description: brand.metadata.displayDescription,
+  };
+}
 
 export default function DisplayPage() {
   // Scope the board to a non-persisting language provider so admin-configured

@@ -29,6 +29,15 @@ const frameAncestors = enableTweakcnPreview
 
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
+  // Uploaded brand logos may be SVGs (kept vector for crisp hi-DPI
+  // rendering). next/image refuses SVG sources unless explicitly allowed;
+  // the paired CSP sandboxes every optimizer response so an SVG document can
+  // never script, and uploads are already validated self-contained by
+  // src/lib/brand-config/assets.ts.
+  images: {
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'none'; style-src 'unsafe-inline'; sandbox;",
+  },
   turbopack: {},
   webpack: (config, { isServer, dev }) => {
     if (isServer && !dev && !process.env.DATABASE_URL) {
@@ -54,6 +63,21 @@ const nextConfig: NextConfig = {
               "base-uri 'self'",
               "form-action 'self'",
             ].join("; "),
+          },
+        ],
+      },
+      {
+        // Stored brand assets may be operator-uploaded SVG documents. They
+        // are validated inert at upload (src/lib/brand-config/assets.ts);
+        // this stricter CSP is defense in depth so a directly-navigated SVG
+        // can never script or load anything, even if validation were ever
+        // bypassed. Last matching rule wins for the same header key, so this
+        // overrides the site-wide policy above for assets only.
+        source: "/api/brand-assets/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'none'; style-src 'unsafe-inline'; sandbox",
           },
         ],
       },

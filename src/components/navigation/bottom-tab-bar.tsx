@@ -12,7 +12,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { useStaffAuthenticated } from "@/components/staff-auth-context";
-import { authNavItems, navItems, type NavIconHandle } from "@/components/navigation/nav-items";
+import {
+  getAuthNavItems,
+  getNavItems,
+  type NavIconHandle,
+} from "@/components/navigation/nav-items";
+import { useBrand } from "@/contexts/brand-context";
 import { useLanguage } from "@/contexts/language-context";
 import { isRTL } from "@/lib/rtl-utils";
 import { cn } from "@/lib/utils";
@@ -50,7 +55,10 @@ export function BottomTabBar({ autoHideAfterSeconds }: BottomTabBarProps = {}) {
   // variant; everyone else gets the public Your-ticket-first bar. Same component,
   // same animation rules — only the destinations differ.
   const isStaff = useStaffAuthenticated();
-  const items = isStaff ? authNavItems : navItems;
+  const inventoryEnabled = useBrand().inventory.enabled;
+  const items = isStaff
+    ? getAuthNavItems(inventoryEnabled)
+    : getNavItems(inventoryEnabled);
 
   const autoHideEnabled = typeof autoHideAfterSeconds === "number" && autoHideAfterSeconds > 0;
   const [isHidden, setIsHidden] = React.useState(false);

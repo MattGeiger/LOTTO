@@ -18,9 +18,10 @@ import { AuthSessionProvider } from "@/components/auth-session-provider";
 import { HapticsProvider } from "@/components/haptics-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { BrandProvider } from "@/contexts/brand-context";
 import { LanguageProvider } from "@/contexts/language-context";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { brandProfile } from "@/config/brand";
+import { getResolvedRuntimeBrand } from "@/lib/brand-config/resolve";
 
 const lato = Lato({
   variable: "--font-lato",
@@ -51,43 +52,61 @@ const ibmPlexMono = IBM_Plex_Mono({
   weight: ["300", "400", "500", "600", "700"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: brandProfile.appName,
-    template: `%s | ${brandProfile.appName}`,
-  },
-  description: brandProfile.metadata.description,
-  icons: {
-    icon: brandProfile.pwa.browserIcons.map(({ src, ...icon }) => ({
-      url: src,
-      ...icon,
-    })),
-    apple: brandProfile.pwa.appleIcons.map(({ src, ...icon }) => ({
-      url: src,
-      ...icon,
-    })),
-  },
-};
+// Brand identity (saved configuration or compiled profile) resolves per
+// request so appearance changes appear without a rebuild
+// (docs/CONFIGURABLE_BRANDING_PLAN.md).
+export async function generateMetadata(): Promise<Metadata> {
+  const { brand } = await getResolvedRuntimeBrand();
+  return {
+    title: {
+      default: brand.appName,
+      template: `%s | ${brand.appName}`,
+    },
+    description: brand.metadata.description,
+    icons: {
+      icon: brand.pwa.browserIcons.map(({ src, ...icon }) => ({
+        url: src,
+        ...icon,
+      })),
+      apple: brand.pwa.appleIcons.map(({ src, ...icon }) => ({
+        url: src,
+        ...icon,
+      })),
+    },
+  };
+}
 
-export const viewport: Viewport = {
-  themeColor: brandProfile.pwa.themeColor,
-};
+export async function generateViewport(): Promise<Viewport> {
+  const { brand } = await getResolvedRuntimeBrand();
+  return { themeColor: brand.pwa.themeColor };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const enableTweakcnPreview = process.env.VERCEL !== "1";
+  const { brand, themeCss } = await getResolvedRuntimeBrand();
 
   return (
     <html
       lang="en"
-      data-brand={brandProfile.id}
+      data-brand={brand.brandId}
       suppressHydrationWarning
       className={`${lato.variable} ${geistMono.variable} ${openSans.variable} ${bodoniModaSc.variable} ${ibmPlexMono.variable}`}
     >
       <head>
+        {themeCss ? (
+          // Server-rendered custom theme tokens: injected after the compiled
+          // brand layers (see docs/CSS_THEME_ARCHITECTURE.md cascade contract)
+          // so first paint carries the saved appearance with no flash of the
+          // default brand.
+          <style
+            data-brand-theme="runtime"
+            dangerouslySetInnerHTML={{ __html: themeCss }}
+          />
+        ) : null}
         {enableTweakcnPreview ? (
           <script
             async
@@ -100,7 +119,9 @@ export default function RootLayout({
         <AuthSessionProvider>
           <ThemeProvider>
             <HapticsProvider>
-              <LanguageProvider>{children}</LanguageProvider>
+              <BrandProvider brand={brand}>
+                <LanguageProvider>{children}</LanguageProvider>
+              </BrandProvider>
               <Toaster />
             </HapticsProvider>
           </ThemeProvider>

@@ -44,6 +44,7 @@ import { PackageCheck } from "@/components/animate-ui/icons/package-check";
 import { Search } from "@/components/animate-ui/icons/search";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { useBrand } from "@/contexts/brand-context";
 import { useLanguage } from "@/contexts/language-context";
 import { isRTL } from "@/lib/rtl-utils";
 import {
@@ -360,6 +361,7 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
 
 export function PublicInventoryPage() {
   const { language, t, translateInventory } = useLanguage();
+  const inventoryUrl = useBrand().inventory.url;
   const [inventory, setInventory] = React.useState<FeedPublicInventory | null>(null);
   const [query, setQuery] = React.useState("");
   const [selectedDietaryFlags, setSelectedDietaryFlags] = React.useState<DietaryFlagKey[]>([]);
@@ -370,13 +372,13 @@ export function PublicInventoryPage() {
     setIsLoading(true);
     setError("");
     try {
-      setInventory(await fetchFeedPublicInventory());
+      setInventory(await fetchFeedPublicInventory(inventoryUrl));
     } catch {
       setError("Current inventory could not be loaded. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [inventoryUrl]);
 
   React.useEffect(() => {
     void loadInventory();

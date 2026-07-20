@@ -51,6 +51,16 @@ consistent with existing patterns and workflows.
 - Any deliberate change to operational status semiotics requires explicit user
   approval, corresponding updates to `docs/UI_DESIGN.md`, and regression tests
   covering every shared consumer.
+- Runtime-configurable branding (`src/lib/brand-theme/`, `src/lib/brand-config/`,
+  the Admin Appearance wizard) enforces the same boundary structurally: the
+  derivable token vocabulary in `src/lib/brand-theme/tokens.ts` excludes every
+  protected family, the generator/override pipeline is tested to never emit
+  them, and validation runs on the final merged token set. Do not add protected
+  token names to that vocabulary or weaken `PROTECTED_TOKEN_PATTERNS`. The
+  derivation rules in `src/lib/brand-theme/derive.ts` are reverse-engineered
+  from the hand-authored St. Johns CSS — changing a rule changes every custom
+  brand, so treat rule edits like shared-theme edits (tests + docs + approval).
+  See `docs/CONFIGURABLE_BRANDING_PLAN.md`.
 
 ## Translation AI / FEED Parity
 - The Translation card's AI surfaces are a FEED-first parity area. For

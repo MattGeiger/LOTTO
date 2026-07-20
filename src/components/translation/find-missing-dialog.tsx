@@ -52,7 +52,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { collectFeedInventoryNames, fetchFeedPublicInventory } from "@/lib/feed-public-inventory";
 import { runStagedTranslation, type TranslationProgress } from "@/lib/translation/run-translation";
 import { TRANSLATION_TYPES, type TranslationType } from "@/lib/translation/types";
-import { inventoryIntegration } from "@/config/brand";
+import { useBrand } from "@/contexts/brand-context";
 
 type MissingDetails = {
   count: number;
@@ -69,9 +69,10 @@ const TYPE_META: Record<TranslationType, { label: string; icon: LucideIcon }> = 
   inventory: { label: "Inventory", icon: Package },
 };
 
-const AVAILABLE_TRANSLATION_TYPES = inventoryIntegration.enabled
-  ? TRANSLATION_TYPES
-  : TRANSLATION_TYPES.filter((type) => type !== "inventory");
+const availableTranslationTypes = (inventoryEnabled: boolean) =>
+  inventoryEnabled
+    ? TRANSLATION_TYPES
+    : TRANSLATION_TYPES.filter((type) => type !== "inventory");
 
 export function FindMissingDialog({
   open,
@@ -82,6 +83,8 @@ export function FindMissingDialog({
   onOpenChange: (open: boolean) => void;
   onProcessed: () => void;
 }) {
+  const brand = useBrand();
+  const AVAILABLE_TRANSLATION_TYPES = availableTranslationTypes(brand.inventory.enabled);
   const [scanning, setScanning] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
   const [result, setResult] = React.useState<MissingDetails | null>(null);
@@ -116,9 +119,9 @@ export function FindMissingDialog({
       // even when the server's egress to it is blocked). On failure, fall through
       // without them and let the server attempt its own fetch + report why.
       let names: string[] | undefined;
-      if (inventoryIntegration.enabled) {
+      if (brand.inventory.enabled) {
         try {
-          names = collectFeedInventoryNames(await fetchFeedPublicInventory());
+          names = collectFeedInventoryNames(await fetchFeedPublicInventory(brand.inventory.url));
         } catch {
           names = undefined;
         }
@@ -265,7 +268,7 @@ export function FindMissingDialog({
             <TabsContent value="overview" className="min-h-0 flex-1">
               <ScrollArea className="h-[min(48vh,420px)]">
                 <div className="flex flex-col gap-4 p-1">
-                  {inventoryIntegration.enabled && result.sourceCounts && (result.sourceCounts.inventory ?? 0) === 0 ? (
+                  {brand.inventory.enabled && result.sourceCounts && (result.sourceCounts.inventory ?? 0) === 0 ? (
                     <div className="flex items-start gap-2 rounded-md border border-status-warning-border bg-status-warning-bg p-3 text-sm text-status-warning-text">
                       <XCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                       <div className="space-y-1">

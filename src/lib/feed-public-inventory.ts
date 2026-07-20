@@ -7,7 +7,7 @@
 
 import type { Language } from "@/contexts/language-context";
 import { getCatalogEntryByCode } from "@/lib/languages";
-import { brandProfile, inventoryIntegration } from "@/config/brand";
+import { getBrandProfile, getInventoryIntegration } from "@/config/brand";
 
 export type FeedLimitType = "household" | "person" | string;
 
@@ -72,8 +72,12 @@ type TranslatedFeedEntity = {
   translations: Record<string, string>;
 };
 
+// Compiled-profile inventory URL. Runtime-configured brands resolve their URL
+// through the brand resolver (server) or `useBrand()` (client) and pass it to
+// `fetchFeedPublicInventory` explicitly; this accessor is the compiled
+// fallback used when no runtime override is supplied.
 export function getFeedPublicInventoryUrl(): string | null {
-  return inventoryIntegration.url;
+  return getInventoryIntegration().url;
 }
 
 export function getFeedDisplayName(entity: TranslatedFeedEntity, language: Language): string {
@@ -129,7 +133,7 @@ async function fetchFeedPublicInventoryFromUrl(url: string): Promise<FeedPublicI
   //     Issue 23.
   const headers: Record<string, string> = { Accept: "application/json" };
   if (typeof window === "undefined") {
-    headers["User-Agent"] = `LOTTO/1.0 (+${brandProfile.publicAppUrl})`;
+    headers["User-Agent"] = `LOTTO/1.0 (+${getBrandProfile(process.env.NEXT_PUBLIC_LOTTO_BRAND).publicAppUrl})`;
   }
 
   const response = await fetch(url, {

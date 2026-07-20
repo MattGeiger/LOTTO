@@ -16,7 +16,7 @@ import { render } from "@react-email/components";
 
 import { getPool } from "@/lib/db";
 import { OtpCode } from "@/emails/otp-code";
-import { brandProfile } from "@/config/brand";
+import { getResolvedBrand } from "@/lib/brand-config/resolve";
 import { isAdminEmailAllowed } from "@/lib/admin-email-policy";
 
 export const runtime = "nodejs";
@@ -102,7 +102,13 @@ export async function POST(request: Request) {
       [email, now.toISOString()],
     );
 
-    const htmlContent = await render(React.createElement(OtpCode, { code }));
+    const brand = await getResolvedBrand();
+    const htmlContent = await render(
+      React.createElement(OtpCode, {
+        code,
+        organizationName: brand.organizationName,
+      }),
+    );
     const maskedEmail = `${email.slice(0, 2)}***@${email.split("@")[1]}`;
 
     const sendWithSmtp = async () => {
@@ -120,7 +126,7 @@ export async function POST(request: Request) {
       await transporter.sendMail({
         from: fromAddress,
         to: email,
-        subject: `Your ${brandProfile.organizationName} login code`,
+        subject: `Your ${brand.organizationName} login code`,
         html: htmlContent,
       });
     };
@@ -133,7 +139,7 @@ export async function POST(request: Request) {
         const { error } = await resend.emails.send({
           from: fromAddress,
           to: [email],
-          subject: `Your ${brandProfile.organizationName} login code`,
+          subject: `Your ${brand.organizationName} login code`,
           html: htmlContent,
         });
         if (error) {

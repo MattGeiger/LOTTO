@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2025 Matt Geiger, Temple Consulting, LLC.
 
+"use client";
+
 import Image from "next/image";
 
-import { brandProfile } from "@/config/brand";
+import { useBrand } from "@/contexts/brand-context";
 import { cn } from "@/lib/utils";
 
 type BrandLogoProps = {
@@ -13,13 +15,14 @@ type BrandLogoProps = {
 };
 
 export function BrandLogo({ className, imageClassName, priority = false }: BrandLogoProps) {
-  const { logo, organizationName } = brandProfile;
+  const brand = useBrand();
+  const { logo, organizationName } = brand;
   const needsDarkSurface = logo.presentation === "dark-surface";
   const sharedImageClassName = cn("h-auto w-full", imageClassName);
 
   return (
     <div
-      data-brand-logo={brandProfile.id}
+      data-brand-logo={brand.brandId}
       data-presentation={logo.presentation}
       className={cn(
         "flex items-center justify-center",

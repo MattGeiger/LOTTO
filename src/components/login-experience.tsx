@@ -28,7 +28,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { BrandLogo } from "@/components/brand-logo";
-import { brandProfile } from "@/config/brand";
+import { useBrand } from "@/contexts/brand-context";
 
 const LOGIN_TABS_IDS = {
   otpTrigger: "login-tabs-trigger-otp",
@@ -38,6 +38,7 @@ const LOGIN_TABS_IDS = {
 } as const;
 
 function LoginForm() {
+  const brandProfile = useBrand();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/admin";
 

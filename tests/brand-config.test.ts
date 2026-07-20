@@ -159,7 +159,7 @@ describe("white-label brand configuration", () => {
     vi.stubEnv("NEXT_PUBLIC_LOTTO_BRAND", "st-johns-food-share");
     vi.stubEnv("NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL", "");
     const { default: manifest } = await import("@/app/manifest");
-    expect(manifest()).toMatchObject({
+    expect(await manifest()).toMatchObject({
       name: "St. Johns Food Share Queue",
       short_name: "St Johns Food Share App",
       theme_color: "#33a478",

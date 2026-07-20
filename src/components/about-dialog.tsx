@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { brandProfile } from "@/config/brand";
+import { useBrand } from "@/contexts/brand-context";
 
 type AboutDialogProps = {
   version: string;
@@ -35,6 +35,7 @@ type AboutDialogProps = {
  * the modal, not a card-in-a-card), a close button, and a GitHub source link.
  */
 export function AboutDialog({ version }: AboutDialogProps) {
+  const brandProfile = useBrand();
   const { trigger } = useAppHaptics();
   const facts = [
     { label: "Version", value: `v${version}` },

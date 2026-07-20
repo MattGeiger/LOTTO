@@ -71,9 +71,15 @@ const allNavItems: NavItem[] = [
   },
 ];
 
-export const navItems: NavItem[] = inventoryIntegration.enabled
-  ? allNavItems
-  : allNavItems.filter((item) => item.id !== "inventory");
+/** Public nav items for a runtime-resolved inventory capability. */
+export const getNavItems = (inventoryEnabled: boolean): NavItem[] =>
+  inventoryEnabled
+    ? allNavItems
+    : allNavItems.filter((item) => item.id !== "inventory");
+
+// Compiled-profile defaults, kept for callers without a runtime brand (and the
+// existing brand tests). Components should prefer `getNavItems(useBrand()...)`.
+export const navItems: NavItem[] = getNavItems(inventoryIntegration.enabled);
 
 // Authenticated staff variant: Admin · Dashboard · What's in stock · Games.
 // Same component + animation rules as the public bar (see docs/NAVIGATION.md);
@@ -109,6 +115,12 @@ const allAuthNavItems: NavItem[] = [
   },
 ];
 
-export const authNavItems: NavItem[] = inventoryIntegration.enabled
-  ? allAuthNavItems
-  : allAuthNavItems.filter((item) => item.id !== "inventory");
+/** Staff nav items for a runtime-resolved inventory capability. */
+export const getAuthNavItems = (inventoryEnabled: boolean): NavItem[] =>
+  inventoryEnabled
+    ? allAuthNavItems
+    : allAuthNavItems.filter((item) => item.id !== "inventory");
+
+export const authNavItems: NavItem[] = getAuthNavItems(
+  inventoryIntegration.enabled,
+);

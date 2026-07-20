@@ -141,7 +141,9 @@ describe("public inventory page", () => {
   it("renders FEED inventory in category tables with tags and limits", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(inventoryPayload), { status: 200 })));
 
-    renderWithLanguage(<InventoryPage />);
+    // The inventory route is an async server component (runtime brand gating);
+    // resolve it to its element before rendering in jsdom.
+    renderWithLanguage(await InventoryPage());
 
     expect(await screen.findByRole("heading", { name: "What's in stock today" })).toBeInTheDocument();
     expect(screen.queryByText("Pantry inventory")).not.toBeInTheDocument();
@@ -173,7 +175,9 @@ describe("public inventory page", () => {
     const user = userEvent.setup();
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(inventoryPayload), { status: 200 })));
 
-    renderWithLanguage(<InventoryPage />);
+    // The inventory route is an async server component (runtime brand gating);
+    // resolve it to its element before rendering in jsdom.
+    renderWithLanguage(await InventoryPage());
 
     await user.click(await screen.findByRole("button", { name: /change language/i }));
     await user.click(screen.getByRole("menuitemradio", { name: "Español" }));
@@ -198,7 +202,9 @@ describe("public inventory page", () => {
   it("uses the public board search control treatment for inventory search", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(inventoryPayload), { status: 200 })));
 
-    renderWithLanguage(<InventoryPage />);
+    // The inventory route is an async server component (runtime brand gating);
+    // resolve it to its element before rendering in jsdom.
+    renderWithLanguage(await InventoryPage());
 
     const searchInput = await screen.findByRole("textbox", { name: "Search inventory" });
     expect(searchInput.closest("[data-slot='input-group']")).toBeInTheDocument();
@@ -209,7 +215,9 @@ describe("public inventory page", () => {
     const user = userEvent.setup();
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(inventoryPayload), { status: 200 })));
 
-    renderWithLanguage(<InventoryPage />);
+    // The inventory route is an async server component (runtime brand gating);
+    // resolve it to its element before rendering in jsdom.
+    renderWithLanguage(await InventoryPage());
 
     expect((await screen.findAllByText("Garbanzo Beans")).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Tuna").length).toBeGreaterThan(0);

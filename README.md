@@ -18,7 +18,7 @@ ticketed distributions (food pantries, clinics, giveaways, and similar).
 
 **Production deployment:** https://williamtemple.app
 **License:** [AGPL-3.0-or-later](./LICENSE)
-**Status:** v1.19.0 — release candidate; v1.18.0 remains in production
+**Status:** v1.20.0 — production release
 
 ---
 
@@ -66,11 +66,13 @@ on their own phone, in their own language.
 If LOTTO looks useful, you can fork it, modify it, and deploy your own instance —
 see [LICENSE](./LICENSE) and [TRADEMARKS.md](./TRADEMARKS.md) for the terms.
 
-LOTTO supports deployment-selected brand profiles from one repository. Each
-agency can have its own logo, colors, copy, metadata, install identity, database,
-authentication allowlist/domain policy, and optional FEED integration while continuing to share
-queue logic and future updates. See
+LOTTO supports deployment-selected brand profiles and database-backed appearance
+configurations from one repository. Each agency can manage its own logo, colors,
+copy, metadata, install identity, database, authentication allowlist/domain
+policy, and optional FEED integration while continuing to share queue logic and
+future updates. See
 [`docs/WHITE_LABEL_BRANDING_PLAN.md`](./docs/WHITE_LABEL_BRANDING_PLAN.md) and
+[`docs/CONFIGURABLE_BRANDING_PLAN.md`](./docs/CONFIGURABLE_BRANDING_PLAN.md), and
 [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md).
 
 ---

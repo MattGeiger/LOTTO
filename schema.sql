@@ -185,3 +185,19 @@ CREATE TABLE IF NOT EXISTS usage_records (
 CREATE INDEX IF NOT EXISTS usage_records_timestamp_idx ON usage_records(timestamp DESC);
 CREATE INDEX IF NOT EXISTS usage_records_provider_idx ON usage_records(service_provider);
 CREATE INDEX IF NOT EXISTS usage_records_success_idx ON usage_records(success);
+
+-- Configurable branding: per-deployment appearance configurations
+-- (docs/CONFIGURABLE_BRANDING_PLAN.md). At most one row is active; template
+-- rows are the read-only wizard starting points seeded from the compiled
+-- brand profiles.
+CREATE TABLE IF NOT EXISTS brand_configurations (
+  id TEXT PRIMARY KEY,
+  payload JSONB NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT false,
+  is_template BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS brand_configurations_single_active_idx
+  ON brand_configurations(is_active) WHERE is_active;

@@ -16,13 +16,19 @@ import {
   Section,
   Text,
 } from "@react-email/components";
-import { brandProfile } from "@/config/brand";
+import { getBrandProfile } from "@/config/brand";
 
 type OtpCodeProps = {
   code: string;
+  /** Agency name shown in the email; defaults to the compiled profile. */
+  organizationName?: string;
 };
 
-export const OtpCode = ({ code }: OtpCodeProps) => (
+export const OtpCode = ({
+  code,
+  organizationName = getBrandProfile(process.env.NEXT_PUBLIC_LOTTO_BRAND)
+    .organizationName,
+}: OtpCodeProps) => (
   <Html>
     <Head>
       <Font
@@ -36,11 +42,11 @@ export const OtpCode = ({ code }: OtpCodeProps) => (
         fontStyle="normal"
       />
     </Head>
-    <Preview>{brandProfile.organizationName} login code</Preview>
+    <Preview>{organizationName} login code</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>Your Login Code</Heading>
-        <Text style={text}>Use this code to sign in to {brandProfile.organizationName}:</Text>
+        <Text style={text}>Use this code to sign in to {organizationName}:</Text>
         <Section style={codeContainer}>
           <Text style={codeText}>{code}</Text>
         </Section>

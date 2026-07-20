@@ -1548,3 +1548,48 @@ unconfirmed pairing preemptively.
 Documented in `docs/WHITE_LABEL_BRANDING_PLAN.md` under "Primary/foreground
 contrast" as a manual check to perform when authoring or reviewing a new
 brand's token blocks, since there's no automated gate for it today.
+
+## Issue 34: Page-wide Radix `useId` hydration mismatch reported on `/admin` (not reproducible on a consistent build)
+
+**Reported (2026-07-19):** during Appearance testing ("when switching
+themes"), the dev overlay showed a hydration warning on `/admin` in which
+every Radix-generated id (`aria-controls`, accordion `id`/`aria-labelledby`)
+differed between server and client — attributes only, identical tree shape
+and text. In React 19, `useId` values encode tree position, so a page-wide
+shift means the server and client rendered structurally different component
+trees.
+
+**Investigation:** could not be reproduced across clean loads of `/admin` in
+any state: custom appearance active (inline runtime `<style>` present),
+activation + reload round-trips, dark mode, Hi-viz, or defaults. A full audit
+of components rendered on `/admin` found no render-time structural branches
+on `typeof window`, storage, time, or randomness — the classic causes; all
+such reads are effect-guarded (`ThemeSwitcher` uses the mounted-state
+pattern, `ContrastModeProvider` applies classes in effects, admin state
+initializers are deterministic).
+
+**Most likely causes (both environmental):**
+1. **Dev-server restarts mid-session.** The dev server was killed/restarted
+   several times while a browser held a previously loaded session; the next
+   reload can hydrate new server HTML with stale cached client chunks (or
+   vice versa), yielding exactly this signature. Not possible in a
+   production build (hashed immutable chunks).
+2. **A browser extension** mutating the DOM before React hydrates (password
+   managers, Grammarly, etc.) — explicitly called out by React's own
+   hydration-error message and consistent with attributes-only, page-wide id
+   shifts in one browser profile but not a clean one.
+
+**Related real fix made during the audit:** the public board's service clock
+(`readonly-display.tsx`) initialized from `Date.now()` and rendered
+`Intl.DateTimeFormat` text that can legitimately differ between the server
+render and hydration (minute boundary; Node vs. browser ICU emitting
+different spaces before AM/PM). That is a genuine hydration-warning source of
+the same family the report cites, now fixed with `suppressHydrationWarning`
+on the clock text (the mounted clock interval corrects the value
+immediately).
+
+**Prevention/reopening:** if this reproduces on a production build or on a
+clean browser profile with a stable dev server, treat it as real: bisect by
+commenting regions of `admin-page-client.tsx` and diff the SSR HTML
+(`curl /admin`) against the hydrated DOM's Radix id sequence to locate the
+first divergent sibling.
