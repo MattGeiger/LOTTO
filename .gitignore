@@ -32,6 +32,11 @@ yarn-error.log*
 data/*.json
 data/*.tmp
 
+# Local brand source assets. Runtime-ready public assets remain tracked, while
+# working files and editable Illustrator sources stay outside the repository.
+/data/brand-assets/
+/public/brands/**/*.ai
+
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example

@@ -71,3 +71,38 @@ closed with 503; missing or invalid credentials return 401.
 Changing FEED's configured connection resets its local cursor deliberately so
 the source can be reconciled from the beginning. Source ids and content hashes
 make the replay safe.
+
+## Local full-stack validation
+
+The integration token is a machine credential, so LOTTO deliberately has no UI
+for creating or displaying it. It must remain server-side and must never be
+exposed through `NEXT_PUBLIC_*` configuration or a browser response.
+
+With LOTTO on port 3000 and FEED on ports 5173/3001:
+
+1. Generate a local token with `openssl rand -base64 48`, add it to LOTTO's
+   `.env.local` as `LOTTO_FEED_INTEGRATION_TOKEN`, and restart LOTTO.
+2. From `packages/backend` in FEED, run `npx prisma migrate deploy`, then start
+   or restart the FEED backend.
+3. Verify LOTTO's endpoint without credentials. It should now return 401, not
+   the 503 used when server configuration is missing.
+4. Sign into FEED as an administrator. In **Information → Data → LOTTO Queue
+   Data**, choose **Configure**, enter `http://localhost:3000`, paste the same
+   token, and save the connection.
+5. Create and reset a LOTTO queue if no closeout exists yet. The API exposes
+   immutable resets, not the current live queue.
+6. In FEED, choose **Sync now**. The new session should appear as either
+   **Include as service** or **Needs review**. Run **Sync now** again to confirm
+   the replay is a no-op.
+
+An authenticated command-line check can use the same local environment without
+printing the token:
+
+```bash
+set -a
+source .env.local
+set +a
+curl -i \
+  -H "Authorization: Bearer $LOTTO_FEED_INTEGRATION_TOKEN" \
+  http://localhost:3000/api/integrations/feed/v1/daily-summaries
+```
