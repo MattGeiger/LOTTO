@@ -47,6 +47,44 @@ export type Announcement = {
   updatedAt: number;
 };
 
+export type QueueBatchMechanism = "full" | "batch" | "append";
+
+export type QueueOperatingWindow = {
+  day: DayOfWeek;
+  isOpen: boolean;
+  openTime: string;
+  closeTime: string;
+};
+
+export type QueueTicketTiming = {
+  batchSequence: number | null;
+  issuedAt: number | null;
+  firstCalledAt: number | null;
+};
+
+export type QueueBatchTiming = {
+  sequence: number;
+  issuedAt: number;
+  mechanism: QueueBatchMechanism;
+  mode: Mode;
+  ticketNumbers: number[];
+};
+
+export type ActiveQueueSession = {
+  sessionId: string;
+  sessionStartedAt: number | null;
+  serviceDate: string;
+  serviceDateBasis: "first_issue" | "legacy_activity" | "closeout";
+  timezone: string;
+  operatingWindow: QueueOperatingWindow | null;
+  timingCoverage: "complete" | "partial_legacy";
+  initialMode: Mode;
+  switchedRandomToSequential: boolean;
+  appendedTickets: boolean;
+  batches: QueueBatchTiming[];
+  tickets: Record<number, QueueTicketTiming>;
+};
+
 export type RaffleState = {
   startNumber: number;
   endNumber: number;
@@ -62,6 +100,8 @@ export type RaffleState = {
   timezone: string;
   displayLanguageRotation: DisplayLanguageRotation | null;
   announcement: Announcement | null;
+  /** Internal operational evidence retained until Reset creates a durable closeout. */
+  queueSession?: ActiveQueueSession | null;
 };
 
 export const defaultState: RaffleState = {
@@ -87,6 +127,7 @@ export const defaultState: RaffleState = {
   timezone: "America/Los_Angeles",
   displayLanguageRotation: null,
   announcement: null,
+  queueSession: null,
 };
 
 export const formatTimestamp = (timestamp: number) => {

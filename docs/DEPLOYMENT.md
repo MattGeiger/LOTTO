@@ -133,11 +133,17 @@ AUTH_BYPASS=false
 AUTH_SECRET=<generated>
 AUTH_TRUST_HOST=true
 DATABASE_URL=postgresql://...sslmode=require
+LOTTO_FEED_INTEGRATION_TOKEN=<separate long random secret>
 EMAIL_FROM=login@williamtemple.app
 RESEND_API_KEY=re_...
 ADMIN_EMAIL_DOMAIN=williamtemple.org
 NODE_ENV=production
 ```
+
+Before deploying v1.21.0, apply `schema.sql` to the agency's Neon database so
+`raffle_session_summaries` exists. Configure the same integration token in
+FEED's administrator-only LOTTO connection settings. Rotate the two copies
+together; do not use `AUTH_SECRET`, a NextAuth token, or a database credential.
 
 `NEXT_PUBLIC_LOTTO_BRAND` may remain unset for this existing project; the safe
 default is `william-temple-house`. It may also be set explicitly to that value.

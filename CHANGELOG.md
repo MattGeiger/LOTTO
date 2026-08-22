@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [1.21.0] - 2026-08-22
+
+### Added
+- Durable, privacy-minimized queue-session timing. LOTTO now records the atomic
+  transition that first issues each ticket, its write-once first call, batch
+  boundaries, append activity, and Random-to-Sequential transitions.
+- **Reset for New Day** now closes meaningful active state into immutable,
+  revisioned history before clearing the queue. Postgres performs the closeout,
+  reset snapshot, and singleton replacement in one transaction; the local file
+  fallback writes the closeout first and retries idempotently.
+- `GET /api/integrations/feed/v1/daily-summaries`, protected by a dedicated
+  bearer token, exposes cursor-ordered closeout revisions for FEED. The contract
+  contains anonymous observation sequences and never exposes physical ticket
+  numbers, staff identity, or client identity.
+
+### Documentation
+- Added `docs/LOTTO_FEED_INTEGRATION.md`, deployment configuration, and staff
+  guidance explaining that Reset preserves the completed queue for Analytics.
+
 ## [1.20.1] - 2026-07-20
 
 ### Fixed

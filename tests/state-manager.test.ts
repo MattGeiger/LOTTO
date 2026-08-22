@@ -349,6 +349,26 @@ describe("state manager", () => {
     expect(backupFiles.length).toBeGreaterThanOrEqual(2);
   });
 
+  it("writes an immutable queue closeout before Reset clears the active state", async () => {
+    await manager.generateState({ startNumber: 1, endNumber: 3, mode: "random" });
+    await manager.setMode("sequential");
+    await manager.appendTickets(4);
+    for (const ticket of [1, 2, 3, 4]) await manager.updateCurrentlyServing(ticket);
+
+    await manager.resetState();
+    const summaries = await manager.listQueueSummaries();
+    expect(summaries).toHaveLength(1);
+    expect(summaries[0].facts.activitySignals).toEqual({
+      allIssuedTicketsCalled: true,
+      switchedRandomToSequential: true,
+      appendedTickets: true,
+    });
+    expect(summaries[0].facts.ticketObservations).toHaveLength(4);
+
+    await manager.resetState();
+    expect(await manager.listQueueSummaries()).toHaveLength(1);
+  });
+
   it("lists snapshots", async () => {
     await manager.generateState({ startNumber: 1, endNumber: 3, mode: "random" });
     const snapshots = await manager.listSnapshots();

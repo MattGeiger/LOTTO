@@ -50,6 +50,18 @@ returns to normal without changing who's currently being served.
 - The **display URL / QR code** can point clients to wherever you like; by
   default the board's QR sends them to the home screen to look up their ticket.
 
+## Ending a Service Day
+
+Choose **Reset for New Day** when the queue is finished. LOTTO first preserves
+the meaningful queue activity for FEED Analytics, then clears the live board.
+An empty reset creates no history. If a reset happens the following morning,
+the preserved session still belongs to the date its first tickets entered the
+queue.
+
+LOTTO records the operational facts only. If the pattern looks like testing or
+an accidental setup, FEED withholds it from Analytics and asks staff to classify
+it there; Reset does not add another question to the end-of-shift workflow.
+
 ## The Advanced Section
 
 Expand **Advanced** on the dashboard for less-frequent setup tasks: operating

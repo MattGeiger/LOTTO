@@ -1,6 +1,21 @@
 
 ## Unreleased
 
+## Version 1.21.0 — August 22, 2026
+
+- **Queue history now survives Reset.** When staff choose **Reset for New Day**,
+  LOTTO first preserves the completed queue as an immutable operational
+  closeout. Empty resets do not create noise, and the normal workflow remains
+  one action.
+- **FEED can synchronize queue timing safely.** A new read-only integration
+  supplies anonymous issuance-to-first-call observations, batching, append, and
+  mode-change evidence. Physical ticket numbers and client identities are not
+  included.
+- **Unusual activity stays reviewable.** LOTTO preserves facts rather than
+  deciding whether activity was service or testing. FEED applies the agency's
+  operating-hours and authenticity rules, withholds anomalies from Analytics,
+  and asks staff to classify them there.
+
 ## Version 1.20.1 — July 20, 2026
 
 - **Typing an announcement is fast again on older iPads.** Editing the
