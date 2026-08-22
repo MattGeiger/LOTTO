@@ -1,3 +1,22 @@
+# LOTTO v1.21.0
+
+**Release Date:** August 22, 2026
+
+LOTTO v1.21.0 makes operational queue history durable. Ticket issuance,
+write-once first calls, batch boundaries, appends, and Random-to-Sequential
+transitions are retained in active state and closed immutably when staff reset
+for a new day. The closeout path is transactional in Neon and durable-first in
+the development file store.
+
+The versioned, bearer-authenticated FEED endpoint delivers only privacy-minimized
+session facts in append order. It never emits physical ticket numbers or client
+identity. Classification remains FEED's responsibility: source facts always
+synchronize, while unusual sessions stay out of Analytics pending staff review.
+
+Deployment and contract details are in `docs/LOTTO_FEED_INTEGRATION.md`.
+
+---
+
 # LOTTO v1.20.1
 
 **Release Date:** July 20, 2026

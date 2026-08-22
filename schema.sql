@@ -21,6 +21,28 @@ CREATE INDEX IF NOT EXISTS raffle_snapshots_created_at_idx
 CREATE INDEX IF NOT EXISTS raffle_snapshots_id_idx
   ON raffle_snapshots(id);
 
+-- Immutable operational closeouts consumed by FEED. These records are not
+-- part of the undo/snapshot retention system and are never pruned by Reset.
+CREATE TABLE IF NOT EXISTS raffle_session_summaries (
+  summary_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  revision INTEGER NOT NULL CHECK (revision > 0),
+  supersedes_summary_id TEXT REFERENCES raffle_session_summaries(summary_id),
+  content_hash TEXT NOT NULL,
+  service_date DATE NOT NULL,
+  closed_at TIMESTAMPTZ NOT NULL,
+  recorded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  payload JSONB NOT NULL,
+  UNIQUE (session_id, revision),
+  UNIQUE (session_id, content_hash)
+);
+
+CREATE INDEX IF NOT EXISTS raffle_session_summaries_cursor_idx
+  ON raffle_session_summaries(recorded_at ASC, summary_id ASC);
+
+CREATE INDEX IF NOT EXISTS raffle_session_summaries_service_date_idx
+  ON raffle_session_summaries(service_date);
+
 -- NextAuth tables
 CREATE TABLE IF NOT EXISTS verification_token (
   identifier TEXT NOT NULL,

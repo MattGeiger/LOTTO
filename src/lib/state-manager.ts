@@ -20,6 +20,13 @@ import {
 } from "./state-types";
 import { createDbStateManager } from "./state-manager-db";
 import { UserInputError } from "./user-input-error";
+import {
+  addIssuedTickets,
+  createStoredQueueSessionSummary,
+  recordFirstCall,
+  recordModeTransition,
+  type StoredQueueSessionSummary,
+} from "./queue-session";
 
 export { defaultState } from "./state-types";
 export type {
@@ -55,6 +62,7 @@ const MAX_TICKET_NUMBER = 999_999;
 
 export const createStateManager = (baseDir = path.join(process.cwd(), "data")) => {
   const statePath = path.join(baseDir, "state.json");
+  const queueSummariesDir = path.join(baseDir, "queue-summaries");
   let lastRedoSnapshot: Snapshot | null = null;
   let lastPersistTs = 0;
 
@@ -178,7 +186,8 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
 
     validateRange(input.startNumber, input.endNumber, { requireStrictEnd: true });
     const generatedOrder = generateOrder(input.startNumber, input.endNumber, input.mode);
-    return persist({
+    const issuedAt = Date.now();
+    return persist(addIssuedTickets({
       startNumber: input.startNumber,
       endNumber: input.endNumber,
       mode: input.mode,
@@ -193,7 +202,8 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
       timezone: current.timezone ?? defaultState.timezone,
       displayLanguageRotation: current.displayLanguageRotation ?? null,
       announcement: current.announcement ?? null,
-    });
+      queueSession: null,
+    }, generatedOrder, "full", issuedAt));
   };
 
   const appendTickets = async (newEndNumber: number) => {
@@ -220,11 +230,12 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
     const newBatch = current.mode === "random" ? shuffle(additions) : additions;
     const generatedOrder = [...current.generatedOrder, ...newBatch];
 
-    return persist({
+    const issuedAt = Date.now();
+    return persist(addIssuedTickets({
       ...current,
       endNumber: newEndNumber,
       generatedOrder,
-    });
+    }, newBatch, "append", issuedAt));
   };
 
   const extendRange = async (newEndNumber: number) => {
@@ -301,13 +312,14 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
         ? shuffle(pool).slice(0, batchSize)
         : pool.slice(0, batchSize);
 
-    return persist({
+    const issuedAt = Date.now();
+    return persist(addIssuedTickets({
       ...current,
       startNumber: effectiveStart,
       endNumber: effectiveEnd,
       generatedOrder: [...current.generatedOrder, ...selected],
       orderLocked: true,
-    });
+    }, selected, "batch", issuedAt));
   };
 
   const setMode = async (mode: Mode) => {
@@ -326,17 +338,18 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
         current.endNumber,
         mode,
       );
-      return persist({
+      const issuedAt = Date.now();
+      return persist(addIssuedTickets({
         ...current,
         mode,
         generatedOrder,
-      });
+      }, generatedOrder, "full", issuedAt));
     }
 
-    return persist({
+    return persist(recordModeTransition({
       ...current,
       mode,
-    });
+    }, current.mode, mode));
   };
 
   const updateCurrentlyServing = async (value: number | null) => {
@@ -351,15 +364,17 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
     }
 
     const nextCalledAt = { ...(current.calledAt ?? {}) } as RaffleState["calledAt"];
+    const calledAt = Date.now();
     if (value !== null) {
-      nextCalledAt[value] = Date.now();
+      nextCalledAt[value] = calledAt;
     }
 
-    return persist({
+    const nextState = {
       ...current,
       currentlyServing: value,
       calledAt: nextCalledAt,
-    });
+    };
+    return persist(value === null ? nextState : recordFirstCall(nextState, value, calledAt));
   };
 
   const advanceServing = async (direction: "next" | "prev") => {
@@ -402,13 +417,14 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
     }
 
     const nextCalledAt = { ...(current.calledAt ?? {}) } as RaffleState["calledAt"];
-    nextCalledAt[nextTicket] = Date.now();
+    const calledAt = Date.now();
+    nextCalledAt[nextTicket] = calledAt;
 
-    return persist({
+    return persist(recordFirstCall({
       ...current,
       currentlyServing: nextTicket,
       calledAt: nextCalledAt,
-    });
+    }, nextTicket, calledAt));
   };
 
   const markTicketReturned = async (ticketNumber: number) => {
@@ -431,6 +447,7 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
     } as RaffleState["ticketStatus"];
     let nextServing = current.currentlyServing;
     const nextCalledAt = { ...(current.calledAt ?? {}) } as RaffleState["calledAt"];
+    let autoCalledAt: number | null = null;
     if (ticketNumber === current.currentlyServing) {
       const currentIndex = current.generatedOrder.indexOf(ticketNumber);
       if (currentIndex !== -1) {
@@ -439,19 +456,25 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
           const nextTicket = current.generatedOrder[i];
           if (nextStatus[nextTicket] !== "returned") {
             nextServing = nextTicket;
-            nextCalledAt[nextTicket] = Date.now();
+            autoCalledAt = Date.now();
+            nextCalledAt[nextTicket] = autoCalledAt;
             break;
           }
         }
       }
     }
 
-    return persist({
+    const nextState = {
       ...current,
       ticketStatus: nextStatus,
       currentlyServing: nextServing,
       calledAt: nextCalledAt,
-    });
+    };
+    return persist(
+      nextServing !== null && autoCalledAt !== null
+        ? recordFirstCall(nextState, nextServing, autoCalledAt)
+        : nextState,
+    );
   };
 
   const markTicketUnclaimed = async (ticketNumber: number) => {
@@ -525,6 +548,21 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
 
   const resetState = async () => {
     const current = await safeReadState();
+    const closedAt = Date.now();
+    const prior = current.queueSession
+      ? (await listQueueSummaries()).filter(
+          (summary) => summary.sessionId === current.queueSession?.sessionId,
+        )
+      : [];
+    const closeout = createStoredQueueSessionSummary(current, closedAt, prior);
+    if (closeout) {
+      await ensureDir(queueSummariesDir);
+      await fs.writeFile(
+        path.join(queueSummariesDir, `${closeout.summaryId}.json`),
+        JSON.stringify(closeout, null, 2),
+        { encoding: "utf-8", flag: "wx" },
+      );
+    }
     return persist({
       ...defaultState,
       ticketStatus: {},
@@ -532,7 +570,22 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
       operatingHours: current.operatingHours ?? defaultState.operatingHours,
       timezone: current.timezone ?? defaultState.timezone,
       displayLanguageRotation: current.displayLanguageRotation ?? null,
+      announcement: current.announcement ?? null,
+      queueSession: null,
     });
+  };
+
+  const listQueueSummaries = async (): Promise<StoredQueueSessionSummary[]> => {
+    await ensureDir(queueSummariesDir);
+    const files = (await fs.readdir(queueSummariesDir)).filter((file) => file.endsWith(".json"));
+    const summaries = await Promise.all(files.map(async (file) => {
+      const contents = await fs.readFile(path.join(queueSummariesDir, file), "utf-8");
+      return JSON.parse(contents) as StoredQueueSessionSummary;
+    }));
+    return summaries.sort((left, right) =>
+      left.recordedAt === right.recordedAt
+        ? left.summaryId.localeCompare(right.summaryId)
+        : left.recordedAt.localeCompare(right.recordedAt));
   };
 
   const parseSnapshot = async (file: string): Promise<Snapshot | null> => {
@@ -640,6 +693,7 @@ export const createStateManager = (baseDir = path.join(process.cwd(), "data")) =
     markTicketUnclaimed,
     revertTicketStatus,
     resetState,
+    listQueueSummaries,
     listSnapshots,
     restoreSnapshot,
     undo,

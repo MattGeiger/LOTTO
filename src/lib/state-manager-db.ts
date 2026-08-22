@@ -19,6 +19,13 @@ import {
   type RaffleState,
 } from "./state-types";
 import { UserInputError } from "./user-input-error";
+import {
+  addIssuedTickets,
+  createStoredQueueSessionSummary,
+  recordFirstCall,
+  recordModeTransition,
+  type StoredQueueSessionSummary,
+} from "./queue-session";
 
 const buildRange = (start: number, end: number) =>
   Array.from({ length: end - start + 1 }, (_, index) => start + index);
@@ -120,7 +127,11 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
 
   const persist = async (
     state: RaffleState,
-    options?: { preserveTimestamp?: boolean; skipBackup?: boolean },
+    options?: {
+      preserveTimestamp?: boolean;
+      skipBackup?: boolean;
+      closeout?: StoredQueueSessionSummary | null;
+    },
   ): Promise<RaffleState> => {
     const timestamped =
       options?.preserveTimestamp && state.timestamp !== null ? state : withTimestamp(state);
@@ -138,6 +149,22 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
     await withTimeout(
       sql.transaction((tx) => {
         const statements = [];
+        if (options?.closeout) {
+          const closeout = options.closeout;
+          const facts = JSON.stringify(closeout.facts);
+          statements.push(tx`
+            insert into raffle_session_summaries (
+              summary_id, session_id, revision, supersedes_summary_id,
+              content_hash, service_date, closed_at, recorded_at, payload
+            ) values (
+              ${closeout.summaryId}, ${closeout.sessionId}, ${closeout.revision},
+              ${closeout.supersedesSummaryId}, ${closeout.contentHash},
+              ${closeout.facts.serviceDate}, ${closeout.closedAt},
+              ${closeout.recordedAt}, ${facts}::jsonb
+            )
+            on conflict (session_id, content_hash) do nothing;
+          `);
+        }
         if (!options?.skipBackup) {
           statements.push(tx`
           insert into raffle_snapshots (id, payload)
@@ -189,7 +216,8 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
 
     validateRange(input.startNumber, input.endNumber, { requireStrictEnd: true });
     const generatedOrder = generateOrder(input.startNumber, input.endNumber, input.mode);
-    return persist({
+    const issuedAt = Date.now();
+    return persist(addIssuedTickets({
       startNumber: input.startNumber,
       endNumber: input.endNumber,
       mode: input.mode,
@@ -204,7 +232,8 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
       timezone: current.timezone ?? defaultState.timezone,
       displayLanguageRotation: current.displayLanguageRotation ?? null,
       announcement: current.announcement ?? null,
-    });
+      queueSession: null,
+    }, generatedOrder, "full", issuedAt));
   };
 
   const appendTickets = async (newEndNumber: number) => {
@@ -231,11 +260,12 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
     const newBatch = current.mode === "random" ? shuffle(additions) : additions;
     const generatedOrder = [...current.generatedOrder, ...newBatch];
 
-    return persist({
+    const issuedAt = Date.now();
+    return persist(addIssuedTickets({
       ...current,
       endNumber: newEndNumber,
       generatedOrder,
-    });
+    }, newBatch, "append", issuedAt));
   };
 
   const extendRange = async (newEndNumber: number) => {
@@ -312,13 +342,14 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
         ? shuffle(pool).slice(0, batchSize)
         : pool.slice(0, batchSize);
 
-    return persist({
+    const issuedAt = Date.now();
+    return persist(addIssuedTickets({
       ...current,
       startNumber: effectiveStart,
       endNumber: effectiveEnd,
       generatedOrder: [...current.generatedOrder, ...selected],
       orderLocked: true,
-    });
+    }, selected, "batch", issuedAt));
   };
 
   const setMode = async (mode: Mode) => {
@@ -333,17 +364,18 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
 
     if (!hasOrder) {
       const generatedOrder = generateOrder(current.startNumber, current.endNumber, mode);
-      return persist({
+      const issuedAt = Date.now();
+      return persist(addIssuedTickets({
         ...current,
         mode,
         generatedOrder,
-      });
+      }, generatedOrder, "full", issuedAt));
     }
 
-    return persist({
+    return persist(recordModeTransition({
       ...current,
       mode,
-    });
+    }, current.mode, mode));
   };
 
   const updateCurrentlyServing = async (value: number | null) => {
@@ -355,15 +387,17 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
     }
 
     const nextCalledAt = { ...(current.calledAt ?? {}) } as RaffleState["calledAt"];
+    const calledAt = Date.now();
     if (value !== null) {
-      nextCalledAt[value] = Date.now();
+      nextCalledAt[value] = calledAt;
     }
 
-    return persist({
+    const nextState = {
       ...current,
       currentlyServing: value,
       calledAt: nextCalledAt,
-    });
+    };
+    return persist(value === null ? nextState : recordFirstCall(nextState, value, calledAt));
   };
 
   const advanceServing = async (direction: "next" | "prev") => {
@@ -406,13 +440,14 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
     }
 
     const nextCalledAt = { ...(current.calledAt ?? {}) } as RaffleState["calledAt"];
-    nextCalledAt[nextTicket] = Date.now();
+    const calledAt = Date.now();
+    nextCalledAt[nextTicket] = calledAt;
 
-    return persist({
+    return persist(recordFirstCall({
       ...current,
       currentlyServing: nextTicket,
       calledAt: nextCalledAt,
-    });
+    }, nextTicket, calledAt));
   };
 
   const markTicketReturned = async (ticketNumber: number) => {
@@ -435,6 +470,7 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
     } as RaffleState["ticketStatus"];
     let nextServing = current.currentlyServing;
     const nextCalledAt = { ...(current.calledAt ?? {}) } as RaffleState["calledAt"];
+    let autoCalledAt: number | null = null;
     if (ticketNumber === current.currentlyServing) {
       const currentIndex = current.generatedOrder.indexOf(ticketNumber);
       if (currentIndex !== -1) {
@@ -443,19 +479,25 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
           const nextTicket = current.generatedOrder[i];
           if (nextStatus[nextTicket] !== "returned") {
             nextServing = nextTicket;
-            nextCalledAt[nextTicket] = Date.now();
+            autoCalledAt = Date.now();
+            nextCalledAt[nextTicket] = autoCalledAt;
             break;
           }
         }
       }
     }
 
-    return persist({
+    const nextState = {
       ...current,
       ticketStatus: nextStatus,
       currentlyServing: nextServing,
       calledAt: nextCalledAt,
-    });
+    };
+    return persist(
+      nextServing !== null && autoCalledAt !== null
+        ? recordFirstCall(nextState, nextServing, autoCalledAt)
+        : nextState,
+    );
   };
 
   const markTicketUnclaimed = async (ticketNumber: number) => {
@@ -529,6 +571,12 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
 
   const resetState = async () => {
     const current = await safeReadState();
+    const closedAt = Date.now();
+    const sessionId = current.queueSession?.sessionId;
+    const prior = sessionId
+      ? await listQueueSummariesForSession(sessionId)
+      : [];
+    const closeout = createStoredQueueSessionSummary(current, closedAt, prior);
     cleanupOldSnapshots(30).catch((error) => {
       console.warn("[State] Snapshot cleanup failed:", error);
     });
@@ -540,7 +588,49 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
       timezone: current.timezone ?? defaultState.timezone,
       displayLanguageRotation: current.displayLanguageRotation ?? null,
       announcement: current.announcement ?? null,
-    });
+      queueSession: null,
+    }, { closeout });
+  };
+
+  const mapQueueSummaryRow = (row: {
+    summary_id: string;
+    session_id: string;
+    revision: number;
+    supersedes_summary_id: string | null;
+    content_hash: string;
+    closed_at: string;
+    recorded_at: string;
+    payload: StoredQueueSessionSummary["facts"];
+  }): StoredQueueSessionSummary => ({
+    summaryId: row.summary_id,
+    sessionId: row.session_id,
+    revision: row.revision,
+    supersedesSummaryId: row.supersedes_summary_id,
+    contentHash: row.content_hash,
+    closedAt: new Date(row.closed_at).toISOString(),
+    recordedAt: new Date(row.recorded_at).toISOString(),
+    facts: row.payload,
+  });
+
+  async function listQueueSummariesForSession(sessionId: string) {
+    const rows = (await withTimeout(sql`
+      select summary_id, session_id, revision, supersedes_summary_id,
+             content_hash, closed_at, recorded_at, payload
+      from raffle_session_summaries
+      where session_id = ${sessionId}
+      order by revision asc;
+    `)) as Parameters<typeof mapQueueSummaryRow>[0][];
+    return rows.map(mapQueueSummaryRow);
+  }
+
+  const listQueueSummaries = async () => {
+    const rows = (await withTimeout(sql`
+      select summary_id, session_id, revision, supersedes_summary_id,
+             content_hash, closed_at, recorded_at, payload
+      from raffle_session_summaries
+      order by recorded_at asc, summary_id asc;
+    `)) as Parameters<typeof mapQueueSummaryRow>[0][];
+    return rows.map(mapQueueSummaryRow);
   };
 
   const listSnapshots = async () => {
@@ -629,6 +719,7 @@ export const createDbStateManager = (databaseUrl = process.env.DATABASE_URL) => 
     markTicketUnclaimed,
     revertTicketStatus,
     resetState,
+    listQueueSummaries,
     listSnapshots,
     restoreSnapshot,
     undo,
