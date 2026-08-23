@@ -62,10 +62,19 @@ closed with 503; missing or invalid credentials return 401.
 ## Deployment
 
 1. Apply `schema.sql` to Neon.
-2. A deployment administrator generates a dedicated token with
-   `openssl rand -base64 48`.
+2. A deployment administrator generates a dedicated URL-safe 384-bit token
+   locally with:
+
+   ```bash
+   node -e "console.log(require('node:crypto').randomBytes(48).toString('base64url'))"
+   ```
+
+   `openssl rand -base64 48` is an equivalent fallback. Treat the generated
+   value like a password: do not commit it, add it to documentation, or send it
+   through ordinary email or chat.
 3. The deployment administrator stores it as `LOTTO_FEED_INTEGRATION_TOKEN` in
-   LOTTO's Vercel environment and redeploys LOTTO.
+   LOTTO's Vercel Production environment as a **Sensitive** variable and
+   redeploys LOTTO.
 4. The same administrator, or another administrator receiving the secret
    through the organization's password manager, enters the LOTTO base URL and
    token once in FEED's connection dialog.
@@ -88,8 +97,9 @@ exposed through `NEXT_PUBLIC_*` configuration or a browser response.
 
 With LOTTO on port 3000 and FEED on ports 5173/3001:
 
-1. Generate a local token with `openssl rand -base64 48`, add it to LOTTO's
-   `.env.local` as `LOTTO_FEED_INTEGRATION_TOKEN`, and restart LOTTO.
+1. Generate a local token with the same Node command used for production, add
+   it to LOTTO's `.env.local` as `LOTTO_FEED_INTEGRATION_TOKEN`, and restart
+   LOTTO.
 2. From `packages/backend` in FEED, run `npx prisma migrate deploy`, then start
    or restart the FEED backend.
 3. Verify LOTTO's endpoint without credentials. It should now return 401, not
