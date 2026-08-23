@@ -62,15 +62,23 @@ closed with 503; missing or invalid credentials return 401.
 ## Deployment
 
 1. Apply `schema.sql` to Neon.
-2. Generate a dedicated token with `openssl rand -base64 48`.
-3. Store it as `LOTTO_FEED_INTEGRATION_TOKEN` in LOTTO's server environment.
-4. Enter the LOTTO base URL and same token in FEED's administrator-only
-   connection dialog.
+2. A deployment administrator generates a dedicated token with
+   `openssl rand -base64 48`.
+3. The deployment administrator stores it as `LOTTO_FEED_INTEGRATION_TOKEN` in
+   LOTTO's Vercel environment and redeploys LOTTO.
+4. The same administrator, or another administrator receiving the secret
+   through the organization's password manager, enters the LOTTO base URL and
+   token once in FEED's connection dialog.
 5. Have a staff user choose **Sync now** and confirm the run is idempotent.
 
 Changing FEED's configured connection resets its local cursor deliberately so
 the source can be reconciled from the beginning. Source ids and content hashes
 make the replay safe.
+
+Ordinary staff never obtain or handle this token. After the one-time
+administrator pairing, FEED stores it encrypted and staff only use **Sync
+now**. Rotate the credential by replacing the Vercel value, redeploying LOTTO,
+and saving the new value in FEED; never send it through email or chat.
 
 ## Local full-stack validation
 

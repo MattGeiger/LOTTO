@@ -37,6 +37,10 @@ data/*.tmp
 /data/brand-assets/
 /public/brands/**/*.ai
 
+# Local agent configuration and file-backed operational closeouts.
+/.claude/
+/data/queue-summaries/
+
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
