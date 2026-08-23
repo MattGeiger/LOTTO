@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Documentation
+- The LOTTO → FEED deployment runbook now gives administrators the canonical
+  Node.js command for generating a URL-safe 384-bit integration token and
+  identifies Vercel's Production Sensitive-variable setting.
+
 ## [1.21.0] - 2026-08-22
 
 ### Added
