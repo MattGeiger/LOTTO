@@ -71,6 +71,11 @@ code and no credential details.
    connection dialog.
 5. Have a staff user choose **Sync now** and confirm the run is idempotent.
 
+The Admin section surfaces whether LOTTO currently has an active credential and
+when the in-app token was generated. This status is intentionally LOTTO-local:
+it does not claim that FEED still holds the matching plaintext token. FEED
+proves the complete pairing whenever it successfully authenticates a sync.
+
 Only one token exists at a time. **Generate new token** atomically replaces the
 stored hash and immediately invalidates FEED's previous value. FEED then shows
 an actionable rejection without displaying any token details. Saving the new

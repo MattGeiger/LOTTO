@@ -22,6 +22,12 @@ read-only synchronization token. The plaintext is displayed once; LOTTO stores
 only its hash. Generating another token immediately invalidates the value
 currently saved in FEED.
 
+The section shows a **Configured** or **Not configured** status tag beside
+**Setup** and the local date and time when the active in-app token was generated.
+**Configured** means LOTTO has an active credential; FEED still validates that
+it holds the matching token when synchronization runs. Deployment-managed
+legacy tokens do not carry a generation timestamp.
+
 The following configuration cards live inside the collapsed **Advanced**
 accordion:
 

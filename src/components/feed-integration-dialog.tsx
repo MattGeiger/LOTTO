@@ -8,6 +8,7 @@ import { Check, Copy, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -42,6 +43,7 @@ const readError = async (response: Response): Promise<string> => {
 export const FeedIntegrationDialog = React.memo(function FeedIntegrationDialog() {
   const [open, setOpen] = React.useState(false);
   const [status, setStatus] = React.useState<PairingStatus | null>(null);
+  const [statusUnavailable, setStatusUnavailable] = React.useState(false);
   const [token, setToken] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [copied, setCopied] = React.useState<"url" | "token" | null>(null);
@@ -49,12 +51,14 @@ export const FeedIntegrationDialog = React.memo(function FeedIntegrationDialog()
 
   const loadStatus = React.useCallback(async () => {
     setLoading(true);
+    setStatusUnavailable(false);
     try {
       const response = await fetch("/api/integrations/feed/token", { cache: "no-store" });
       if (!response.ok) throw new Error(await readError(response));
       const body = await response.json() as { status: PairingStatus };
       setStatus(body.status);
     } catch (error) {
+      setStatusUnavailable(true);
       toast.error(error instanceof Error ? error.message : "LOTTO could not load the FEED connection.");
     } finally {
       setLoading(false);
@@ -62,10 +66,12 @@ export const FeedIntegrationDialog = React.memo(function FeedIntegrationDialog()
   }, []);
 
   React.useEffect(() => {
-    if (!open) return;
-    setLottoUrl(window.location.origin);
     void loadStatus();
-  }, [loadStatus, open]);
+  }, [loadStatus]);
+
+  React.useEffect(() => {
+    if (open) setLottoUrl(window.location.origin);
+  }, [open]);
 
   const generate = async () => {
     setLoading(true);
@@ -95,9 +101,37 @@ export const FeedIntegrationDialog = React.memo(function FeedIntegrationDialog()
 
   return (
     <>
-      <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)}>
-        Setup
-      </Button>
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)}>
+            Setup
+          </Button>
+          {status?.configured ? (
+            <Badge variant="success">Configured</Badge>
+          ) : status ? (
+            <Badge
+              variant="outline"
+              className="border-status-neutral-border bg-status-neutral-bg text-status-neutral-text"
+            >
+              Not configured
+            </Badge>
+          ) : (
+            <Badge variant={statusUnavailable ? "warning" : "outline"}>
+              {statusUnavailable ? "Status unavailable" : "Checking status"}
+            </Badge>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground" aria-live="polite">
+          Last token generated:{" "}
+          {status?.createdAt ? (
+            <time dateTime={status.createdAt}>{new Date(status.createdAt).toLocaleString()}</time>
+          ) : status?.source === "environment" ? (
+            "Not available for the deployment token"
+          ) : (
+            "Never"
+          )}
+        </p>
+      </div>
       <Dialog
         open={open}
         onOpenChange={next => {

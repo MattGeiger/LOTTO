@@ -10,6 +10,8 @@
   unchanged.
 
 ### Added
+- The Admin **Sync With FEED** section now shows a configuration-status tag and
+  the local date and time when the active in-app token was generated.
 - **Administrators can pair LOTTO with FEED from the History card.** The modal
   shows the LOTTO URL, generates one high-entropy token, displays it once, and
   stores only its SHA-256 hash in Neon (or the local file fallback). Generating

@@ -1261,6 +1261,18 @@ The test now wraps the localized `notCalled` lookup and RTL-containment check in
 `waitFor`. This preserves every existing assertion and waits only for that
 label's own animation to settle. No component or user-facing behavior changed.
 
+### Related application of the flake procedure — 2026-08-24
+
+During validation of the Admin FEED-status indicator, the first full-suite run
+found the Start Number input before the Admin page's asynchronous queue-state
+hydration had locked it. `tests/admin-range-locking.test.tsx` then passed 2/2 in
+isolation, and the unchanged full suite passed 724/724 immediately afterward.
+The feature-specific tests, lint, and production build were also clean. This is
+the same one-off worker-pressure signature described above, not evidence that
+range locking or the FEED indicator is defective. No assertion was loosened.
+If this exact failure recurs, stabilize the disabled-state assertion with
+`waitFor` rather than changing the range-locking contract.
+
 ---
 
 ## Issue 28: Operating-hours API accepts malformed or conflicting time values
