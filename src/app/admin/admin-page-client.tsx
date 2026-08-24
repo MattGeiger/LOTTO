@@ -52,6 +52,7 @@ import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
 import { OperatingHoursEditor } from "@/components/operating-hours-editor";
 import { DisplayLanguageRotationEditor } from "@/components/display-language-rotation-editor";
 import { FeedIntegrationDialog } from "@/components/feed-integration-dialog";
+import { DatabaseArrowUp } from "@/components/database-arrow-up-icon";
 import { AnnouncementSection } from "@/components/announcement-section";
 import { TranslationCard } from "@/components/translation/translation-card";
 import { ArchiveIcon, type ArchiveIconHandle } from "@/components/lucide-animated/archive";
@@ -2524,12 +2525,15 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
               </div>
               <Separator />
               <div className="space-y-3">
-                <div className="space-y-1">
-                  <h3 className="text-sm font-semibold text-foreground">Sync With FEED</h3>
-                  <p className="text-sm text-muted-foreground">
+                <CardHeader className="p-0">
+                  <CardTitle className="flex items-center gap-2">
+                    <DatabaseArrowUp className="size-4 text-muted-foreground" />
+                    Sync With FEED
+                  </CardTitle>
+                  <CardDescription>
                     Configure LOTTO App to share daily operations data with FEED.
-                  </p>
-                </div>
+                  </CardDescription>
+                </CardHeader>
                 <FeedIntegrationDialog />
               </div>
             </CardContent>
