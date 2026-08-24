@@ -18,7 +18,7 @@ ticketed distributions (food pantries, clinics, giveaways, and similar).
 
 **Production deployment:** https://williamtemple.app
 **License:** [AGPL-3.0-or-later](./LICENSE)
-**Status:** v1.21.0 — production release
+**Status:** v1.21.1 — production release
 
 ---
 

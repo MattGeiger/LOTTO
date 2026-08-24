@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.21.1] - 2026-08-24
+
 ### Fixed
 
 - Stabilized the public-display RTL regression test against the intentional
