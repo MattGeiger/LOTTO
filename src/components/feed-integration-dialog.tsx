@@ -4,7 +4,7 @@
 "use client";
 
 import React from "react";
-import { Check, Copy, Link2, Loader2 } from "lucide-react";
+import { Check, Copy, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -96,7 +96,6 @@ export const FeedIntegrationDialog = React.memo(function FeedIntegrationDialog()
   return (
     <>
       <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <Link2 className="size-4" />
         Setup
       </Button>
       <Dialog

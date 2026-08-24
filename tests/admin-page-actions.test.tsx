@@ -416,7 +416,10 @@ describe("Admin page actions", () => {
     const olderSnapshots = screen.getByText("Show older snapshots");
     const setup = screen.getByRole("button", { name: "Setup" });
 
-    expect(screen.getByText("Sync With FEED")).toBeInTheDocument();
+    const sectionTitle = screen.getByText("Sync With FEED");
+    expect(sectionTitle).toBeInTheDocument();
+    expect(sectionTitle.parentElement?.querySelector(".lucide-database-arrow-up"))
+      .toBeInTheDocument();
     expect(
       screen.getByText("Configure LOTTO App to share daily operations data with FEED."),
     ).toBeInTheDocument();
