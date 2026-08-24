@@ -2,9 +2,9 @@
 ## Unreleased
 
 - **Connect FEED without Vercel or terminal work.** Open History on the Admin
-  dashboard, choose **Sync history with FEED**, and copy the displayed URL and
-  one-time token into FEED. LOTTO stores only a protected hash. Generating a
-  replacement immediately invalidates the old connection.
+  dashboard, choose **Setup** under **Sync With FEED**, and copy the displayed
+  URL and one-time token into FEED. LOTTO stores only a protected hash.
+  Generating a replacement immediately invalidates the old connection.
 
 ## Version 1.21.0 — August 22, 2026
 

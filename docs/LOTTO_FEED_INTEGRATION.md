@@ -64,7 +64,7 @@ code and no credential details.
 
 1. Apply the current `schema.sql` to Neon. It creates the singleton
    `feed_integration_credentials` row shape.
-2. Sign in to LOTTO and open **Admin → History → Sync history with FEED**.
+2. Sign in to LOTTO and open **Admin → History → Sync With FEED → Setup**.
 3. Select **Generate token**. LOTTO creates a URL-safe 384-bit value, displays
    it once, and stores only its SHA-256 hash.
 4. Copy the displayed LOTTO URL and token into FEED's administrator-only LOTTO
@@ -96,8 +96,9 @@ chat. Later verification uses only the stored hash.
 
 With LOTTO on port 3000 and FEED on ports 5173/3001:
 
-1. Open LOTTO's History card, select **Sync history with FEED**, and generate a
-   local token. The local file fallback writes only its hash under `data/`.
+1. Open LOTTO's History card, select **Setup** under **Sync With FEED**, and
+   generate a local token. The local file fallback writes only its hash under
+   `data/`.
 2. From `packages/backend` in FEED, run `npx prisma migrate deploy`, then start
    or restart the FEED backend.
 3. Verify LOTTO's endpoint without credentials. It should now return 401, not

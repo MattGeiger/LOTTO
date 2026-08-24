@@ -2460,7 +2460,6 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
                 >
                   Refresh snapshots
                 </Button>
-                <FeedIntegrationDialog />
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-sm text-foreground" htmlFor="snapshot-select" id="snapshot-label">
@@ -2522,6 +2521,16 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
                     </label>
                   )}
                 </div>
+              </div>
+              <Separator />
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-foreground">Sync With FEED</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Configure LOTTO App to share daily operations data with FEED.
+                  </p>
+                </div>
+                <FeedIntegrationDialog />
               </div>
             </CardContent>
           </Card>

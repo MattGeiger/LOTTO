@@ -9,6 +9,8 @@
   another token immediately invalidates the previous value.
 
 ### Changed
+- The History card now separates snapshot controls from a dedicated **Sync With
+  FEED** section, with a concise **Setup** action beneath older-snapshot controls.
 - The read-only FEED endpoint now authenticates against the singleton token
   store and returns stable credential-free error codes. A legacy
   `LOTTO_FEED_INTEGRATION_TOKEN` is accepted only until the first database token

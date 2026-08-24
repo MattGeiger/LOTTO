@@ -402,4 +402,26 @@ describe("Admin page actions", () => {
       expect(snapshotSelect.querySelectorAll("option")).toHaveLength(100);
     });
   });
+
+  it("places FEED setup beneath the older-snapshots control", async () => {
+    currentSnapshots = Array.from({ length: 101 }, (_, index) => ({
+      id: `snap-${index + 1}`,
+      timestamp: Date.now() - index * 1000,
+      path: `snap-${index + 1}`,
+    }));
+
+    render(<AdminPage />);
+    await screen.findByText("History");
+
+    const olderSnapshots = screen.getByText("Show older snapshots");
+    const setup = screen.getByRole("button", { name: "Setup" });
+
+    expect(screen.getByText("Sync With FEED")).toBeInTheDocument();
+    expect(
+      screen.getByText("Configure LOTTO App to share daily operations data with FEED."),
+    ).toBeInTheDocument();
+    expect(olderSnapshots.compareDocumentPosition(setup)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
 });
