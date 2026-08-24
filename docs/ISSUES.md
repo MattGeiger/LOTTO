@@ -1162,7 +1162,8 @@ Background white chosen to match the official logo presentation; user-approved.
 ## Issue 27: Intermittent full-suite-only failure in `readonly-display-public.test.tsx` (confirmed flake, not a stale test)
 
 ### Status
-- Documented as a known flake pattern; no code or test changes made. Not a bug.
+- Test stabilization applied after the same failure recurred during the
+  v1.21.0 production-readiness run. The product behavior was not defective.
 
 ### Observed
 `npm test` (full suite, `vitest run`) failed once on
@@ -1247,6 +1248,18 @@ mean the test is stale and "fixed" by loosening/removing its assertions.
 - **Only escalate to a real fix** (e.g. `waitFor` around the assertion,
   reduced worker parallelism) if it fails **repeatedly** or **reproducibly**,
   not from a single occurrence.
+
+### Recurrence and stabilization — 2026-08-24
+
+The v1.21.0 production-readiness run reproduced this failure in two consecutive
+full-suite runs while the file continued to pass in isolation. The failed DOM
+captured other Arabic labels with their final characters still replaced by the
+intentional language-change scramble animation, confirming that the assertion
+was reading during the animation rather than observing an RTL layout defect.
+
+The test now wraps the localized `notCalled` lookup and RTL-containment check in
+`waitFor`. This preserves every existing assertion and waits only for that
+label's own animation to settle. No component or user-facing behavior changed.
 
 ---
 
