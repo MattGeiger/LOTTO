@@ -1,6 +1,12 @@
 
 ## Unreleased
 
+## Version 1.21.1 — August 24, 2026
+
+- **See FEED pairing status at a glance.** The Sync With FEED section now shows
+  whether LOTTO has an active credential and when the active in-app token was
+  generated.
+
 - **Connect FEED without Vercel or terminal work.** Open History on the Admin
   dashboard, choose **Setup** under **Sync With FEED**, and copy the displayed
   URL and one-time token into FEED. LOTTO stores only a protected hash.
