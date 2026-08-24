@@ -15,6 +15,12 @@ process.env.BRAND_ASSETS_DIR = path.join(
   os.tmpdir(),
   `lotto-brand-assets-test-${process.pid}`,
 );
+// Pairing credentials are hashes, but tests must still never read or overwrite
+// the developer's local token file.
+process.env.FEED_INTEGRATION_TOKEN_FILE = path.join(
+  os.tmpdir(),
+  `lotto-feed-integration-token-test-${process.pid}.json`,
+);
 
 // Polyfill IntersectionObserver for jsdom (required by motion/animate-ui icons)
 if (typeof globalThis.IntersectionObserver === "undefined") {

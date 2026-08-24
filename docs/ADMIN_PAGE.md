@@ -15,6 +15,12 @@ The default admin view keeps these cards visible:
 - System reset
 - Share the live board
 
+The **History** card also contains **Sync history with FEED**. Its modal shows
+the deployment URL and lets an authorized administrator generate the one active
+read-only synchronization token. The plaintext is displayed once; LOTTO stores
+only its hash. Generating another token immediately invalidates the value
+currently saved in FEED.
+
 The following configuration cards live inside the collapsed **Advanced**
 accordion:
 

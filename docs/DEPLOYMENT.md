@@ -133,7 +133,6 @@ AUTH_BYPASS=false
 AUTH_SECRET=<generated>
 AUTH_TRUST_HOST=true
 DATABASE_URL=postgresql://...sslmode=require
-LOTTO_FEED_INTEGRATION_TOKEN=<separate long random secret>
 EMAIL_FROM=login@williamtemple.app
 RESEND_API_KEY=re_...
 ADMIN_EMAIL_DOMAIN=williamtemple.org
@@ -141,9 +140,17 @@ NODE_ENV=production
 ```
 
 Before deploying v1.21.0, apply `schema.sql` to the agency's Neon database so
-`raffle_session_summaries` exists. Configure the same integration token in
-FEED's administrator-only LOTTO connection settings. Rotate the two copies
-together; do not use `AUTH_SECRET`, a NextAuth token, or a database credential.
+`raffle_session_summaries` and the singleton `feed_integration_credentials`
+store exist. After deployment, sign in and use **Admin → History → Sync history
+with FEED** to generate the one active token, then copy the displayed URL and
+token into FEED's administrator-only connection settings. LOTTO stores only a
+hash; FEED encrypts its copy. Do not use `AUTH_SECRET`, a NextAuth token, or a
+database credential.
+
+An existing `LOTTO_FEED_INTEGRATION_TOKEN` Vercel variable remains a migration
+fallback only while no database token exists. Once an administrator generates
+the in-app token, the database hash takes precedence immediately and the
+legacy variable can be removed without redeploy-time pairing work.
 
 `NEXT_PUBLIC_LOTTO_BRAND` may remain unset for this existing project; the safe
 default is `william-temple-house`. It may also be set explicitly to that value.

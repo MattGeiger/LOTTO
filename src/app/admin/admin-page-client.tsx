@@ -51,6 +51,7 @@ import { ConfirmAction } from "@/components/confirm-action";
 import { BottomTabBar } from "@/components/navigation/bottom-tab-bar";
 import { OperatingHoursEditor } from "@/components/operating-hours-editor";
 import { DisplayLanguageRotationEditor } from "@/components/display-language-rotation-editor";
+import { FeedIntegrationDialog } from "@/components/feed-integration-dialog";
 import { AnnouncementSection } from "@/components/announcement-section";
 import { TranslationCard } from "@/components/translation/translation-card";
 import { ArchiveIcon, type ArchiveIconHandle } from "@/components/lucide-animated/archive";
@@ -2459,6 +2460,7 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
                 >
                   Refresh snapshots
                 </Button>
+                <FeedIntegrationDialog />
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-sm text-foreground" htmlFor="snapshot-select" id="snapshot-label">

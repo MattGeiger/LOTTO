@@ -46,7 +46,7 @@ changing it produces a new immutable revision.
 
 ```text
 GET /api/integrations/feed/v1/daily-summaries
-Authorization: Bearer <LOTTO_FEED_INTEGRATION_TOKEN>
+Authorization: Bearer <synchronization token>
 ```
 
 Optional parameters are `from`, `to`, `cursor`, and `limit` (default 100,
@@ -57,49 +57,47 @@ available. An empty page returns `nextCursor: null`, and FEED retains its last
 stored cursor.
 
 Responses use `Cache-Control: no-store`. Missing server configuration fails
-closed with 503; missing or invalid credentials return 401.
+closed with 503; missing or invalid credentials return 401 with a stable error
+code and no credential details.
 
 ## Deployment
 
-1. Apply `schema.sql` to Neon.
-2. A deployment administrator generates a dedicated URL-safe 384-bit token
-   locally with:
-
-   ```bash
-   node -e "console.log(require('node:crypto').randomBytes(48).toString('base64url'))"
-   ```
-
-   `openssl rand -base64 48` is an equivalent fallback. Treat the generated
-   value like a password: do not commit it, add it to documentation, or send it
-   through ordinary email or chat.
-3. The deployment administrator stores it as `LOTTO_FEED_INTEGRATION_TOKEN` in
-   LOTTO's Vercel Production environment as a **Sensitive** variable and
-   redeploys LOTTO.
-4. The same administrator, or another administrator receiving the secret
-   through the organization's password manager, enters the LOTTO base URL and
-   token once in FEED's connection dialog.
+1. Apply the current `schema.sql` to Neon. It creates the singleton
+   `feed_integration_credentials` row shape.
+2. Sign in to LOTTO and open **Admin → History → Sync history with FEED**.
+3. Select **Generate token**. LOTTO creates a URL-safe 384-bit value, displays
+   it once, and stores only its SHA-256 hash.
+4. Copy the displayed LOTTO URL and token into FEED's administrator-only LOTTO
+   connection dialog.
 5. Have a staff user choose **Sync now** and confirm the run is idempotent.
 
-Changing FEED's configured connection resets its local cursor deliberately so
-the source can be reconciled from the beginning. Source ids and content hashes
-make the replay safe.
+Only one token exists at a time. **Generate new token** atomically replaces the
+stored hash and immediately invalidates FEED's previous value. FEED then shows
+an actionable rejection without displaying any token details. Saving the new
+token against the same LOTTO URL preserves FEED's cursor; changing the LOTTO
+URL resets the source-specific cursor and replays that source's available
+window.
 
-Ordinary staff never obtain or handle this token. After the one-time
-administrator pairing, FEED stores it encrypted and staff only use **Sync
-now**. Rotate the credential by replacing the Vercel value, redeploying LOTTO,
-and saving the new value in FEED; never send it through email or chat.
+`LOTTO_FEED_INTEGRATION_TOKEN` remains a migration fallback only when the
+database contains no token. The first in-app generation takes precedence and
+becomes the sole valid credential; remove the legacy Vercel value afterwards.
+The old manual command remains useful only for that fallback:
+
+```bash
+node -e "console.log(require('node:crypto').randomBytes(48).toString('base64url'))"
+```
 
 ## Local full-stack validation
 
-The integration token is a machine credential, so LOTTO deliberately has no UI
-for creating or displaying it. It must remain server-side and must never be
-exposed through `NEXT_PUBLIC_*` configuration or a browser response.
+The integration token is a machine credential. LOTTO returns its plaintext only
+once, in response to the authenticated administrator generation action. It must
+never enter `NEXT_PUBLIC_*` configuration, logs, documentation, or ordinary
+chat. Later verification uses only the stored hash.
 
 With LOTTO on port 3000 and FEED on ports 5173/3001:
 
-1. Generate a local token with the same Node command used for production, add
-   it to LOTTO's `.env.local` as `LOTTO_FEED_INTEGRATION_TOKEN`, and restart
-   LOTTO.
+1. Open LOTTO's History card, select **Sync history with FEED**, and generate a
+   local token. The local file fallback writes only its hash under `data/`.
 2. From `packages/backend` in FEED, run `npx prisma migrate deploy`, then start
    or restart the FEED backend.
 3. Verify LOTTO's endpoint without credentials. It should now return 401, not
@@ -113,14 +111,5 @@ With LOTTO on port 3000 and FEED on ports 5173/3001:
    **Include as service** or **Needs review**. Run **Sync now** again to confirm
    the replay is a no-op.
 
-An authenticated command-line check can use the same local environment without
-printing the token:
-
-```bash
-set -a
-source .env.local
-set +a
-curl -i \
-  -H "Authorization: Bearer $LOTTO_FEED_INTEGRATION_TOKEN" \
-  http://localhost:3000/api/integrations/feed/v1/daily-summaries
-```
+Use FEED's **Sync now** for the authenticated check so the one-time plaintext
+does not have to be copied into a shell or environment file.
