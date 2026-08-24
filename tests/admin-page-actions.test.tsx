@@ -83,6 +83,12 @@ const oneSnapshot = [{ id: "snap-1", timestamp: Date.now(), path: "snap-1" }];
 let currentState = { ...baseState };
 let currentSnapshots: typeof twoSnapshots = [...twoSnapshots];
 let postBodies: Record<string, unknown>[] = [];
+let pairingStatus = {
+  configured: false,
+  source: null as "database" | "environment" | null,
+  createdAt: null as string | null,
+  lastUsedAt: null as string | null,
+};
 
 const installMatchMedia = () => {
   Object.defineProperty(window, "matchMedia", {
@@ -103,8 +109,11 @@ const installMatchMedia = () => {
 const installFetch = () => {
   vi.stubGlobal(
     "fetch",
-    vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const method = init?.method ?? "GET";
+      if (String(input).includes("/api/integrations/feed/token")) {
+        return new Response(JSON.stringify({ status: pairingStatus }), { status: 200 });
+      }
       if (method === "GET") {
         return new Response(JSON.stringify(currentState), { status: 200 });
       }
@@ -127,6 +136,12 @@ describe("Admin page actions", () => {
     currentState = { ...baseState };
     currentSnapshots = [...twoSnapshots];
     postBodies = [];
+    pairingStatus = {
+      configured: false,
+      source: null,
+      createdAt: null,
+      lastUsedAt: null,
+    };
     toastError.mockReset();
     toastSuccess.mockReset();
     installMatchMedia();
@@ -425,6 +440,28 @@ describe("Admin page actions", () => {
     ).toBeInTheDocument();
     expect(olderSnapshots.compareDocumentPosition(setup)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(await screen.findByText("Not configured")).toBeInTheDocument();
+    expect(screen.getByText(/Last token generated:/)).toHaveTextContent(
+      "Last token generated: Never",
+    );
+  });
+
+  it("shows active FEED configuration and the token generation timestamp", async () => {
+    const createdAt = "2026-08-24T18:04:00.000Z";
+    pairingStatus = {
+      configured: true,
+      source: "database",
+      createdAt,
+      lastUsedAt: "2026-08-24T18:12:00.000Z",
+    };
+
+    render(<AdminPage />);
+    await screen.findByText("History");
+
+    expect(await screen.findByText("Configured")).toBeInTheDocument();
+    expect(screen.getByText(/Last token generated:/)).toHaveTextContent(
+      `Last token generated: ${new Date(createdAt).toLocaleString()}`,
     );
   });
 });

@@ -64,16 +64,18 @@ it there; Reset does not add another question to the end-of-shift workflow.
 
 ## Connect Queue History To FEED
 
-An authorized administrator can open the **History** card and select **Sync
-history with FEED**. The window shows the LOTTO URL and lets you generate the
-one active synchronization token. Copy both values into FEED's **Data
-Management → LOTTO Queue Data → Configure** window, then use **Sync now** in
-FEED.
+An authorized administrator can open the **History** card, find **Sync With
+FEED**, and select **Setup**. A status tag shows whether LOTTO has an active
+token, and the line beneath the button shows when that token was generated.
+The window shows the LOTTO URL and lets you generate the one active
+synchronization token. Copy both values into FEED's **Data Management → LOTTO
+Queue Data → Configure** window, then use **Sync now** in FEED.
 
 The token is shown once. Generating another immediately invalidates the value
 already saved in FEED, so update FEED before the next synchronization. Ordinary
 daily synchronization and review happen in FEED; LOTTO's Reset workflow does
-not change.
+not change. The **Configured** tag confirms that LOTTO has a token; a successful
+FEED synchronization confirms that both applications hold the matching pair.
 
 ## The Advanced Section
 
