@@ -150,9 +150,13 @@ describe("ReadOnlyDisplay (public variant)", () => {
     expect(screen.getByTestId("ticket-grid")).toHaveAttribute("dir", "ltr");
     expect(screen.getByRole("button", { name: "12" })).toHaveAttribute("dir", "ltr");
     expect(screen.getByTestId("ticket-status-key")).toHaveAttribute("dir", "ltr");
-    expect(screen.getByText("لم يُنادى").closest("[dir='rtl']")).toContainElement(
-      screen.getByText("لم يُنادى"),
-    );
+    // The language-change scramble intentionally replaces characters for a
+    // fraction of a second after the translated heading first appears. Wait
+    // for this label's own animation to settle before asserting its RTL scope.
+    await waitFor(() => {
+      const notCalled = screen.getByText("لم يُنادى");
+      expect(notCalled.closest("[dir='rtl']")).toContainElement(notCalled);
+    });
   });
 
   it("shows 'Pending' when no ticket is currently being served", async () => {

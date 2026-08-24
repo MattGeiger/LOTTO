@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Stabilized the public-display RTL regression test against the intentional
+  language-change scramble animation after the full-suite-only timing failure
+  recurred during v1.21.0 production validation. User-facing RTL behavior is
+  unchanged.
+
 ### Added
 - **Administrators can pair LOTTO with FEED from the History card.** The modal
   shows the LOTTO URL, generates one high-entropy token, displays it once, and
