@@ -141,8 +141,8 @@ NODE_ENV=production
 
 Before deploying v1.21.0, apply `schema.sql` to the agency's Neon database so
 `raffle_session_summaries` and the singleton `feed_integration_credentials`
-store exist. After deployment, sign in and use **Admin → History → Sync history
-with FEED** to generate the one active token, then copy the displayed URL and
+store exist. After deployment, sign in and use **Admin → History → Sync With
+FEED → Setup** to generate the one active token, then copy the displayed URL and
 token into FEED's administrator-only connection settings. LOTTO stores only a
 hash; FEED encrypts its copy. Do not use `AUTH_SECRET`, a NextAuth token, or a
 database credential.

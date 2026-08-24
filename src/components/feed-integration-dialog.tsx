@@ -97,7 +97,7 @@ export const FeedIntegrationDialog = React.memo(function FeedIntegrationDialog()
     <>
       <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)}>
         <Link2 className="size-4" />
-        Sync history with FEED
+        Setup
       </Button>
       <Dialog
         open={open}
