@@ -43,6 +43,16 @@ CREATE INDEX IF NOT EXISTS raffle_session_summaries_cursor_idx
 CREATE INDEX IF NOT EXISTS raffle_session_summaries_service_date_idx
   ON raffle_session_summaries(service_date);
 
+-- One narrowly scoped credential authorizes FEED to read immutable queue
+-- summaries. LOTTO stores only its SHA-256 hash; generating another token
+-- atomically replaces this singleton and immediately invalidates the old one.
+CREATE TABLE IF NOT EXISTS feed_integration_credentials (
+  id TEXT PRIMARY KEY CHECK (id = 'singleton'),
+  token_hash TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_used_at TIMESTAMPTZ
+);
+
 -- NextAuth tables
 CREATE TABLE IF NOT EXISTS verification_token (
   identifier TEXT NOT NULL,

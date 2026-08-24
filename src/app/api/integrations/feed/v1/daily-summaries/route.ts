@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Matt Geiger, Temple Consulting, LLC.
 
-import { createHash, timingSafeEqual } from "node:crypto";
-
 import { NextResponse } from "next/server";
 
+import {
+  authorizeFeedIntegrationToken,
+  getFeedIntegrationStatus,
+} from "@/lib/feed-integration-token/index";
 import { stateManager } from "@/lib/state-manager";
 
 export const runtime = "nodejs";
@@ -45,24 +47,32 @@ const parseCursor = (value: string | null): Cursor | null => {
 const encodeCursor = (cursor: Cursor) =>
   Buffer.from(JSON.stringify(cursor), "utf-8").toString("base64url");
 
-const authorized = (header: string | null, expected: string) => {
-  if (!header?.startsWith("Bearer ")) return false;
-  const supplied = header.slice("Bearer ".length);
-  const suppliedHash = createHash("sha256").update(supplied).digest();
-  const expectedHash = createHash("sha256").update(expected).digest();
-  return timingSafeEqual(suppliedHash, expectedHash);
-};
-
 export async function GET(request: Request) {
-  const integrationToken = process.env.LOTTO_FEED_INTEGRATION_TOKEN;
-  if (!integrationToken) {
+  let configured = false;
+  let isAuthorized = false;
+  try {
+    configured = (await getFeedIntegrationStatus()).configured;
+    isAuthorized = configured
+      ? await authorizeFeedIntegrationToken(request.headers.get("authorization"))
+      : false;
+  } catch (error) {
+    console.error("[FEED integration] Unable to verify integration credential:", error);
     return noStoreJson(
-      { error: "The FEED integration is not configured on this LOTTO deployment." },
+      { error: { code: "FEED_INTEGRATION_AUTH_UNAVAILABLE", message: "LOTTO could not verify the FEED connection. Try again." } },
       503,
     );
   }
-  if (!authorized(request.headers.get("authorization"), integrationToken)) {
-    return noStoreJson({ error: "A valid integration token is required." }, 401);
+  if (!configured) {
+    return noStoreJson(
+      { error: { code: "FEED_INTEGRATION_NOT_CONFIGURED", message: "The FEED integration is not configured on this LOTTO deployment." } },
+      503,
+    );
+  }
+  if (!isAuthorized) {
+    return noStoreJson(
+      { error: { code: "INVALID_FEED_INTEGRATION_TOKEN", message: "The saved FEED synchronization token is no longer valid." } },
+      401,
+    );
   }
 
   const url = new URL(request.url);

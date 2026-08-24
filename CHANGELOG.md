@@ -2,10 +2,21 @@
 
 ## [Unreleased]
 
+### Added
+- **Administrators can pair LOTTO with FEED from the History card.** The modal
+  shows the LOTTO URL, generates one high-entropy token, displays it once, and
+  stores only its SHA-256 hash in Neon (or the local file fallback). Generating
+  another token immediately invalidates the previous value.
+
+### Changed
+- The read-only FEED endpoint now authenticates against the singleton token
+  store and returns stable credential-free error codes. A legacy
+  `LOTTO_FEED_INTEGRATION_TOKEN` is accepted only until the first database token
+  is generated.
+
 ### Documentation
-- The LOTTO → FEED deployment runbook now gives administrators the canonical
-  Node.js command for generating a URL-safe 384-bit integration token and
-  identifies Vercel's Production Sensitive-variable setting.
+- The LOTTO → FEED runbook, deployment guide, Admin architecture, and in-app
+  Staff Controls guide now document the one-token pairing workflow.
 
 ## [1.21.0] - 2026-08-22
 

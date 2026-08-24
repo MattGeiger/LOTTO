@@ -25,6 +25,7 @@ export const config = {
     "/api/translations/:path*",
     "/api/brand-config",
     "/api/brand-config/:path*",
+    "/api/integrations/feed/token",
     "/arcade/zombie-attack/:path*",
   ],
 };
@@ -38,6 +39,7 @@ const GATED_API_PREFIXES = [
   "/api/system-prompts",
   "/api/translations",
   "/api/brand-config",
+  "/api/integrations/feed/token",
 ];
 
 export async function proxy(request: NextRequest) {
