@@ -1884,3 +1884,33 @@ light logo required the configured dark surface.
   the user their image is bad.
 - Any new email consumer of a brand asset must carry the asset's presentation
   contract as well as its URL.
+
+## Issue 38: Hosted uploads could not be saved and the first picker action was unreliable
+
+### Status
+
+Resolved in v1.22.2.
+
+### Root Cause
+
+The v1.22.1 upload service correctly returned durable absolute Vercel Blob
+URLs, but the shared Appearance schema still enforced the older local-only
+root-relative asset contract. The wizard could preview a successful upload but
+then rejected every hosted logo and generated icon during Save.
+
+The upload trigger was also a visually styled `<label>` rather than a button.
+That indirect file-input activation did not provide reliable first-action
+button behavior across the supported browser/device range.
+
+### Fix and Prevention
+
+- The shared client/server schema accepts HTTPS URLs only when their hostname
+  is a public Vercel Blob host and their path is inside LOTTO's managed
+  `/brand-assets/` namespace. Arbitrary remote hosts, credentials, query
+  strings, fragments, and unmanaged Blob paths remain invalid.
+- Each upload control is now a real Shadcn button that explicitly invokes its
+  associated native file input.
+- Schema coverage exercises uploaded logo plus browser, Apple, and manifest
+  icon URLs and proves that arbitrary remote URLs still fail closed.
+- Interaction coverage proves the first button press opens the picker and the
+  first selected file is uploaded and applied.

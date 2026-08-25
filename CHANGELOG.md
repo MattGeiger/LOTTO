@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## [1.22.2] - 2026-08-24
+
+### Fixed
+
+- Appearance configurations can now save the durable public Vercel Blob URLs
+  returned for uploaded logos and generated install icons. Validation remains
+  fail-closed: only root-relative assets or HTTPS URLs in LOTTO's managed
+  `brand-assets/` namespace on a public Vercel Blob host are accepted.
+- Logo and app-icon upload controls now use real buttons that explicitly open
+  the native file picker, preventing the first selection from being lost by
+  the former label-based trigger.
+
+### Documentation
+
+- Extended the hosted-asset deployment acceptance check to require a complete
+  upload, save, reload, and redeploy cycle for every agency project.
+
 ## [1.22.1] - 2026-08-24
 
 ### Added

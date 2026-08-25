@@ -39,14 +39,42 @@ const httpUrl = z
     message: "must be an http(s) URL",
   });
 
-/** Root-relative or same-origin asset path (uploaded assets serve locally). */
+const PUBLIC_VERCEL_BLOB_HOST_SUFFIX = ".public.blob.vercel-storage.com";
+
+const isTrustedAssetReference = (value: string): boolean => {
+  if (
+    value.startsWith("/") &&
+    !value.startsWith("//") &&
+    !value.includes("\\")
+  ) {
+    return true;
+  }
+
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === "https:" &&
+      !url.username &&
+      !url.password &&
+      url.hostname.endsWith(PUBLIC_VERCEL_BLOB_HOST_SUFFIX) &&
+      url.hostname.length > PUBLIC_VERCEL_BLOB_HOST_SUFFIX.length &&
+      url.pathname.startsWith("/brand-assets/") &&
+      !url.search &&
+      !url.hash
+    );
+  } catch {
+    return false;
+  }
+};
+
+/** Built-in/local asset path or durable hosted asset written by LOTTO. */
 const assetPath = z
   .string()
   .trim()
   .min(2)
   .max(500)
-  .refine((value) => value.startsWith("/") && !value.startsWith("//"), {
-    message: "must be a root-relative path",
+  .refine(isTrustedAssetReference, {
+    message: "must be a root-relative path or trusted public Vercel Blob URL",
   });
 
 const cssColorValue = z

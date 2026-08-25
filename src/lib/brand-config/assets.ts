@@ -37,7 +37,7 @@ export const resolveAssetPath = (fileName: string): string | null => {
 };
 
 export type StoredAsset = {
-  /** Root-relative URL the app serves the asset from. */
+  /** Local root-relative URL or durable public Blob URL for the asset. */
   src: string;
   width: number;
   height: number;
