@@ -2,6 +2,68 @@
 
 ## [Unreleased]
 
+### Security
+
+- Hardened the authorization gate in `src/proxy.ts` to test for a populated
+  `session.user` rather than mere session truthiness. Auth.js can resolve
+  `auth()` to an *error-carrying* object instead of `null` when the config
+  factory throws, and the previous `!session` test would have treated that
+  object as authenticated. This proxy is the only authorization check in front
+  of the gated API prefixes, so the weaker form was exploitable rather than
+  cosmetic (GHSA-8fpg-xm3f-6cx3).
+- Admin email authorization now screens for non-ASCII characters on the raw
+  address before any normalization, and normalizes with NFKC before validating
+  rather than after. Unicode confusables such as U+FF20 FULLWIDTH COMMERCIAL AT
+  collapse into a plain `@`, so a post-normalization check cannot see the very
+  characters it exists to reject, and an address could otherwise change which
+  domain it belongs to after passing the structural test (GHSA-7rqj-j65f-68wh).
+- Moved `react-email` from `dependencies` to `devDependencies`. It is a
+  preview/CLI tool that no source file or npm script imports; the shipped
+  runtime library is `@react-email/components`. This removed `socket.io`,
+  `engine.io`, `ws`, `glob`/`minimatch`, `conf`/`ajv`, and `fast-uri` from the
+  production dependency tree, clearing 7 advisories with no runtime change.
+- Production advisories reduced from 16 (3 critical, 11 high, 2 moderate) to
+  9 (3 critical, 6 high). The remaining criticals are the Auth.js chain, whose
+  exploit paths are mitigated in the two code changes above pending the
+  `next-auth` upgrade.
+
+### Deferred
+
+- `next` 16.0.10 to 16.3.2 and `next-auth` 5.0.0-beta.30 to beta.32 are held
+  for a separate change. Both ship code into the client bundle, `next-auth`
+  onto `/login` specifically, and the declared support floor is iPadOS 15.8 on
+  2015 hardware where a dependency bump has previously broken hydration. They
+  require a preview deployment verified on the real device, per the new
+  Dependency Security section in `AGENTS.md`.
+- `nodemailer` 7 to 9 is held because `next-auth` declares a `^7.0.7` peer
+  range and every nodemailer advisory is in the SMTP transport path, which
+  production does not use (Resend is required in production). It should move
+  together with the `next-auth` upgrade.
+- `sharp` 0.35.3 was applied and then reverted to 0.34.5. Next.js 16.0.10
+  resolves its own `sharp` for the image optimizer, so raising only the root
+  copy stopped npm deduplicating them and loaded two different libvips dylibs
+  (8.18.3 and 8.17.3) into one process, which the Objective-C runtime reports
+  as a duplicate-class collision that "may cause spurious casting failures and
+  mysterious crashes". That risk lands on the brand-asset and `next/image`
+  paths. The libvips CVEs affect an admin-authenticated upload path, so the
+  correct fix is to raise both copies together with the Next.js upgrade rather
+  than to force one via an npm override.
+
+### Documentation
+
+- Added a Dependency Security section to `AGENTS.md` directing agents to run
+  `npm audit --omit=dev` at session start and to triage advisories by whether
+  a fix reaches the client bundle, since that is what carries risk against the
+  iPadOS 15 support floor.
+
+### Known issues
+
+- The full `package.json` (45.7 KB, including `devDependencies`, `scripts`, and
+  every pinned version) is inlined into a client chunk that loads on `/login`,
+  because four route files import `{ version }` from it. This discloses exact
+  dependency versions to any visitor and wastes bandwidth on legacy devices.
+  Fixing it changes the client bundle, so it is queued with the Next.js work.
+
 ## [1.24.0] - 2026-08-24
 
 ### Changed

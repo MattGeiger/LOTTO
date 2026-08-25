@@ -64,7 +64,14 @@ export async function proxy(request: NextRequest) {
 
   if ((isAdmin || isWriteApi) && !authBypass) {
     const session = await auth();
-    if (!session) {
+    // Check for a populated `user`, not merely a truthy session. Auth.js can
+    // resolve `auth()` to an *error-carrying* object rather than null when the
+    // config factory throws (missing DATABASE_URL / RESEND_API_KEY, etc.), and
+    // a bare `!session` test treats that object as "authenticated" and fails
+    // open. This proxy is the only authorization gate in front of the gated
+    // API prefixes below, so the existence check has to be the strict one.
+    // See GHSA-8fpg-xm3f-6cx3 (Auth.js existence-based checks fail open).
+    if (!session?.user) {
       if (pathname.startsWith("/api/")) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
