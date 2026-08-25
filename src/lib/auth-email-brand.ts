@@ -12,6 +12,8 @@ export type AuthEmailBrand = {
   tagline: string;
   publicAppUrl: string;
   logoUrl: string;
+  logoPresentation: ResolvedBrand["logo"]["presentation"];
+  logoSurface: string;
   senderName: string;
   primary: string;
   primaryForeground: string;
@@ -78,6 +80,8 @@ export const createAuthEmailBrand = (
     tagline: brand.tagline,
     publicAppUrl: brand.publicAppUrl,
     logoUrl: new URL(brand.logo.lightSrc, brand.publicAppUrl).toString(),
+    logoPresentation: brand.logo.presentation,
+    logoSurface: toHex(colors.surfaceDark),
     senderName,
     primary,
     primaryForeground:

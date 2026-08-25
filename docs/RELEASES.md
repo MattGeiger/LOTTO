@@ -1,3 +1,20 @@
+# LOTTO v1.22.1
+
+**Release Date:** August 24, 2026
+
+LOTTO v1.22.1 completes hosted Appearance asset persistence with public Vercel
+Blob storage while retaining the local filesystem fallback. Valid logos are
+inspected from their bytes, stored durably, and remain available to the app,
+palette extraction, install metadata, and authentication email across
+deployments. Upload failures now follow the ASK contract with a specific cause
+and useful next action.
+
+Authentication emails also honor the configured light-logo treatment. An
+appearance set to **Dark plate** renders its logo on the configured dark brand
+surface in both Magic Link and Verification Code messages.
+
+---
+
 # LOTTO v1.22.0
 
 **Release Date:** August 24, 2026

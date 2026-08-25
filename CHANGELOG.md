@@ -2,6 +2,43 @@
 
 ## [Unreleased]
 
+## [1.22.1] - 2026-08-24
+
+### Added
+
+- Durable public Vercel Blob storage for uploaded Appearance logos and generated
+  install icons, with the existing filesystem store retained for local and
+  self-hosted deployments.
+- Structured, ASK-compliant brand-upload errors that distinguish empty or
+  oversized files, unreadable images, unsafe SVG content, missing hosted
+  storage, storage outages, and unexpected service failures.
+
+### Changed
+
+- Hosted uploads now accept an image based on its inspected bytes instead of
+  rejecting a valid image because a browser supplied an incomplete MIME type.
+- The secure server-upload limit is now 4 MB, safely below Vercel Functions'
+  4.5 MB request-body limit, and is enforced before upload in the Appearance
+  wizard.
+
+### Fixed
+
+- Authentication emails now honor the active Appearance configuration's
+  **Dark plate** logo treatment. St. Johns' light-lettered mark renders on its
+  configured dark surface in both Magic Link and Verification Code messages;
+  transparent-treatment brands remain unchanged.
+- Valid self-contained SVGs containing internal class styles (including the
+  reported NVIDIA logo) no longer appear to fail as unsupported when the real
+  cause is Vercel's read-only deployment filesystem.
+- Palette extraction opts into anonymous CORS before loading public Blob logos,
+  keeping automatic color-story recommendations available for hosted uploads.
+
+### Documentation
+
+- Added the Vercel Blob provisioning and deployment contract, updated the
+  Appearance guide's format/size/error guidance, and recorded the root cause
+  and prevention rules in Issue 37.
+
 ## [1.22.0] - 2026-08-24
 
 ### Added

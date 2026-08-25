@@ -38,6 +38,21 @@ export function AuthEmailLayout({
   securityMessage,
   children,
 }: AuthEmailLayoutProps) {
+  const logo = (
+    <Img
+      src={brand.logoUrl}
+      width="260"
+      alt={brand.organizationName}
+      style={{
+        display: "block",
+        width: "260px",
+        maxWidth: "100%",
+        height: "auto",
+        margin: "0 auto",
+      }}
+    />
+  );
+
   return (
     <Html lang="en">
       <Head>
@@ -58,12 +73,33 @@ export function AuthEmailLayout({
           }}
         >
           <Section style={{ padding: "30px 40px 18px", textAlign: "center", backgroundColor: "#FFFFFF" }}>
-            <Img
-              src={brand.logoUrl}
-              width="260"
-              alt={brand.organizationName}
-              style={{ display: "block", width: "260px", maxWidth: "100%", height: "auto", margin: "0 auto" }}
-            />
+            {brand.logoPresentation === "dark-surface" ? (
+              <table
+                align="center"
+                width="320"
+                cellPadding="0"
+                cellSpacing="0"
+                role="presentation"
+                style={{ width: "320px", maxWidth: "100%", margin: "0 auto" }}
+              >
+                <tbody>
+                  <tr>
+                    <td
+                      align="center"
+                      style={{
+                        padding: "16px 20px",
+                        backgroundColor: brand.logoSurface,
+                        borderRadius: "14px",
+                      }}
+                    >
+                      {logo}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            ) : (
+              logo
+            )}
             <Text
               style={{
                 margin: "16px 0 0",

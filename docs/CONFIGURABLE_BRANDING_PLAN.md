@@ -238,6 +238,23 @@ uses `sharp` server-side. The blob host is added to `img-src` in the CSP the
 same way FEED origins are added to `connect-src` today. Asset records in the
 payload store the blob URL plus measured intrinsic dimensions.
 
+**Implemented in v1.22.1.** Hosted deployments select Blob when
+`BLOB_READ_WRITE_TOKEN` is present, or when Vercel OIDC is paired with
+`BLOB_STORE_ID`; local/self-hosted deployments continue to use
+`BRAND_ASSETS_DIR`. A Vercel deployment without a connected store fails the
+upload explicitly rather than attempting an ephemeral/read-only filesystem
+write. Blob objects are public because the active logo must be readable by the
+public app, installed-app metadata, browser palette extraction, and external
+email clients. Random pathname suffixes prevent collisions.
+
+Server uploads are capped at 4 MB so the multipart request remains below
+Vercel Functions' 4.5 MB body limit. The server determines the real format from
+the bytes; it does not reject a valid file only because the browser supplied a
+missing or incorrect MIME type. SVGs remain vector and must pass the existing
+self-contained/inert validation. Failures return structured ASK messages for
+unsafe SVGs, unreadable images, size limits, storage configuration/outages, and
+unexpected service failures.
+
 ### Runtime theme delivery (no FOUC)
 
 The root layout (`src/app/layout.tsx`) is a server component. It loads the

@@ -27,4 +27,9 @@ describe("M3: Content Security Policy headers must be configured", () => {
     expect(configSource).toContain("feedPublicInventoryHost");
     expect(configSource).toContain("frame-ancestors");
   });
+
+  it("allows durable public Vercel Blob brand images in CSP and Next Image", () => {
+    expect(configSource).toContain("https://*.public.blob.vercel-storage.com");
+    expect(configSource).toContain('hostname: "*.public.blob.vercel-storage.com"');
+  });
 });

@@ -7,8 +7,8 @@
 
 "use client";
 
-// Client-side palette extraction from a same-origin logo image (median-cut
-// over the opaque pixels). Shared by the LogoPalette picker (swatch chips)
+// Client-side palette extraction from a same-origin or CORS-enabled public
+// Blob logo image (median-cut over the opaque pixels). Shared by the LogoPalette picker (swatch chips)
 // and the automatic color-story recommendation
 // (`recommendColorStory` in src/lib/brand-theme/color-story.ts).
 
@@ -102,6 +102,7 @@ export const extractPalette = (
 export const extractPaletteFromImage = (src: string): Promise<PaletteEntry[]> =>
   new Promise((resolve) => {
     const image = new Image();
+    image.crossOrigin = "anonymous";
     image.src = src;
     image.onload = () => {
       try {

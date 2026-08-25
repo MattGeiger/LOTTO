@@ -136,8 +136,37 @@ DATABASE_URL=postgresql://...sslmode=require
 EMAIL_FROM=login@williamtemple.app
 RESEND_API_KEY=re_...
 ADMIN_EMAIL_DOMAIN=williamtemple.org
+BLOB_READ_WRITE_TOKEN=<added automatically when the public Blob store is connected>
 NODE_ENV=production
 ```
+
+### Hosted Appearance asset storage
+
+LOTTO v1.22.1 stores uploaded Appearance logos and generated install icons in
+a **public Vercel Blob store**. Public access is intentional: these brand assets
+must load on public LOTTO pages, in installed-app metadata, and from external
+email clients. The generated URL includes a random suffix and contains no
+private operational data.
+
+Configure this once in each agency's Vercel project:
+
+1. Open **Storage → Create Database → Blob**.
+2. Choose **Public** access. Name the store `lotto-brand-assets` (or another
+   agency-specific name).
+3. Connect it to **Production** and **Preview**. Vercel adds
+   `BLOB_READ_WRITE_TOKEN` automatically; keep the default variable name.
+4. Redeploy the project so the running Functions receive the credential.
+5. In **Admin → Advanced → Appearance**, upload a small test logo, save the
+   draft, reload, and verify the preview still loads. If the appearance is
+   activated, also request a test sign-in email and verify its logo loads.
+
+Do not paste the token into Appearance configuration, Neon, or client-visible
+variables. Local/self-hosted development does not need Blob and continues to
+write `data/brand-assets/` (or `BRAND_ASSETS_DIR`). On Vercel, LOTTO refuses the
+upload with a specific storage-configuration message if neither the Blob token
+nor a Vercel OIDC/store-id pairing is available; it never falls back to the
+deployment filesystem. Server uploads are limited to 4 MB so their multipart
+envelope remains below Vercel Functions' 4.5 MB request limit.
 
 Before deploying v1.22.0, apply the complete `schema.sql` to the agency's Neon
 database. The additive authentication migration adds
@@ -218,9 +247,8 @@ whatever registrar/host the agency actually uses.
 > first sign-in, and the deployment starts as the WTH-shaped default. The
 > compiled-profile path below remains valid as a fallback and template source.
 > For the configurable path, `schema.sql` must be applied
-> (it now includes `brand_configurations`), and hosted asset uploads still
-> require the Vercel Blob storage work planned in the branding plan — until
-> then uploaded assets persist only on filesystem-backed deployments.
+> (it now includes `brand_configurations`) and a public Vercel Blob store must
+> be connected as described above so uploaded assets persist across deploys.
 
 - The agency's brand profile already exists in `src/config/brand.ts` (see
   [`WHITE_LABEL_BRANDING_PLAN.md`](./WHITE_LABEL_BRANDING_PLAN.md) for the
@@ -282,6 +310,14 @@ whatever registrar/host the agency actually uses.
    below. Don't repeat that for a new agency.) Leave the **Custom Environment
    Variable Prefix** field empty — the app expects the bare `DATABASE_URL`
    name, not a prefixed one.
+
+### 2a. Provision hosted brand-asset storage
+
+Before an administrator uses the Appearance upload controls, create and connect
+the agency's public Vercel Blob store by following
+[Hosted Appearance asset storage](#hosted-appearance-asset-storage). This is
+separate from Neon: Neon stores the versioned Appearance configuration, while
+Blob stores the referenced logo/icon bytes.
 
 ### 3. Apply the database schema
 

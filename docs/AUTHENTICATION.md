@@ -80,7 +80,8 @@ Magic Link and Verification Code emails share one React Email shell. The shell
 resolves the active runtime brand at send time, including a saved Appearance
 configuration, and provides:
 
-- the agency logo plus organization/app identity as live text;
+- the agency logo plus organization/app identity as live text, including the
+  Appearance configuration's transparent or dark-plate light-logo treatment;
 - email-safe hexadecimal brand colors rather than CSS variables or OKLCH;
 - a branded sender display name over the deployment's verified `EMAIL_FROM`;
 - a message-specific preheader, plain-text alternative, expiry statement, and
