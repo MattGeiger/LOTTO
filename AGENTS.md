@@ -150,6 +150,47 @@ consistent with existing patterns and workflows.
 - Scope Arcade styles to Arcade route/layout files; avoid broad global theme changes in `src/app/globals.css`.
 - If using 8bitcn, install and consume it in an Arcade-only scope; do not overwrite global `theme-provider` or shared app theming.
 
+## Dependency Security (check at session start)
+- **Run `npm audit --omit=dev` at the start of every agent session** and report
+  the counts before proposing work. This repo has no CI audit and no Dependabot
+  by deliberate choice; that check is a human/agent responsibility, not an
+  automated one. `--omit=dev` matters: dev-only advisories are noise here.
+- Triage advisories by **whether the fix changes the client bundle**, not by
+  CVSS score alone. That is the axis that actually carries risk in this repo:
+  - *Server-only* (`sharp`, `nodemailer`, `@auth/pg-adapter`, API/route code,
+    `src/proxy.ts`): safe to patch and ship normally. A semver-major here is
+    usually lower risk than a patch bump that reaches the browser.
+  - *Client bundle* (`next`, `next-auth` via `next-auth/react`, `react`,
+    `tiptap`, `motion`, any markdown/regex-adjacent library): treat as a
+    legacy-compatibility change first and a security change second. See
+    `docs/BROWSER_SUPPORT.md`.
+- **Never bump a client-bundle dependency without real-device validation.** The
+  declared floor is iPadOS/iOS 15 (staff run a 2015 iPad mini 4 stuck on
+  iPadOS 15.8). `browserslist` does not protect against this: SWC downlevels
+  syntax and core-js polyfills APIs, but a **regex literal ships verbatim** and
+  parse-fails the whole chunk, aborting hydration — the page renders but is not
+  interactive, with no error page and no 500. A dependency bump caused exactly
+  this outage once (`remark-gfm` lookbehind; see `docs/ISSUES.md`).
+  Required sequence: build → `npm run check:legacy-bundles` →
+  `npm run smoke:legacy` → deploy to a **preview** off `dev` → open the preview
+  on the real iPad and confirm sign-in works → only then promote.
+  `check:legacy-bundles` only knows the patterns it already knows; a green scan
+  is necessary, not sufficient. The device test is the real gate.
+- When a change is expected to be server-only, **prove it**: diff the built
+  `.next/static/chunks` filenames/hashes before and after. An unchanged bundle
+  is evidence the iPad is unaffected; a changed one means device validation.
+- Keep developer tooling out of `dependencies`. Shipping a dev-only CLI as a
+  production dependency drags its whole tree into audit scope and the deploy
+  (`react-email`, the preview CLI, once accounted for 7 of 16 advisories on its
+  own; the runtime library is `@react-email/components`).
+- `next-auth` must stay **pinned exactly** (no `^`/`~`) — enforced by
+  `tests/security-nextauth-pin.test.ts`. It is on the `5.0.0-beta` channel and
+  will keep producing advisories; bumping it is a client-bundle change that
+  lands on `/login`.
+- Authorization is enforced in `src/proxy.ts`. Gated API routes rely on it, so
+  prefer `!session?.user` over `!session` (an errored auth object is truthy)
+  and keep in-route checks as defense in depth rather than trusting one gate.
+
 ## Deploy and Branching
 - Production is the Vercel project for `williamtemple.app`.
 - Use `dev` for staging/testing unless directed otherwise.

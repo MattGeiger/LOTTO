@@ -42,3 +42,23 @@ describe("H2: AUTH_BYPASS must not work in production", () => {
     expect(hasGuardBeforeBypass).toBe(true);
   });
 });
+
+// Recurrence guard for GHSA-8fpg-xm3f-6cx3 (Auth.js: configuration errors can
+// leave auth() resolving to a truthy error object, so existence-based checks
+// fail open). src/proxy.ts is the only authorization gate in front of the
+// gated API prefixes, so a regression to bare `!session` there is exploitable
+// rather than cosmetic.
+describe("H3: proxy auth check must not fail open on an errored session", () => {
+  const readProxy = () =>
+    fs.readFileSync(path.resolve(__dirname, "../src/proxy.ts"), "utf-8");
+
+  it("tests for a populated user rather than mere session truthiness", () => {
+    expect(readProxy()).toContain("!session?.user");
+  });
+
+  it("does not reintroduce the bare truthiness check", () => {
+    // Matches `if (!session)` / `if (!session )` but deliberately not
+    // `if (!session?.user)`, which is the correct form.
+    expect(readProxy()).not.toMatch(/if\s*\(\s*!session\s*\)/);
+  });
+});
