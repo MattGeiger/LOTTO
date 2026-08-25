@@ -52,6 +52,49 @@ type UploadResponse = {
 
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 
+function UploadButton({
+  kind,
+  label,
+  busy,
+  uploading,
+  onFile,
+}: {
+  kind: UploadKind;
+  label: string;
+  busy: boolean;
+  uploading: UploadKind | null;
+  onFile: (kind: UploadKind, file: File) => void;
+}) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  return (
+    <div>
+      <input
+        ref={inputRef}
+        id={`upload-${kind}`}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+        className="sr-only"
+        disabled={busy}
+        onChange={(event) => {
+          const file = event.currentTarget.files?.[0];
+          event.currentTarget.value = "";
+          if (file) onFile(kind, file);
+        }}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={busy}
+        onClick={() => inputRef.current?.click()}
+      >
+        {uploading === kind ? "Uploading…" : label}
+      </Button>
+    </div>
+  );
+}
+
 export function LogosStep({
   draft,
   onChange,
@@ -130,28 +173,6 @@ export function LogosStep({
     }
   };
 
-  const UploadButton = ({ kind, label }: { kind: UploadKind; label: string }) => (
-    <div>
-      <input
-        id={`upload-${kind}`}
-        type="file"
-        accept="image/png,image/jpeg,image/webp,image/svg+xml"
-        className="sr-only"
-        disabled={busy}
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file) void upload(kind, file);
-          event.target.value = "";
-        }}
-      />
-      <Button asChild variant="outline" size="sm" disabled={busy}>
-        <label htmlFor={`upload-${kind}`} className="cursor-pointer">
-          {uploading === kind ? "Uploading…" : label}
-        </label>
-      </Button>
-    </div>
-  );
-
   const headerSlot = (scope: "light" | "dark") => {
     const tokens = theme[scope] as Record<string, string>;
     const src = scope === "light" ? logo.lightSrc : logo.darkSrc;
@@ -189,8 +210,20 @@ export function LogosStep({
           {headerSlot("dark")}
         </div>
         <div className="flex flex-wrap gap-2">
-          <UploadButton kind="logo-light" label="Upload light-mode logo" />
-          <UploadButton kind="logo-dark" label="Upload dark-mode logo" />
+          <UploadButton
+            kind="logo-light"
+            label="Upload light-mode logo"
+            busy={busy}
+            uploading={uploading}
+            onFile={(kind, file) => void upload(kind, file)}
+          />
+          <UploadButton
+            kind="logo-dark"
+            label="Upload dark-mode logo"
+            busy={busy}
+            uploading={uploading}
+            onFile={(kind, file) => void upload(kind, file)}
+          />
         </div>
       </div>
 
@@ -243,7 +276,13 @@ export function LogosStep({
             </p>
           </div>
           <div className="ml-auto">
-            <UploadButton kind="icon" label="Upload square mark" />
+        <UploadButton
+          kind="icon"
+          label="Upload square mark"
+          busy={busy}
+          uploading={uploading}
+          onFile={(kind, file) => void upload(kind, file)}
+        />
           </div>
         </div>
         <p className="text-xs text-muted-foreground">

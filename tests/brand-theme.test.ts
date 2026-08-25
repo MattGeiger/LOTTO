@@ -637,6 +637,60 @@ describe("brand configuration schema", () => {
     );
   });
 
+  it("accepts LOTTO-hosted public Blob assets and rejects arbitrary remote assets", () => {
+    const blobOrigin = "https://store-id.public.blob.vercel-storage.com";
+    const hosted = {
+      ...ST_JOHNS_TEMPLATE,
+      logo: {
+        ...ST_JOHNS_TEMPLATE.logo,
+        lightSrc: `${blobOrigin}/brand-assets/logo-light.svg`,
+        darkSrc: `${blobOrigin}/brand-assets/logo-dark.svg`,
+      },
+      pwa: {
+        ...ST_JOHNS_TEMPLATE.pwa,
+        browserIcons: [
+          {
+            src: `${blobOrigin}/brand-assets/icon-32.png`,
+            sizes: "32x32",
+            type: "image/png",
+          },
+        ],
+        appleIcons: [
+          {
+            src: `${blobOrigin}/brand-assets/icon-256.png`,
+            sizes: "256x256",
+            type: "image/png",
+          },
+        ],
+        manifestIcons: [
+          {
+            src: `${blobOrigin}/brand-assets/icon-512.png`,
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any" as const,
+          },
+        ],
+      },
+    };
+
+    expect(parseBrandConfig(hosted).ok).toBe(true);
+    expect(
+      parseBrandConfig({
+        ...hosted,
+        logo: { ...hosted.logo, lightSrc: "https://attacker.example/logo.svg" },
+      }).ok,
+    ).toBe(false);
+    expect(
+      parseBrandConfig({
+        ...hosted,
+        logo: {
+          ...hosted.logo,
+          lightSrc: `${blobOrigin}/unmanaged/logo.svg`,
+        },
+      }).ok,
+    ).toBe(false);
+  });
+
   it("rejects malformed payloads without throwing", () => {
     expect(parseBrandConfig(null).ok).toBe(false);
     expect(parseBrandConfig({}).ok).toBe(false);

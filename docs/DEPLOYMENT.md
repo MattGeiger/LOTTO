@@ -156,9 +156,12 @@ Configure this once in each agency's Vercel project:
 3. Connect it to **Production** and **Preview**. Vercel adds
    `BLOB_READ_WRITE_TOKEN` automatically; keep the default variable name.
 4. Redeploy the project so the running Functions receive the credential.
-5. In **Admin → Advanced → Appearance**, upload a small test logo, save the
-   draft, reload, and verify the preview still loads. If the appearance is
-   activated, also request a test sign-in email and verify its logo loads.
+5. In **Admin → Advanced → Appearance**, upload a small test logo and install
+   mark, then save the draft. Reload and verify both previews still load.
+6. Redeploy once more and verify the saved previews still load. This complete
+   upload/save/reload/redeploy cycle is the release gate for durable branding.
+   If the appearance is activated, also request a test sign-in email and verify
+   its logo loads.
 
 Do not paste the token into Appearance configuration, Neon, or client-visible
 variables. Local/self-hosted development does not need Blob and continues to

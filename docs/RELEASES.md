@@ -1,3 +1,16 @@
+# LOTTO v1.22.2
+
+**Release Date:** August 24, 2026
+
+LOTTO v1.22.2 completes the hosted asset contract introduced in v1.22.1.
+Appearance validation now accepts only LOTTO-managed public Vercel Blob URLs
+or the existing local root-relative paths, allowing uploaded logos and install
+icons to save without opening configuration to arbitrary remote assets. Upload
+controls also use explicit buttons so the first file selection is handled
+reliably.
+
+---
+
 # LOTTO v1.22.1
 
 **Release Date:** August 24, 2026

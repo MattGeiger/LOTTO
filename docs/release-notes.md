@@ -1,6 +1,15 @@
 
 ## Unreleased
 
+## Version 1.22.2 — August 24, 2026
+
+- **Uploaded branding can now be saved.** Logos and install icons stored in an
+  agency's connected Vercel Blob store pass the Appearance safety check and
+  remain available after reloads and deployments.
+- **The first upload selection is reliable.** Logo and app-icon controls now
+  open the native file picker from a real button instead of depending on an
+  indirect label click.
+
 ## Version 1.22.1 — August 24, 2026
 
 - **Logos keep their intended background in sign-in email.** If an Appearance
