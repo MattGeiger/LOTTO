@@ -11,7 +11,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ComponentProps } from "react";
 
 import { ReadOnlyDisplay } from "@/components/readonly-display";
+import { BrandProvider } from "@/contexts/brand-context";
 import { LanguageProvider } from "@/contexts/language-context";
+import { resolvedBrandFromProfile } from "@/lib/brand-config/types";
 import type { RaffleState } from "@/lib/state-types";
 
 // --- Mocks ----------------------------------------------------------------
@@ -129,6 +131,55 @@ describe("ReadOnlyDisplay (public variant)", () => {
     await waitFor(() => {
       expect(screen.getByText("Drawing Order")).toBeInTheDocument();
     });
+  });
+
+  it("renders translated active client-facing service copy from the language pack", async () => {
+    window.localStorage.setItem("display-language", "bs");
+    const serviceLabel = "Community Library Service For";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes("/api/translations/pack")) {
+          return new Response(
+            JSON.stringify({
+              pack: {
+                code: "bs",
+                uiStrings: {},
+                inventory: {},
+                brandStrings: { [serviceLabel]: "Usluga biblioteke zajednice za" },
+                announcement: null,
+              },
+            }),
+            { status: 200 },
+          );
+        }
+        if (url.includes("/api/languages?client")) {
+          return new Response(
+            JSON.stringify({
+              languages: [
+                { code: "en", label: "English", ready: true },
+                { code: "bs", label: "Bosanski", ready: true },
+              ],
+            }),
+            { status: 200 },
+          );
+        }
+        return new Response(JSON.stringify(baseState), { status: 200 });
+      }),
+    );
+    const brand = { ...resolvedBrandFromProfile(), serviceLabel };
+
+    render(
+      <BrandProvider brand={brand}>
+        <LanguageProvider>
+          <ReadOnlyDisplay displayVariant="public" />
+        </LanguageProvider>
+      </BrandProvider>,
+    );
+
+    expect(await screen.findByText("Usluga biblioteke zajednice za")).toBeInTheDocument();
+    expect(screen.queryByText(serviceLabel)).not.toBeInTheDocument();
   });
 
   it("renders ticket grid with generated order tickets", async () => {

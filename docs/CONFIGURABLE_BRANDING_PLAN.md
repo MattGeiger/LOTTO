@@ -122,6 +122,7 @@ The persisted configuration mirrors the existing `BrandProfile` type in
 | Group | Configurable values | Notes |
 | --- | --- | --- |
 | Identity | organization name, app name, PWA short name, tagline, page descriptions | Same fields as `BrandProfile.metadata`; descriptions offered with sensible generated defaults from the organization name. |
+| Public copy | public service label | Client-facing replacement for “Food Pantry Service For.” The active value enters Translation Management and is localized for every enabled non-English visitor language; blank uses the hand-authored standard string. |
 | Links | organization website, public app URL | Same as today. |
 | Logos | uploaded light/dark logo images, presentation mode (`transparent` / `dark-surface`) | Intrinsic dimensions measured server-side on upload, never typed by the user. Rendered through the existing height-capped `BrandLogo` slot. |
 | Icons | one uploaded square mark | Full browser/Apple/manifest/install set (32–512 px, padded, rounded) generated server-side; no per-size uploads. |
@@ -297,7 +298,9 @@ Steps:
    scratch (which pre-fills the neutral WTH-shaped defaults with placeholder
    graphics).
 2. **Identity** — organization name, app name, PWA short name, tagline,
-   descriptions (with generated defaults), links.
+   descriptions (with generated defaults), links, and the client-facing public
+   service label. Only that public service label enters localization; sign-in
+   and Admin copy remains staff-facing English.
 3. **Logos & icons** — upload light/dark logos, choose presentation mode,
    upload the square mark; server measures dimensions and generates the icon
    set; the step previews the header slot at its capped height and the

@@ -1914,3 +1914,157 @@ button behavior across the supported browser/device range.
   icon URLs and proves that arbitrary remote URLs still fail closed.
 - Interaction coverage proves the first button press opens the picker and the
   first selected file is uploaded and applied.
+
+## Issue 39: Runtime public copy and Arcade bypassed the shared localization catalog
+
+### Status
+
+Resolved in v1.22.3.
+
+### Root Cause
+
+The configurable public service label was rendered as raw Appearance text.
+LOTTO's translation content discovery, missing-translation audit, language-pack
+builder, and client context knew about hardcoded UI strings, announcements, and
+inventory, but not this runtime visitor-facing string. **Find Missing** could
+therefore report complete coverage while the public board remained in English.
+
+Arcade was added before dynamic languages and retained its own static map of the
+eight core language codes and labels. Its UI consumed the shared translation
+context, but its picker did not consume `availableLanguages`. Enabled catalog
+languages were consequently translated in Arcade content but impossible to
+select there; a persisted dynamic selection could also lack a native trigger
+label on a direct Arcade load.
+
+### Fix and Prevention
+
+- Translation content now has a `brand_string` domain for active client-facing
+  Appearance copy. The service label is discovered, audited for every enabled
+  non-English language, prioritized, delivered in language packs, and rendered
+  with safe English fallback. Stale label translations are retained for history
+  but excluded from the active pack.
+- The localization boundary is explicit: client-facing public copy is
+  translatable; sign-in and Admin Appearance copy is intentionally not.
+- Arcade now renders `availableLanguages` from `LanguageProvider`, loads the
+  shared catalog on open or when a persisted code is absent locally, uses the
+  catalog's native labels, and applies the established fixed-height ScrollArea
+  when the list grows.
+- Any future client-facing language picker must consume the shared catalog; a
+  private `Record<Language, string>` is not an acceptable source of options.
+- Regression coverage verifies brand-copy readiness and pack filtering plus
+  dynamic Arcade discovery, labeling, and selection.
+
+## Issue 40: Visitor language readiness polled an unqueued condition indefinitely
+
+### Status
+
+Resolved in v1.22.3.
+
+### Root Cause
+
+The homepage exposed enabled-but-incomplete dynamic languages immediately. If
+a visitor selected one, a dedicated readiness branch called
+`GET /api/languages?client` every four seconds until the language became ready.
+That loop was separate from LOTTO's operating-hours-aware adaptive queue polling:
+it had no backoff, visibility pause, timeout, or terminal error state.
+
+The defect became visible when active public brand copy joined the translation
+contract. Bosnian already had every UI string translated but no `brand_string`
+row for the newly active service label, so readiness became false. No
+translation request had been queued; the browser was polling a condition that
+could not change by itself.
+
+On Vercel, one stuck tab could issue 21,600 dynamic requests per day. Each
+request could consume an Edge Request and Function invocation and fan out into
+multiple Neon reads. Multiple visitors or abandoned tabs multiplied the waste.
+
+### Fix and Prevention
+
+- Enabling a dynamic language remains an authenticated Admin action and
+  automatically runs the complete **Find Missing Translations** staged sweep.
+  The progress UI owns this work and reports failures for staff review.
+- The public language catalog now contains the eight core languages plus only
+  dynamic languages whose required UI and active public-brand translations are
+  complete. Incomplete languages never enter Home, Display, or Arcade menus.
+- The visitor `getting-ready` branch and its fixed four-second API interval were
+  removed. A persisted dynamic code that is no longer in the ready catalog
+  safely returns to English after the catalog loads.
+- Serverless polling guidance now lives in `AGENTS.md`: never poll an unqueued
+  condition; avoid fixed unbounded intervals; use bounded adaptive backoff,
+  visibility pausing, caching, and request-count tests when polling is necessary.
+- The authenticated staged translation runner is explicitly finite: it stops if
+  a chunk does not reduce the queue and caps one staff action at 100 follow-up
+  requests (up to 10,000 rows at the current batch size). Remaining work stays hidden
+  and is reported for staff recovery rather than becoming an API loop.
+- Regression coverage asserts that incomplete dynamic languages are withheld
+  and that the homepage does not start a language-readiness request loop; job
+  progression tests also assert completion, no-progress termination, and the
+  hard request budget.
+
+## Issue 41: Translation sent one provider request and one store write per string
+
+### Status
+
+Resolved in v1.24.0.
+
+### Root Cause
+
+LOTTO's translation engine inherited a single-string provider primitive. A
+staged job selected only a small queue slice and called the provider once for
+every row, then persisted each response independently. That design did not use
+the structured-output and large-context capabilities of current models such as
+Gemini 2.5 Flash-Lite. It multiplied Vercel execution time, provider request
+count, latency, and database traffic without improving translation quality.
+
+AI Configuration also treated the model's advertised output-token limit as the
+ordinary per-request setting. Selecting Gemini could therefore copy its 65,536
+token capability directly into LOTTO's translation configuration even though
+the application's output was only a modest set of short UI phrases.
+
+### Approaches
+
+1. Keep single-row calls and increase concurrency. This shortens wall time but
+   preserves excessive provider and database traffic and raises rate-limit
+   pressure.
+2. Send every missing translation for every language and domain at once. This
+   minimizes calls but creates large failure domains, weak recovery behavior,
+   and difficult source/result alignment.
+3. Use bounded homogeneous structured batches with stable ids, strict complete-
+   set validation, one bulk write, and a separate operational token budget.
+   This captures the model's useful capacity without making one response an
+   all-or-nothing translation deployment.
+
+### Fix and Prevention
+
+- The engine groups at most 100 pending rows by target language and content
+  type and sends one structured provider request.
+- Every output must preserve each input row id exactly. Missing, duplicate,
+  empty, changed, or invented items reject the response before any translation
+  is written.
+- Validated results enter the file or Postgres store through one bulk update.
+  Aggregate provider token usage is allocated deterministically across rows so
+  existing per-row usage and cost reporting remains useful.
+- A malformed structured response can split into two smaller batches once. An
+  HTTP, authentication, quota, provider, or network failure receives no
+  recursive retry and marks the affected rows failed for deliberate recovery.
+- The provider output limit remains truthful model metadata. LOTTO's distinct
+  translation output budget defaults to 8,192, scales downward for small
+  batches, and is capped at 16,384. Legacy configurations that copied the
+  provider ceiling normalize safely at runtime.
+- Regression tests assert one provider call and one store write for 100 rows,
+  exact token-allocation totals, strict structured validation, bounded splitting,
+  and the absence of HTTP retry storms.
+
+### Verification
+
+- The full v1.24.0 suite passes: 107 files and 770 tests, plus lint, the
+  legacy-bundle scan, and both William Temple House and St. Johns production
+  builds.
+- A local end-to-end run against the configured Google
+  `gemini-2.5-flash-lite` translated 174 Armenian rows with zero pending or
+  failed results. It used four expected homogeneous batches: two single-row
+  visitor-copy domains plus UI batches of 100 and 72.
+- Real adaptive output budgets ranged from 2,048 to 7,304 tokens—below LOTTO's
+  8,192 default and far below the model's 65,536 capability. Armenian entered
+  the client catalog only after all required rows completed; the temporary
+  language enablement was then removed after validation.

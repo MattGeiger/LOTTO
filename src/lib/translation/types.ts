@@ -6,10 +6,15 @@
 // is not covered by this license; see TRADEMARKS.md.
 
 // Translation Management types (ported/adapted from FEED). LOTTO's translatable
-// content is UI strings (from the language context) and the active announcement,
-// plus staff-authored custom strings.
+// content is UI strings (from the language context), visitor-facing brand copy,
+// the active announcement, and inventory names.
 
-export const TRANSLATION_TYPES = ["ui_string", "announcement", "inventory"] as const;
+export const TRANSLATION_TYPES = [
+  "ui_string",
+  "brand_string",
+  "announcement",
+  "inventory",
+] as const;
 export type TranslationType = (typeof TRANSLATION_TYPES)[number];
 
 export const TRANSLATION_STATUSES = ["pending", "completed", "failed"] as const;
@@ -42,4 +47,14 @@ export type TranslationKey = {
   originalText: string;
   language: string;
   type: TranslationType;
+};
+
+export type TranslationBatchUpdate = {
+  id: number;
+  translatedText: string | null;
+  status: TranslationStatus;
+  metadata: Record<string, unknown> | null;
+  promptTokens: number | null;
+  completionTokens: number | null;
+  totalCost: number | null;
 };

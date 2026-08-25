@@ -25,6 +25,7 @@ import {
   getServiceEndpoint,
 } from "@/lib/ai/model-specs";
 import type { AiServiceType } from "@/lib/ai/types";
+import { recommendedTranslationOutputBudget } from "@/lib/ai/output-budget";
 
 import { StepWrapper } from "../shared/StepWrapper";
 import type { ApiKeyConfigData, BaseStepProps } from "../shared/types";
@@ -43,7 +44,7 @@ const applyModelSpecs = (
     unitPrice: "per_1m",
     inputTokenLimit: spec.inputTokenLimit,
     outputTokenLimit: spec.outputTokenLimit,
-    maxTokens: spec.outputTokenLimit,
+    maxTokens: recommendedTranslationOutputBudget(spec.outputTokenLimit),
   };
 };
 

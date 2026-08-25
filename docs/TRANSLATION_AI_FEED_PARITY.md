@@ -60,6 +60,14 @@ Relevant FEED frontend paths:
   warning. This is a deployment-capability boundary, not a replacement of
   FEED's Translation Management interaction pattern. Inventory remains present
   unchanged for FEED-enabled profiles.
+- LOTTO ports FEED's batch-translation principle through provider-neutral REST
+  adapters rather than provider SDK classes. A batch contains at most 100 rows
+  sharing one target language and content type, uses stable row identifiers,
+  validates the exact response set, and performs one bulk store write.
+- The provider model's advertised output limit and LOTTO's operational output
+  budget are separate fields. The operational default is 8,192 tokens, the
+  per-request estimate scales downward with source content, and the app ceiling
+  is 16,384 even when a provider advertises a larger maximum.
 
 ## Current LOTTO Implementation Map
 
@@ -86,3 +94,5 @@ Before merging Translation AI UI changes:
 - Do action menus, tables, dialogs, and scroll areas preserve FEED behavior?
 - Are docs and `CHANGELOG.md` updated?
 - Did `npm run lint`, targeted Vitest tests, and `npm run build` pass?
+- Do request-count tests prove that 100 compatible rows use one provider call
+  and one store write, and that non-validation failures do not retry?

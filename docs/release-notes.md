@@ -1,6 +1,35 @@
 
 ## Unreleased
 
+## Version 1.24.0 — August 24, 2026
+
+- **New languages prepare with far fewer AI requests.** LOTTO translates up to
+  100 related phrases together instead of contacting the provider once for
+  every phrase.
+- **Translation results stay safely matched to their source.** Every batch is
+  checked for missing, duplicate, or unexpected items before it is saved.
+- **Provider problems remain bounded and recoverable.** LOTTO may split one
+  malformed batch once, but authentication, quota, and service failures stop
+  cleanly and remain available for staff review or retry.
+- **Token settings now say what they control.** AI Configuration distinguishes
+  the model's supported output limit from LOTTO's per-request translation
+  budget, which defaults to 8,192 tokens.
+
+## Version 1.22.3 — August 24, 2026
+
+- **Custom public service headings are translated.** If Appearance replaces
+  “Food Pantry Service For,” LOTTO now includes that client-facing wording in
+  **Find Missing** and shows its completed translation on the public board.
+- **Enabled languages are available in the Arcade.** The Arcade language menu
+  now shows the same organization-enabled options as Home and Display,
+  including dynamic languages such as Bosnian.
+- **New languages prepare automatically before guests see them.** Saving a new
+  language starts the complete missing-translation sweep in Admin. It appears
+  in Home, Display, and Arcade menus only after preparation succeeds.
+- **No more endless language-readiness requests.** Guests are offered only
+  ready languages, so an incomplete translation cannot leave a browser making
+  repeated background requests.
+
 ## Version 1.22.2 — August 24, 2026
 
 - **Uploaded branding can now be saved.** Logos and install icons stored in an

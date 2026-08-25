@@ -1,8 +1,9 @@
 # AI-Powered Translation
 
 LOTTO ships with eight core languages built in. Staff can turn on **AI-powered
-translation** to add many more, covering the app's text and "What's in stock"
-inventory names.
+translation** to add many more, covering client-facing app text, the active
+custom public service label, announcements, and "What's in stock" inventory
+names. Sign-in and Admin Appearance copy is staff-facing and is not localized.
 
 ## Language Settings
 
@@ -10,8 +11,12 @@ inventory names.
    **Advanced**, and open the **Translation** card's **Language Settings** tab.
 2. Search the full language list and turn on any you need. The eight core
    languages are always on and can't be disabled.
-3. A newly enabled language stays hidden from guests until its translations
-   are ready — usually just a few minutes.
+3. Choose **Save changes**. LOTTO immediately runs the same complete sweep as
+   **Find Missing**, queues every gap, and shows progress. Keep LOTTO open until
+   preparation finishes.
+4. The new language stays hidden from Home, Display, and Arcade menus until its
+   required translations complete. If anything fails, LOTTO keeps the language
+   hidden and directs you to **Translation Management** to review and retry it.
 
 ## AI Configuration
 
@@ -24,18 +29,33 @@ Before translations can run, connect at least one AI provider:
    Keys are encrypted and never shown again after saving.
 3. Use **Test** to confirm the key works before relying on it.
 
+The model's **Output Token Limit** is its advertised technical capability. The
+separate **Translation Output Budget Per Request** controls how much LOTTO may
+ask that model to return at once. LOTTO defaults this budget to 8,192 tokens,
+adapts it downward for short jobs, and never permits more than 16,384. A larger
+model context window therefore does not make an ordinary translation request
+needlessly large or expensive.
+
 ## Translation Management
 
 Once a provider is configured, the **Translation Management** tab handles the
 actual translating:
 
-- **Find Missing** scans the app's text and inventory names for anything not
-  yet translated into an enabled language and queues it.
-- Queued items translate automatically in the background; the table shows
-  each one's status (pending / completed / failed).
+- **Find Missing** scans client-facing app text, the active custom public
+  service label, announcements, and inventory names for anything not yet
+  translated into an enabled language and queues it.
+- Queued items translate through staged requests while LOTTO remains open. Up
+  to 100 items with the same language and content type share one structured AI
+  request, and LOTTO verifies every item before saving the batch. The table
+  still shows each item's status (pending / completed / failed).
 - **Recover stuck** re-runs anything that's been pending too long.
 - Any translation can be edited, retried, or deleted by hand if the
   AI-generated wording needs a human touch.
+
+If a provider returns malformed structured output, LOTTO splits that batch once
+to isolate the problem. Authentication, quota, network, and provider failures
+are not repeatedly retried in the background; affected rows remain visible so
+staff can correct the configuration or retry them deliberately.
 
 ## What To Read Next
 

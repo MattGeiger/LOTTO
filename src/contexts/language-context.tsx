@@ -24,9 +24,9 @@ type LanguageContextType = {
   isLanguageHydrated: boolean;
   t: (key: string) => string;
   /**
-   * Visitor-selectable languages: the eight core options plus every admin-enabled
-   * catalog language. Each carries `ready` — false while its translation pack is
-   * still being prepared (Feature 4).
+   * Visitor-selectable languages: the eight core options plus admin-enabled
+   * catalog languages whose required translation pack is complete. Incomplete
+   * languages are withheld by the server rather than exposed as a client state.
    */
   availableLanguages: ReadonlyArray<LanguageOption>;
   /** True while the dynamic language list is being fetched (for skeletons). */
@@ -36,12 +36,14 @@ type LanguageContextType = {
    * on mount; it fetches once per provider lifetime.
    */
   ensureAvailableLanguagesLoaded: () => void;
-  /** Whether a given language's pack is complete (core = always true). */
-  isLanguageReady: (code: Language) => boolean;
-  /** Re-fetch the dynamic language list (e.g. while polling a "getting ready" gate). */
-  refreshAvailableLanguages: () => Promise<void>;
   /** Translated active announcement for the current language, when available. */
   announcementTranslation: string | null;
+  /**
+   * Translate active visitor-facing Appearance copy, such as the configured
+   * service label. Returns null when English is active or no completed brand
+   * translation exists.
+   */
+  translateBrandString: (englishText: string) => string | null;
   /**
    * Translate an English inventory name (category/item) into the current
    * language using the DB-translated pack. Returns null when there's no
@@ -72,10 +74,12 @@ export function LanguageProvider({
   const [isLanguageHydrated, setIsLanguageHydrated] = React.useState(false);
   const [availableLanguages, setAvailableLanguages] =
     React.useState<ReadonlyArray<LanguageOption>>(LANGUAGE_OPTIONS);
+  const [availableLanguagesResolved, setAvailableLanguagesResolved] = React.useState(false);
   const [pack, setPack] = React.useState<{
     code: string;
     uiStrings: Record<string, string>;
     inventory: Record<string, string>;
+    brandStrings: Record<string, string>;
     announcement: string | null;
   } | null>(null);
   const packCacheRef = React.useRef(new Map<string, NonNullable<typeof pack>>());
@@ -124,7 +128,10 @@ export function LanguageProvider({
         (entry): entry is LanguageOption =>
           typeof entry?.code === "string" && typeof entry?.label === "string",
       );
-      if (options.length >= LANGUAGE_OPTIONS.length) setAvailableLanguages(options);
+      if (options.length >= LANGUAGE_OPTIONS.length) {
+        setAvailableLanguages(options);
+        setAvailableLanguagesResolved(true);
+      }
     } catch {
       // Offline/unavailable — keep the core options.
     } finally {
@@ -139,19 +146,18 @@ export function LanguageProvider({
     void fetchAvailableLanguages();
   }, [fetchAvailableLanguages]);
 
-  const refreshAvailableLanguages = React.useCallback(async () => {
-    languagesRequestedRef.current = true;
-    await fetchAvailableLanguages();
-  }, [fetchAvailableLanguages]);
+  // A dynamic selection can outlive its readiness (for example after active
+  // public brand copy changes). Once the ready-only catalog resolves, discard
+  // an unavailable persisted code instead of showing a dead language state.
+  React.useEffect(() => {
+    if (!availableLanguagesResolved || isLanguageCode(language)) return;
+    if (availableLanguages.some((entry) => entry.code === language)) return;
 
-  const isLanguageReady = React.useCallback(
-    (code: Language) => {
-      if (code === "en" || isLanguageCode(code)) return true;
-      const option = availableLanguages.find((entry) => entry.code === code);
-      return option?.ready ?? false;
-    },
-    [availableLanguages],
-  );
+    setLanguageState("en");
+    setHasSessionLanguageOverride(false);
+    window.sessionStorage.removeItem(DISPLAY_LANGUAGE_SESSION_STORAGE_KEY);
+    if (persist) window.localStorage.removeItem(DISPLAY_LANGUAGE_STORAGE_KEY);
+  }, [availableLanguages, availableLanguagesResolved, language, persist]);
 
   // Load the translation pack for any non-English language: dynamic languages
   // need it for UI strings; core languages need it for the announcement.
@@ -177,6 +183,7 @@ export function LanguageProvider({
             code?: string;
             uiStrings?: Record<string, string>;
             inventory?: Record<string, string>;
+            brandStrings?: Record<string, string>;
             announcement?: string | null;
           };
         };
@@ -185,6 +192,7 @@ export function LanguageProvider({
           code: data.pack.code,
           uiStrings: data.pack.uiStrings ?? {},
           inventory: data.pack.inventory ?? {},
+          brandStrings: data.pack.brandStrings ?? {},
           announcement: data.pack.announcement ?? null,
         };
         packCacheRef.current.set(language, next);
@@ -230,6 +238,14 @@ export function LanguageProvider({
   const announcementTranslation =
     language !== "en" && pack?.code === language ? pack.announcement : null;
 
+  const translateBrandString = React.useCallback(
+    (englishText: string): string | null => {
+      if (language === "en" || pack?.code !== language) return null;
+      return pack.brandStrings[englishText] ?? null;
+    },
+    [language, pack],
+  );
+
   const translateInventory = React.useCallback(
     (englishName: string): string | null => {
       if (language === "en" || pack?.code !== language) return null;
@@ -250,9 +266,8 @@ export function LanguageProvider({
         availableLanguages,
         availableLanguagesLoading,
         ensureAvailableLanguagesLoaded,
-        isLanguageReady,
-        refreshAvailableLanguages,
         announcementTranslation,
+        translateBrandString,
         translateInventory,
       }}
     >

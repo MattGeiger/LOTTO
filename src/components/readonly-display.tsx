@@ -143,7 +143,7 @@ export const ReadOnlyDisplay = ({
   showQrCode = true,
   showHeaderLogo = true,
 }: ReadOnlyDisplayProps) => {
-  const { language, t } = useLanguage();
+  const { language, t, translateBrandString } = useLanguage();
 
   const [state, setState] = React.useState<RaffleState | null>(null);
   const [status, setStatus] = React.useState("");
@@ -513,7 +513,13 @@ export const ReadOnlyDisplay = ({
             <CardHeader className="pb-0">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-lg uppercase tracking-[0.14em] text-muted-foreground">
-                  <T text={serviceLabel ?? t("foodPantryServiceFor")} />
+                  <T
+                    text={
+                      serviceLabel
+                        ? translateBrandString(serviceLabel) ?? serviceLabel
+                        : t("foodPantryServiceFor")
+                    }
+                  />
                 </CardTitle>
               </div>
             </CardHeader>

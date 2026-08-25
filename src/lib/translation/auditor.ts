@@ -43,8 +43,9 @@ export const auditMissing = async (
     .filter((name) => name !== "English");
   // UI strings (hardcoded map) and inventory (FEED's own translations) are
   // already covered for the base languages, so only *newly enabled* languages
-  // need DB translations for them. The announcement is LOTTO-authored and not in
-  // FEED, so every enabled non-English language needs it.
+  // need DB translations for them. Announcements and active visitor-facing
+  // brand copy are deployment-authored, so every enabled non-English language
+  // needs them.
   const nonCoreTargets = enabledNonEnglish.filter((name) => !base.has(name));
 
   const { items: content, inventory } = await getContentItems({ inventoryNames });
@@ -62,7 +63,10 @@ export const auditMissing = async (
   const sampleItems: string[] = [];
 
   for (const item of content) {
-    const targets = item.type === "announcement" ? enabledNonEnglish : nonCoreTargets;
+    const targets =
+      item.type === "announcement" || item.type === "brand_string"
+        ? enabledNonEnglish
+        : nonCoreTargets;
     for (const language of targets) {
       const row = byKey.get(`${item.type}::${language}::${item.originalText}`);
       if (row) {

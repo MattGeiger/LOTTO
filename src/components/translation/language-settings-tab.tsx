@@ -135,7 +135,11 @@ export function LanguageSettingsTab() {
       const newlyEnabled = data.languages.filter(
         (row) => row.isEnabled && !ALWAYS_ON.has(row.name) && !previouslyEnabled.has(row.name),
       );
-      toast.success("Language settings saved.");
+      toast.success(
+        newlyEnabled.length > 0
+          ? "Language settings saved. Preparing the newly enabled languages now."
+          : "Language settings saved.",
+      );
       setSaving(false);
 
       // Auto-start staged translation for newly enabled languages, with live
@@ -146,10 +150,21 @@ export function LanguageSettingsTab() {
         setProgress({ total: 0, done: 0, remaining: 0, failed: 0 });
         try {
           const result = await runStagedTranslation(setProgress);
-          toast.success(
-            `Translated ${result.done} item${result.done === 1 ? "" : "s"}` +
-              (result.failed > 0 ? `, ${result.failed} failed (retry in Translation Management).` : "."),
-          );
+          const languageLabel =
+            newlyEnabled.length === 1
+              ? newlyEnabled[0].name
+              : `${newlyEnabled.length} languages`;
+          if (result.failed > 0 || result.remaining > 0) {
+            toast.error(
+              `${languageLabel} remains hidden because ${result.failed + result.remaining} ` +
+                `translation${result.failed + result.remaining === 1 ? "" : "s"} could not be completed. ` +
+                "Review the failed items in Translation Management, then retry them.",
+            );
+          } else {
+            toast.success(
+              `${languageLabel} is translated and now available in client language menus.`,
+            );
+          }
         } catch (error) {
           toast.error(
             error instanceof Error ? error.message : "Translation could not be completed.",
@@ -197,7 +212,7 @@ export function LanguageSettingsTab() {
           />
         </div>
         <AnimateIcon asChild animateOnView animateOnViewOnce animateOnHover animateOnTap>
-          <Button type="button" variant="outline" size="sm" onClick={selectAllVisible} disabled={loading || saving}>
+          <Button type="button" variant="outline" size="sm" onClick={selectAllVisible} disabled={loading || saving || translating}>
             <PlusIcon className="mr-1 size-3.5" aria-hidden="true" />
             Select all
           </Button>
@@ -208,7 +223,7 @@ export function LanguageSettingsTab() {
             variant="ghost"
             size="sm"
             onClick={clearToBase}
-            disabled={loading || saving || selectedCount <= ALWAYS_ON.size}
+            disabled={loading || saving || translating || selectedCount <= ALWAYS_ON.size}
           >
             <XIcon className="mr-1 size-3.5" aria-hidden="true" />
             Reset
@@ -231,7 +246,7 @@ export function LanguageSettingsTab() {
                 <Checkbox
                   id={id}
                   checked={checked}
-                  disabled={locked || loading || saving}
+                  disabled={locked || loading || saving || translating}
                   onCheckedChange={(value) => toggle(row.name, value === true)}
                   className="mt-0.5"
                 />
@@ -254,7 +269,7 @@ export function LanguageSettingsTab() {
         <div className="space-y-2 rounded-md border border-status-warning-border bg-status-warning-bg/40 p-3">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium text-foreground">
-              Translating new languages… you can leave this open.
+              Translating new languages… keep LOTTO open until this finishes.
             </span>
             <span className="tabular-nums text-muted-foreground">
               {progress && progress.total > 0 ? `${progress.done}/${progress.total}` : "starting…"}

@@ -20,5 +20,6 @@ export const list = backend.list;
 export const get = backend.get;
 export const upsert = backend.upsert;
 export const update = backend.update;
+export const bulkUpdate = backend.bulkUpdate;
 export const remove = backend.remove;
 export const bulkRemove = backend.bulkRemove;

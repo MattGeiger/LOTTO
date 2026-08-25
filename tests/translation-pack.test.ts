@@ -32,6 +32,11 @@ vi.mock("@/lib/state-manager", () => ({
   stateManager: { loadState: () => loadState() },
 }));
 
+const resolvedBrand = vi.fn();
+vi.mock("@/lib/brand-config/resolve", () => ({
+  getResolvedBrand: () => resolvedBrand(),
+}));
+
 const row = (originalText: string, translatedText: string, type = "ui_string") => ({
   id: Math.random(),
   originalText,
@@ -51,6 +56,7 @@ describe("language packs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     loadState.mockResolvedValue({ announcement: null });
+    resolvedBrand.mockResolvedValue({ serviceLabel: null });
     enabledLanguages.mockResolvedValue([
       { name: "English", isEnabled: true, sortOrder: 0 },
       { name: "Bosnian", isEnabled: true, sortOrder: 6 },
@@ -104,6 +110,25 @@ describe("language packs", () => {
     expect(pack?.inventory["Now Serving"]).toBeUndefined();
   });
 
+  it("includes only the active service-label translation as visitor-facing brand copy", async () => {
+    resolvedBrand.mockResolvedValue({ serviceLabel: "Community Library Service For" });
+    storeList.mockResolvedValue([
+      row(
+        "Community Library Service For",
+        "Usluga biblioteke zajednice za",
+        "brand_string",
+      ),
+      row("Retired Service Label", "Stara oznaka", "brand_string"),
+    ]);
+
+    const { buildLanguagePack } = await import("@/lib/translation/pack");
+    const pack = await buildLanguagePack("bs");
+
+    expect(pack?.brandStrings).toEqual({
+      "Community Library Service For": "Usluga biblioteke zajednice za",
+    });
+  });
+
   it("marks a language ready only when every UI source is completed", async () => {
     const { isLanguageReady } = await import("@/lib/translation/pack");
     // Missing "Your ticket" → not ready.
@@ -118,13 +143,32 @@ describe("language packs", () => {
     expect(await isLanguageReady("Bosnian")).toBe(true);
   });
 
+  it("keeps a dynamic language pending until active brand copy is translated", async () => {
+    resolvedBrand.mockResolvedValue({ serviceLabel: "Community Library Service For" });
+    const completeUiRows = [
+      row("Now Serving", "x"),
+      row("Close", "y"),
+      row("Your ticket", "z"),
+    ];
+    const { isLanguageReady } = await import("@/lib/translation/pack");
+
+    storeList.mockResolvedValue(completeUiRows);
+    expect(await isLanguageReady("Bosnian")).toBe(false);
+
+    storeList.mockResolvedValue([
+      ...completeUiRows,
+      row("Community Library Service For", "Bibliotečka usluga za", "brand_string"),
+    ]);
+    expect(await isLanguageReady("Bosnian")).toBe(true);
+  });
+
   it("core languages are always ready", async () => {
     const { isLanguageReady } = await import("@/lib/translation/pack");
     storeList.mockResolvedValue([]);
     expect(await isLanguageReady("Spanish")).toBe(true);
   });
 
-  it("listClientLanguages = core eight (ready) plus every enabled dynamic language with a ready flag", async () => {
+  it("listClientLanguages = core eight plus enabled dynamic languages whose required translations are ready", async () => {
     // Bosnian fully translated → ready.
     storeList.mockResolvedValue([
       row("Now Serving", "x"),
@@ -138,13 +182,12 @@ describe("language packs", () => {
     expect(options.at(-1)).toMatchObject({ code: "bs", name: "Bosnian", label: "Bosanski", ready: true });
   });
 
-  it("listClientLanguages includes enabled-but-incomplete languages flagged not ready", async () => {
+  it("listClientLanguages withholds enabled-but-incomplete languages", async () => {
     storeList.mockResolvedValue([row("Now Serving", "x")]); // incomplete
     const { listClientLanguages } = await import("@/lib/translation/pack");
     const options = await listClientLanguages();
-    // Shown immediately (the picker gates the experience), but not yet ready.
-    expect(options).toHaveLength(9);
-    expect(options.find((o) => o.code === "bs")).toMatchObject({ ready: false });
-    expect(options.every((o) => o.code === "bs" || o.ready === true)).toBe(true);
+    expect(options).toHaveLength(8);
+    expect(options.find((o) => o.code === "bs")).toBeUndefined();
+    expect(options.every((o) => o.ready === true)).toBe(true);
   });
 });
