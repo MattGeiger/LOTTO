@@ -18,6 +18,10 @@ tablets, and the 2015 iPad Mini baseline.
 2. Pick a game from the arcade index.
 3. Follow the on-screen instructions; use **Back** to return to the index.
 
+The Arcade language menu uses the same organization-enabled language list as
+Home and Display. A language added through **Admin → Translation** is therefore
+available across every client-facing page once its translation pack is ready.
+
 ## Good Citizen: Ticket Calls Come First
 
 The Arcade watches the queue. If a player's saved ticket number is called while

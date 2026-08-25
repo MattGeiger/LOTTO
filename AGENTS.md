@@ -79,6 +79,46 @@ consistent with existing patterns and workflows.
 - See `docs/TRANSLATION_AI_FEED_PARITY.md` before changing
   `src/components/translation/*` AI-related UI.
 
+## Serverless Polling and Readiness
+- LOTTO runs on Vercel and production reads usually reach Neon. A repeated
+  client request can therefore multiply into an Edge Request, a Function
+  invocation, and several database reads. Treat request frequency as a product
+  and cost concern, not merely a frontend implementation detail.
+- Never poll for a condition that cannot change without a separate staff action.
+  In particular, visitors must not poll while waiting for translation work that
+  has not been queued. Language enablement is an Admin workflow: enabling a
+  dynamic language runs the missing-translation sweep and completes its queue;
+  only ready languages enter the shared client catalog.
+- Do not create fixed, unbounded `setInterval` API loops. When polling is truly
+  necessary, reuse the shared adaptive strategy or implement equivalent bounded
+  backoff, pause while `document.visibilityState === "hidden"`, stop after a
+  defined terminal condition/timeout, and test request counts as well as UI
+  state.
+- Prefer action-driven refresh, short shared CDN caching, or existing server
+  responses over per-tab `cache: "no-store"` polling. Any exception must explain
+  why caching/event-driven refresh is insufficient and document its Vercel plus
+  datastore cost envelope.
+- Finite serverless job progression is not visitor polling: Translation Admin
+  may advance a queued job through bounded chunks after an explicit staff
+  action. Even then, enforce a hard request budget, stop if the queue does not
+  shrink, surface recovery guidance, and cover both limits with tests.
+
+## Translation Provider Batching
+- A provider's advertised context/output ceiling is a capability, not LOTTO's
+  normal request budget. Keep the two settings separate. Translation requests
+  default to an adaptive 8,192-token output budget and must not exceed LOTTO's
+  16,384-token application ceiling without a reviewed architecture change.
+- Translate compatible rows in bounded structured batches (currently 100 rows
+  with one target language and content type), preserving stable row ids. Reject
+  the whole response before writing if any expected id is missing, duplicated,
+  changed, or invented.
+- Commit a validated provider response with one bulk store operation while
+  preserving row-level token/cost metadata. Do not turn database writes back
+  into one operation per string.
+- A structured-response validation failure may split once to isolate a bad
+  batch. Authentication, quota, HTTP, and network failures must not recursively
+  retry. Test provider-call and store-write counts, not just final text.
+
 ## Documentation Priority
 - Documentation is a first-class requirement for this repo.
 - Any feature implementation or behavior change must update docs to reflect the current state.

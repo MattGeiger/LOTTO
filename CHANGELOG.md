@@ -2,6 +2,76 @@
 
 ## [Unreleased]
 
+## [1.24.0] - 2026-08-24
+
+### Changed
+
+- AI translation now sends up to 100 same-language, same-content-type strings
+  in one provider-neutral structured request instead of making one request per
+  string. Stable row identifiers and strict response validation prevent a
+  provider from silently omitting, duplicating, inventing, or misaligning
+  translations.
+- AI Configuration now distinguishes a model's advertised output-token limit
+  from LOTTO's translation output budget. New and legacy configurations use an
+  8,192-token operating budget by default, requests adapt downward for small
+  batches, and LOTTO enforces a 16,384-token application ceiling.
+- Successful batches are committed to the translation store in one bulk write.
+  Token usage and estimated cost remain allocated to individual rows for the
+  existing management and reporting surfaces.
+
+### Resilience
+
+- Malformed structured output receives one bounded split-and-retry attempt so
+  a single difficult batch can be isolated. Provider, authentication, quota,
+  and network failures do not trigger recursive request storms; affected rows
+  are recorded as failed for staff review.
+
+### Documentation
+
+- Documented LOTTO's translation batch, output-budget, validation, retry, and
+  request-count contracts in the AI guide, FEED parity notes, roadmap,
+  `AGENTS.md`, and Issue 41.
+
+## [1.22.3] - 2026-08-24
+
+### Changed
+
+- The active custom public service label is now discovered as visitor-facing
+  brand copy, translated for every enabled non-English language, included in
+  client language packs, and rendered on the public board with English
+  fallback. Admin and sign-in Appearance copy remain intentionally outside the
+  localization boundary.
+- Arcade language menus now consume the shared enabled-language catalog used
+  by Home and Display instead of maintaining a private eight-language list.
+  Persisted dynamic languages resolve their native label on direct Arcade
+  loads, and long menus use the established bounded scroll treatment.
+- Enabling a dynamic language now owns the full staged **Find Missing** sweep in
+  Admin. The language remains absent from every client menu until its required
+  UI and active public-brand translations complete; failures keep it hidden and
+  direct staff to Translation Management.
+
+### Fixed
+
+- **Find Missing** no longer reports that localization is complete while an
+  active custom public service label remains untranslated.
+- Arcade no longer hides enabled dynamic languages such as Bosnian or renders
+  an empty label for a persisted non-core selection.
+- Removed the homepage's fixed four-second language-readiness polling loop. It
+  could issue 21,600 Vercel Function/Edge requests per day from one stuck tab
+  while repeatedly querying Neon for translation work that had never started.
+  Visitors now receive only ready language options, and stale persisted dynamic
+  selections safely return to English after the catalog resolves.
+- Bounded Admin translation jobs now stop when the pending count fails to shrink
+  and cap follow-up chunk requests, preventing a provider or queue fault from
+  turning legitimate preparation work into another runaway request loop.
+
+### Documentation
+
+- Clarified which configurable brand copy is visitor-localized and recorded
+  the shared language-catalog requirement for every client-facing picker.
+- Added serverless polling guardrails to `AGENTS.md` and documented the request
+  amplification root cause and prevention contract in Issue 40.
+
 ## [1.22.2] - 2026-08-24
 
 ### Fixed

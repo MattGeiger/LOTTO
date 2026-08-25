@@ -1,3 +1,42 @@
+# LOTTO v1.24.0
+
+**Release Date:** August 24, 2026
+
+LOTTO v1.24.0 translates structured batches of up to 100 related strings in a
+single AI-provider request. Responses carry stable row identifiers and must
+pass a complete-set validation before any translation is written, preserving
+the row-level audit trail while sharply reducing provider and Vercel traffic.
+
+The release also separates a model's technical output ceiling from LOTTO's
+operational request budget. Gemini 2.5 Flash-Lite may support a much larger
+response, but ordinary LOTTO batches default to an adaptive maximum of 8,192
+tokens and can never exceed the application ceiling of 16,384. Malformed
+structured output receives one bounded split; provider failures stop without a
+retry storm and remain visible for staff recovery.
+
+---
+
+# LOTTO v1.22.3
+
+**Release Date:** August 24, 2026
+
+LOTTO v1.22.3 brings runtime Appearance copy into the client localization
+contract. The active custom public service label is now found, translated,
+audited, packed, and rendered for every enabled visitor language; administrative
+and sign-in copy remains intentionally untranslated.
+
+The Arcade language picker now reads the same enabled-language catalog as Home
+and Display. Dynamic languages such as Bosnian are available throughout the
+client experience, including when a visitor opens Arcade directly with a saved
+selection.
+
+Language preparation is now entirely staff-driven. Enabling a dynamic language
+automatically runs the complete missing-translation sweep, and only completed
+languages enter client menus. Visitors no longer wait behind a fixed readiness
+poller, eliminating an unbounded Vercel/Neon request loop.
+
+---
+
 # LOTTO v1.22.2
 
 **Release Date:** August 24, 2026

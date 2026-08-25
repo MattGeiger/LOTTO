@@ -12,6 +12,7 @@ import { neon } from "@neondatabase/serverless";
 
 import type {
   TranslationFilter,
+  TranslationBatchUpdate,
   TranslationKey,
   TranslationRecord,
   TranslationStatus,
@@ -140,6 +141,49 @@ export const update = async (
     ` as unknown as Promise<Record<string, unknown>[]>,
   )) as Record<string, unknown>[];
   return rows[0] ? mapRow(rows[0]) : null;
+};
+
+export const bulkUpdate = async (
+  patches: ReadonlyArray<TranslationBatchUpdate>,
+  sql: SqlClient = getSql(),
+): Promise<TranslationRecord[]> => {
+  if (patches.length === 0) return [];
+  const payload = JSON.stringify(
+    patches.map((patch) => ({
+      id: patch.id,
+      translated_text: patch.translatedText,
+      status: patch.status,
+      metadata: patch.metadata,
+      prompt_tokens: patch.promptTokens,
+      completion_tokens: patch.completionTokens,
+      total_cost: patch.totalCost,
+    })),
+  );
+  const rows = (await withTimeout(
+    sql`
+      UPDATE translations AS translation
+      SET
+        translated_text = patch.translated_text,
+        status = patch.status,
+        metadata = patch.metadata,
+        prompt_tokens = patch.prompt_tokens,
+        completion_tokens = patch.completion_tokens,
+        total_cost = patch.total_cost,
+        updated_at = now()
+      FROM jsonb_to_recordset(${payload}::jsonb) AS patch(
+        id bigint,
+        translated_text text,
+        status text,
+        metadata jsonb,
+        prompt_tokens integer,
+        completion_tokens integer,
+        total_cost double precision
+      )
+      WHERE translation.id = patch.id
+      RETURNING translation.*
+    ` as unknown as Promise<Record<string, unknown>[]>,
+  )) as Record<string, unknown>[];
+  return rows.map(mapRow).sort((a, b) => a.id - b.id);
 };
 
 export const remove = async (id: number, sql: SqlClient = getSql()): Promise<boolean> => {

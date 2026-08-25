@@ -7,11 +7,17 @@
 
 // Client-side driver for staged translation. Kicks off Find-missing (which
 // queues the gaps and translates the first chunk), then loops the chunked
-// process endpoint until nothing is pending — reporting progress so the admin
-// (and the client "getting ready" screen) can show a live count instead of a
-// silent wait. Chunking keeps each request within serverless time limits.
+// process endpoint until nothing is pending — reporting progress so Admin can
+// show a live count instead of a silent wait. Visitors receive only the
+// ready-only catalog and never drive translation work. Chunking keeps each
+// request within serverless time limits.
 
 export type TranslationProgress = { total: number; done: number; remaining: number; failed: number };
+
+// A deliberate staff action may need several serverless batches, but it must
+// never become an open-ended request loop. One hundred follow-ups cover up to
+// 10,000 rows at the current 100-row batch while preserving a firm cost cap.
+const MAX_STAGED_FOLLOW_UP_REQUESTS = 100;
 
 const postJson = async (url: string, body?: unknown) => {
   const res = await fetch(url, {
@@ -46,15 +52,24 @@ export async function runStagedTranslation(
   const emit = () => onProgress?.({ total, done: Math.max(0, total - remaining), remaining, failed });
   emit();
 
-  // Loop the bounded process endpoint until the queue drains. The guard caps the
-  // loop well above any realistic chunk count.
-  let guard = 0;
-  while (remaining > 0 && guard < 1000) {
-    guard += 1;
+  // Advance the bounded process endpoint until the queue drains. This is an
+  // authenticated, finite job progression after a staff action, not polling:
+  // stop immediately if a request makes no progress and enforce a hard request
+  // budget even if the server behaves unexpectedly.
+  let followUpRequests = 0;
+  while (remaining > 0 && followUpRequests < MAX_STAGED_FOLLOW_UP_REQUESTS) {
+    followUpRequests += 1;
+    const previousRemaining = remaining;
     const step = await postJson("/api/translations/process");
     remaining = (step.remaining as number) ?? 0;
     failed += (step.failed as number) ?? 0;
     emit();
+    if (remaining >= previousRemaining) {
+      throw new Error(
+        "Translation preparation paused because the queue did not advance. " +
+          "Open Translation Management, review failed items, and run Find Missing again.",
+      );
+    }
   }
   return { total, done: Math.max(0, total - remaining), remaining, failed };
 }

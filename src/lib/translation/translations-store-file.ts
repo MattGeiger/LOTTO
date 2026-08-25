@@ -11,7 +11,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import type { TranslationFilter, TranslationKey, TranslationRecord } from "./types";
+import type {
+  TranslationBatchUpdate,
+  TranslationFilter,
+  TranslationKey,
+  TranslationRecord,
+} from "./types";
 
 type FileShape = { nextId: number; records: TranslationRecord[] };
 
@@ -96,6 +101,25 @@ export const update = async (
   data.records[index] = { ...data.records[index], ...patch, id, updatedAt: Date.now() };
   await write(data);
   return data.records[index];
+};
+
+export const bulkUpdate = async (
+  patches: ReadonlyArray<TranslationBatchUpdate>,
+): Promise<TranslationRecord[]> => {
+  if (patches.length === 0) return [];
+  const data = await read();
+  const byId = new Map(patches.map((patch) => [patch.id, patch]));
+  const updated: TranslationRecord[] = [];
+  const now = Date.now();
+  data.records = data.records.map((record) => {
+    const patch = byId.get(record.id);
+    if (!patch) return record;
+    const next = { ...record, ...patch, id: record.id, updatedAt: now };
+    updated.push(next);
+    return next;
+  });
+  if (updated.length > 0) await write(data);
+  return updated.sort((a, b) => a.id - b.id);
 };
 
 export const remove = async (id: number): Promise<boolean> => {

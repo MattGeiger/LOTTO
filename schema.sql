@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS translations (
   translated_text TEXT,
   status TEXT NOT NULL DEFAULT 'pending', -- 'pending' | 'completed' | 'failed'
   language TEXT NOT NULL,                  -- English name, matches languages.name
-  type TEXT NOT NULL,                      -- 'ui_string' | 'announcement' | 'custom'
+  type TEXT NOT NULL,                      -- 'ui_string' | 'brand_string' | 'announcement' | 'inventory'
   metadata JSONB,
   prompt_tokens INT,
   completion_tokens INT,

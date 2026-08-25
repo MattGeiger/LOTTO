@@ -5,9 +5,10 @@
 // licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
 // is not covered by this license; see TRADEMARKS.md.
 
-// The set of translatable content the auditor scans: every English UI string,
-// the active announcement, and the inventory category/item names from the FEED
-// public inventory feed.
+// The set of translatable visitor content the auditor scans: every English UI
+// string, the active custom service label, the active announcement, and the
+// inventory category/item names from the FEED public inventory feed. Admin and
+// sign-in Appearance copy are intentionally outside the localization boundary.
 
 import {
   collectFeedInventoryNames,
@@ -50,6 +51,12 @@ export const getAnnouncementSource = async (): Promise<string | null> => {
     return announcement.markdown;
   }
   return null;
+};
+
+export const getBrandStringSources = async (): Promise<string[]> => {
+  const brand = await getResolvedBrand();
+  const serviceLabel = brand.serviceLabel?.trim();
+  return serviceLabel ? [serviceLabel] : [];
 };
 
 // Distinct English inventory strings (category + item names) from the FEED feed,
@@ -102,6 +109,9 @@ export const getContentItems = async (
     originalText,
     type: "ui_string" as const,
   }));
+  for (const originalText of await getBrandStringSources()) {
+    items.push({ originalText, type: "brand_string" });
+  }
   const announcement = await getAnnouncementSource();
   if (announcement) items.push({ originalText: announcement, type: "announcement" });
   // Prefer inventory names the caller bridged from the browser (FEED's feed is

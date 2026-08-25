@@ -3,6 +3,21 @@
 ## Overview
 Add language selection for display page with support for: English, Mandarin Chinese (简体中文), Spanish (Español), Russian (Русский), Ukrainian (Українська), Vietnamese (Tiếng Việt), Farsi (فارسی), and Arabic (العربية).
 
+> **Current contract (v1.22.3):** the eight languages above are the always-on
+> hand-authored core, not the complete picker inventory. Every client-facing
+> language picker—including Home, Display, onboarding, and Arcade—must render
+> `availableLanguages` from `LanguageProvider`. That shared catalog adds any
+> Admin-enabled dynamic language once its required UI and active public-brand
+> translations are complete. Private static maps of language codes or labels
+> are prohibited because they silently hide configured languages.
+> Enabling a language automatically runs the full missing-translation sweep in
+> Admin. Incomplete languages are withheld from the catalog; visitors never
+> poll or wait for translation readiness.
+>
+> Localization covers client-facing UI, active announcements, inventory, and
+> the active custom public service label. Sign-in and Admin Appearance copy is
+> intentionally staff-facing English.
+
 ## Translation Dictionary
 
 ### Display Page Main Content
@@ -302,7 +317,12 @@ const translations: Record<Language, Record<string, string>> = {
 }
 ```
 
-### 2. Language Switcher Component
+### 2. Language Switcher Component (historical core-only sketch)
+
+> This original implementation sketch is retained as history and is
+> superseded by the current contract above. Production pickers must map
+> `availableLanguages`; do not recreate the static `languageNames` object shown
+> below.
 
 **Create:** `/Users/russbook/lotto/src/components/language-switcher.tsx`
 

@@ -10,6 +10,10 @@
 import * as React from "react";
 
 import { getModelSpecByModel, getServiceEndpoint, GOOGLE_MODEL_SPECS } from "@/lib/ai/model-specs";
+import {
+  normalizeTranslationOutputBudget,
+  recommendedTranslationOutputBudget,
+} from "@/lib/ai/output-budget";
 import type { AiConfigInput, AiConfigPublic } from "@/lib/ai/types";
 
 import { BaseAIConfigDialog } from "./shared/BaseAIConfigDialog";
@@ -34,7 +38,7 @@ const initialData = (): ApiKeyConfigData => ({
   unitPrice: "per_1m",
   inputTokenLimit: defaultGoogleSpec?.inputTokenLimit,
   outputTokenLimit: defaultGoogleSpec?.outputTokenLimit,
-  maxTokens: defaultGoogleSpec?.outputTokenLimit,
+  maxTokens: recommendedTranslationOutputBudget(defaultGoogleSpec?.outputTokenLimit),
   name: "",
   description: "",
   value: "",
@@ -60,7 +64,7 @@ const fromConfig = (config: AiConfigPublic): Partial<ApiKeyConfigData> => {
     unitPrice: config.unitPrice,
     inputTokenLimit: config.inputTokenLimit,
     outputTokenLimit: config.outputTokenLimit,
-    maxTokens: config.maxTokens,
+    maxTokens: normalizeTranslationOutputBudget(config.maxTokens, config.outputTokenLimit),
     temperature: config.temperature ?? 0.7,
     topP: config.topP ?? 1,
     thinkingLevel: (config.thinkingLevel as ApiKeyConfigData["thinkingLevel"]) ?? "high",

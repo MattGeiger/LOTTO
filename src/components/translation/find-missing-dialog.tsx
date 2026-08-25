@@ -21,6 +21,7 @@ import {
   Loader2,
   Megaphone,
   Package,
+  Palette,
   Search,
   XCircle,
   type LucideIcon,
@@ -65,6 +66,7 @@ type MissingDetails = {
 
 const TYPE_META: Record<TranslationType, { label: string; icon: LucideIcon }> = {
   ui_string: { label: "UI strings", icon: FileText },
+  brand_string: { label: "Brand copy", icon: Palette },
   announcement: { label: "Announcement", icon: Megaphone },
   inventory: { label: "Inventory", icon: Package },
 };
@@ -217,6 +219,12 @@ export function FindMissingDialog({
                     <FileSearch className="mt-0.5 size-4 shrink-0 text-status-warning-text" aria-hidden="true" />
                     <span className="text-sm">
                       Discover the active announcement missing in any enabled language
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Palette className="mt-0.5 size-4 shrink-0 text-status-warning-text" aria-hidden="true" />
+                    <span className="text-sm">
+                      Find active visitor-facing brand copy missing in any enabled language
                     </span>
                   </div>
                   <div className="flex items-start gap-3">

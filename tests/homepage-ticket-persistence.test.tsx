@@ -7,7 +7,7 @@
 
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PersonalizedHomePage as HomePage } from "@/components/personalized-home-page";
 import { LanguageProvider } from "@/contexts/language-context";
@@ -80,6 +80,10 @@ describe("homepage ticket persistence", () => {
       "fetch",
       vi.fn(async () => new Response(JSON.stringify(currentState), { status: 200 })),
     );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("skips onboarding when a valid persisted ticket exists", async () => {
@@ -234,5 +238,56 @@ describe("homepage ticket persistence", () => {
     expect(await screen.findByText("Choose your language")).toBeInTheDocument();
     // No close affordance on step 1 — the user must pick a language to proceed.
     expect(screen.queryByRole("button", { name: "Close" })).not.toBeInTheDocument();
+  });
+
+  it("offers only ready dynamic languages without starting a readiness polling loop", async () => {
+    const intervalSpy = vi.spyOn(window, "setInterval");
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/languages?client")) {
+        return new Response(
+          JSON.stringify({
+            languages: [
+              { code: "en", label: "English", ready: true },
+              { code: "zh", label: "中文", ready: true },
+              { code: "es", label: "Español", ready: true },
+              { code: "ru", label: "Русский", ready: true },
+              { code: "uk", label: "Українська", ready: true },
+              { code: "vi", label: "Tiếng Việt", ready: true },
+              { code: "fa", label: "فارسی", ready: true },
+              { code: "ar", label: "العربية", ready: true },
+              { code: "bs", label: "Bosanski", ready: true },
+            ],
+          }),
+          { status: 200 },
+        );
+      }
+      if (url.includes("/api/translations/pack")) {
+        return new Response(
+          JSON.stringify({
+            pack: {
+              code: "bs",
+              uiStrings: {},
+              inventory: {},
+              brandStrings: {},
+              announcement: null,
+            },
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify(currentState), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+
+    renderHomePage();
+    await user.click(await screen.findByRole("button", { name: "Bosanski" }));
+    expect(await screen.findByRole("textbox", { name: "Enter your ticket number" })).toBeInTheDocument();
+
+    expect(intervalSpy.mock.calls.some((call) => call[1] === 4_000)).toBe(false);
+    expect(
+      fetchMock.mock.calls.filter(([input]) => String(input).includes("/api/languages?client")),
+    ).toHaveLength(1);
   });
 });

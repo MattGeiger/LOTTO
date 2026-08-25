@@ -10,12 +10,13 @@ import { NextResponse } from "next/server";
 import { NoActiveConfigError, translatePending } from "@/lib/translation/engine";
 
 export const runtime = "nodejs";
-// Headroom for one chunk of provider calls; callers loop until remaining is 0.
+// Headroom for one chunk of provider calls; the authenticated Admin preparation
+// flow makes explicit, bounded follow-up requests until remaining is 0.
 export const maxDuration = 60;
 
 // POST /api/translations/process — translate the next staged chunk of pending
-// rows (announcement → UI strings → inventory). Returns counts + how many
-// pending rows remain, so the admin/client can poll until complete.
+// rows (announcement → brand copy → UI strings → inventory). Returns
+// counts plus the number of pending rows so Admin can advance the bounded job.
 export async function POST() {
   try {
     const result = await translatePending();

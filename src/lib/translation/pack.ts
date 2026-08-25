@@ -6,11 +6,12 @@
 // is not covered by this license; see TRADEMARKS.md.
 
 // Client language packs (Feature 4 bridge). A pack maps UI-string keys to
-// completed DB translations for one language, plus the translated active
-// announcement. Visibility rule: the eight core languages are always client-
-// visible (hand-authored translations); a newly enabled catalog language only
-// becomes visible once every UI string has a completed translation.
+// completed DB translations for one language, plus translated active brand copy
+// and announcement. Visibility rule: the eight core languages are always
+// client-visible (hand-authored translations); a newly enabled catalog language
+// is ready once every UI string and active brand string has a completed row.
 
+import { getResolvedBrand } from "@/lib/brand-config/resolve";
 import {
   ALWAYS_ON_LANGUAGE_NAMES,
   getCatalogEntryByCode,
@@ -31,6 +32,8 @@ export type LanguagePack = {
   uiStrings: Record<string, string>;
   /** English inventory name → translated text (completed rows only). */
   inventory: Record<string, string>;
+  /** Active visitor-facing brand source → translated text. */
+  brandStrings: Record<string, string>;
   /** Translated active announcement markdown, when one exists. */
   announcement: string | null;
 };
@@ -39,7 +42,7 @@ export type ClientLanguageOption = {
   code: string;
   label: string;
   name: string;
-  /** True once the language's UI strings are fully translated (core = always). */
+  /** True once required UI and active brand strings are translated (core = always). */
   ready: boolean;
 };
 
@@ -52,6 +55,14 @@ const distinctUiSources = (): Set<string> => {
     if (value?.trim()) set.add(value);
   }
   return set;
+};
+
+const activeBrandSources = async (): Promise<Set<string>> => {
+  const brand = await getResolvedBrand();
+  const sources = new Set<string>();
+  const serviceLabel = brand.serviceLabel?.trim();
+  if (serviceLabel) sources.add(serviceLabel);
+  return sources;
 };
 
 export const buildLanguagePack = async (code: string): Promise<LanguagePack | null> => {
@@ -67,6 +78,18 @@ export const buildLanguagePack = async (code: string): Promise<LanguagePack | nu
   for (const [key, english] of Object.entries(UI_STRINGS_EN)) {
     const row = byOriginal.get(english);
     if (row?.translatedText) uiStrings[key] = row.translatedText;
+  }
+
+  const brandSources = await activeBrandSources();
+  const brandStrings: Record<string, string> = {};
+  for (const row of completed) {
+    if (
+      row.type === "brand_string" &&
+      row.translatedText &&
+      brandSources.has(row.originalText)
+    ) {
+      brandStrings[row.originalText] = row.translatedText;
+    }
   }
 
   // Inventory: keyed by the English name so the inventory page can look up a
@@ -88,29 +111,44 @@ export const buildLanguagePack = async (code: string): Promise<LanguagePack | nu
     announcement = row?.translatedText ?? null;
   }
 
-  return { code: entry.code, name: entry.name, uiStrings, inventory, announcement };
+  return {
+    code: entry.code,
+    name: entry.name,
+    uiStrings,
+    inventory,
+    brandStrings,
+    announcement,
+  };
 };
 
-// A non-core language is client-ready when every distinct UI source string has a
-// completed translation row ("mark language active when complete").
+// A non-core language is client-ready when every distinct UI source and active
+// visitor-facing brand string has a completed translation row.
 export const isLanguageReady = async (name: string): Promise<boolean> => {
   if (CORE_NAMES.has(name)) return true;
-  const sources = distinctUiSources();
-  const completed = await store.list({ language: name, type: "ui_string", status: "completed" });
-  const done = new Set(completed.map((row) => row.originalText));
-  for (const source of sources) {
-    if (!done.has(source)) return false;
+  const uiSources = distinctUiSources();
+  const brandSources = await activeBrandSources();
+  const completed = await store.list({ language: name, status: "completed" });
+  const doneUi = new Set(
+    completed.filter((row) => row.type === "ui_string").map((row) => row.originalText),
+  );
+  const doneBrand = new Set(
+    completed.filter((row) => row.type === "brand_string").map((row) => row.originalText),
+  );
+  for (const source of uiSources) {
+    if (!doneUi.has(source)) return false;
+  }
+  for (const source of brandSources) {
+    if (!doneBrand.has(source)) return false;
   }
   return true;
 };
 
-// Languages offered to visitors: the core eight (always ready) plus every
-// enabled catalog language — shown immediately with a `ready` flag so the picker
-// can present a newly enabled language right away and gate the experience behind
-// a "getting ready" screen until its translations complete.
+// Languages offered to visitors: the core eight plus enabled dynamic languages
+// whose required translations are complete. Preparation belongs to the Admin
+// enablement flow; visitors never receive or poll incomplete options.
 //
 // Readiness for all enabled languages is computed from a SINGLE query of
-// completed UI-string rows (grouped by language in memory) rather than one query
+// completed rows (grouped by language and type in memory) rather than one query
 // per language — the per-language version made the homepage language list slow.
 export const listClientLanguages = async (): Promise<ClientLanguageOption[]> => {
   const options: ClientLanguageOption[] = LANGUAGE_OPTIONS.map((option) => {
@@ -124,23 +162,31 @@ export const listClientLanguages = async (): Promise<ClientLanguageOption[]> => 
   );
   if (dynamic.length === 0) return options;
 
-  const sources = distinctUiSources();
-  // One query for every completed UI-string row across all languages.
-  const completed = await store.list({ type: "ui_string", status: "completed" });
-  const doneByLanguage = new Map<string, Set<string>>();
+  const uiSources = distinctUiSources();
+  const brandSources = await activeBrandSources();
+  // One query for every completed row across all languages.
+  const completed = await store.list({ status: "completed" });
+  const doneUiByLanguage = new Map<string, Set<string>>();
+  const doneBrandByLanguage = new Map<string, Set<string>>();
   for (const row of completed) {
-    let set = doneByLanguage.get(row.language);
+    if (row.type !== "ui_string" && row.type !== "brand_string") continue;
+    const target = row.type === "ui_string" ? doneUiByLanguage : doneBrandByLanguage;
+    let set = target.get(row.language);
     if (!set) {
       set = new Set<string>();
-      doneByLanguage.set(row.language, set);
+      target.set(row.language, set);
     }
     set.add(row.originalText);
   }
   const isReady = (name: string): boolean => {
-    const done = doneByLanguage.get(name);
-    if (!done) return false;
-    for (const source of sources) {
-      if (!done.has(source)) return false;
+    const doneUi = doneUiByLanguage.get(name);
+    if (!doneUi) return false;
+    for (const source of uiSources) {
+      if (!doneUi.has(source)) return false;
+    }
+    const doneBrand = doneBrandByLanguage.get(name);
+    for (const source of brandSources) {
+      if (!doneBrand?.has(source)) return false;
     }
     return true;
   };
@@ -148,7 +194,8 @@ export const listClientLanguages = async (): Promise<ClientLanguageOption[]> => 
   for (const row of dynamic) {
     const entry = getCatalogEntryByName(row.name);
     if (!entry) continue;
-    options.push({ code: entry.code, label: entry.label, name: entry.name, ready: isReady(row.name) });
+    if (!isReady(row.name)) continue;
+    options.push({ code: entry.code, label: entry.label, name: entry.name, ready: true });
   }
   return options;
 };

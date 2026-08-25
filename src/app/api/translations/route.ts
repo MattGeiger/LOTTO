@@ -15,7 +15,8 @@ export const runtime = "nodejs";
 // GET /api/translations?language=&type=&status=
 // Translation rows are created by the auditor (Find missing / on-enable), not by
 // a manual "add" flow — every translatable string comes from a content source
-// (UI strings, the active announcement, inventory).
+// (UI strings, active visitor-facing brand copy, the active announcement,
+// inventory).
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);

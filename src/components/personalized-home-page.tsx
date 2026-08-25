@@ -8,7 +8,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowLeft, Loader2, X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { ReadOnlyDisplay } from "@/components/readonly-display";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -23,10 +23,6 @@ import {
 import type { RaffleState } from "@/lib/state-types";
 import { cn } from "@/lib/utils";
 import { hasSeenAnnouncement, isAnnouncementActive, markAnnouncementSeen } from "@/lib/announcement";
-import {
-  getChooseAnotherLanguageLabel,
-  getGettingReadyMessage,
-} from "@/lib/translation/getting-ready-messages";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -54,8 +50,6 @@ export function PersonalizedHomePage() {
     availableLanguages,
     availableLanguagesLoading,
     ensureAvailableLanguagesLoaded,
-    isLanguageReady,
-    refreshAvailableLanguages,
     announcementTranslation,
   } = useLanguage();
 
@@ -65,11 +59,8 @@ export function PersonalizedHomePage() {
   }, [ensureAvailableLanguagesLoaded]);
   const { trigger } = useAppHaptics();
   const [onboardingStep, setOnboardingStep] = React.useState<
-    "language" | "getting-ready" | "announcement" | "ticket"
+    "language" | "announcement" | "ticket"
   >("language");
-  // Language selected at the language step that is still being prepared; drives
-  // the inline "getting ready" gate.
-  const [pendingLanguageCode, setPendingLanguageCode] = React.useState<string | null>(null);
   // Start closed and decide once language hydration completes (see the
   // onboarding effect below). This avoids briefly flashing the language step
   // before we know whether the client already has a session language choice.
@@ -138,32 +129,10 @@ export function PersonalizedHomePage() {
   const handleLanguageSelect = React.useCallback(
     (language: Language) => {
       setLanguage(language);
-      // A newly enabled language may still be translating; gate behind the
-      // "getting ready" screen until its pack is complete.
-      if (!isLanguageReady(language)) {
-        setPendingLanguageCode(language);
-        setOnboardingStep("getting-ready");
-        return;
-      }
       setOnboardingStep("ticket");
     },
-    [setLanguage, isLanguageReady],
+    [setLanguage],
   );
-
-  // While the "getting ready" gate is showing, poll the language list; when the
-  // chosen language's pack completes, continue into the normal flow.
-  React.useEffect(() => {
-    if (onboardingStep !== "getting-ready" || !pendingLanguageCode) return;
-    if (isLanguageReady(pendingLanguageCode)) {
-      setPendingLanguageCode(null);
-      setOnboardingStep("ticket");
-      return;
-    }
-    const timer = setInterval(() => {
-      void refreshAvailableLanguages();
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [onboardingStep, pendingLanguageCode, isLanguageReady, refreshAvailableLanguages]);
 
   const handleTicketSubmit = React.useCallback(() => {
     const ticketNumber = normalizeTicketNumber(ticketInput);
@@ -302,31 +271,6 @@ export function PersonalizedHomePage() {
                       />
                     ))
                   : null}
-              </div>
-            </>
-          ) : onboardingStep === "getting-ready" ? (
-            <>
-              <DialogHeader className="mb-3">
-                <DialogTitle className="sr-only">Preparing your language</DialogTitle>
-              </DialogHeader>
-              <div className="flex flex-col items-center gap-4 py-6 text-center">
-                <Loader2 className="size-8 animate-spin text-primary" aria-hidden="true" />
-                <p className="text-lg font-medium text-foreground">
-                  {getGettingReadyMessage(pendingLanguageCode ?? "")}
-                </p>
-                <Button
-                  type="button"
-                  haptic="uiToggle"
-                  className="mt-2 h-11 w-full text-base"
-                  onClick={() => {
-                    setPendingLanguageCode(null);
-                    setOnboardingStep("language");
-                  }}
-                >
-                  {/* Hardcoded per-language label so it reads in the chosen
-                      language even before any AI translations exist. */}
-                  {getChooseAnotherLanguageLabel(pendingLanguageCode ?? "")}
-                </Button>
               </div>
             </>
           ) : onboardingStep === "announcement" ? (

@@ -82,6 +82,7 @@ function StatusBadge({ status }: { status: TranslationStatus }) {
 
 function formatTranslationType(type: TranslationType) {
   if (type === "ui_string") return "UI string";
+  if (type === "brand_string") return "Brand copy";
   if (type === "announcement") return "Announcement";
   return "Inventory";
 }
@@ -483,8 +484,8 @@ export function TranslationManagementTab() {
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
         Review, correct, retry, and find missing translations for the enabled
-        languages. Translations cover UI strings, the active announcement, and
-        inventory item names.
+        languages. Translations cover UI strings, active visitor-facing brand
+        copy, the active announcement, and inventory item names.
       </p>
 
       <EnhancedDataTable

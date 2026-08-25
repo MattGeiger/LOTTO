@@ -7,31 +7,41 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const enabledLanguages = vi.fn();
 vi.mock("@/lib/translation/languages-store", () => ({
-  listEnabledLanguages: vi.fn().mockResolvedValue([
-    { name: "English", isEnabled: true, sortOrder: 0 },
-    { name: "Bosnian", isEnabled: true, sortOrder: 6 },
-  ]),
+  listEnabledLanguages: () => enabledLanguages(),
 }));
 
-// Mirrors the real getContentItems: 2 UI strings plus whatever inventory names
-// the caller bridged in (the browser-sourced path), so the auditor's handling of
-// injected inventory can be asserted end-to-end.
+let brandString: string | null = null;
+
+// Mirrors the real getContentItems: 2 UI strings, optional visitor-facing brand
+// copy, plus whatever inventory names the caller bridged in.
 const getContentItems = vi.fn(async (options?: { inventoryNames?: string[] }) => {
   const names = options?.inventoryNames ?? [];
-  const items: Array<{ originalText: string; type: string }> = [
+  const items: Array<{ originalText: string; type: "ui_string" | "brand_string" | "inventory" }> = [
     { originalText: "Now Serving", type: "ui_string" },
     { originalText: "Your ticket", type: "ui_string" },
   ];
+  if (brandString) items.push({ originalText: brandString, type: "brand_string" });
   for (const name of names) items.push({ originalText: name, type: "inventory" });
   return {
     items,
     inventory: { names, ok: true, error: null, url: "https://feed.example/inventory.json" },
   };
 });
+
 vi.mock("@/lib/translation/content", () => ({
   getContentItems: (...args: unknown[]) => getContentItems(...args),
 }));
+
+/*
+ * The language store is controlled per test so brand copy can be shown to
+ * target the core languages as well as a dynamic language.
+ */
+const defaultLanguages = [
+    { name: "English", isEnabled: true, sortOrder: 0 },
+    { name: "Bosnian", isEnabled: true, sortOrder: 6 },
+];
 
 const storeList = vi.fn();
 const storeUpsert = vi.fn();
@@ -48,6 +58,8 @@ vi.mock("@/lib/translation/engine", () => ({
 describe("translation auditor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    brandString = null;
+    enabledLanguages.mockResolvedValue(defaultLanguages);
     storeList.mockResolvedValue([]);
     storeUpsert.mockResolvedValue({});
   });
@@ -96,5 +108,23 @@ describe("translation auditor", () => {
     expect(details.byType.inventory).toBe(2);
     expect(details.byType.ui_string).toBe(2);
     expect(details.byLanguage.Bosnian).toBe(4);
+  });
+
+  it("audits active brand copy for core and dynamic non-English languages", async () => {
+    brandString = "Community Library Service For";
+    enabledLanguages.mockResolvedValue([
+      { name: "English", isEnabled: true, sortOrder: 0 },
+      { name: "Spanish", isEnabled: true, sortOrder: 1 },
+      { name: "Bosnian", isEnabled: true, sortOrder: 6 },
+    ]);
+
+    const { findMissing } = await import("@/lib/translation/auditor");
+    const { details } = await findMissing(false);
+
+    expect(details.byType.brand_string).toBe(2);
+    expect(details.byLanguage.Spanish).toBe(1);
+    // Bosnian also needs the two dynamic UI strings.
+    expect(details.byLanguage.Bosnian).toBe(3);
+    expect(details.count).toBe(4);
   });
 });
