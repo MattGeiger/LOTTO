@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.24.1] - 2026-08-24
+
 ### Security
 
 - Hardened the authorization gate in `src/proxy.ts` to test for a populated

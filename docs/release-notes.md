@@ -1,6 +1,25 @@
 
 ## Unreleased
 
+## Version 1.24.1 — August 24, 2026
+
+**This is a security patch.** There are no changes to how LOTTO looks or works
+for staff or visitors.
+
+- **Sign-in checks are stricter.** If LOTTO's authentication settings are ever
+  misconfigured, staff pages and administrative APIs now refuse access instead
+  of risking letting a request through.
+- **Look-alike email addresses are rejected.** Characters from other alphabets
+  can be drawn to look exactly like ordinary letters and the "@" symbol. The
+  staff allow list now refuses any address that is not plain text, so a
+  look-alike address cannot be mistaken for an approved one.
+- **Fewer components ship to the server.** A tool only needed while developing
+  LOTTO was being installed alongside the live application. Removing it drops
+  seven known security advisories with no change to the running app.
+- **Verified on the oldest supported iPad.** The updated application was
+  checked on a simulated iPad mini 4 running iOS 15.4 to confirm nothing
+  regressed on the tablets used at the counter.
+
 ## Version 1.24.0 — August 24, 2026
 
 - **New languages prepare with far fewer AI requests.** LOTTO translates up to
