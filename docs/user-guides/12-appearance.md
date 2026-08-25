@@ -27,13 +27,18 @@ required.
    app's public address. **Use suggested wording** fills in the page
    descriptions from your organization name; edit them freely.
 3. **Logos & icons.** Upload a light-mode and a dark-mode logo as SVG, PNG,
-   or JPEG — SVG is best, because it stays a true vector and renders crisply
+   JPEG, or WebP, up to 4 MB — SVG is best, because it stays a true vector and renders crisply
    at every size and on hi-DPI screens (export a plain, self-contained SVG:
    no scripts, links, or embedded images — the uploader will tell you if
-   yours isn't). Sizes are measured automatically, and the preview shows
+   yours isn't). Internal SVG class styles are supported. LOTTO inspects the
+   actual image instead of relying on the file label supplied by the browser.
+   If an upload cannot be used, the message identifies whether the file is
+   empty, too large, unreadable, unsafe, or whether hosted storage needs an
+   administrator's attention—and tells you what to do next. Sizes are measured automatically, and the preview shows
    each logo at the exact height the app uses, on your own colors. If your
    light logo needs a dark plate behind it (common for white-lettered
-   logos), pick the **Dark plate** treatment. Upload one square mark and
+   logos), pick the **Dark plate** treatment; LOTTO also carries that surface
+   into staff sign-in emails. Upload one square mark and
    every browser, Apple, and install icon size is generated for you.
 4. **Your color story.** If you've uploaded a logo, the wizard reads it and
    builds your whole color story automatically — check the preview and just

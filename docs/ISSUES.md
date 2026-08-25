@@ -1804,3 +1804,83 @@ expiry.
   behavior.
 - `tests/auth-email-branding.test.tsx` renders both built-in identities in HTML
   and plain text.
+
+## Issue 37: Valid logo uploads failed on Vercel and errors blamed the image
+
+### Status
+
+Resolved in v1.22.1.
+
+### Observed
+
+- A valid 2.7 KB NVIDIA SVG (`viewBox="0 0 2560 1440"`) was rejected from the
+  Appearance wizard with “Unable to process the image. Please try a different
+  file.”
+- The SVG was self-contained, contained only paths plus an internal CSS class,
+  passed LOTTO's safety policy, and decoded successfully through Sharp.
+- St. Johns' configured **Dark plate** treatment appeared correctly in the app
+  preview but was missing from Magic Link and Verification Code email, leaving
+  the light lettering nearly invisible on the white email shell.
+
+### Root Cause
+
+The asset service always wrote to `data/brand-assets/`. That is correct for
+local and self-hosted deployments but not for an immutable Vercel Function
+filesystem. The write failed after image validation, then the route collapsed
+every non-SVG exception into one generic image-processing response. A valid
+image was therefore blamed for a storage architecture failure.
+
+Separately, `createAuthEmailBrand()` resolved the logo URL and colors but
+dropped `logo.presentation`. The shared email shell could not know that the
+light logo required the configured dark surface.
+
+### Approaches
+
+1. Store image bytes in Neon. This avoids a second service but makes the
+   operational database serve binary files and conflicts with the established
+   branding plan.
+2. Embed data URLs in Appearance JSON. This is easy initially but bloats rows,
+   email markup, and every configuration read.
+3. Use public Vercel Blob with the filesystem fallback retained for local and
+   self-hosted LOTTO. This is the pre-documented architecture and keeps each
+   store focused on its proper role.
+
+### Fix
+
+- Vercel-hosted uploads use `@vercel/blob` and store random-suffixed public
+  URLs; local/self-hosted uploads retain `/api/brand-assets` filesystem URLs.
+- A Vercel deployment without a connected Blob store now returns a specific
+  503 response telling the operator to ask a deployment administrator to
+  connect public Blob storage. It never attempts the deployment filesystem.
+- Upload acceptance is based on inspected bytes, not browser-supplied MIME
+  labels. Valid SVG `<defs><style>...</style></defs>` content remains allowed;
+  unsafe scripts, event handlers, external references, embedded documents,
+  data URIs, and CSS imports remain blocked.
+- The server-upload limit is 4 MB, leaving room below Vercel Functions' 4.5 MB
+  body limit. Client and server both enforce it with actionable copy.
+- Upload responses now distinguish invalid requests, empty files, size limits,
+  unsafe SVGs, unreadable images, unavailable storage, and unexpected failures.
+- Public Blob is allowed by Next Image and CSP. Palette-loading images set
+  anonymous CORS before `src`, preserving canvas color extraction.
+- The authentication-email brand contract carries `logoPresentation` and the
+  hex `logoSurface`; the shared React Email shell renders a table-backed dark
+  plate only when configured.
+
+### Verification
+
+- `tests/brand-assets.test.ts` covers internal class-styled SVGs, durable Blob
+  URLs, public upload options, and the missing-store message.
+- `tests/api-brand-assets.test.ts` covers ASK responses for unreadable,
+  oversized, and storage-unavailable uploads.
+- `tests/auth-email-branding.test.tsx` verifies the plate in both St. Johns
+  authentication messages and its absence for William Temple House.
+- Full suite: 745 passing. Lint, legacy-bundle validation, and production builds
+  for both William Temple House and St. Johns are clean.
+
+### Prevention
+
+- Never persist user uploads to a Vercel deployment filesystem.
+- Never collapse storage or infrastructure failures into a message that tells
+  the user their image is bad.
+- Any new email consumer of a brand asset must carry the asset's presentation
+  contract as well as its URL.

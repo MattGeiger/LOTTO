@@ -11,7 +11,8 @@
 // auto-extracted palette (shared extraction in palette-extract.ts), a
 // click-to-pick logo canvas, and — where the browser supports it — the
 // native EyeDropper for picking from anywhere on screen. Logos are
-// same-origin (public/ or /api/brand-assets), so the canvas stays untainted.
+// same-origin (public/ or /api/brand-assets) or CORS-enabled Vercel Blob, so
+// the canvas stays untainted.
 
 import * as React from "react";
 import { Pipette } from "lucide-react";
@@ -55,6 +56,7 @@ export function LogoPalette({
     setFailed(false);
     setPalette([]);
     const image = new Image();
+    image.crossOrigin = "anonymous";
     image.src = logoSrc;
     image.onload = () => {
       if (cancelled) return;

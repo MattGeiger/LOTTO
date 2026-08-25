@@ -1,6 +1,6 @@
 {
   "name": "app",
-  "version": "1.22.0",
+  "version": "1.22.1",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -38,6 +38,7 @@
     "@tiptap/pm": "^3.26.0",
     "@tiptap/react": "^3.26.0",
     "@tiptap/starter-kit": "^3.26.0",
+    "@vercel/blob": "^2.8.0",
     "@vercel/speed-insights": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

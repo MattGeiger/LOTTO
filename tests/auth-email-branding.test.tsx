@@ -54,4 +54,20 @@ describe("branded authentication email templates", () => {
     expect(otp.text.toLowerCase()).toContain("verification code");
     expect(otp.text).not.toContain("Continue to sign in");
   });
+
+  it("honors the configured dark-surface logo treatment in both email flows", async () => {
+    const magic = await renderedEmail("st-johns-food-share", "magic");
+    const otp = await renderedEmail("st-johns-food-share", "otp");
+
+    expect(magic.brand.logoPresentation).toBe("dark-surface");
+    expect(magic.html).toContain(`background-color:${magic.brand.logoSurface}`);
+    expect(otp.html).toContain(`background-color:${otp.brand.logoSurface}`);
+  });
+
+  it("does not add a logo plate when the active treatment is transparent", async () => {
+    const magic = await renderedEmail("william-temple-house", "magic");
+
+    expect(magic.brand.logoPresentation).toBe("transparent");
+    expect(magic.html).not.toContain(`background-color:${magic.brand.logoSurface}`);
+  });
 });

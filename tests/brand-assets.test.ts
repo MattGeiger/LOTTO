@@ -9,10 +9,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import sharp from "sharp";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
+
+const { putMock } = vi.hoisted(() => ({ putMock: vi.fn() }));
+vi.mock("@vercel/blob", () => ({ put: putMock }));
 
 import {
   assertSelfContainedSvg,
+  BrandAssetStorageError,
   generateIconSet,
   resolveAssetPath,
   storeLogoAsset,
@@ -26,6 +30,20 @@ const CLEAN_SVG = `<?xml version="1.0" encoding="UTF-8"?>
   <rect x="8" y="8" width="144" height="144" rx="28" fill="#475569"/>
   <text x="176" y="72" font-size="44">Your Organization</text>
 </svg>`;
+
+// Regression shape for the reported NVIDIA upload: a valid Illustrator-style
+// SVG with an XML declaration, <defs>, and a class defined in an internal
+// <style> block. Internal CSS is safe and must not be mistaken for @import or
+// an external reference.
+const CLASS_STYLED_SVG = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1440">
+  <defs><style>.cls-1{fill:#76b900;}</style></defs>
+  <path class="cls-1" d="M0 0h2560v1440H0z"/>
+</svg>`;
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 afterAll(async () => {
   await fs.rm(assetsDir(), { recursive: true, force: true });
@@ -49,6 +67,48 @@ describe("brand asset storage formats", () => {
     const noSize = CLEAN_SVG.replace('viewBox="0 0 600 160"', 'viewBox="0 0 320 80"');
     const asset = await storeLogoAsset("logo-light", Buffer.from(noSize));
     expect([asset.width, asset.height]).toEqual([320, 80]);
+  });
+
+  it("accepts a self-contained SVG with internal class styles", async () => {
+    const asset = await storeLogoAsset("logo-light", Buffer.from(CLASS_STYLED_SVG));
+    expect(asset.type).toBe("image/svg+xml");
+    expect([asset.width, asset.height]).toEqual([2560, 1440]);
+  });
+
+  it("stores hosted assets in public Vercel Blob and returns the durable URL", async () => {
+    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "test-token");
+    putMock.mockResolvedValue({
+      url: "https://store.public.blob.vercel-storage.com/brand-assets/logo.svg",
+    });
+
+    const asset = await storeLogoAsset("logo-light", Buffer.from(CLEAN_SVG));
+
+    expect(asset.src).toBe(
+      "https://store.public.blob.vercel-storage.com/brand-assets/logo.svg",
+    );
+    expect(putMock).toHaveBeenCalledWith(
+      expect.stringMatching(/^brand-assets\/logo-light-\d+\.svg$/),
+      expect.any(Buffer),
+      expect.objectContaining({
+        access: "public",
+        addRandomSuffix: true,
+        contentType: "image/svg+xml",
+      }),
+    );
+  });
+
+  it("explains how to configure storage instead of writing to Vercel's filesystem", async () => {
+    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "");
+    vi.stubEnv("VERCEL_OIDC_TOKEN", "");
+    vi.stubEnv("BLOB_STORE_ID", "");
+    vi.stubEnv("VERCEL", "1");
+
+    await expect(storeLogoAsset("logo-light", Buffer.from(CLEAN_SVG))).rejects.toThrow(
+      BrandAssetStorageError,
+    );
+    await expect(storeLogoAsset("logo-light", Buffer.from(CLEAN_SVG))).rejects.toThrow(
+      /connect a public Vercel Blob store/i,
+    );
   });
 
   it("re-encodes PNG uploads as PNG and JPEG uploads as JPEG", async () => {

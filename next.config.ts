@@ -37,6 +37,12 @@ const nextConfig: NextConfig = {
   images: {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'none'; style-src 'unsafe-inline'; sandbox;",
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+      },
+    ],
   },
   turbopack: {},
   webpack: (config, { isServer, dev }) => {
@@ -56,7 +62,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               scriptSrc,
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob:",
+              "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
               "font-src 'self'",
               connectSrc,
               frameAncestors,

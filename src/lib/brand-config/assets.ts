@@ -6,17 +6,18 @@
 // by this license; see TRADEMARKS.md.
 
 // Brand asset storage for the Appearance wizard (uploaded logos and the
-// generated icon set). Local/self-hosted deployments store files under
-// `data/brand-assets/` and serve them through `/api/brand-assets/...`;
-// Vercel deployments will map this to Blob storage in a later phase
-// (docs/CONFIGURABLE_BRANDING_PLAN.md, "Asset storage").
+// generated icon set). Vercel deployments use public Blob storage so assets
+// survive immutable deployments and can appear in authentication email;
+// local/self-hosted deployments keep the filesystem fallback under
+// `data/brand-assets/` and serve it through `/api/brand-assets/...`.
 
 import "server-only";
 
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import sharp from "sharp";
+import { put } from "@vercel/blob";
+import sharp, { type OutputInfo } from "sharp";
 
 export const BRAND_ASSET_PUBLIC_PREFIX = "/api/brand-assets";
 
@@ -56,9 +57,55 @@ export type GeneratedIconSet = {
   dominantColor: string;
 };
 
-const writeAsset = async (fileName: string, data: Buffer): Promise<void> => {
-  await fs.mkdir(assetsDir(), { recursive: true });
-  await fs.writeFile(path.join(assetsDir(), fileName), data);
+/** Error thrown when otherwise-valid image data cannot be persisted. */
+export class BrandAssetStorageError extends Error {}
+
+/** Error thrown when uploaded bytes are not a supported, readable image. */
+export class ImageProcessingError extends Error {}
+
+const blobConfigured = (): boolean =>
+  Boolean(
+    process.env.BLOB_READ_WRITE_TOKEN ||
+      (process.env.VERCEL_OIDC_TOKEN && process.env.BLOB_STORE_ID),
+  );
+
+const writeAsset = async (
+  fileName: string,
+  data: Buffer,
+  contentType: string,
+): Promise<string> => {
+  if (blobConfigured()) {
+    try {
+      const blob = await put(`brand-assets/${fileName}`, data, {
+        access: "public",
+        addRandomSuffix: true,
+        contentType,
+      });
+      return blob.url;
+    } catch (error) {
+      console.error("[BrandAssets] Vercel Blob write failed:", error);
+      throw new BrandAssetStorageError(
+        "LOTTO could not store this image. Ask a deployment administrator to check the connected Vercel Blob store and its available storage, then try again.",
+      );
+    }
+  }
+
+  if (process.env.VERCEL === "1") {
+    throw new BrandAssetStorageError(
+      "Logo storage is not configured for this LOTTO deployment. Ask a deployment administrator to connect a public Vercel Blob store, then try the upload again.",
+    );
+  }
+
+  try {
+    await fs.mkdir(assetsDir(), { recursive: true });
+    await fs.writeFile(path.join(assetsDir(), fileName), data);
+    return `${BRAND_ASSET_PUBLIC_PREFIX}/${fileName}`;
+  } catch (error) {
+    console.error("[BrandAssets] Filesystem write failed:", error);
+    throw new BrandAssetStorageError(
+      "LOTTO could not store this image. Ask a deployment administrator to check the brand-assets storage directory, then try again.",
+    );
+  }
 };
 
 // ---------------------------------------------------------------------------
@@ -177,35 +224,45 @@ export const storeLogoAsset = async (
 ): Promise<StoredAsset> => {
   const format = sniffFormat(input);
   if (format === null) {
-    throw new UnsafeSvgError("This file doesn't look like an image.");
+    throw new ImageProcessingError(
+      "LOTTO could not read this file as an image. Export it as a PNG, JPEG, WebP, or plain self-contained SVG, then upload the new file.",
+    );
   }
 
   if (format === "svg") {
     assertSelfContainedSvg(input.toString("utf8"));
     const { width, height } = await measureSvg(input);
     const fileName = `${kind}-${Date.now()}.svg`;
-    await writeAsset(fileName, input);
+    const src = await writeAsset(fileName, input, "image/svg+xml");
     return {
-      src: `${BRAND_ASSET_PUBLIC_PREFIX}/${fileName}`,
+      src,
       width,
       height,
       type: "image/svg+xml",
     };
   }
 
-  const image = sharp(input, { limitInputPixels: 32_000_000 });
-  const encoded =
-    format === "jpeg"
-      ? await image.jpeg({ quality: 90 }).toBuffer({ resolveWithObject: true })
-      : await image.png().toBuffer({ resolveWithObject: true });
+  let encoded: { data: Buffer; info: OutputInfo };
+  try {
+    const image = sharp(input, { limitInputPixels: 32_000_000 });
+    encoded =
+      format === "jpeg"
+        ? await image.jpeg({ quality: 90 }).toBuffer({ resolveWithObject: true })
+        : await image.png().toBuffer({ resolveWithObject: true });
+  } catch {
+    throw new ImageProcessingError(
+      "LOTTO could not decode this image. Re-export it as a standard PNG, JPEG, WebP, or plain self-contained SVG, then try again.",
+    );
+  }
   const extension = format === "jpeg" ? "jpg" : "png";
   const fileName = `${kind}-${Date.now()}.${extension}`;
-  await writeAsset(fileName, encoded.data);
+  const type = format === "jpeg" ? "image/jpeg" : "image/png";
+  const src = await writeAsset(fileName, encoded.data, type);
   return {
-    src: `${BRAND_ASSET_PUBLIC_PREFIX}/${fileName}`,
+    src,
     width: encoded.info.width,
     height: encoded.info.height,
-    type: format === "jpeg" ? "image/jpeg" : "image/png",
+    type,
   };
 };
 
@@ -269,11 +326,15 @@ export const generateIconSet = async (
     { name: `icon-apple-${stamp}.png`, size: APPLE_ICON_SIZE, opaque: true },
     { name: `icon-maskable-${stamp}.png`, size: 512, opaque: true },
   ];
+  const urls = new Map<string, string>();
   for (const file of files) {
-    await writeAsset(file.name, await renderIcon(file.size, file.opaque));
+    urls.set(
+      file.name,
+      await writeAsset(file.name, await renderIcon(file.size, file.opaque), "image/png"),
+    );
   }
 
-  const url = (name: string) => `${BRAND_ASSET_PUBLIC_PREFIX}/${name}`;
+  const url = (name: string) => urls.get(name)!;
   return {
     browserIcons: [
       { src: url(`icon-32-${stamp}.png`), sizes: "32x32", type: "image/png" },

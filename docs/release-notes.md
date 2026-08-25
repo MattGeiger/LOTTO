@@ -1,6 +1,18 @@
 
 ## Unreleased
 
+## Version 1.22.1 — August 24, 2026
+
+- **Logos keep their intended background in sign-in email.** If an Appearance
+  uses the **Dark plate** treatment, both Magic Link and Verification Code
+  messages now show that same dark surface behind the logo.
+- **Uploaded logos now persist in hosted LOTTO deployments.** Vercel-hosted
+  organizations store logos and generated app icons in durable image storage,
+  so an upload remains available across deployments.
+- **Image upload problems explain what to do.** LOTTO now distinguishes an
+  unreadable file, unsafe SVG, oversized image, missing storage setup, and a
+  temporary service problem. Each message explains the next useful action.
+
 ## Version 1.22.0 — August 24, 2026
 
 - **Magic Links now work behind Microsoft Defender.** Opening the link first

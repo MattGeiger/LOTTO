@@ -34,6 +34,23 @@ import { draftTheme, patchConfig } from "../draft";
 import type { AppearanceStepProps } from "../types";
 
 type UploadKind = "logo-light" | "logo-dark" | "icon";
+type UploadResponse = {
+  error?: string;
+  asset?: { src: string; width: number; height: number };
+  iconSet?: {
+    browserIcons: { src: string; sizes: string; type: string }[];
+    appleIcons: { src: string; sizes: string; type: string }[];
+    manifestIcons: {
+      src: string;
+      sizes: string;
+      type: string;
+      purpose: "any" | "maskable";
+    }[];
+    dominantColor: string;
+  };
+};
+
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 
 export function LogosStep({
   draft,
@@ -47,6 +64,12 @@ export function LogosStep({
   const busy = isLoading || uploading !== null;
 
   const upload = async (kind: UploadKind, file: File) => {
+    if (file.size > MAX_UPLOAD_BYTES) {
+      toast.error(
+        "This image is larger than 4 MB. Export or compress a smaller PNG, JPEG, WebP, or SVG, then upload it again.",
+      );
+      return;
+    }
     setUploading(kind);
     try {
       const form = new FormData();
@@ -57,12 +80,15 @@ export function LogosStep({
         method: "POST",
         body: form,
       });
-      const body = await response.json();
+      const body = (await response.json().catch(() => ({}))) as UploadResponse;
       if (!response.ok) {
-        toast.error(body.error ?? "Upload failed. Please try again.");
+        toast.error(
+          body.error ??
+            "LOTTO could not finish this image upload. Check your connection and try the same file again.",
+        );
         return;
       }
-      if (kind === "icon") {
+      if (kind === "icon" && body.iconSet) {
         onChange({
           config: patchConfig(draft.config, "pwa", {
             browserIcons: body.iconSet.browserIcons,
@@ -72,7 +98,7 @@ export function LogosStep({
           }),
         });
         toast.success("Install icons generated from your mark.");
-      } else if (kind === "logo-light") {
+      } else if (kind === "logo-light" && body.asset) {
         onChange({
           config: patchConfig(draft.config, "logo", {
             lightSrc: body.asset.src,
@@ -80,7 +106,8 @@ export function LogosStep({
             height: body.asset.height,
           }),
         });
-      } else {
+        toast.success("Light-mode logo uploaded.");
+      } else if (kind === "logo-dark" && body.asset) {
         onChange({
           config: patchConfig(draft.config, "logo", {
             darkSrc: body.asset.src,
@@ -88,9 +115,16 @@ export function LogosStep({
             darkHeight: body.asset.height,
           }),
         });
+        toast.success("Dark-mode logo uploaded.");
+      } else {
+        toast.error(
+          "LOTTO stored the image but did not return its details. Try the upload again; if it continues, ask a deployment administrator to review the LOTTO logs.",
+        );
       }
     } catch {
-      toast.error("Upload failed. Please try again.");
+      toast.error(
+        "LOTTO could not reach the image upload service. Check your connection and try the same file again.",
+      );
     } finally {
       setUploading(null);
     }
