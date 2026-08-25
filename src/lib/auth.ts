@@ -13,6 +13,8 @@ import EmailProvider from "next-auth/providers/email";
 import ResendProvider from "next-auth/providers/resend";
 import { createHash } from "node:crypto";
 
+import { MAGIC_LINK_MAX_AGE_SECONDS } from "./auth-constants";
+import { sendMagicLinkEmail } from "./auth-email-service";
 import { getPool } from "./db";
 import { isAdminEmailAllowed } from "./admin-email-policy";
 
@@ -110,12 +112,22 @@ export const { handlers: authHandlers, auth } = NextAuth(() => {
             ResendProvider({
               from: fromAddress,
               apiKey: resendApiKey,
+              maxAge: MAGIC_LINK_MAX_AGE_SECONDS,
+              sendVerificationRequest: ({ identifier, url, expires }) =>
+                sendMagicLinkEmail({ email: identifier, magicLink: url, expires }),
             }),
           ]
         : [
             EmailProvider({
+              // Keep the provider id stable so the login form, scanner-safe
+              // callback wrapper, and MailDev all exercise the same route.
+              id: "resend",
+              name: "Resend",
               from: fromAddress,
               server: emailServer,
+              maxAge: MAGIC_LINK_MAX_AGE_SECONDS,
+              sendVerificationRequest: ({ identifier, url, expires }) =>
+                sendMagicLinkEmail({ email: identifier, magicLink: url, expires }),
             }),
           ]),
       CredentialsProvider({
@@ -150,7 +162,7 @@ export const { handlers: authHandlers, auth } = NextAuth(() => {
 
           const hashed = hashToken(code);
           const result = await pool.query(
-            "delete from verification_token where identifier = $1 and token = $2 and expires > now() returning identifier",
+            "delete from verification_token where identifier = $1 and token = $2 and type = 'otp' and expires > now() returning identifier",
             [email, hashed],
           );
           if (result.rowCount === 0) {

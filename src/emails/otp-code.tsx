@@ -6,105 +6,59 @@
 // is not covered by this license; see TRADEMARKS.md.
 
 import {
-  Body,
-  Container,
-  Font,
-  Head,
   Heading,
-  Html,
-  Preview,
   Section,
   Text,
 } from "@react-email/components";
-import { getBrandProfile } from "@/config/brand";
+
+import {
+  AuthEmailLayout,
+  authEmailHeadingStyle,
+  authEmailTextStyle,
+} from "@/emails/auth-email-layout";
+import { OTP_EXPIRY_MINUTES } from "@/lib/auth-constants";
+import type { AuthEmailBrand } from "@/lib/auth-email-brand";
 
 type OtpCodeProps = {
   code: string;
-  /** Agency name shown in the email; defaults to the compiled profile. */
-  organizationName?: string;
+  brand: AuthEmailBrand;
 };
 
-export const OtpCode = ({
-  code,
-  organizationName = getBrandProfile(process.env.NEXT_PUBLIC_LOTTO_BRAND)
-    .organizationName,
-}: OtpCodeProps) => (
-  <Html>
-    <Head>
-      <Font
-        fontFamily="Lato"
-        fallbackFontFamily="Helvetica"
-        webFont={{
-          url: "https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap",
-          format: "woff2",
+export const OtpCode = ({ code, brand }: OtpCodeProps) => (
+  <AuthEmailLayout
+    brand={brand}
+    preview={`${code} is your ${brand.organizationName} verification code — expires in ${OTP_EXPIRY_MINUTES} minutes.`}
+    securityMessage="If you did not ask to sign in, you can ignore this message. The code expires on its own and is useless without access to your sign-in attempt."
+  >
+    <Heading style={authEmailHeadingStyle(brand)}>Your verification code</Heading>
+    <Text style={authEmailTextStyle}>Enter this code on the sign-in page for {brand.appName}:</Text>
+    <Section
+      style={{
+        margin: "8px 0 24px",
+        padding: "20px 28px",
+        borderRadius: "8px",
+        backgroundColor: brand.tint,
+        textAlign: "center",
+      }}
+    >
+      <Text
+        style={{
+          margin: 0,
+          color: brand.primary,
+          fontFamily: "'SF Mono', Menlo, Consolas, 'Courier New', monospace",
+          fontSize: "34px",
+          fontWeight: 700,
+          letterSpacing: "10px",
+          lineHeight: "40px",
         }}
-        fontWeight={400}
-        fontStyle="normal"
-      />
-    </Head>
-    <Preview>{organizationName} login code</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>Your Login Code</Heading>
-        <Text style={text}>Use this code to sign in to {organizationName}:</Text>
-        <Section style={codeContainer}>
-          <Text style={codeText}>{code}</Text>
-        </Section>
-        <Text style={footer}>
-          This code expires in 10 minutes. If you did not request it, you can ignore this email.
-        </Text>
-      </Container>
-    </Body>
-  </Html>
+      >
+        {code}
+      </Text>
+    </Section>
+    <Text style={{ ...authEmailTextStyle, textAlign: "center" }}>
+      This code expires in {OTP_EXPIRY_MINUTES} minutes.
+    </Text>
+  </AuthEmailLayout>
 );
-
-const main = {
-  backgroundColor: "#f6f9fc",
-  fontFamily: "Lato, Helvetica, sans-serif",
-};
-
-const container = {
-  margin: "0 auto",
-  padding: "20px 0 48px",
-  maxWidth: "580px",
-};
-
-const h1 = {
-  color: "#1d1c1d",
-  fontSize: "28px",
-  fontWeight: "700",
-  margin: "24px 0",
-  padding: "0",
-  lineHeight: "36px",
-};
-
-const text = {
-  color: "#484848",
-  fontSize: "16px",
-  lineHeight: "26px",
-};
-
-const codeContainer = {
-  background: "#f4f4f4",
-  borderRadius: "8px",
-  margin: "24px 0",
-  padding: "20px",
-};
-
-const codeText = {
-  fontSize: "32px",
-  fontWeight: "700",
-  letterSpacing: "8px",
-  textAlign: "center" as const,
-  color: "#1d1c1d",
-  margin: 0,
-};
-
-const footer = {
-  color: "#9ca299",
-  fontSize: "14px",
-  lineHeight: "24px",
-  marginTop: "24px",
-};
 
 export default OtpCode;

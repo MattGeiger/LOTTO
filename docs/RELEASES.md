@@ -1,3 +1,21 @@
+# LOTTO v1.22.0
+
+**Release Date:** August 24, 2026
+
+LOTTO v1.22.0 makes Magic Link authentication viable on systems protected by
+Microsoft Defender and similar email-scanning gateways. Callback GETs now show
+a branded confirmation page without consuming the single-use credential; only
+an explicit staff POST completes the native Auth.js callback.
+
+Magic Link is the default sign-in method and Verification Code remains the
+fallback. Both expire in ten minutes, coexist safely through typed verification
+rows, enforce the same staff policy, and use one runtime-branded HTML/plain-text
+email service for William Temple House, St. Johns, and saved Appearance
+configurations. Full details are in `docs/AUTHENTICATION.md` and
+`docs/V1.22_AUTHENTICATION_PLAN.md`.
+
+---
+
 # LOTTO v1.21.0
 
 **Release Date:** August 22, 2026

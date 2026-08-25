@@ -1,6 +1,19 @@
 
 ## Unreleased
 
+## Version 1.22.0 — August 24, 2026
+
+- **Magic Links now work behind Microsoft Defender.** Opening the link first
+  shows a confirmation page; selecting **Sign in** completes access. Automated
+  email scanners may inspect the link without using it before you do.
+- **Authentication email looks like the active organization.** Magic Links and
+  Verification Codes now share the agency's logo, app name, colors, clear
+  expiry information, plain-text alternative, and security guidance—even when
+  the agency uses a saved Appearance configuration.
+- **A clearer sign-in experience.** Magic Link is the default and Verification
+  Code remains available beside it. Failed code requests no longer claim that a
+  code was sent, and requesting one method no longer cancels the other.
+
 ## Version 1.21.1 — August 24, 2026
 
 - **See FEED pairing status at a glance.** The Sync With FEED section now shows

@@ -1,10 +1,13 @@
 # Staff Controls
 
 Everything you do to run the queue happens on the **Staff Dashboard**. Go to
-`/staff` and sign in with your email (a magic link or a 6-digit code) — you'll
-land on the dashboard at `/admin`. Already signed in? Going straight to
-`/admin` works too. Only email addresses authorized by your agency administrator
-can receive or complete a staff sign-in.
+`/staff` and sign in with your email. **Magic Link** is the default; open the
+email, then select **Sign in** on the confirmation page. The extra confirmation
+keeps Microsoft Defender and similar email scanners from using the link first.
+Choose **Verification Code** instead to enter a 6-digit code from the email.
+Either method lands on `/admin`. Already signed in? Going straight to `/admin`
+works too. Only email addresses authorized by your agency administrator can
+receive or complete a staff sign-in.
 
 ## Setting Today's Ticket Range
 
