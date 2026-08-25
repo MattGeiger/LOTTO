@@ -1,3 +1,40 @@
+# LOTTO v1.24.1
+
+**Release Date:** August 24, 2026
+
+LOTTO v1.24.1 is a security patch. It closes the two exploitable Auth.js
+weaknesses in LOTTO's own code rather than waiting on an upstream upgrade, and
+removes a development-only tool from the production dependency tree.
+
+`src/proxy.ts` is the single authorization gate in front of every gated API
+prefix, and it tested session truthiness alone. Auth.js can resolve `auth()` to
+an error-carrying object rather than `null` when the configuration factory
+throws, so that check could treat a failed configuration as an authenticated
+session. The gate now requires a populated `session.user`.
+
+Admin email authorization now screens for non-ASCII characters on the raw
+address before normalizing, and normalizes with NFKC before validating rather
+than after. Unicode confusables such as U+FF20 FULLWIDTH COMMERCIAL AT collapse
+into a plain `@`, so a check applied after normalization cannot see the
+characters it exists to reject.
+
+`react-email` moved to `devDependencies`. It is a preview CLI that no source
+file or script imports, and shipping it as a production dependency pulled
+`socket.io`, `engine.io`, `ws`, `minimatch`, `ajv`, and `fast-uri` into the
+deployed tree. Production advisories fall from 16 to 9.
+
+The release deliberately changes no client-side code. Of the 48 built client
+chunks, 47 are byte-identical to v1.24.0; the sole difference is the inlined
+`package.json` metadata. Hydration was verified against the deployed build on a
+simulated iPad mini 4 running iOS 15.4, matching the declared support floor.
+
+The Next.js and Auth.js package upgrades that clear the remaining advisories
+are held for a separate release, because both ship code into the client bundle
+and require device verification. See `CHANGELOG.md` for the reasoning on each
+deferred item.
+
+---
+
 # LOTTO v1.24.0
 
 **Release Date:** August 24, 2026
