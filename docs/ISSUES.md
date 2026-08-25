@@ -1741,3 +1741,66 @@ re-lifted to root state.
 - Note the `TabsContents` behavior: any card using
   `components/animate-ui/primitives/animate/tabs` mounts **all** of its tabs,
   so its render cost is the sum of every tab, not just the visible one.
+
+## Issue 36: Microsoft Defender consumed Magic Links before staff could use them
+
+### Status
+
+Resolved in v1.22.0.
+
+### Observed
+
+LOTTO offered Magic Link sign-in, but William Temple House's Microsoft Defender
+mail protection followed the Auth.js callback URL during inspection. Because a
+standard callback GET consumes the single-use verification token, the later
+human click reached an expired link. Staff had to use OTP even though the UI
+continued to advertise Magic Link.
+
+The adjacent OTP flow had two correctness gaps: requesting a code deleted every
+verification token for the address (including a pending Magic Link), and a
+failed request still moved the interface to a misleading “Code sent” state.
+Magic Link copy promised ten minutes while the provider retained its default
+expiry.
+
+### Root Cause
+
+- `src/app/api/auth/[...nextauth]/route.ts` previously exported Auth.js GET
+  directly, giving scanners and humans identical token-consuming behavior.
+- `src/app/api/auth/otp/request/route.ts` deleted by `identifier` without a
+  method discriminator.
+- `src/components/login-experience.tsx` used one OTP `error` state for both
+  request failure and verification failure.
+- `src/lib/auth.ts` did not set an explicit email-provider `maxAge`.
+
+### Approaches
+
+1. Remove Magic Link and use codes only. Simple, but eliminates the better
+   staff experience and leaves email branding fragmented.
+2. Replace Auth.js email authentication. Maximum control, but unnecessarily
+   duplicates session and token security.
+3. Preserve Auth.js and require a human POST after a harmless GET. This keeps
+   the established architecture and matches FEED's scanner-safe contract.
+
+### Fix
+
+- Email callback GETs now redirect to `/login/confirm` without invoking
+  Auth.js. The page contains no automatic submission; its explicit **Sign in**
+  POST is the only path that spends the token.
+- Both methods now expire in ten minutes through shared constants.
+- The additive `verification_token.type` column isolates `otp` rows from
+  `magic_link` rows.
+- Magic Link is the default sign-in method; Verification Code remains the
+  fallback. Request failures stay on the email step with actionable feedback.
+- Both messages now share runtime-branded React Email HTML/plain-text templates
+  and centralized Resend/SMTP delivery.
+
+### Verification
+
+- `tests/magic-link-interstitial.test.ts` proves repeated callback GETs never
+  reach Auth.js and callback POSTs still do.
+- `tests/auth-token-isolation.test.ts` protects the additive schema and
+  type-scoped OTP queries.
+- `tests/login-experience.test.tsx` protects tab order and honest request-state
+  behavior.
+- `tests/auth-email-branding.test.tsx` renders both built-in identities in HTML
+  and plain text.

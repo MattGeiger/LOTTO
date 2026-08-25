@@ -1,7 +1,10 @@
-## Deployment migration plan (Neon + NextAuth magic links)
+## Deployment migration plan (Neon + scanner-safe Auth.js email sign-in)
 
 ### Overview
-Goal: run the same stack locally and on Vercel using Neon Postgres, NextAuth v5 email/magic-link auth (Resend), and keep parity between dev and production. Local Docker should read `.env.local`. **Production now requires `DATABASE_URL`; file-system storage is development-only.**
+Goal: run the same stack locally and on Vercel using Neon Postgres, Auth.js v5
+scanner-safe Magic Link plus Verification Code (Resend), and keep parity between
+development and production. Local Docker should read `.env.local`.
+**Production requires `DATABASE_URL`; file-system storage is development-only.**
 
 ### Steps (canonical)
 1) Provision Neon
@@ -67,6 +70,14 @@ Goal: run the same stack locally and on Vercel using Neon Postgres, NextAuth v5 
      - Uses `DATABASE_URL` exclusively for the adapter; fails fast when missing (production required).
      - Resend only when `RESEND_API_KEY` is set; otherwise defaults to MailDev settings above for local.
      - Domain allowlist enforced; `trustHost` true.
+     - Sets both email credentials to a ten-minute expiry and sends through the
+       shared runtime-branded email service.
+   - `src/app/api/auth/[...nextauth]/route.ts`:
+     - Redirects email callback GETs to `/login/confirm` without consuming the
+       token; only the explicit confirmation POST delegates to Auth.js.
+   - `verification_token.type`:
+     - Defaults existing/Auth.js rows to `magic_link`; OTP queries only mutate
+       `otp` rows. Apply the complete `schema.sql` before v1.22.0.
 
 5) Docker config
    - `docker-compose.yml` uses:
@@ -81,7 +92,11 @@ Goal: run the same stack locally and on Vercel using Neon Postgres, NextAuth v5 
 6) Test flow checklist
    - `docker compose down && docker compose up --build`
    - Visit `/login`, submit `@williamtemple.org`.
-   - Email arrives from `login@williamtemple.app`; link signs in.
+   - Email arrives with the active brand and verified sender. The link opens
+     `/login/confirm`; refreshing is harmless; pressing **Sign in** completes
+     authentication.
+   - A six-digit Verification Code also signs in, and requesting it does not
+     invalidate a pending Magic Link.
    - Neon tables show user rows; verification_token row appears then is consumed.
    - `/admin` accessible post-login; non-allowed domains rejected.
 

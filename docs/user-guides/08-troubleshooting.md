@@ -33,6 +33,20 @@ Update it there; the board picks up the change on its next refresh.
 - The board's language is controlled separately — see
   [Languages & Themes](06-languages-themes.md).
 
+## A Staff Sign-In Link Does Not Work
+
+1. Open the newest LOTTO sign-in email; links expire after ten minutes and are
+   single-use.
+2. The link should open a **Confirm sign in** page. Select **Sign in** there.
+   Refreshing the confirmation page is safe and does not use the link.
+3. If the page says the link is incomplete or verification fails, return to
+   `/staff` and request a new one.
+4. Select **Verification Code** if the mail program rewrites or breaks the link.
+   Request a fresh six-digit code and enter it within ten minutes.
+
+If LOTTO says the address is not authorized, contact the agency administrator;
+retrying with the same address will not change its access policy.
+
 ## What To Read Next
 
 - Back to the basics: [Getting Started](01-getting-started.md).

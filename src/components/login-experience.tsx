@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { BrandLogo } from "@/components/brand-logo";
 import { useBrand } from "@/contexts/brand-context";
+import { MAGIC_LINK_EXPIRY_MINUTES, OTP_EXPIRY_MINUTES } from "@/lib/auth-constants";
 
 const LOGIN_TABS_IDS = {
   otpTrigger: "login-tabs-trigger-otp",
@@ -44,11 +45,13 @@ function LoginForm() {
 
   const [email, setEmail] = React.useState("");
   const [magicStatus, setMagicStatus] = React.useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [magicError, setMagicError] = React.useState<string | null>(null);
 
   const [otpCode, setOtpCode] = React.useState("");
   const [otpStatus, setOtpStatus] = React.useState<
-    "idle" | "requesting" | "sent" | "verifying" | "error"
+    "idle" | "requesting" | "requestFailed" | "sent" | "verifying" | "verificationFailed"
   >("idle");
+  const [otpError, setOtpError] = React.useState<string | null>(null);
 
   const hasVerificationError = searchParams.get("error") === "Verification";
 
@@ -60,25 +63,45 @@ function LoginForm() {
     }
   }, [hasVerificationError]);
 
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    setMagicStatus("idle");
+    setMagicError(null);
+    setOtpStatus("idle");
+    setOtpCode("");
+    setOtpError(null);
+  };
+
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setMagicStatus("sending");
-    const result = await signIn("resend", {
-      email,
-      callbackUrl,
-      redirect: false,
-    });
-    if (result?.error) {
-      toast.error(result.error);
+    setMagicError(null);
+    try {
+      const result = await signIn("resend", {
+        email,
+        callbackUrl,
+        redirect: false,
+      });
+      if (result?.error) {
+        throw new Error("LOTTO could not send the sign-in link. Check the email and try again.");
+      }
+      setMagicStatus("sent");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "LOTTO could not send the sign-in link. Check the email and try again.";
+      toast.error(message);
+      setMagicError(message);
       setMagicStatus("error");
-      return;
     }
-    setMagicStatus("sent");
   };
 
-  const handleRequestOTP = async () => {
+  const handleRequestOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
     setOtpCode("");
     setOtpStatus("requesting");
+    setOtpError(null);
     try {
       const response = await fetch("/api/auth/otp/request", {
         method: "POST",
@@ -99,14 +122,17 @@ function LoginForm() {
         toast(`Development OTP code: ${data.devCode}`);
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Unable to send code. Please try again.");
-      setOtpStatus("error");
+      const message = err instanceof Error ? err.message : "Unable to send code. Please try again.";
+      toast.error(message);
+      setOtpError(message);
+      setOtpStatus("requestFailed");
     }
   };
 
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setOtpStatus("verifying");
+    setOtpError(null);
     const result = await signIn("otp", {
       email,
       code: otpCode,
@@ -114,8 +140,10 @@ function LoginForm() {
       redirect: false,
     });
     if (result?.error) {
-      toast.error(result.error);
-      setOtpStatus("error");
+      const message = "That verification code is incorrect or expired. Request a new code and try again.";
+      toast.error(message);
+      setOtpError(message);
+      setOtpStatus("verificationFailed");
       return;
     }
     if (result?.url) {
@@ -131,20 +159,9 @@ function LoginForm() {
       </CardHeader>
 
       <CardContent className="px-8 pb-7 sm:px-10 sm:pb-8">
-        <Tabs defaultValue="otp" className="w-full">
+        <Tabs defaultValue="magic" className="w-full">
           <TabsHighlight className="absolute inset-0 rounded-[calc(var(--radius)-7px)] border border-border/45 bg-background/80 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-background/55">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsHighlightItem value="otp">
-                <TabsTrigger
-                  value="otp"
-                  id={LOGIN_TABS_IDS.otpTrigger}
-                  aria-controls={LOGIN_TABS_IDS.otpContent}
-                  className="flex w-full items-center gap-2"
-                >
-                  <KeyRound className="size-4" />
-                  OTP Code
-                </TabsTrigger>
-              </TabsHighlightItem>
               <TabsHighlightItem value="magic">
                 <TabsTrigger
                   value="magic"
@@ -154,6 +171,17 @@ function LoginForm() {
                 >
                   <Mail className="size-4" />
                   Magic Link
+                </TabsTrigger>
+              </TabsHighlightItem>
+              <TabsHighlightItem value="otp">
+                <TabsTrigger
+                  value="otp"
+                  id={LOGIN_TABS_IDS.otpTrigger}
+                  aria-controls={LOGIN_TABS_IDS.otpContent}
+                  className="flex w-full items-center gap-2"
+                >
+                  <KeyRound className="size-4" />
+                  Verification Code
                 </TabsTrigger>
               </TabsHighlightItem>
             </TabsList>
@@ -175,9 +203,10 @@ function LoginForm() {
                     id="email-magic"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => handleEmailChange(e.target.value)}
                     placeholder={brandProfile.staff.emailPlaceholder}
                     className="px-4"
+                    autoComplete="email"
                     required
                   />
                 </div>
@@ -189,8 +218,14 @@ function LoginForm() {
               {magicStatus === "sent" && (
                 <Alert>
                   <AlertDescription>
-                    Check your email for the sign-in link. It expires in 10 minutes.
+                    Check your email for the sign-in link. It expires in {MAGIC_LINK_EXPIRY_MINUTES}
+                    {" "}minutes.
                   </AlertDescription>
+                </Alert>
+              )}
+              {magicError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{magicError}</AlertDescription>
                 </Alert>
               )}
             </TabsContent>
@@ -201,8 +236,8 @@ function LoginForm() {
               aria-labelledby={LOGIN_TABS_IDS.otpTrigger}
               className="space-y-4"
             >
-              {otpStatus === "idle" || otpStatus === "requesting" ? (
-                <div className="space-y-3">
+              {otpStatus === "idle" || otpStatus === "requesting" || otpStatus === "requestFailed" ? (
+                <form onSubmit={handleRequestOTP} className="space-y-3">
                   <div className="space-y-2">
                     <label htmlFor="email-otp" className="text-sm font-medium">
                       Work email
@@ -211,21 +246,26 @@ function LoginForm() {
                       id="email-otp"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => handleEmailChange(e.target.value)}
                       placeholder={brandProfile.staff.emailPlaceholder}
                       className="px-4"
+                      autoComplete="email"
                       required
                     />
                   </div>
                   <Button
-                    type="button"
-                    onClick={handleRequestOTP}
+                    type="submit"
                     className="w-full px-5"
                     disabled={otpStatus === "requesting" || email.trim().length === 0}
                   >
                     {otpStatus === "requesting" ? "Sending..." : "Send 6-digit code"}
                   </Button>
-                </div>
+                  {otpError && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{otpError}</AlertDescription>
+                    </Alert>
+                  )}
+                </form>
               ) : (
                 <form onSubmit={handleVerifyOTP} className="space-y-4">
                   <div className="space-y-2">
@@ -233,8 +273,13 @@ function LoginForm() {
                     <InputOTP
                       maxLength={6}
                       value={otpCode}
-                      onChange={(value) => setOtpCode(value)}
+                      onChange={(value) => {
+                        setOtpCode(value);
+                        setOtpError(null);
+                        if (otpStatus === "verificationFailed") setOtpStatus("sent");
+                      }}
                       className="w-full"
+                      autoComplete="one-time-code"
                     >
                       <InputOTPGroup className="gap-2.5">
                         {[0, 1, 2, 3, 4, 5].map((idx) => (
@@ -243,7 +288,15 @@ function LoginForm() {
                       </InputOTPGroup>
                     </InputOTP>
                     <p className="text-xs text-muted-foreground">Code sent to {email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      The code expires in {OTP_EXPIRY_MINUTES} minutes.
+                    </p>
                   </div>
+                  {otpError && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{otpError}</AlertDescription>
+                    </Alert>
+                  )}
                   <div className="flex gap-2">
                     <Button
                       type="button"
@@ -251,6 +304,7 @@ function LoginForm() {
                       onClick={() => {
                         setOtpStatus("idle");
                         setOtpCode("");
+                        setOtpError(null);
                       }}
                       className="flex-1 px-4"
                     >

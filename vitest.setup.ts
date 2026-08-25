@@ -37,3 +37,13 @@ if (typeof globalThis.IntersectionObserver === "undefined") {
     }
   } as unknown as typeof globalThis.IntersectionObserver;
 }
+
+// Radix/animate-ui panels measure their active content after mount. JSDOM does
+// not ship ResizeObserver, so provide the no-op shape used by component tests.
+if (typeof globalThis.ResizeObserver === "undefined") {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof globalThis.ResizeObserver;
+}

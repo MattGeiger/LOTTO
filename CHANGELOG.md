@@ -2,6 +2,44 @@
 
 ## [Unreleased]
 
+## [1.22.0] - 2026-08-24
+
+### Added
+
+- **Scanner-safe Magic Links.** Email callback GETs now land on a branded
+  confirmation page without consuming the one-time token. Only the staff
+  member's explicit **Sign in** POST reaches Auth.js, so Microsoft Defender and
+  similar inbound-mail scanners can inspect the link harmlessly.
+- Shared, runtime-branded React Email templates for Magic Links and six-digit
+  Verification Codes, including HTML and plain-text bodies, live-text agency
+  identity, email-safe brand colors, expiry/security guidance, and the active
+  app name as the sender display name.
+- An additive `verification_token.type` discriminator and lookup index isolate
+  `otp` credentials from Auth.js `magic_link` credentials.
+
+### Changed
+
+- **Magic Link** is now the default staff sign-in method, with **Verification
+  Code** as a first-class fallback. Both methods explicitly expire after ten
+  minutes and share the same authorization policy and email delivery service.
+- Verification Code entry appears only after LOTTO accepts the delivery
+  request. Authorization and delivery failures remain on the email step with
+  actionable inline feedback.
+
+### Fixed
+
+- Requesting a Verification Code no longer deletes a pending Magic Link for the
+  same email address.
+- Magic Link expiry now matches the ten-minute duration shown in the interface
+  and message copy instead of inheriting Auth.js's longer default.
+
+### Documentation
+
+- Replaced the former “Magic Links are not viable” guidance with the v1.22.0
+  scanner-safe contract, migration/runbook, security invariants, user guidance,
+  and deployment acceptance checks. See `docs/AUTHENTICATION.md`,
+  `docs/V1.22_AUTHENTICATION_PLAN.md`, and Issue 36 in `docs/ISSUES.md`.
+
 ## [1.21.1] - 2026-08-24
 
 ### Fixed

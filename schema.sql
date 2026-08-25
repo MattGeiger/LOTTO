@@ -58,8 +58,15 @@ CREATE TABLE IF NOT EXISTS verification_token (
   identifier TEXT NOT NULL,
   expires TIMESTAMPTZ NOT NULL,
   token TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'magic_link',
   PRIMARY KEY (identifier, token)
 );
+
+-- Existing deployments predate typed verification records. Auth.js inserts
+-- Magic Link rows without naming this column, so the default preserves adapter
+-- compatibility while LOTTO's OTP path can remain isolated.
+ALTER TABLE verification_token
+  ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'magic_link';
 
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -94,6 +101,9 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 CREATE INDEX IF NOT EXISTS verification_token_identifier_idx
   ON verification_token(identifier);
+
+CREATE INDEX IF NOT EXISTS verification_token_identifier_type_idx
+  ON verification_token(identifier, type);
 
 CREATE INDEX IF NOT EXISTS accounts_userId_idx
   ON accounts("userId");

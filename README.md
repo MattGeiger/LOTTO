@@ -18,7 +18,7 @@ ticketed distributions (food pantries, clinics, giveaways, and similar).
 
 **Production deployment:** https://williamtemple.app
 **License:** [AGPL-3.0-or-later](./LICENSE)
-**Status:** v1.21.1 — production release
+**Status:** v1.22.0 — release candidate
 
 ---
 
@@ -164,7 +164,9 @@ optional standalone read-only board, and persistence details are in
 - **Content:** `react-markdown` + `remark-gfm` for in-app help and release notes
 - **Data:** Neon Postgres in production; a file-based `data/state.json` fallback
   for local development
-- **Auth & email:** NextAuth magic link + OTP, delivered via [Resend](https://resend.com/)
+- **Auth & email:** scanner-safe Auth.js Magic Link + Verification Code,
+  delivered through runtime-branded HTML/plain-text templates via
+  [Resend](https://resend.com/)
 - **Testing:** Vitest + Testing Library
 - **Hosting:** Vercel
 

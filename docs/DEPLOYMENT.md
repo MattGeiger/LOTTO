@@ -121,8 +121,8 @@ for every brand profile.
 ### William Temple House production
 
 - **Live:** https://williamtemple.app (Vercel, custom domain).
-- **Auth:** NextAuth magic link + OTP fallback; sign-ins restricted to
-  `@williamtemple.org`.
+- **Auth:** scanner-safe Auth.js Magic Link + Verification Code fallback;
+  sign-ins restricted to `@williamtemple.org`.
 - **Email:** Resend (`login@williamtemple.app`; configure SPF/DKIM/DMARC in DNS).
 - **Database:** Neon Postgres (serverless) with a shared connection pool.
 
@@ -137,6 +137,24 @@ EMAIL_FROM=login@williamtemple.app
 RESEND_API_KEY=re_...
 ADMIN_EMAIL_DOMAIN=williamtemple.org
 NODE_ENV=production
+```
+
+Before deploying v1.22.0, apply the complete `schema.sql` to the agency's Neon
+database. The additive authentication migration adds
+`verification_token.type` (default `magic_link`) plus
+`verification_token_identifier_type_idx`; OTP and Magic Link credentials can
+then coexist without one flow deleting the other. Do not drop or recreate the
+table. Verify with:
+
+```sql
+SELECT column_name, column_default, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'verification_token'
+  AND column_name = 'type';
+
+SELECT to_regclass('public.verification_token_identifier_type_idx')
+  AS token_type_index;
 ```
 
 Before deploying v1.21.0, apply `schema.sql` to the agency's Neon database so
@@ -387,14 +405,18 @@ against the schema and env vars from steps 3–4.
    another agency's.
 2. `/admin` redirects to sign-in (auth required); `/api/state` reads/writes
    succeed once signed in.
-3. **OTP and Magic Link both succeed** for an address allowed by the agency's
+3. **Verification Code and Magic Link both succeed** for an address allowed by the agency's
    `ADMIN_EMAIL_ALLOWLIST`/`ADMIN_EMAIL_DOMAIN` policy, and both are rejected
    for a disallowed address. Don't just check that the request returns
    `200` — confirm the actual email arrives, since a `200` with a missing
    schema (step 3) can still surface as a generic error *after* that point in
    some flows. If either fails with "Unable to issue code" or NextAuth's
    "Configuration" page, re-check step 3 first — that's the most likely cause
-   even though neither error message mentions the database.
+   even though neither error message mentions the database. For Magic Link,
+   verify the emailed URL first opens `/login/confirm`, refreshing that page
+   does not expire the link, and only selecting **Sign in** completes the
+   session. Inspect both messages with images disabled and confirm the agency
+   name remains visible as text.
 4. For queue-only deployments: nav omits Inventory, `/inventory` returns 404,
    CSP has no FEED origin. For FEED-enabled deployments: confirm the
    agency-specific inventory and CSP origin, and that a failed feed never
