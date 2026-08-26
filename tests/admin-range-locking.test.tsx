@@ -38,7 +38,7 @@ vi.mock("next/image", () => ({
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ children, href, ...rest }: { children: unknown; href: string }) => (
+  default: ({ children, href, ...rest }: { children: import("react").ReactNode; href: string }) => (
     <a href={href} {...rest}>
       {children}
     </a>

@@ -33,6 +33,7 @@ describe("Appearance logo upload interaction", () => {
       <LogosStep
         draft={{ id: "custom", config: scratchConfig(), startSource: "scratch" }}
         onChange={vi.fn()}
+        templates={[]}
         isLoading={false}
         animateIntro={false}
       />,
@@ -63,6 +64,7 @@ describe("Appearance logo upload interaction", () => {
       <LogosStep
         draft={{ id: "custom", config: scratchConfig(), startSource: "scratch" }}
         onChange={onChange}
+        templates={[]}
         isLoading={false}
         animateIntro={false}
       />,

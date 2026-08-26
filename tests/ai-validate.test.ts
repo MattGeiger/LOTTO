@@ -57,7 +57,7 @@ describe("validateApiKey", () => {
     await validateApiKey("OpenAI", "k");
     await validateApiKey("Anthropic", "k");
     await validateApiKey("Google", "k");
-    const urls = fetchMock.mock.calls.map((c) => String(c[0]));
+    const urls = fetchMock.mock.calls.map((c: unknown[]) => String(c[0]));
     expect(urls[0]).toContain("api.openai.com");
     expect(urls[1]).toContain("api.anthropic.com");
     expect(urls[2]).toContain("generativelanguage.googleapis.com");

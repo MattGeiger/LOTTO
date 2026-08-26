@@ -57,7 +57,7 @@ describe("FEED public inventory helpers", () => {
     await fetchFeedPublicInventory("https://example.test/inventory.json");
 
     const SAFELISTED = new Set(["accept", "accept-language", "content-language", "content-type", "range"]);
-    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    const init = (fetchMock.mock.calls[0] as unknown[])[1] as RequestInit;
     const headerNames = Object.keys((init.headers ?? {}) as Record<string, string>);
     expect(headerNames.length).toBeGreaterThan(0);
     for (const name of headerNames) {

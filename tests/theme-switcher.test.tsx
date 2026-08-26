@@ -83,11 +83,7 @@ describe("ThemeSwitcher", () => {
     rawTriggerMock.mockReset();
     document.documentElement.classList.remove("dark", "light", "hi-viz");
     installMatchMedia(false);
-    delete (
-      document as Document & {
-        startViewTransition?: unknown;
-      }
-    ).startViewTransition;
+    Reflect.deleteProperty(document, "startViewTransition");
   });
 
   it("shows all four theme options", async () => {

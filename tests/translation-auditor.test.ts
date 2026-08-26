@@ -31,7 +31,8 @@ const getContentItems = vi.fn(async (options?: { inventoryNames?: string[] }) =>
 });
 
 vi.mock("@/lib/translation/content", () => ({
-  getContentItems: (...args: unknown[]) => getContentItems(...args),
+  getContentItems: (...args: Parameters<typeof getContentItems>) =>
+    getContentItems(...args),
 }));
 
 /*

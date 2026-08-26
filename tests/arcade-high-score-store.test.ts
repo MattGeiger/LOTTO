@@ -63,7 +63,11 @@ describe("createArcadeHighScoreStore", () => {
       score: 400,
     });
     expect(mockSql).toHaveBeenCalledWith(expect.any(Array), "brick-mayhem", "hard", 10);
-    expect(String(mockSql.mock.calls[0]?.[0])).toContain("order by score desc, created_at asc, id asc");
+    expect(
+      String(
+        (mockSql as unknown as { mock: { calls: unknown[][] } }).mock.calls[0]?.[0],
+      ),
+    ).toContain("order by score desc, created_at asc, id asc");
   });
 
   it("inserts only when the score qualifies", async () => {

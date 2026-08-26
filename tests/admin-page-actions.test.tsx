@@ -45,7 +45,7 @@ vi.mock("next/link", () => ({
     href,
     ...rest
   }: {
-    children: unknown;
+    children: import("react").ReactNode;
     href: string;
   }) => (
     <a href={href} {...rest}>
@@ -63,7 +63,7 @@ const baseState = {
   endNumber: 10,
   mode: "random",
   generatedOrder: [3, 7, 1, 9, 5, 2, 10, 4, 8, 6],
-  currentlyServing: 3,
+  currentlyServing: 3 as number | null,
   ticketStatus: {},
   calledAt: {},
   orderLocked: true,

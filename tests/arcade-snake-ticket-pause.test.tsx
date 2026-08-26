@@ -31,7 +31,9 @@ describe("Snake ticket-called pause behavior", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ scores: [] }), { status: 200 }),
     ));
-    vi.spyOn(window, "setInterval").mockImplementation(() => 0 as unknown as number);
+    vi.spyOn(window, "setInterval").mockImplementation(
+      () => 0 as unknown as ReturnType<typeof window.setInterval>,
+    );
     vi.spyOn(window, "clearInterval").mockImplementation(() => undefined);
   });
 

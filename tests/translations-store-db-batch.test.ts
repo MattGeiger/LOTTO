@@ -63,7 +63,7 @@ describe("Postgres translation batch updates", () => {
     );
 
     expect(sql).toHaveBeenCalledTimes(1);
-    const [strings, payload] = sql.mock.calls[0];
+    const [strings, payload] = sql.mock.calls[0] as unknown[];
     expect(String(strings)).toContain("jsonb_to_recordset");
     expect(JSON.parse(String(payload))).toHaveLength(2);
     expect(result.map((record) => record.id)).toEqual([1, 2]);
