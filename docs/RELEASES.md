@@ -1,3 +1,42 @@
+# LOTTO v1.25.0
+
+**Release Date:** August 26, 2026
+
+LOTTO v1.25.0 upgrades Next.js from 16.0.10 to 16.3.2. Production advisories
+fall from six to two, still none critical: `next`, `nanoid`, `postcss` and
+`sharp` all clear. The client bundle shrinks by roughly 271 KB, from 48 chunks
+and 3,394,148 bytes to 41 chunks and 3,122,732 bytes.
+
+Next 16.3 bundles its own `sharp` 0.35.4, which reintroduced the libvips
+duplicate-class collision first seen during v1.24.1 — but mirrored. The root
+copy remained on 0.34.5 with libvips 8.17.3 while Next resolved 8.18.6, loading
+two dylibs into one process on the image paths. In v1.24.1 the correct response
+was to revert; here it is to move forward. Raising the root copy to `^0.35.4`
+deduplicates to a single `sharp` and one libvips, and clears the outstanding
+`sharp` advisory as a consequence.
+
+The upgrade also required fixing 18 TypeScript errors across 13 test files.
+Those errors were not introduced by it. The same 18 are present on 16.0.10,
+confirmed by running `tsc` against both dependency sets and diffing the
+normalized error lists. Next 16.0.10's build silently skipped typechecking test
+files; 16.3.2 honours `tsconfig`'s `include`, so the build fails until they are
+addressed. Every fix is a type annotation — no assertion was weakened and no
+`src/` file changed. One was a real defect rather than noise:
+`appearance-logo-upload.test.tsx` omitted the required `templates` prop, so
+`AppearanceStepProps` had gained a member without its test being updated.
+`npx tsc --noEmit` is now clean for the first time.
+
+Because every client chunk is rebuilt by a framework upgrade, a static scan is
+not sufficient evidence for the iPadOS 15 support floor. Verification was done
+on a simulated iPad mini 4 running iPadOS 15.4 with a custom appearance
+applied. The device fetched `/api/auth/session` and two RSC prefetch requests —
+both issued only by a hydrated client router — proving hydration completed
+rather than merely that the page painted. This was observed through a logging
+proxy placed in front of the production server, leaving the application under
+test unmodified.
+
+---
+
 # LOTTO v1.24.3
 
 **Release Date:** August 26, 2026
