@@ -1,6 +1,17 @@
 
 ## Unreleased
 
+## Version 1.25.1 — August 26, 2026
+
+**This is a security update.** Nothing changes about how LOTTO looks or works
+for staff or visitors.
+
+- **Sign-in email delivery is locked to the approved provider in production.**
+  LOTTO previously relied on its settings being correct to ensure live sign-in
+  email always went through Resend. It now refuses to fall back to the local
+  development mail path at all when running in production.
+
+
 ## Version 1.25.0 — August 26, 2026
 
 **This is a maintenance update.** Nothing changes about how LOTTO looks or works

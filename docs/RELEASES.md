@@ -1,3 +1,37 @@
+# LOTTO v1.25.1
+
+**Release Date:** August 26, 2026
+
+LOTTO v1.25.1 makes the SMTP transport structurally unavailable in production.
+
+Every branch in `auth-email-service.ts` that reached `smtpTransport()` already
+checked `isProduction` — except the one where `RESEND_API_KEY` is absent or
+malformed, which fell through unguarded. `src/lib/auth.ts` refuses to start in
+production without a valid key, but `/api/auth/otp/request` imports the email
+service directly and never loads that config, so the OTP path was not covered.
+Delivery in production depended on the environment being correct rather than on
+the code refusing to do otherwise.
+
+The practical impact of the old behaviour was low. An SMTP attempt on Vercel
+would have dialled `localhost:1025`, been refused, and failed the request closed
+without sending mail. The remaining nodemailer advisory also needs
+attacker-controlled message options, and LOTTO builds the message itself.
+
+The value of the change is in what it settles. That advisory requires nodemailer
+9.0.1 or later, which falls outside the Auth.js peer range of
+`^7.0.7 || ^8.0.5`, so it cannot be resolved by upgrading while Auth.js remains
+on its current line. Production can no longer construct an SMTP transport at
+all, which makes the advisory's dev-only reachability a property of the code
+rather than of the deployment configuration.
+
+`tests/auth-email-transport.test.ts` covers the transport contract, which had no
+tests. Both exported senders are exercised, since they are reached by different
+routes with different guards. The three guard assertions were confirmed to fail
+with the guard removed, so they are regression guards rather than descriptions
+of current behaviour.
+
+---
+
 # LOTTO v1.25.0
 
 **Release Date:** August 26, 2026

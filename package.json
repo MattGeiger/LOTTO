@@ -1,6 +1,6 @@
 {
   "name": "app",
-  "version": "1.25.0",
+  "version": "1.25.1",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -95,7 +95,7 @@
     "typescript": "^5",
     "vitest": "^3.2.4"
   },
-  "//browserslist": "Declared legacy support floor (see docs/BROWSER_SUPPORT.md). iOS/Safari 15 covers the iPadOS 15.8 staff devices (all iOS browsers use WebKit); Chrome/Android 80 covers aging public-facing visitor devices. SWC downlevels syntax and core-js polyfills runtime APIs to this baseline. NOTE: regex *literal* syntax (e.g. lookbehind) cannot be downleveled \u2014 keep such syntax out of the bundle; enforced by `npm run check:legacy-bundles`.",
+  "//browserslist": "Declared legacy support floor (see docs/BROWSER_SUPPORT.md). iOS/Safari 15 covers the iPadOS 15.8 staff devices (all iOS browsers use WebKit); Chrome/Android 80 covers aging public-facing visitor devices. SWC downlevels syntax and core-js polyfills runtime APIs to this baseline. NOTE: regex *literal* syntax (e.g. lookbehind) cannot be downleveled — keep such syntax out of the bundle; enforced by `npm run check:legacy-bundles`.",
   "browserslist": [
     "iOS >= 15",
     "Safari >= 15",

@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+## [1.25.1] - 2026-08-26
+
+### Security
+
+- The SMTP transport in `src/lib/auth-email-service.ts` now refuses to run in
+  production instead of falling through to it. Every branch that reached
+  `smtpTransport()` already checked `isProduction` except the one where
+  `RESEND_API_KEY` is absent or malformed, which fell through unguarded.
+- That gap was reachable in principle. `src/lib/auth.ts` refuses to start in
+  production without a valid key, but `/api/auth/otp/request` imports
+  `auth-email-service` directly and never loads that config, so the OTP path
+  was not covered by it. Delivery in production therefore depended on the
+  environment being correct rather than on the code refusing to do otherwise.
+- This makes the remaining nodemailer advisory's dev-only reachability a
+  property of the code. That advisory needs nodemailer 9.0.1 or later, which
+  falls outside the Auth.js peer range of `^7.0.7 || ^8.0.5`, so it cannot be
+  resolved by upgrading while Auth.js is on its current line. Production now
+  cannot construct an SMTP transport at all, which closes the question by
+  construction rather than by configuration.
+- Practical impact of the old behaviour was low: an SMTP attempt on Vercel
+  would have dialled `localhost:1025`, been refused, and failed the request
+  closed without sending mail. The advisory itself needs attacker-controlled
+  message options, and LOTTO builds the message itself.
+
+### Added
+
+- `tests/auth-email-transport.test.ts` covers the delivery-transport contract,
+  which previously had no tests at all. Both exported senders are exercised
+  because they are reached by different routes with different guards in front
+  of them: production refuses SMTP on the OTP path, the magic-link path, and
+  when the key is present but malformed; Resend still delivers when the key is
+  valid; and development keeps the local SMTP/MailDev path on both senders.
+  The three guard assertions were confirmed to fail with the guard removed, so
+  they are regression guards rather than descriptions.
+
 ## [1.25.0] - 2026-08-26
 
 ### Changed
