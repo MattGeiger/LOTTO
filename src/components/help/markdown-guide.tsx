@@ -35,9 +35,19 @@ export function MarkdownGuideContent({ content }: MarkdownGuideProps) {
   const headingIdsByLine = React.useMemo(() => getGuideHeadingIdsByLine(content), [content]);
 
   const components: Components = {
-    a: ({ href, children, className, node: _node, title, ...props }) => {
-      const shouldUnderline = title === "underline";
-      const linkClassName = cn(shouldUnderline && "underline underline-offset-4", className);
+    a: ({ href, children, className, node: _node, title: _title, ...props }) => {
+      // Links are given the conventional affordance — blue and underlined — so
+      // they read as interactive. Markdown (and linkify) turn plain URLs into
+      // anchors, and without this they inherited body colour with no underline,
+      // leaving no signal that they could be tapped. `title="underline"` used
+      // to be the only way to get an underline; it is now redundant but kept so
+      // existing guide content keeps behaving the same.
+      const linkClassName = cn(
+        "text-link underline underline-offset-4 decoration-from-font",
+        "hover:text-link-hover focus-visible:text-link-hover",
+        "visited:text-link-visited",
+        className,
+      );
 
       if (!href) {
         return (
