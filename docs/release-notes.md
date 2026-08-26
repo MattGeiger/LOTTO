@@ -1,6 +1,21 @@
 
 ## Unreleased
 
+## Version 1.24.3 — August 26, 2026
+
+**This is a security update.** Nothing changes about how LOTTO looks or works
+for staff or visitors.
+
+- **Sign-in libraries updated.** LOTTO's authentication components were moved
+  to their current versions, resolving the last of the serious security
+  advisories identified earlier this week.
+- **Extra sign-in protections kept in place.** The stricter checks LOTTO added
+  in v1.24.1 remain, even though the underlying library now performs similar
+  checks of its own.
+- **Verified on the oldest supported iPad.** Sign-in was checked on a simulated
+  iPad mini 4 running iPadOS 15.4 with a custom appearance applied, to confirm
+  nothing changed for the tablets used at the counter.
+
 ## Version 1.24.2 — August 25, 2026
 
 **This is a bug-fix release.**
