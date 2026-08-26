@@ -10,12 +10,26 @@ const feedPublicInventoryHost = inventoryIntegration.url
   ? new URL(inventoryIntegration.url).origin
   : null;
 
+// React's development build calls eval() to reconstruct callstacks across the
+// server/client boundary. Modern engines take a different path, but older
+// WebKit (the iPadOS 15 support floor, see docs/BROWSER_SUPPORT.md) falls back
+// to eval, and blocking it aborts hydration silently — the page renders and
+// never becomes interactive, with the failure reported only via console.error.
+// This relaxation is development-only; the production policy is unchanged and
+// must never carry 'unsafe-eval'.
+const isDevelopment = process.env.NODE_ENV !== "production";
+const devEvalSource = isDevelopment ? " 'unsafe-eval'" : "";
+
 const scriptSrc = enableTweakcnPreview
-  ? `script-src 'self' 'unsafe-inline' ${speedInsightsScriptHost} https://tweakcn.com https://*.tweakcn.com`
-  : `script-src 'self' 'unsafe-inline' ${speedInsightsScriptHost}`;
+  ? `script-src 'self' 'unsafe-inline'${devEvalSource} ${speedInsightsScriptHost} https://tweakcn.com https://*.tweakcn.com`
+  : `script-src 'self' 'unsafe-inline'${devEvalSource} ${speedInsightsScriptHost}`;
 
 const connectSrcHosts = [
   "'self'",
+  // Older WebKit does not treat ws:/wss: as covered by 'self', so the dev
+  // hot-reload socket is refused by connect-src on the iPadOS 15 floor.
+  // Development only; the production policy is unchanged.
+  ...(isDevelopment ? ["ws://localhost:*", "ws://127.0.0.1:*", "wss://localhost:*"] : []),
   speedInsightsConnectHost,
   speedInsightsScriptHost,
   feedPublicInventoryHost,
