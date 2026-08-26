@@ -61,6 +61,14 @@ consistent with existing patterns and workflows.
   from the hand-authored St. Johns CSS — changing a rule changes every custom
   brand, so treat rule edits like shared-theme edits (tests + docs + approval).
   See `docs/CONFIGURABLE_BRANDING_PLAN.md`.
+- **Runtime-generated CSS must be legacy-safe at emit time.** Authored
+  stylesheets are downleveled by the build; CSS generated per request and
+  injected inline is not. `oklch()` needs Safari 16.4 and the floor is
+  iPadOS 15, so `serializeBrandThemeCss` writes an sRGB baseline first and
+  restores OKLCH inside `@supports (color: oklch(0 0 0))`. Do not "simplify"
+  this to a single OKLCH layer, and do not replace it with two consecutive
+  custom-property declarations — custom properties are not validated at parse
+  time, so the later one always wins. See `docs/BROWSER_SUPPORT.md`.
 
 ## Translation AI / FEED Parity
 - The Translation card's AI surfaces are a FEED-first parity area. For
@@ -179,6 +187,14 @@ consistent with existing patterns and workflows.
 - When a change is expected to be server-only, **prove it**: diff the built
   `.next/static/chunks` filenames/hashes before and after. An unchanged bundle
   is evidence the iPad is unaffected; a changed one means device validation.
+- **Clean up after any production build.** `check:legacy-bundles` and
+  `smoke:legacy` both require `npm run build`, which leaves a production tree in
+  `.next` that `npm run dev` cannot use — the dev server fails with `ENOENT` on
+  `.next/dev/routes-manifest.json`. Run `rm -rf .next` before returning to dev.
+  Likewise, `npm start` renames its process to `next-server`, so
+  `pkill -f "next start"` does **not** stop it and it keeps holding port 3000;
+  match on `next-server` or kill the PID from
+  `lsof -nP -iTCP:3000 -sTCP:LISTEN`.
 - Keep developer tooling out of `dependencies`. Shipping a dev-only CLI as a
   production dependency drags its whole tree into audit scope and the deploy
   (`react-email`, the preview CLI, once accounted for 7 of 16 advisories on its
@@ -190,6 +206,67 @@ consistent with existing patterns and workflows.
 - Authorization is enforced in `src/proxy.ts`. Gated API routes rely on it, so
   prefer `!session?.user` over `!session` (an errored auth object is truthy)
   and keep in-route checks as defense in depth rather than trusting one gate.
+
+## Legacy Device Testing (iPadOS 15 floor)
+- Staff run a 2015 iPad mini 4 capped at iPadOS 15.8, bought deliberately cheap
+  because nonprofit budgets are tight. Treat the iOS 15 floor as a product
+  requirement, not legacy debt — the replacement will be min-spec too.
+- Simulate it with an **iPad mini 4 on the iOS 15.4 runtime**
+  (`xcrun simctl create "LOTTO-iPadMini4-iOS15"
+  com.apple.CoreSimulator.SimDeviceType.iPad-mini-4
+  com.apple.CoreSimulator.SimRuntime.iOS-15-4`). Device *model* is cosmetic; the
+  **runtime** is what matters, because a hydration failure is decided by
+  JavaScriptCore's version. 15.4 is slightly older than the deployed 15.8, which
+  errs in the safe direction.
+- A newer simulator (iPadOS 17/18) is fine for layout, touch, and logic, but
+  **proves nothing about the floor** — it has lookbehind, the regex `v` flag,
+  `Object.groupBy`, and `Promise.withResolvers`. Never read a green modern-iPad
+  run as "safe to ship".
+
+### Three testing tiers
+1. **Iterate** — `npm run dev`, loaded on the iOS 15.4 simulator. Works because
+   of the dev-only WebSocket shim in `src/app/layout.tsx` (see below). Hot
+   reload does *not* work on that engine; edits need a manual refresh.
+2. **Verify** — `npm run build` then `npm run check:legacy-bundles`, and load
+   the built app on the 15.4 simulator. This is the tier that catches the
+   Issue 5 class of bug, because tier 1 does not exercise the downleveled,
+   minified bundle that actually ships. **Then `rm -rf .next`**, or the next
+   `npm run dev` dies on a missing `.next/dev/routes-manifest.json`.
+3. **Final** — a Vercel preview. Real environment and real auth, so it is the
+   only tier where `/admin` is reachable; locally the proxy gate redirects to
+   `/login` with no session.
+
+### The dev-mode WebSocket shim — do not remove
+- iOS/iPadOS 15 Safari refuses the Next.js HMR WebSocket with a `SecurityError`
+  ("The operation is insecure"). Next constructs that socket inside its async
+  `appBootstrap`, so the synchronous throw becomes an **unhandled rejection that
+  aborts bootstrap before `hydrateRoot`**. The page server-renders, no handlers
+  attach, and no client effect ever fires.
+- The symptom is indistinguishable from the Issue 5 outage: the app paints, then
+  sits forever on `Loading state from datastore…` with dead theme/language
+  switches. Do not go hunting for an app bug or a missing polyfill — check
+  whether the shim is present first.
+- The shim wraps `window.WebSocket` so construction cannot throw, returning an
+  inert stub instead. Bootstrap completes, the app hydrates, and the only loss
+  is hot reload on that engine. It is gated on
+  `process.env.NODE_ENV === "development"`, and a controlled build comparison
+  confirmed **all 48 production chunks byte-identical with and without it**.
+- Safari's `NSURLSession WebSocket` experimental toggle does **not** fix this;
+  it was investigated and ruled out. Do not re-litigate it.
+
+### Diagnosing hydration failures on old WebKit
+- Static-grepping the bundle for "modern syntax" is a poor first move — matches
+  land in comments and CSS strings and send you chasing ghosts. Get the real
+  exception instead: add a temporary inline `<script>` in the layout `<head>`
+  that forwards `error` and `unhandledrejection` (message **and** stack) to a
+  URL the dev server logs, then read the server log.
+- **Make the device under test the only client.** A desktop browser left open on
+  the same port produces the very requests you are looking for, and will fool
+  you into declaring a fix that does not work.
+- Confirm a fix **on the device screen**, not from server-log traffic. The
+  reliable tell on `/admin` is the `Loading state from datastore…` spinner being
+  replaced by the green *Persistence confirmed* card, because that value only
+  arrives through a `useEffect` that runs after hydration.
 
 ## Deploy and Branching
 - Production is the Vercel project for `williamtemple.app`.

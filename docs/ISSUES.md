@@ -2068,3 +2068,144 @@ the application's output was only a modest set of short UI phrases.
   8,192 default and far below the model's 65,536 capability. Armenian entered
   the client catalog only after all required rows completed; the temporary
   language enablement was then removed after validation.
+
+---
+
+## Issue 42: Custom appearances rendered unusable on the iPadOS 15 support floor
+
+### Status
+
+Resolved in v1.24.2.
+
+### Root Cause
+
+`oklch()` requires Safari 16.4. LOTTO's declared floor is iPadOS 15
+(`docs/BROWSER_SUPPORT.md`), where the deployed iPad mini 4 runs Safari 15.6.
+Every OKLCH value is invalid on that engine.
+
+Hand-authored brand stylesheets were unaffected because they pass through the
+build, where Lightning CSS downlevels `oklch()` to sRGB for the browserslist
+floor; the compiled stylesheet contains no OKLCH at all. Runtime brand themes
+take a different path. They are derived per request and injected as an inline
+`<style>` in `<head>`, so they never reach that pipeline and shipped their
+OKLCH values verbatim.
+
+The failure was therefore invisible in the two built-in brands and total in
+every custom appearance. Because an invalid value is dropped at computed-value
+time, surfaces fell back to transparent while unrelated declarations survived:
+cards, popovers, and modal surfaces lost their fill; `--border` became invalid
+so `border-color` fell back to `currentColor`, drawing dark outlines around
+every panel; toggle switches disappeared entirely; and modals became unreadable
+because both the surface and the backdrop scrim were transparent, letting page
+content show through the dialog.
+
+This affected the white-label feature on precisely the hardware it is deployed
+to. It was not a simulator artifact.
+
+### Approaches
+
+1. Change the simulator's WebKit experimental flags. Rejected: it cannot fix a
+   real device, and there is no such control on a deployed tablet. It would
+   conceal the defect rather than repair it.
+2. Emit sRGB only. Correct on every engine and simplest, but discards wide-gamut
+   colour on modern displays for all users to accommodate one old device.
+3. Emit an sRGB baseline followed by the OKLCH values inside `@supports`. Old
+   engines keep the baseline, current engines take the richer form. Chosen.
+
+### Fix and Prevention
+
+- `serializeBrandThemeCss` writes each of the four scopes twice: an sRGB
+  baseline, then the OKLCH values guarded by `@supports (color: oklch(0 0 0))`.
+- Colours inside gradients and shadows are converted in place rather than
+  skipped, and alpha is preserved through the conversion.
+- Derived values are unchanged. Only serialization differs, which keeps the
+  change clear of the derivation rules in `src/lib/brand-theme/derive.ts`.
+- The obsolete `produces OKLCH-only output` invariant was replaced rather than
+  deleted, by five tests covering the layered contract: a legacy-safe baseline,
+  the OKLCH authoring standard preserved inside `@supports`, token parity
+  between the two layers, gradient and alpha conversion, and an sRGB/OKLCH
+  round-trip within one part in 255 so an incorrect conversion cannot pass as
+  merely legacy-safe.
+- `AGENTS.md` and `docs/BROWSER_SUPPORT.md` now state the general rule:
+  runtime-generated CSS must be legacy-safe at emit time, because the build
+  only protects authored stylesheets.
+- Recorded in both documents: the two-declaration shorthand
+  (`--card: #fff; --card: oklch(...)`) does **not** work. Custom properties are
+  not validated at parse time, so both declarations are accepted and the later
+  always wins; the invalidity surfaces only at `var()` substitution, which then
+  falls back to the property's initial value rather than the earlier
+  declaration. `@supports` is the only correct guard.
+
+### Verification
+
+- Measured on iPadOS 15.4 rather than inferred:
+  `CSS.supports("color", "oklch(0.7 0.15 145)")` returns `false` and the value
+  computes to `rgba(0, 0, 0, 0)`. `color-mix()` **is** supported on that engine
+  and was not implicated.
+- After the fix, on-device token resolution returns real colours for `--card`,
+  `--popover`, `--primary`, `--border`, `--muted`, and `--secondary`.
+  `--popover` is the modal surface that had been transparent.
+- Confirmed visually on the simulated iPad mini 4 running iPadOS 15.4 with the
+  Lift Up appearance, in both the dev server and a production build: card fills,
+  brand-green toggle and primary button, correct field borders.
+- Full suite passes at 107 files and 780 tests, with lint, `tsc`, the
+  legacy-bundle scan, and a production build. The serializer appears in zero
+  client chunks; it is server-side only.
+
+---
+
+## Issue 43: `npm run dev` aborted hydration on the iPadOS 15 support floor
+
+### Status
+
+Resolved in v1.24.2.
+
+### Root Cause
+
+iOS/iPadOS 15 Safari refuses the Next.js hot-reload WebSocket with a
+`SecurityError` ("The operation is insecure"). Next constructs that socket
+inside its asynchronous `appBootstrap`, so the synchronous throw became an
+unhandled promise rejection that aborted bootstrap **before `hydrateRoot` ran**.
+
+The application server-rendered correctly and then never hydrated: no event
+handlers attached and no `useEffect` fired. On `/admin` this presented as a
+permanent `Loading state from datastore…` spinner with inert theme and language
+switches — the same outward signature as the Issue 5 outage, from an unrelated
+cause. Production was never affected, because a production build contains no
+hot-reload client.
+
+### Approaches
+
+1. `next dev --experimental-https` with an mkcert certificate trusted in the
+   simulator keychain. The page loaded over HTTPS with a valid padlock and threw
+   the identical error, so the page's secure context was not the cause.
+2. Safari's `NSURLSession WebSocket` experimental toggle. No effect.
+3. Abandon dev-mode testing on the floor and verify only against production
+   builds. Workable but costs a rebuild per iteration.
+4. Prevent the constructor from throwing, accepting the loss of hot reload on
+   that engine alone. Chosen.
+
+### Fix and Prevention
+
+- `src/app/layout.tsx` emits a development-only inline script wrapping
+  `window.WebSocket` so construction cannot throw, returning an inert stub when
+  the real constructor raises. Bootstrap then completes and the app hydrates.
+- Gated on `process.env.NODE_ENV === "development"`. A controlled comparison —
+  build at the previous commit, build with the shim, diff chunk hashes —
+  confirmed all 48 production client chunks byte-identical, and the shim string
+  appears in zero shipped chunks.
+- `AGENTS.md` records that the shim must not be removed, together with the
+  failure signature, so the symptom is not mistaken for an application bug.
+
+### Verification
+
+- Diagnosed by forwarding client `error` and `unhandledrejection` events, with
+  stacks, to a URL the dev server logs, with the device under test as the sole
+  client. Static bundle greps produced four consecutive false leads whose matches
+  turned out to be comments and CSS class names; the runtime probe identified the
+  cause in one attempt.
+- Confirmed on-device rather than from server-log traffic: the spinner is
+  replaced by the resolved *Persistence confirmed* card, and the QR code renders
+  a display URL taken from fetched state. An earlier apparent fix was retracted
+  after the traffic proving it was traced to a desktop browser left open on the
+  same port.

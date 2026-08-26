@@ -1,6 +1,19 @@
 
 ## Unreleased
 
+## Version 1.24.2 — August 25, 2026
+
+**This is a bug-fix release.**
+
+- **Custom appearances now work on the older counter tablets.** An agency using
+  its own logo and colours saw the app render with missing backgrounds, dark
+  outlines around every panel, invisible switches, and pop-up dialogs that were
+  impossible to read. The two built-in appearances were unaffected. Custom
+  appearances now display correctly on every supported device.
+- **Colour accuracy is unchanged on newer devices.** Modern tablets and phones
+  still receive the richer colour range; older ones receive an equivalent that
+  looks the same to the eye.
+
 ## Version 1.24.1 — August 24, 2026
 
 **This is a security patch.** There are no changes to how LOTTO looks or works

@@ -97,6 +97,31 @@ export default async function RootLayout({
       className={`${lato.variable} ${geistMono.variable} ${openSans.variable} ${bodoniModaSc.variable} ${ibmPlexMono.variable}`}
     >
       <head>
+        {process.env.NODE_ENV === "development" ? (
+          // Dev-only, legacy-WebKit shim. iOS/iPadOS 15 Safari refuses the
+          // Next.js HMR WebSocket with a SecurityError ("The operation is
+          // insecure"). Next constructs that socket inside its async
+          // appBootstrap, so the synchronous throw becomes an unhandled
+          // rejection that aborts bootstrap *before* hydrateRoot runs: the page
+          // server-renders, no handlers attach, and client effects never fire.
+          // Wrapping the constructor so it cannot throw costs us hot reload on
+          // that engine and nothing else -- the app hydrates and is testable on
+          // the declared support floor (docs/BROWSER_SUPPORT.md). Emitted only
+          // in development, so production output is unchanged.
+          <script
+            dangerouslySetInnerHTML={{
+              __html:
+                "(function(){var W=window.WebSocket;if(!W){return}" +
+                "function S(u,p){try{return p?new W(u,p):new W(u)}catch(e){" +
+                "if(window.console&&console.warn){console.warn('[LOTTO] HMR WebSocket unavailable on this engine; hot reload disabled.',e&&e.message)}" +
+                "return{url:u,readyState:3,binaryType:'blob',bufferedAmount:0,extensions:'',protocol:''," +
+                "send:function(){},close:function(){},addEventListener:function(){},removeEventListener:function(){}," +
+                "dispatchEvent:function(){return false},onopen:null,onclose:null,onerror:null,onmessage:null}}}" +
+                "S.prototype=W.prototype;S.CONNECTING=0;S.OPEN=1;S.CLOSING=2;S.CLOSED=3;" +
+                "try{window.WebSocket=S}catch(e){}})();",
+            }}
+          />
+        ) : null}
         {themeCss ? (
           // Server-rendered custom theme tokens: injected after the compiled
           // brand layers (see docs/CSS_THEME_ARCHITECTURE.md cascade contract)

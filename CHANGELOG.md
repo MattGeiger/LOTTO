@@ -2,6 +2,60 @@
 
 ## [Unreleased]
 
+## [1.24.2] - 2026-08-25
+
+### Fixed
+
+- Custom appearances now render on the iPadOS 15 support floor. `oklch()`
+  requires Safari 16.4, and runtime brand themes are derived per request and
+  injected as an inline `<style>`, so unlike hand-authored brand stylesheets
+  they never pass through the build's Lightning CSS downleveling. Every OKLCH
+  value was therefore invalid on the deployed iPad mini 4: card, popover, and
+  modal surfaces rendered transparent, `--border` fell back to `currentColor`
+  producing dark outlines around every card, toggle switches disappeared, and
+  modals became unreadable as page content showed through both the surface and
+  the missing backdrop. Only the two hand-authored built-in brands were exempt.
+  `serializeBrandThemeCss` now emits an sRGB baseline first and restores the
+  OKLCH values inside `@supports (color: oklch(0 0 0))`; colours inside
+  gradients and shadows are converted in place with alpha preserved.
+- Verified by measurement rather than inference: on iPadOS 15.4,
+  `CSS.supports("color", "oklch(0.7 0.15 145)")` returns `false` and the value
+  computes to `rgba(0, 0, 0, 0)`. After the fix, `--card`, `--popover`,
+  `--primary`, and `--border` all resolve to real colours on-device.
+  (`color-mix()` **is** supported on that engine and was not implicated.)
+  See `docs/ISSUES.md` Issue 42.
+
+- `npm run dev` is now usable on the iPadOS 15 support floor. iOS 15 Safari
+  refuses the Next.js hot-reload WebSocket with a `SecurityError`, and because
+  Next constructs that socket inside its async `appBootstrap`, the throw became
+  an unhandled rejection that aborted bootstrap before `hydrateRoot`. The app
+  server-rendered but never hydrated, presenting as a permanent
+  `Loading state from datastore…` spinner with dead theme and language
+  switches — indistinguishable from the Issue 5 outage, but a completely
+  different cause. `src/app/layout.tsx` now emits a development-only inline
+  script wrapping `window.WebSocket` so its constructor cannot throw. Hot reload
+  does not work on that engine; everything else does.
+- The shim is gated on `process.env.NODE_ENV === "development"`. A controlled
+  comparison (build at HEAD, build with the shim, diff chunk hashes) confirmed
+  all 48 production client chunks byte-identical with and without it, and the
+  shim appears in zero shipped chunks.
+- Investigated and ruled out as fixes: `next dev --experimental-https` with a
+  trusted mkcert certificate (same error over HTTPS with a valid padlock, so the
+  page's secure context is not the cause), and Safari's `NSURLSession WebSocket`
+  experimental toggle (no effect). See `docs/ISSUES.md` Issue 43.
+
+### Documentation
+
+- `docs/BROWSER_SUPPORT.md` gains a section on the dev-server HMR WebSocket
+  failure: the stack, what was ruled out, the shim and its verified production
+  neutrality, and how to diagnose this class of "renders but is not
+  interactive" bug without chasing false positives from bundle greps.
+- `AGENTS.md` gains a Legacy Device Testing section: how to create the iOS 15.4
+  iPad mini 4 simulator, the three testing tiers (dev-server iteration,
+  production-build legacy verification, Vercel preview), why a modern iPad
+  simulator proves nothing about the floor, and why the WebSocket shim must not
+  be removed.
+
 ## [1.24.1] - 2026-08-24
 
 ### Security

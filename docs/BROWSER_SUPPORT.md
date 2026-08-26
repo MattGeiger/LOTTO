@@ -58,6 +58,118 @@ hydration on both — in Safari *and* Chrome (same engine). Resolved by replacin
 plugin (tables + strikethrough + task lists, **no autolink-literal**). See
 [ISSUES.md](./ISSUES.md) Issue 5.
 
+## The second thing that breaks: the dev-server HMR WebSocket
+
+`npm run dev` **cannot be used on iOS/iPadOS 15 without a shim.** This is a
+Next.js dev-mode incompatibility with old WebKit, not an application bug, and it
+does not affect production in any way.
+
+iOS 15 Safari refuses the Next.js hot-reload WebSocket with a `SecurityError`:
+
+```
+The operation is insecure.
+  WebSocket@[native code]
+  init@ .../node_modules_next_dist_client_*.js:10147
+  appBootstrap@ .../node_modules_next_dist_client_*.js:171
+```
+
+The socket is constructed at
+[`get-socket-url.js`](../node_modules/next/dist/client/dev/hot-reloader/get-socket-url.js)
+inside Next's **async `appBootstrap`**, so the synchronous throw becomes an
+unhandled promise rejection that aborts bootstrap **before `hydrateRoot` runs**.
+Nothing hydrates: the page server-renders correctly, no event handlers attach,
+and no `useEffect` ever fires.
+
+The symptom is therefore identical to the Issue 5 outage above — "renders but is
+not interactive" — while having a completely different cause. On `/admin` it
+presents as a permanent `Loading state from datastore…` spinner, because the
+state fetch lives in a `useEffect`.
+
+### What does not fix it
+
+| Attempted | Result |
+| --------- | ------ |
+| `next dev --experimental-https` with an mkcert cert trusted in the simulator keychain | Page loads over HTTPS with a valid padlock; **same error**. The page's secure context is not the issue. |
+| Safari → Advanced → Experimental Features → `NSURLSession WebSocket` = off | **No effect.** Investigated and ruled out. |
+| Testing a newer simulator (iPadOS 17/18) | Works, but proves nothing — modern WebKit accepts the socket. |
+
+### The shim
+
+[`src/app/layout.tsx`](../src/app/layout.tsx) emits a development-only inline
+script that wraps `window.WebSocket` so its constructor cannot throw, returning
+an inert stub when the real one raises. Bootstrap then completes normally.
+
+The cost is that **hot reload does not work on iOS 15** — edits require a manual
+refresh. Everything else behaves normally, and the app becomes testable on the
+declared support floor.
+
+It is gated on `process.env.NODE_ENV === "development"`. A controlled comparison
+(build at `HEAD`, build with the shim, diff the chunk hashes) confirmed **all 48
+production client chunks byte-identical with and without it**, and the shim
+string appears in zero shipped chunks.
+
+> Note that this shim only makes the *dev server* usable on old WebKit. It does
+> not change what the production bundle contains, so it is no substitute for
+> `npm run build` + `npm run check:legacy-bundles` + a load of the built app on
+> the 15.4 simulator. Run `rm -rf .next` afterwards, or the next `npm run dev`
+> fails on a missing `.next/dev/routes-manifest.json`.
+
+### Diagnosing this class of failure
+
+Grepping bundles for "modern syntax" is unreliable — matches land inside
+comments and CSS strings. Get the real exception instead: add a temporary inline
+`<script>` to the layout `<head>` forwarding `error` and `unhandledrejection`
+(message **and** stack) to a URL the dev server logs, then read the log. Make the
+device under test the **only** client — a desktop browser left open on the same
+port emits the exact requests you are looking for and will fool you into
+declaring a fix that does not work. Confirm any fix **on the device screen**, not
+from server-log traffic.
+
+## The third thing that breaks: OKLCH in runtime-generated themes
+
+> Recorded as Issue 42 in [ISSUES.md](./ISSUES.md); the dev-server WebSocket
+> failure above is Issue 43.
+
+`oklch()` requires **Safari 16.4**. The declared floor is iPadOS 15, where every
+OKLCH value is invalid, so anything using one computes to `transparent`.
+
+Hand-authored brand stylesheets are safe: they pass through the build, where
+Lightning CSS downlevels `oklch()` to sRGB for the browserslist floor. The
+compiled stylesheet contains **zero** `oklch()`.
+
+Runtime brand themes are not. They are derived per request and injected as an
+inline `<style>` in `<head>` (`src/lib/brand-config/resolve.ts`), so they never
+touch that pipeline. Before v1.24.2 they shipped their OKLCH values verbatim,
+and on iPadOS 15 every custom appearance rendered broken:
+
+| Symptom | Mechanism |
+| ------- | --------- |
+| Card, popover, and modal surfaces transparent | `background-color: var(--card)` invalid at computed-value time |
+| Dark outlines around every card | `--border` invalid, so `border-color` falls back to `currentColor` |
+| Toggle switches invisible | track and thumb are theme tokens |
+| Modals unreadable | surface *and* backdrop scrim both transparent, so page content shows through |
+
+Measured directly on iPadOS 15.4 (`CSS.supports('color','oklch(0.7 0.15 145)')`
+returns `false`; the same value computes to `rgba(0, 0, 0, 0)`). Note that
+`color-mix()` **is** supported there, so it is not implicated.
+
+### The fix
+
+`serializeBrandThemeCss` emits each scope twice: an sRGB baseline first, then
+the OKLCH values inside `@supports (color: oklch(0 0 0))`. Modern engines take
+the second; iPadOS 15 keeps the first. Colours inside gradients and shadows are
+converted in place, alpha preserved.
+
+> The obvious shorthand does **not** work here. Writing `--card: #fff;` followed
+> by `--card: oklch(...)` fails, because custom properties are not validated at
+> parse time — both declarations are accepted and the later always wins, with
+> the invalidity only surfacing at `var()` substitution, which then falls back to
+> the *property's* initial value rather than to the earlier declaration.
+> `@supports` is the only correct guard.
+
+**Any new runtime-generated CSS must follow this rule.** The build protects
+authored stylesheets; nothing protects CSS generated at request time.
+
 ## Guardrails
 
 - **Static guard:** `npm run check:legacy-bundles` scans the built chunks for the

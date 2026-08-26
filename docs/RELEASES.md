@@ -1,3 +1,38 @@
+# LOTTO v1.24.2
+
+**Release Date:** August 25, 2026
+
+LOTTO v1.24.2 is a bug-fix release. Custom appearances did not render on the
+declared iPadOS 15 support floor, and only the two hand-authored built-in brands
+were exempt.
+
+`oklch()` requires Safari 16.4. Hand-authored brand stylesheets are safe because
+the build downlevels them to sRGB for the browserslist floor, but runtime brand
+themes are derived per request and injected as an inline `<style>`, so they never
+pass through that pipeline. Every OKLCH value was invalid on the deployed iPad
+mini 4: card, popover, and modal surfaces rendered transparent, `--border` fell
+back to `currentColor` and drew dark outlines around every card, toggle switches
+vanished, and modals became unreadable as page content showed through both the
+missing surface and the missing backdrop.
+
+`serializeBrandThemeCss` now emits each scope twice — an sRGB baseline, then the
+OKLCH values inside `@supports (color: oklch(0 0 0))`. Modern engines take the
+richer form; iPadOS 15 keeps the baseline. Colours inside gradients and shadows
+are converted in place with alpha preserved, and derived values are unchanged:
+only serialization differs.
+
+The release also makes `npm run dev` usable on that floor. iOS 15 Safari refuses
+the Next.js hot-reload WebSocket, and because Next constructs it inside an async
+bootstrap, the rejection aborted hydration before it began — the app rendered but
+never became interactive. A development-only shim keeps the constructor from
+throwing; hot reload is unavailable on that engine, nothing else changes, and
+production output is byte-identical.
+
+Both defects are recorded in full in `docs/ISSUES.md` as Issues 42 and 43,
+including the approaches considered and rejected.
+
+---
+
 # LOTTO v1.24.1
 
 **Release Date:** August 24, 2026
