@@ -12,7 +12,6 @@
 
 import { describe, expect, it } from "vitest";
 
-// @ts-expect-error — plain .mjs script, no types.
 import { scanText, scanBuild, FORBIDDEN } from "../scripts/check-legacy-safe-bundles.mjs";
 
 describe("legacy bundle guard — detection rules", () => {

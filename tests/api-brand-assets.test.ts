@@ -11,7 +11,7 @@ const CLEAN_SVG = `<?xml version="1.0" encoding="UTF-8"?>
 </svg>`;
 
 const uploadFile = (bytes: Uint8Array, name: string, type: string): File => {
-  const file = new File([bytes], name, { type });
+  const file = new File([bytes as unknown as BlobPart], name, { type });
   // jsdom's File lacks the modern arrayBuffer() method used by Next route
   // handlers; attach the standards-compatible result for this focused test.
   Object.defineProperty(file, "arrayBuffer", {
