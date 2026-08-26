@@ -2,18 +2,42 @@
 
 **Release Date:** August 26, 2026
 
-LOTTO v1.25.0 upgrades Next.js from 16.0.10 to 16.3.2. Production advisories
-fall from six to two, still none critical: `next`, `nanoid`, `postcss` and
-`sharp` all clear. The client bundle shrinks by roughly 271 KB, from 48 chunks
-and 3,394,148 bytes to 41 chunks and 3,122,732 bytes.
+LOTTO v1.25.0 upgrades Next.js from 16.0.10 to 16.3.2 and closes the remaining
+dependency advisories. The client bundle shrinks by roughly 176 KB, from 48
+chunks and 3,394,148 bytes to 41 chunks and 3,218,514 bytes.
 
 Next 16.3 bundles its own `sharp` 0.35.4, which reintroduced the libvips
 duplicate-class collision first seen during v1.24.1 — but mirrored. The root
 copy remained on 0.34.5 with libvips 8.17.3 while Next resolved 8.18.6, loading
 two dylibs into one process on the image paths. In v1.24.1 the correct response
-was to revert; here it is to move forward. Raising the root copy to `^0.35.4`
-deduplicates to a single `sharp` and one libvips, and clears the outstanding
-`sharp` advisory as a consequence.
+was to revert; here it is to move forward, and raising the root copy to
+`^0.35.4` deduplicates to a single `sharp`.
+
+`nodemailer` moves to 8.0.11. This was blocked in v1.24.1, when `@auth/core`
+still required `^6.8.0`; the beta.32 upgrade in v1.24.3 widened both Auth.js
+peer ranges to `^7.0.7 || ^8.0.5` and made the 8.x line available. It resolves
+six of the seven nodemailer advisories, including the CVSS 7.5 `addressparser`
+denial of service.
+
+The `linkify-it` advisory needed no upgrade at all. The lockfile had pinned
+`markdown-it` 14.2.0, holding `linkify-it` at 5.0.1; ordinary resolution moves
+to 14.3.0 and 5.0.2, which is patched. An earlier attempt to force
+`markdown-it` 15.x through an npm override was reverted once the simpler
+resolution proved sufficient — `tiptap-markdown` declares `^14.1.0`, so that
+pairing is not one upstream tests, and taking it would have added risk for no
+benefit.
+
+What remains is a single unfixed issue: nodemailer's message-level `raw` option
+bypassing `disableFileAccess`/`disableUrlAccess`, which requires 9.0.1 or later
+and therefore falls outside the Auth.js peer range. `npm audit` reports it as
+four entries, because nodemailer 8 now satisfies that peer range and npm can
+traverse the edge to `@auth/core`, `@auth/pg-adapter` and `next-auth`; at
+7.0.10 the peer mismatch hid it. The entry count rises from 2 to 4 while the
+number of real vulnerabilities falls from 8 to 1. The count is the misleading
+figure. Neither remaining path is reachable by a visitor: production requires
+Resend and never constructs an SMTP transport, and `linkify-it` ships only in
+the authenticated `admin` chunk because visitor markdown renders through
+`remarkGfmSafe`.
 
 The upgrade also required fixing 18 TypeScript errors across 13 test files.
 Those errors were not introduced by it. The same 18 are present on 16.0.10,
@@ -21,10 +45,17 @@ confirmed by running `tsc` against both dependency sets and diffing the
 normalized error lists. Next 16.0.10's build silently skipped typechecking test
 files; 16.3.2 honours `tsconfig`'s `include`, so the build fails until they are
 addressed. Every fix is a type annotation — no assertion was weakened and no
-`src/` file changed. One was a real defect rather than noise:
+`src/` file changed. One was a real defect:
 `appearance-logo-upload.test.tsx` omitted the required `templates` prop, so
 `AppearanceStepProps` had gained a member without its test being updated.
 `npx tsc --noEmit` is now clean for the first time.
+
+Investigating the `linkify-it` chain exposed an untested surface. The
+announcement editor's Markdown pipeline had no coverage at all:
+`admin-range-locking.test.tsx` mocks the editor out entirely, and
+`markdown-guide-legacy-safe.test.tsx` exercises the separate render pipeline.
+`tests/markdown-editor-parser.test.tsx` now covers it, bringing the suite to
+108 files and 784 tests.
 
 Because every client chunk is rebuilt by a framework upgrade, a static scan is
 not sufficient evidence for the iPadOS 15 support floor. Verification was done
@@ -33,7 +64,8 @@ applied. The device fetched `/api/auth/session` and two RSC prefetch requests �
 both issued only by a hydrated client router — proving hydration completed
 rather than merely that the page painted. This was observed through a logging
 proxy placed in front of the production server, leaving the application under
-test unmodified.
+test unmodified. `nodemailer` 8.0.11 was separately exercised against a local
+SMTP listener using the exact transport options from `auth-email-service.ts`.
 
 ---
 

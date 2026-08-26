@@ -7,44 +7,75 @@
 ### Changed
 
 - Upgraded Next.js 16.0.10 to 16.3.2. The client bundle shrinks from 48 chunks
-  and 3,394,148 bytes to 41 chunks and 3,122,732 bytes, a reduction of roughly
-  271 KB. Every chunk is rebuilt, so this was verified on device rather than by
+  and 3,394,148 bytes to 41 chunks and 3,218,514 bytes, a reduction of about
+  176 KB. Every chunk is rebuilt, so this was verified on device rather than by
   static scan alone.
-- Raised `sharp` from `^0.34.5` to `^0.35.4`. Next 16.3 bundles its own
-  `sharp` 0.35.4, which reintroduced the libvips duplicate-class collision seen
-  during v1.24.1 but mirrored: the root copy stayed on 0.34.5 with libvips
-  8.17.3 while Next resolved 8.18.6, loading two dylibs into one process.
-  Raising the root copy deduplicates to a single `sharp` 0.35.4 and one libvips.
+- Raised `sharp` from `^0.34.5` to `^0.35.4`. Next 16.3 bundles its own `sharp`
+  0.35.4, which reintroduced the libvips duplicate-class collision seen during
+  v1.24.1 but mirrored: the root copy stayed on 0.34.5 with libvips 8.17.3
+  while Next resolved 8.18.6, loading two dylibs into one process. Raising the
+  root copy deduplicates to a single `sharp` and one libvips.
+- Raised `nodemailer` from `^7.0.10` to `^8.0.11`. This was blocked in v1.24.1,
+  when `@auth/core` still required `^6.8.0`; the beta.32 upgrade in v1.24.3
+  widened both Auth.js peer ranges to `^7.0.7 || ^8.0.5`, making the 8.x line
+  available. It resolves six of the seven nodemailer advisories, including the
+  CVSS 7.5 `addressparser` denial of service.
+- Refreshed the `markdown-it` resolution. The lockfile had pinned 14.2.0, which
+  held `linkify-it` at 5.0.1 and left the quadratic-complexity `mailto:`
+  advisory open. Ordinary resolution moves to `markdown-it` 14.3.0 and
+  `linkify-it` 5.0.2, which is patched. No override is required; an earlier
+  attempt to force `markdown-it` 15.x was reverted once the simpler resolution
+  proved sufficient, since `tiptap-markdown` declares `^14.1.0` and that
+  pairing is not one upstream tests.
 
 ### Security
 
-- Production advisories fall from 6 to 2, still none critical. `next`,
-  `nanoid`, `postcss` and `sharp` all clear. The remaining two are
-  `linkify-it`, a ReDoS reachable only through admin-authored markdown, and
-  `nodemailer`, whose advisories are confined to the SMTP transport path that
-  production does not use.
+- Production advisories: `next`, `nanoid`, `postcss`, `sharp` and `linkify-it`
+  all clear. What remains is a single unfixed issue — nodemailer's message-level
+  `raw` option bypassing `disableFileAccess`/`disableUrlAccess`, which requires
+  9.0.1 or later and therefore falls outside the Auth.js peer range.
+- `npm audit` reports that one issue as four entries, because nodemailer 8 now
+  satisfies the Auth.js peer range and npm can traverse the dependency edge to
+  `@auth/core`, `@auth/pg-adapter` and `next-auth`. At 7.0.10 the peer mismatch
+  hid that edge. The entry count therefore rises from 2 to 4 while the number
+  of real vulnerabilities falls from 8 to 1; the count is the misleading figure.
+- Neither the nodemailer nor the `linkify-it` issue is reachable by a visitor.
+  Production requires Resend and never constructs an SMTP transport, and
+  `linkify-it` ships only in the authenticated `admin` chunk, since visitor
+  markdown renders through `remarkGfmSafe` instead.
 
 ### Fixed
 
 - Corrected 18 pre-existing TypeScript errors across 13 test files. These are
-  not introduced by the upgrade: the same 18 errors are present on 16.0.10,
-  confirmed by running `tsc` against both dependency sets and diffing the
-  normalized error lists. Next 16.0.10's build silently skipped typechecking
-  test files, while 16.3.2 honours `tsconfig`'s `include`, so `npm run build`
-  fails until they are fixed. Every fix is a type annotation; no assertion was
-  weakened and no `src/` file changed.
-- One of those errors was a genuine defect rather than noise:
-  `tests/appearance-logo-upload.test.tsx` omitted the required `templates`
-  prop, meaning `AppearanceStepProps` gained a member without its test being
-  updated.
+  not introduced by the upgrade: the same 18 are present on 16.0.10, confirmed
+  by running `tsc` against both dependency sets and diffing the normalized
+  error lists. Next 16.0.10's build silently skipped typechecking test files,
+  while 16.3.2 honours `tsconfig`'s `include`, so `npm run build` fails until
+  they are fixed. Every fix is a type annotation; no assertion was weakened and
+  no `src/` file changed.
+- One of those was a genuine defect: `tests/appearance-logo-upload.test.tsx`
+  omitted the required `templates` prop, so `AppearanceStepProps` had gained a
+  member without its test being updated.
 - `npx tsc --noEmit` is clean for the first time.
+
+### Added
+
+- `tests/markdown-editor-parser.test.tsx` covers the announcement editor's
+  Markdown pipeline (tiptap-markdown to markdown-it to linkify-it), which had
+  no tests: `admin-range-locking.test.tsx` mocks the editor out entirely, and
+  `markdown-guide-legacy-safe.test.tsx` exercises the separate render pipeline.
+  The suite is 108 files and 784 tests.
 
 ### Verification
 
-- 780 tests, `tsc`, lint, a production build and the legacy-bundle scan pass.
+- 784 tests, `tsc`, lint, a production build and the legacy-bundle scan pass.
+- `nodemailer` 8.0.11 was exercised against a local SMTP listener using the
+  exact transport options and `sendMail` shape from `auth-email-service.ts`.
+  The message was accepted and delivered as multipart alternative with both
+  text and HTML parts intact. The 7 to 8 upgrade needs no source change.
 - Verified on a simulated iPad mini 4 running iPadOS 15.4 with a custom
   appearance applied. The device fetched `/api/auth/session` and two RSC
-  prefetch requests, which only the hydrated client router issues, proving
+  prefetch requests, which only a hydrated client router issues, proving
   hydration completed rather than merely that the page painted. Observed
   through a logging proxy in front of the production server so the application
   under test was unmodified.

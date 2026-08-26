@@ -56,7 +56,7 @@
     "next": "16.3.2",
     "next-auth": "5.0.0-beta.32",
     "next-themes": "^0.4.6",
-    "nodemailer": "^7.0.10",
+    "nodemailer": "^8.0.11",
     "qrcode": "^1.5.4",
     "radix-ui": "^1.4.3",
     "react": "19.2.0",
@@ -95,7 +95,7 @@
     "typescript": "^5",
     "vitest": "^3.2.4"
   },
-  "//browserslist": "Declared legacy support floor (see docs/BROWSER_SUPPORT.md). iOS/Safari 15 covers the iPadOS 15.8 staff devices (all iOS browsers use WebKit); Chrome/Android 80 covers aging public-facing visitor devices. SWC downlevels syntax and core-js polyfills runtime APIs to this baseline. NOTE: regex *literal* syntax (e.g. lookbehind) cannot be downleveled — keep such syntax out of the bundle; enforced by `npm run check:legacy-bundles`.",
+  "//browserslist": "Declared legacy support floor (see docs/BROWSER_SUPPORT.md). iOS/Safari 15 covers the iPadOS 15.8 staff devices (all iOS browsers use WebKit); Chrome/Android 80 covers aging public-facing visitor devices. SWC downlevels syntax and core-js polyfills runtime APIs to this baseline. NOTE: regex *literal* syntax (e.g. lookbehind) cannot be downleveled \u2014 keep such syntax out of the bundle; enforced by `npm run check:legacy-bundles`.",
   "browserslist": [
     "iOS >= 15",
     "Safari >= 15",
