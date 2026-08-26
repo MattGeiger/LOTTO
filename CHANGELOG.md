@@ -60,6 +60,26 @@
 
 ### Added
 
+- Rendered Markdown links now carry the conventional affordance: link-blue and
+  underlined, with hover and visited states. Previously the renderer underlined
+  only when the source carried `title="underline"`, so ordinary links inherited
+  body colour with no underline and gave no sign they were interactive. This
+  covers Announcements, Help articles and Release Notes, which all render
+  through `MarkdownGuideContent`, and the announcement editor's own surface.
+- Colour comes from a new brand-independent `--link` token set in
+  `src/app/styles/shared/links.css`. Link colour is deliberately not derived
+  per brand: a link is a universal affordance, and a green link inside Lift Up's
+  green body copy would carry no signal. The reasoning mirrors
+  `shared/operational-status.css`, though these are ordinary tokens a brand may
+  override rather than protected ones. Authored CSS passes through the build,
+  so Lightning CSS downlevels the values for the iPadOS 15 floor — the built
+  stylesheet carries `--link: #0b58bb` alongside the wide-gamut form.
+- `tests/markdown-link-affordance.test.tsx` covers the affordance on external,
+  internal, and angle-bracket autolink forms. The last is the shape that
+  matters in practice: typing a bare URL in the editor produces a link mark
+  that tiptap-markdown serializes as CommonMark `<url>`, which renders as a
+  real anchor. That is distinct from GFM autolink-literal, which
+  `remarkGfmSafe` intentionally drops.
 - `tests/markdown-editor-parser.test.tsx` covers the announcement editor's
   Markdown pipeline (tiptap-markdown to markdown-it to linkify-it), which had
   no tests: `admin-range-locking.test.tsx` mocks the editor out entirely, and

@@ -1,0 +1,27 @@
+/*  Brand-independent hyperlink affordance.
+
+    Link colour is deliberately NOT derived from the active brand. A link is a
+    universal affordance rather than an identity surface: readers recognise
+    "blue and underlined" as clickable regardless of the agency's palette, and
+    a green link inside Lift Up's green body copy would carry no signal at all.
+    This mirrors the reasoning behind operational-status.css, where meaning
+    outranks branding.
+
+    These are ordinary shared tokens, not protected ones — a brand may override
+    them if it has a documented reason. They are simply not derived per brand
+    by default. Contrast is held above 4.5:1 against --background in both
+    schemes.  */
+:root {
+
+  /* Classic link blue, tuned to sit beside the neutral body foreground. */
+  --link: oklch(0.48 0.17 258);
+  --link-hover: oklch(0.38 0.16 258);
+  --link-visited: oklch(0.45 0.14 300)
+}
+.dark {
+
+  /* Lifted for legibility on dark surfaces. */
+  --link: oklch(0.75 0.14 258);
+  --link-hover: oklch(0.83 0.12 258);
+  --link-visited: oklch(0.74 0.12 300)
+}

@@ -55,6 +55,11 @@
   --color-status-neutral-border: var(--status-neutral-border);
   --color-status-neutral-text: var(--status-neutral-text);
 
+  /* Link affordance (brand-independent; see shared/links.css) */
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
+  --color-link-visited: var(--link-visited);
+
   /* Radius system */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
