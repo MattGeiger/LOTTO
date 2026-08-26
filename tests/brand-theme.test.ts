@@ -4,14 +4,19 @@
 // Phase 0 acceptance for the configurable branding system
 // (docs/CONFIGURABLE_BRANDING_PLAN.md): derivation determinism and fidelity,
 // post-merge contrast enforcement, protected-token guarantees, sparse-override
-// round-trips, and OKLCH-only serialization.
+// round-trips, and layered serialization (sRGB baseline + @supports OKLCH).
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { contrastRatio, parseOklch, type Oklch } from "@/lib/brand-theme/color";
+import {
+  contrastRatio,
+  oklchToSrgb,
+  parseOklch,
+  type Oklch,
+} from "@/lib/brand-theme/color";
 import {
   deriveBrandTheme,
   resolveBrandThemeInputs,
@@ -591,13 +596,93 @@ describe("brand theme serialization", () => {
     );
   });
 
-  it("produces OKLCH-only output (repo CSS authoring standard)", () => {
+  // The OKLCH-only authoring standard still governs the *modern* layer, but the
+  // baseline must be sRGB: oklch() requires Safari 16.4 and the declared floor
+  // is iPadOS 15 (docs/BROWSER_SUPPORT.md). Hand-authored brand stylesheets get
+  // downleveled by the build; this CSS is generated per request and injected
+  // inline, so it never passes through that pipeline. Emitting OKLCH alone made
+  // every surface transparent and every border fall back to currentColor on the
+  // deployed iPad mini 4.
+  const splitLayers = (css: string) => {
+    const guardIndex = css.indexOf("@supports (color: oklch(0 0 0))");
+    expect(guardIndex, "@supports guard is present").toBeGreaterThan(0);
+    return { baseline: css.slice(0, guardIndex), guarded: css.slice(guardIndex) };
+  };
+
+  it("emits a legacy-safe sRGB baseline ahead of the OKLCH layer", () => {
     for (const inputs of [stJohnsInputs, wthInputs]) {
-      const css = serializeBrandThemeCss(deriveBrandTheme(inputs), "custom");
-      for (const line of css.split("\n")) {
+      const { baseline } = splitLayers(
+        serializeBrandThemeCss(deriveBrandTheme(inputs), "custom"),
+      );
+      for (const line of baseline.split("\n")) {
+        expect(/oklch\(/i.test(line), line).toBe(false);
+        expect(/oklab\(/i.test(line), line).toBe(false);
+        expect(/color-mix\(/i.test(line), line).toBe(false);
+      }
+      expect(/rgba?\(/i.test(baseline), "baseline carries sRGB colours").toBe(true);
+    }
+  });
+
+  it("keeps the OKLCH authoring standard inside the @supports layer", () => {
+    for (const inputs of [stJohnsInputs, wthInputs]) {
+      const { guarded } = splitLayers(
+        serializeBrandThemeCss(deriveBrandTheme(inputs), "custom"),
+      );
+      for (const line of guarded.split("\n")) {
+        if (!line.includes("--")) continue;
         expect(/\b(?:rgb|rgba|hsl|hsla)\(/i.test(line), line).toBe(false);
         expect(/#[0-9a-f]{3,8}\b/i.test(line), line).toBe(false);
-        expect(/(?<![\w-])(?:black|white)(?![\w-])/i.test(line), line).toBe(false);
+      }
+    }
+  });
+
+  it("re-declares every OKLCH token in both layers", () => {
+    const css = serializeBrandThemeCss(deriveBrandTheme(stJohnsInputs), "custom");
+    const { baseline, guarded } = splitLayers(css);
+    const names = (block: string) =>
+      new Set(block.match(/--[a-z0-9-]+(?=\s*:)/gi) ?? []);
+    const guardedNames = names(guarded);
+    expect(guardedNames.size).toBeGreaterThan(0);
+    // Every token restored under @supports must exist in the baseline, or the
+    // fallback would be missing entirely on an engine without oklch().
+    for (const token of guardedNames) {
+      expect(names(baseline).has(token), `${token} has an sRGB baseline`).toBe(true);
+    }
+  });
+
+  it("converts colours inside gradients and preserves alpha", () => {
+    const { baseline } = splitLayers(
+      serializeBrandThemeCss(deriveBrandTheme(stJohnsInputs), "custom"),
+    );
+    const gradients = baseline
+      .split("\n")
+      .filter((line) => line.includes("gradient("));
+    expect(gradients.length, "theme emits gradient tokens").toBeGreaterThan(0);
+    for (const line of gradients) {
+      expect(/oklch\(/i.test(line), line).toBe(false);
+      expect(/gradient\(/i.test(line), line).toBe(true);
+    }
+    // Alpha survives the conversion rather than being dropped to opaque.
+    expect(/rgba\([^)]*,\s*0?\.\d+\)/.test(baseline)).toBe(true);
+  });
+
+  it("keeps the sRGB fallback perceptually equivalent to its OKLCH source", () => {
+    // A wrong conversion would still be "legacy-safe" while shipping the wrong
+    // brand colour, so check the round-trip rather than only the syntax.
+    const css = serializeBrandThemeCss(deriveBrandTheme(stJohnsInputs), "custom");
+    const { baseline, guarded } = splitLayers(css);
+    const grab = (block: string, token: string) =>
+      block.match(new RegExp(`${token}:\\s*([^;]+);`))?.[1]?.trim();
+    for (const token of ["--primary", "--background", "--foreground"]) {
+      const srgb = grab(baseline, token);
+      const oklch = grab(guarded, token);
+      expect(srgb, `${token} baseline`).toBeDefined();
+      expect(oklch, `${token} modern`).toBeDefined();
+      const channels = srgb!.match(/\d+/g)!.slice(0, 3).map(Number);
+      const source = parseOklch(oklch!)!;
+      const expected = oklchToSrgb(source).map((v) => Math.round(v * 255));
+      for (let i = 0; i < 3; i += 1) {
+        expect(Math.abs(channels[i] - expected[i]), `${token} channel ${i}`).toBeLessThanOrEqual(1);
       }
     }
   });
