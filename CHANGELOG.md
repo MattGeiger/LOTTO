@@ -2,6 +2,61 @@
 
 ## [Unreleased]
 
+## [1.24.3] - 2026-08-26
+
+### Security
+
+- Upgraded `next-auth` 5.0.0-beta.30 to 5.0.0-beta.32 and `@auth/pg-adapter`
+  to 1.11.3, bringing `@auth/core` to 0.41.3. This clears the last three
+  critical advisories: production now reports 6 advisories, none critical,
+  down from 16 (3 critical) before v1.24.1.
+- The upgrade fixes upstream the two weaknesses v1.24.1 mitigated in LOTTO's
+  own code. `@auth/core` 0.41.3 makes a non-OK session response yield no
+  session rather than an error object, so existence checks fail closed
+  (GHSA-8fpg-xm3f-6cx3), and applies NFKC email normalization
+  (GHSA-7rqj-j65f-68wh). Both LOTTO mitigations are retained: the `proxy.ts`
+  check for a populated `session.user` is stricter than the upstream fix, and
+  the admin allowlist screens non-ASCII on the raw address before any
+  normalization. They now serve as defense in depth.
+- `next-auth` remains pinned exactly, without a caret, as
+  `tests/security-nextauth-pin.test.ts` requires. The v5 line has been in beta
+  for roughly 1,000 days across 33 releases with no committed stable date, so
+  an unpinned range on that channel is not acceptable.
+
+### Fixed
+
+- Resolved the `nodemailer` peer-dependency drift reported during v1.24.1.
+  `@auth/core` previously required `^6.8.0` while the project used 7.0.10,
+  producing an `ERESOLVE` warning on every Vercel build. Both `@auth/core` and
+  `next-auth` now declare `^7.0.7 || ^8.0.5`, which 7.0.10 satisfies.
+
+### Verification
+
+- No client-code change. 47 of 48 built chunks are byte-identical to v1.24.2
+  and total chunk bytes are unchanged; the single differing chunk is the
+  inlined `package.json` metadata reflecting the two new version strings.
+  `next-auth`'s client surface (`SessionProvider`, `signIn`) is untouched,
+  consistent with beta.31 changing no next-auth source and every `@auth/core`
+  fix being server-side.
+- The stricter upstream email validation introduced in beta.31 was exercised
+  against the live OTP request route: well-formed and plus-addressed staff
+  addresses pass validation and the allowlist, unauthorized domains are
+  refused, and malformed forms (quoted local parts, doubled `@`, empty domain)
+  are rejected. A U+3000 ideographic space is still refused by LOTTO's own
+  ASCII screen.
+- 780 tests, lint, `tsc`, a production build and the legacy-bundle scan pass.
+  Sign-in confirmed rendering and hydrating on a simulated iPad mini 4 running
+  iPadOS 15.4 with a custom appearance applied.
+
+### Deferred
+
+- `next` 16.0.10 to 16.3.2 remains held for a separate release. It spans three
+  minor versions and is a far larger surface than this upgrade; keeping it
+  apart preserves the ability to attribute any regression.
+- `nodemailer` 7 to 9 remains held. Every advisory is in the SMTP transport
+  path, which production does not use, and 9.x still falls outside the newly
+  declared peer range.
+
 ## [1.24.2] - 2026-08-25
 
 ### Fixed

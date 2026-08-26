@@ -1,3 +1,44 @@
+# LOTTO v1.24.3
+
+**Release Date:** August 26, 2026
+
+LOTTO v1.24.3 completes the security work begun in v1.24.1. Upgrading
+`next-auth` to 5.0.0-beta.32 and `@auth/pg-adapter` to 1.11.3 brings
+`@auth/core` to 0.41.3 and clears the last three critical advisories.
+Production now reports six advisories, none critical, against sixteen — three
+of them critical — before v1.24.1.
+
+The upgrade fixes upstream the two weaknesses v1.24.1 had to mitigate in
+LOTTO's own code: a non-OK session response now yields no session rather than
+an error object, so existence checks fail closed, and email addresses are
+normalized with NFKC. Both LOTTO mitigations are retained rather than reverted.
+The `proxy.ts` gate requires a populated `session.user`, which is stricter than
+the upstream behaviour, and the admin allowlist screens non-ASCII characters on
+the raw address before any normalization runs. They are now defense in depth.
+
+The v5 line has been in beta for roughly 1,000 days across 33 releases with no
+committed stable date, and the release cadence has been lengthening rather than
+converging. That is not a reason to stay on beta.30: v4 does not support the
+App Router, so the practical choice was between an older beta carrying three
+criticals and a current one that fixes them. `next-auth` therefore remains
+pinned exactly, without a caret, enforced by
+`tests/security-nextauth-pin.test.ts`.
+
+This release also resolves the `nodemailer` peer-dependency drift observed
+during v1.24.1, where `@auth/core` required `^6.8.0` against an installed
+7.0.10 and produced an `ERESOLVE` warning on every Vercel build. Both packages
+now declare `^7.0.7 || ^8.0.5`.
+
+No client code changed. Forty-seven of the forty-eight built chunks are
+byte-identical to v1.24.2 and total chunk bytes are unchanged; the only
+difference is the inlined `package.json` metadata carrying the two new version
+strings. Sign-in was confirmed rendering and hydrating on a simulated iPad
+mini 4 running iPadOS 15.4 with a custom appearance applied, and the stricter
+email validation introduced in beta.31 was exercised against the live OTP
+route rather than assumed.
+
+---
+
 # LOTTO v1.24.2
 
 **Release Date:** August 25, 2026
