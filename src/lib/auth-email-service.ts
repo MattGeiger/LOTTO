@@ -62,6 +62,28 @@ const deliver = async (message: AuthEmailMessage): Promise<void> => {
     console.warn("[Auth email] RESEND_API_KEY is not valid; trying SMTP/MailDev.");
   }
 
+  // Structural guarantee that the SMTP transport is development-only.
+  //
+  // Every branch above that reaches this point already checks isProduction —
+  // except the one where RESEND_API_KEY is absent or malformed, which fell
+  // through unguarded. `src/lib/auth.ts` refuses to start in production
+  // without a valid key, but `/api/auth/otp/request` imports this module
+  // directly and never loads that config, so the guard did not cover the OTP
+  // path. Production delivery therefore depended on the environment being
+  // right rather than on the code refusing to do otherwise.
+  //
+  // nodemailer carries an unfixed advisory that needs 9.0.1+, which falls
+  // outside the Auth.js peer range (see CHANGELOG v1.25.0). Keeping SMTP
+  // provably unreachable in production is what makes that advisory's
+  // dev-only reachability a property of the code rather than of the
+  // deployment configuration.
+  if (isProduction) {
+    throw new Error(
+      "Refusing SMTP delivery in production. Set a valid RESEND_API_KEY; " +
+        "the SMTP/MailDev transport is for local development only.",
+    );
+  }
+
   await smtpTransport().sendMail(message);
 };
 
