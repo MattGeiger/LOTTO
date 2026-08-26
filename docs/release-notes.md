@@ -7,11 +7,11 @@
 for staff or visitors.
 
 - **Faster loading.** The framework LOTTO is built on was updated, reducing the
-  amount of code the app downloads by roughly 271 KB. This matters most on the
-  older tablets used at the counter.
-- **Fewer outstanding security advisories.** Four of the six remaining
-  advisories are resolved by this update. The two that remain affect code paths
-  LOTTO does not use in production.
+  code the app downloads by roughly 176 KB. This matters most on the older
+  tablets used at the counter.
+- **Security advisories resolved.** All but one outstanding advisory is now
+  closed. The single remaining item affects a mail-sending option LOTTO does
+  not use in production, and cannot be reached by anyone visiting the site.
 - **Verified on the oldest supported iPad.** Sign-in and a custom appearance
   were checked on a simulated iPad mini 4 running iPadOS 15.4 to confirm the
   update changed nothing for the tablets at the counter.
