@@ -58,6 +58,21 @@
   member without its test being updated.
 - `npx tsc --noEmit` is clean for the first time.
 
+### Developer experience
+
+- `npm run dev` works again on the iPadOS 15 support floor. Next 16.3 ships a
+  React development build that calls `eval()` to reconstruct callstacks across
+  the server/client boundary; modern engines take another path, but older
+  WebKit falls back to eval and LOTTO's CSP carried no `'unsafe-eval'`.
+  Separately, Safari 15 does not treat `ws:`/`wss:` as covered by
+  `connect-src 'self'`, so the hot-reload socket was refused. Both relaxations
+  are gated on `NODE_ENV !== "production"`, and the production headers are
+  byte-identical to before: `script-src` carries no `'unsafe-eval'` and
+  `connect-src` carries no `ws:` source.
+- The failure was silent — no error, rejection, `console.error`, or CSP
+  violation — and presented as the page rendering but never hydrating, the same
+  outward signature as Issues 5 and 43 from unrelated causes.
+
 ### Added
 
 - Rendered Markdown links now carry the conventional affordance: link-blue and

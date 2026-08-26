@@ -12,6 +12,8 @@ for staff or visitors.
 - **Security advisories resolved.** All but one outstanding advisory is now
   closed. The single remaining item affects a mail-sending option LOTTO does
   not use in production, and cannot be reached by anyone visiting the site.
+- **Links look like links.** Web addresses in Announcements, Help articles and
+  Release Notes are now blue and underlined, so it is clear they can be tapped.
 - **Verified on the oldest supported iPad.** Sign-in and a custom appearance
   were checked on a simulated iPad mini 4 running iPadOS 15.4 to confirm the
   update changed nothing for the tablets at the counter.

@@ -57,6 +57,17 @@ announcement editor's Markdown pipeline had no coverage at all:
 `tests/markdown-editor-parser.test.tsx` now covers it, bringing the suite to
 108 files and 784 tests.
 
+The upgrade also broke `npm run dev` on the iPadOS 15 support floor, in a way
+that took some unpicking. Next 16.3 ships a React development build that calls
+`eval()` to reconstruct callstacks across the server/client boundary. Modern
+engines take another path; older WebKit falls back to eval, and LOTTO's CSP
+carried no `'unsafe-eval'`. Safari 15 additionally does not treat `ws:`/`wss:`
+as covered by `connect-src 'self'`, so the hot-reload socket was refused. Both
+relaxations are gated on `NODE_ENV !== "production"` and the production headers
+are unchanged. The failure was silent — no error, rejection, `console.error` or
+CSP violation — and presented as the page rendering without ever hydrating, the
+same outward signature as Issues 5 and 43 from an unrelated cause.
+
 Because every client chunk is rebuilt by a framework upgrade, a static scan is
 not sufficient evidence for the iPadOS 15 support floor. Verification was done
 on a simulated iPad mini 4 running iPadOS 15.4 with a custom appearance
