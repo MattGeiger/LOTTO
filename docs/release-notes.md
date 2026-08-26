@@ -1,6 +1,21 @@
 
 ## Unreleased
 
+## Version 1.25.0 — August 26, 2026
+
+**This is a maintenance update.** Nothing changes about how LOTTO looks or works
+for staff or visitors.
+
+- **Faster loading.** The framework LOTTO is built on was updated, reducing the
+  amount of code the app downloads by roughly 271 KB. This matters most on the
+  older tablets used at the counter.
+- **Fewer outstanding security advisories.** Four of the six remaining
+  advisories are resolved by this update. The two that remain affect code paths
+  LOTTO does not use in production.
+- **Verified on the oldest supported iPad.** Sign-in and a custom appearance
+  were checked on a simulated iPad mini 4 running iPadOS 15.4 to confirm the
+  update changed nothing for the tablets at the counter.
+
 ## Version 1.24.3 — August 26, 2026
 
 **This is a security update.** Nothing changes about how LOTTO looks or works

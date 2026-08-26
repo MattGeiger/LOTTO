@@ -2,6 +2,53 @@
 
 ## [Unreleased]
 
+## [1.25.0] - 2026-08-26
+
+### Changed
+
+- Upgraded Next.js 16.0.10 to 16.3.2. The client bundle shrinks from 48 chunks
+  and 3,394,148 bytes to 41 chunks and 3,122,732 bytes, a reduction of roughly
+  271 KB. Every chunk is rebuilt, so this was verified on device rather than by
+  static scan alone.
+- Raised `sharp` from `^0.34.5` to `^0.35.4`. Next 16.3 bundles its own
+  `sharp` 0.35.4, which reintroduced the libvips duplicate-class collision seen
+  during v1.24.1 but mirrored: the root copy stayed on 0.34.5 with libvips
+  8.17.3 while Next resolved 8.18.6, loading two dylibs into one process.
+  Raising the root copy deduplicates to a single `sharp` 0.35.4 and one libvips.
+
+### Security
+
+- Production advisories fall from 6 to 2, still none critical. `next`,
+  `nanoid`, `postcss` and `sharp` all clear. The remaining two are
+  `linkify-it`, a ReDoS reachable only through admin-authored markdown, and
+  `nodemailer`, whose advisories are confined to the SMTP transport path that
+  production does not use.
+
+### Fixed
+
+- Corrected 18 pre-existing TypeScript errors across 13 test files. These are
+  not introduced by the upgrade: the same 18 errors are present on 16.0.10,
+  confirmed by running `tsc` against both dependency sets and diffing the
+  normalized error lists. Next 16.0.10's build silently skipped typechecking
+  test files, while 16.3.2 honours `tsconfig`'s `include`, so `npm run build`
+  fails until they are fixed. Every fix is a type annotation; no assertion was
+  weakened and no `src/` file changed.
+- One of those errors was a genuine defect rather than noise:
+  `tests/appearance-logo-upload.test.tsx` omitted the required `templates`
+  prop, meaning `AppearanceStepProps` gained a member without its test being
+  updated.
+- `npx tsc --noEmit` is clean for the first time.
+
+### Verification
+
+- 780 tests, `tsc`, lint, a production build and the legacy-bundle scan pass.
+- Verified on a simulated iPad mini 4 running iPadOS 15.4 with a custom
+  appearance applied. The device fetched `/api/auth/session` and two RSC
+  prefetch requests, which only the hydrated client router issues, proving
+  hydration completed rather than merely that the page painted. Observed
+  through a logging proxy in front of the production server so the application
+  under test was unmodified.
+
 ## [1.24.3] - 2026-08-26
 
 ### Security
