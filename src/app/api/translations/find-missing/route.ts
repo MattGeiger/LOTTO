@@ -22,6 +22,10 @@ const schema = z
     // English inventory names bridged from the admin browser, which can reach
     // FEED's public feed even when the server's egress to it is blocked.
     inventoryNames: z.array(z.string()).optional(),
+    // Candidate brand copy supplied by the Appearance activation flow. This
+    // avoids temporarily activating a draft merely so content discovery can
+    // see it.
+    brandStrings: z.array(z.string().trim().min(1).max(60)).max(4).optional(),
   })
   .optional();
 
@@ -36,9 +40,10 @@ export async function POST(request: Request) {
   const process = parsed.success ? Boolean(parsed.data?.process) : false;
   const types = parsed.success ? parsed.data?.types : undefined;
   const inventoryNames = parsed.success ? parsed.data?.inventoryNames : undefined;
+  const brandStrings = parsed.success ? parsed.data?.brandStrings : undefined;
 
   try {
-    const result = await findMissing(process, types, inventoryNames);
+    const result = await findMissing(process, types, inventoryNames, brandStrings);
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
     if (error instanceof NoActiveConfigError) {

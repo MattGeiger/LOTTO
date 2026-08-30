@@ -34,6 +34,7 @@ export async function runStagedTranslation(
   onProgress?: (progress: TranslationProgress) => void,
   types?: string[],
   inventoryNames?: string[],
+  brandStrings?: string[],
 ): Promise<TranslationProgress> {
   // Queue every gap (optionally limited to selected content types) and translate
   // the first chunk. `inventoryNames` (when present) are the English inventory
@@ -43,6 +44,7 @@ export async function runStagedTranslation(
     process: true,
     ...(types && types.length > 0 ? { types } : {}),
     ...(inventoryNames ? { inventoryNames } : {}),
+    ...(brandStrings ? { brandStrings } : {}),
   });
   const details = start.details as { count?: number } | undefined;
   const processed = start.processed as { remaining?: number; failed?: number } | undefined;

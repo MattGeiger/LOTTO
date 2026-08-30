@@ -18,6 +18,7 @@ import * as React from "react";
 import { Pipette } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useLegacySafeColor } from "@/hooks/use-legacy-safe-color";
 import { formatOklch, srgbToOklch, type Oklch } from "@/lib/brand-theme/color";
 import type { PaletteEntry } from "@/lib/brand-theme/color-story";
 
@@ -46,6 +47,9 @@ export function LogoPalette({
   disabled?: boolean;
 }) {
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  // The extracted colours are OKLCH; a swatch is an inline style, so on the
+  // iPadOS 15 floor an unconverted one renders as an empty circle.
+  const safeColor = useLegacySafeColor();
   const [palette, setPalette] = React.useState<PaletteEntry[]>([]);
   const [failed, setFailed] = React.useState(false);
   const hasNativeEyeDropper =
@@ -145,7 +149,7 @@ export function LogoPalette({
               onClick={() => onPick(entry.color)}
               disabled={disabled}
               className="h-7 w-7 rounded-full border border-border shadow-sm transition-transform hover:scale-110 focus-visible:ring-[3px] focus-visible:ring-ring/50"
-              style={{ background: formatOklch(entry.color) }}
+              style={{ background: safeColor(formatOklch(entry.color)) }}
             />
           ))}
         </div>

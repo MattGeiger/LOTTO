@@ -36,7 +36,15 @@ import type { AppearanceStepProps } from "../types";
 type UploadKind = "logo-light" | "logo-dark" | "icon";
 type UploadResponse = {
   error?: string;
-  asset?: { src: string; width: number; height: number };
+  asset?: {
+    src: string;
+    width: number;
+    height: number;
+    type: string;
+    filename: string;
+    warnings: string[];
+    presentationHint?: { suggested: "transparent" | "dark-surface"; reason: string };
+  };
   iconSet?: {
     browserIcons: { src: string; sizes: string; type: string }[];
     appleIcons: { src: string; sizes: string; type: string }[];
@@ -147,18 +155,30 @@ export function LogosStep({
             lightSrc: body.asset.src,
             width: body.asset.width,
             height: body.asset.height,
+            lightFilename: body.asset.filename,
+            lightType: body.asset.type,
+            ...(body.asset.presentationHint
+              ? { presentation: body.asset.presentationHint.suggested }
+              : {}),
           }),
         });
         toast.success("Light-mode logo uploaded.");
+        for (const warning of body.asset.warnings ?? []) toast.warning(warning);
+        if (body.asset.presentationHint?.suggested === "dark-surface") {
+          toast.info(body.asset.presentationHint.reason);
+        }
       } else if (kind === "logo-dark" && body.asset) {
         onChange({
           config: patchConfig(draft.config, "logo", {
             darkSrc: body.asset.src,
             darkWidth: body.asset.width,
             darkHeight: body.asset.height,
+            darkFilename: body.asset.filename,
+            darkType: body.asset.type,
           }),
         });
         toast.success("Dark-mode logo uploaded.");
+        for (const warning of body.asset.warnings ?? []) toast.warning(warning);
       } else {
         toast.error(
           "LOTTO stored the image but did not return its details. Try the upload again; if it continues, ask a deployment administrator to review the LOTTO logs.",

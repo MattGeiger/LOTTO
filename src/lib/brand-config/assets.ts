@@ -16,6 +16,7 @@ import "server-only";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { DOMParser, XMLSerializer, type Attr, type Element, type Node } from "@xmldom/xmldom";
 import { put } from "@vercel/blob";
 import sharp, { type OutputInfo } from "sharp";
 
@@ -42,6 +43,12 @@ export type StoredAsset = {
   width: number;
   height: number;
   type: string;
+  filename: string;
+  warnings: string[];
+  presentationHint?: {
+    suggested: "transparent" | "dark-surface";
+    reason: string;
+  };
 };
 
 export type GeneratedIconSet = {
@@ -145,6 +152,96 @@ const sniffFormat = (input: Buffer): SniffedFormat | null => {
 /** Error thrown when an SVG upload violates the self-containment rules. */
 export class UnsafeSvgError extends Error {}
 
+const FORBIDDEN_SVG_ELEMENTS = new Set([
+  "script", "foreignobject", "iframe", "embed", "object", "image", "video",
+  "audio", "canvas", "base", "feimage", "handler", "discard", "animate",
+  "animatemotion", "animatetransform", "set",
+]);
+const SVG_URI_ATTRIBUTES = new Set(["href", "xlink:href", "src", "xml:base"]);
+const UNSAFE_SVG_CSS = /(?:@import|expression\s*\(|behavior\s*:|-moz-binding\s*:|javascript\s*:|vbscript\s*:|data\s*:)/i;
+
+const unsafeSvgUri = (value: string) => {
+  const compact = value.replace(/[\u0000-\u0020]+/g, "").toLowerCase();
+  return compact.length > 0 && !compact.startsWith("#");
+};
+
+const unsafeCssUrl = (value: string) =>
+  [...value.matchAll(/url\(\s*(['"]?)(.*?)\1\s*\)/gi)].some((match) =>
+    unsafeSvgUri(match[2] ?? ""),
+  );
+
+const sanitizeSvgElement = (element: Element) => {
+  const attributes = Array.from(
+    { length: element.attributes.length },
+    (_, index) => element.attributes.item(index),
+  ).filter((attribute): attribute is Attr => attribute !== null);
+  for (const attribute of attributes) {
+    const name = attribute.name.toLowerCase();
+    const value = attribute.value;
+    if (
+      name.startsWith("on") ||
+      (SVG_URI_ATTRIBUTES.has(name) && unsafeSvgUri(value)) ||
+      ((name === "style" || /url\(/i.test(value)) &&
+        (UNSAFE_SVG_CSS.test(value) || unsafeCssUrl(value)))
+    ) {
+      element.removeAttributeNode(attribute);
+    }
+  }
+  if (element.localName?.toLowerCase() === "style") {
+    const css = element.textContent ?? "";
+    if (UNSAFE_SVG_CSS.test(css) || unsafeCssUrl(css)) {
+      element.parentNode?.removeChild(element);
+    }
+  }
+};
+
+const sanitizeSvgTree = (parent: Node): void => {
+  let child = parent.firstChild;
+  while (child) {
+    const next = child.nextSibling;
+    if (
+      child.nodeType === child.PROCESSING_INSTRUCTION_NODE ||
+      child.nodeType === child.DOCUMENT_TYPE_NODE
+    ) {
+      parent.removeChild(child);
+    } else if (child.nodeType === child.ELEMENT_NODE) {
+      const element = child as Element;
+      const name = element.localName?.toLowerCase() ?? element.nodeName.toLowerCase();
+      if (FORBIDDEN_SVG_ELEMENTS.has(name)) parent.removeChild(child);
+      else {
+        sanitizeSvgElement(element);
+        if (element.parentNode) sanitizeSvgTree(element);
+      }
+    }
+    child = next;
+  }
+};
+
+/** Preserve safe SVG geometry/styles while structurally removing active content. */
+export const sanitizeBrandSvg = (source: Buffer | string): Buffer => {
+  const input = (Buffer.isBuffer(source) ? source.toString("utf8") : source)
+    .replace(/^\uFEFF/, "")
+    .trimStart();
+  if (/<!doctype/i.test(input)) {
+    throw new UnsafeSvgError(
+      "This SVG uses an XML document type, which isn't allowed. Export a standard self-contained SVG and try again.",
+    );
+  }
+  const document = new DOMParser({
+    locator: false,
+    onError: (level, message) => {
+      if (level !== "warning") throw new Error(message);
+    },
+  }).parseFromString(input, "image/svg+xml");
+  const root = document.documentElement;
+  if (!root || root.localName?.toLowerCase() !== "svg") {
+    throw new UnsafeSvgError("This file is not a readable SVG image.");
+  }
+  sanitizeSvgElement(root);
+  sanitizeSvgTree(document);
+  return Buffer.from(new XMLSerializer().serializeToString(document), "utf8");
+};
+
 // Known-safe namespace URLs are stripped before scanning so the required
 // xmlns declarations don't trip the external-reference check (same approach
 // as the St. Johns icon.svg regression test in tests/brand-config.test.ts).
@@ -221,6 +318,7 @@ const measureSvg = async (input: Buffer): Promise<{ width: number; height: numbe
 export const storeLogoAsset = async (
   kind: "logo-light" | "logo-dark",
   input: Buffer,
+  originalFilename = "brand-logo",
 ): Promise<StoredAsset> => {
   const format = sniffFormat(input);
   if (format === null) {
@@ -230,15 +328,18 @@ export const storeLogoAsset = async (
   }
 
   if (format === "svg") {
-    assertSelfContainedSvg(input.toString("utf8"));
-    const { width, height } = await measureSvg(input);
+    const sanitized = sanitizeBrandSvg(input);
+    const { width, height } = await measureSvg(sanitized);
     const fileName = `${kind}-${Date.now()}.svg`;
-    const src = await writeAsset(fileName, input, "image/svg+xml");
+    const src = await writeAsset(fileName, sanitized, "image/svg+xml");
     return {
       src,
       width,
       height,
       type: "image/svg+xml",
+      filename: originalFilename,
+      warnings: [],
+      presentationHint: await describeLogoPresentation(sanitized, true),
     };
   }
 
@@ -263,6 +364,45 @@ export const storeLogoAsset = async (
     width: encoded.info.width,
     height: encoded.info.height,
     type,
+    filename: originalFilename,
+    warnings:
+      encoded.info.width < 576 || encoded.info.height < 160
+        ? [`This logo is ${encoded.info.width} × ${encoded.info.height} px. For crisp high-density screens, use SVG or a raster image at least 576 × 160 px.`]
+        : [],
+    presentationHint: await describeLogoPresentation(encoded.data, false),
+  };
+};
+
+const describeLogoPresentation = async (
+  input: Buffer,
+  isVector: boolean,
+): Promise<NonNullable<StoredAsset["presentationHint"]>> => {
+  const density = isVector ? 144 : undefined;
+  const { data, info } = await sharp(input, { density, limitInputPixels: 32_000_000 })
+    .resize(96, 96, { fit: "inside", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  let transparent = 0;
+  let drawn = 0;
+  let luminance = 0;
+  for (let index = 0; index < data.length; index += info.channels) {
+    const alpha = data[index + 3];
+    if (alpha < 32) {
+      transparent += 1;
+      continue;
+    }
+    drawn += 1;
+    luminance += (0.2126 * data[index] + 0.7152 * data[index + 1] + 0.0722 * data[index + 2]) / 255;
+  }
+  const transparentFraction = transparent / Math.max(1, transparent + drawn);
+  const artworkLightness = luminance / Math.max(1, drawn);
+  const needsPlate = transparentFraction >= 0.2 && artworkLightness >= 0.62;
+  return {
+    suggested: needsPlate ? "dark-surface" : "transparent",
+    reason: needsPlate
+      ? "This logo has a transparent background with light artwork, so it may disappear on a light page. A dark plate is recommended."
+      : "This logo should read directly on a light page.",
   };
 };
 
@@ -287,9 +427,19 @@ export const generateIconSet = async (
   // the render density so the vector rasterizes at ≥512px before resizing.
   let density: number | undefined;
   if (sniffFormat(input) === "svg") {
-    assertSelfContainedSvg(input.toString("utf8"));
+    input = sanitizeBrandSvg(input);
     const natural = await measureSvg(input);
-    density = Math.min(2400, Math.ceil((72 * 512) / Math.max(1, natural.width)));
+    density = Math.min(2400, Math.max(0.01, (72 * 512 * 2) / Math.max(1, natural.width, natural.height)));
+  }
+  const metadata = await sharp(input, { density, limitInputPixels: 32_000_000 }).metadata();
+  if (!metadata.width || !metadata.height) {
+    throw new ImageProcessingError("LOTTO could not determine this app mark's dimensions.");
+  }
+  const aspect = Math.max(metadata.width, metadata.height) / Math.min(metadata.width, metadata.height);
+  if (aspect > 1.2) {
+    throw new ImageProcessingError(
+      `This app mark is ${metadata.width} × ${metadata.height} px. Use an approximately square image so install icons are not cropped or tiny.`,
+    );
   }
   const source = sharp(input, { limitInputPixels: 32_000_000, density });
   const stats = await source.clone().stats();

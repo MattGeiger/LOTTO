@@ -35,39 +35,48 @@ required.
    If an upload cannot be used, the message identifies whether the file is
    empty, too large, unreadable, unsafe, or whether hosted storage needs an
    administrator's attention—and tells you what to do next. Sizes are measured automatically, and the preview shows
-   each logo at the exact height the app uses, on your own colors. If your
+   each logo at the exact height the app uses, on your own colors. LOTTO keeps
+   the uploaded filename and format, warns when a raster is too small for a
+   crisp high-density display, and automatically suggests the dark-plate
+   treatment when it measures light artwork on a transparent ground. If your
    light logo needs a dark plate behind it (common for white-lettered
    logos), pick the **Dark plate** treatment; LOTTO also carries that surface
    into staff sign-in emails. Upload one square mark and
-   every browser, Apple, and install icon size is generated for you.
-4. **Your color story.** If you've uploaded a logo, the wizard reads it and
+   every browser, Apple, and install icon size is generated for you. A wide or
+   tall mark is refused before anything is stored; use an approximately square
+   source.
+4. **Your color story.** The five rows always keep the same jobs: **Primary**,
+   **Accent**, **Ambient**, **Dark anchor**, and **Light anchor**. Choose a
+   Tailwind color family and then its weight; the exact named stop shown is the
+   value LOTTO saves. Clearing an optional color never moves another color into
+   a different job. If you've uploaded a logo, the wizard reads it and
    builds your whole color story automatically — check the preview and just
    fix anything you don't like (or press **Recommend from logo** to rebuild
    it). If a logo color sits in the range reserved for ticket status
    (Returned red, Unclaimed gold), the recommendation works around it and a
    note explains how; you can still override manually. Prefer to choose
-   yourself? List your brand's colors from most to least
-   important — one for a monochrome look, up to five for a rich palette.
+   yourself? Pick the fixed roles directly.
    The easiest way: click colors straight off your uploaded logo, tap a
    swatch from the palette found in it, or (in supported browsers) use the
    eye-dropper to pick from anywhere on screen. The wizard tells you in
-   plain language what each color will do — your first color becomes
-   buttons and Now Serving, the second becomes the accent, and later
-   colors become quiet background tints; dark or light neutrals become
-   your surfaces automatically. Light mode, dark mode, and both
+   plain language what each fixed role will do. Light mode, dark mode, and both
    high-visibility modes are derived from the story with a live preview,
    and readability is checked as you go — if a combination would be hard
    to read, the wizard says exactly what to change, and it warns you if a
    color sits too close to the reserved Returned-red or Unclaimed-gold
-   status colors. Fine-tune surfaces, a custom text color, or a custom Now
-   Serving color under "Fine-tune surfaces & special colors."
+   status colors.
 5. **Staff sign-in.** The heading and guidance text staff see on the login
    screen.
 6. **What's in stock.** If your organization runs FEED, paste your public
    inventory address to enable the inventory tab; leave it off for a
    queue-only app.
-7. **Review & save.** Check the summary and preview, then **Save draft** to
-   keep working later, or **Save & activate** to make it live immediately.
+7. **Review & save.** Check the summary and four-mode preview. **Preview in
+   app** applies the draft only to your current browser session so you can
+   close the wizard and explore it; **Stop preview** restores the live look.
+   Use **Save draft** to keep working later, or **Save & activate** to make it
+   live after LOTTO prepares any changed service heading for every enabled
+   visitor language. If translation fails, the draft is saved but the current
+   live appearance stays in place.
 
 ## Good to Know
 
@@ -75,8 +84,9 @@ required.
   stays gold in every appearance — those colors mean the same thing in every
   LOTTO, so staff and guests can always trust them. The wizard shows them in
   the preview so you can see they stay put.
-- **Activation is instant and reversible.** Activating applies the appearance
-  immediately for everyone. **Use built-in appearance** on the Appearance
+- **Activation is atomic and reversible.** LOTTO prepares changed localized
+  service copy first, then applies the whole appearance for everyone at once.
+  **Use built-in appearance** on the Appearance
   card reverts just as instantly; your saved configuration stays available.
 - **Drafts are safe.** A saved draft changes nothing until you activate it.
 - **Editing.** Choose **Edit** next to a saved appearance to reopen the

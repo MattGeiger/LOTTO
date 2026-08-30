@@ -116,7 +116,18 @@ async function smokeLogin(browser) {
   await page.goto(`${BASE_URL}/login`, { waitUntil: "domcontentloaded" });
   await wait(800); // allow hydration
 
-  // 1. Email field accepts input (proves the OTP form is interactive).
+  // 1. Select Verification Code. Magic Link is deliberately first/default
+  // for scanner safety, while both animated panels remain mounted; typing an
+  // off-canvas OTP input tests the wrong node rather than hydration.
+  const otpTrigger = "#login-tabs-trigger-otp";
+  if ((await page.$(otpTrigger)) === null) {
+    fail(label, `Verification Code tab trigger (${otpTrigger}) not found`);
+  } else {
+    await page.click(otpTrigger);
+    await wait(300);
+  }
+
+  // 2. Email field accepts input (proves the OTP form is interactive).
   const emailSel = "#email-otp";
   const emailEl = await page.waitForSelector(emailSel, { timeout: 10000 }).catch(() => null);
   if (emailEl === null) {
@@ -130,7 +141,7 @@ async function smokeLogin(browser) {
     }
   }
 
-  // 2. Tabs switch (proves the Magic Link / OTP toggle is wired).
+  // 3. Tabs switch back (proves both directions of the toggle are wired).
   const magicTrigger = "#login-tabs-trigger-magic";
   if ((await page.$(magicTrigger)) === null) {
     fail(label, `Magic Link tab trigger (${magicTrigger}) not found`);

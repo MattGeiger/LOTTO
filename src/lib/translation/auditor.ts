@@ -31,11 +31,35 @@ export type MissingDetails = {
   inventorySource: { ok: boolean; error: string | null; url: string };
 };
 
+/** Strict activation gate: pending/failed rows are not ready. */
+export const checkBrandStringReadiness = async (
+  originalText: string,
+): Promise<{ ready: boolean; missingLanguages: string[] }> => {
+  const languages = (await listEnabledLanguages())
+    .map((language) => language.name)
+    .filter((name) => name !== "English");
+  const rows = await store.list();
+  const completed = new Set(
+    rows
+      .filter(
+        (row) =>
+          row.type === "brand_string" &&
+          row.originalText === originalText &&
+          row.status === "completed",
+      )
+      .map((row) => row.language),
+  );
+  const missingLanguages = languages.filter((language) => !completed.has(language));
+  return { ready: missingLanguages.length === 0, missingLanguages };
+};
+
 // A pending row older than this is treated as stale (re-queue it).
 const STALE_MS = 60_000;
 
 export const auditMissing = async (
   inventoryNames?: string[],
+  types?: TranslationType[],
+  brandStrings?: string[],
 ): Promise<{ missing: TranslationKey[]; details: MissingDetails }> => {
   const base = new Set<string>(ALWAYS_ON_LANGUAGE_NAMES);
   const enabledNonEnglish = (await listEnabledLanguages())
@@ -48,7 +72,9 @@ export const auditMissing = async (
   // needs them.
   const nonCoreTargets = enabledNonEnglish.filter((name) => !base.has(name));
 
-  const { items: content, inventory } = await getContentItems({ inventoryNames });
+  const { items: discovered, inventory } = await getContentItems({ inventoryNames, brandStrings });
+  const typeSet = types && types.length > 0 ? new Set(types) : null;
+  const content = typeSet ? discovered.filter((item) => typeSet.has(item.type)) : discovered;
   const sourceCounts: Record<string, number> = {};
   for (const item of content) {
     sourceCounts[item.type] = (sourceCounts[item.type] ?? 0) + 1;
@@ -100,14 +126,13 @@ export const findMissing = async (
   process: boolean,
   types?: TranslationType[],
   inventoryNames?: string[],
+  brandStrings?: string[],
 ): Promise<{ details: MissingDetails; processed?: ProcessResult }> => {
-  const { missing, details } = await auditMissing(inventoryNames);
+  const { missing, details } = await auditMissing(inventoryNames, types, brandStrings);
   if (!process || missing.length === 0) return { details };
 
   // Optionally restrict queuing to the selected content types.
-  const typeSet = types && types.length > 0 ? new Set(types) : null;
-  const toQueue = typeSet ? missing.filter((key) => typeSet.has(key.type)) : missing;
-  if (toQueue.length === 0) return { details };
+  const toQueue = missing;
 
   // Queue every selected missing item as pending, then translate inline.
   for (const key of toQueue) {

@@ -24,12 +24,12 @@ import {
 } from "@/lib/brand-config/store";
 import { seedBrandTemplates } from "@/lib/brand-config/resolve";
 import { parseBrandConfig } from "@/lib/brand-theme/config-schema";
-import { deriveBrandTheme } from "@/lib/brand-theme/derive";
-import { mergeBrandTheme } from "@/lib/brand-theme/serialize";
+import { deriveConfiguredBrandTheme } from "@/lib/brand-theme/configured-theme";
 import {
   validateBrandTheme,
   validateOverrideKeys,
 } from "@/lib/brand-theme/validate";
+import { checkBrandStringReadiness } from "@/lib/translation/auditor";
 
 export const runtime = "nodejs";
 
@@ -53,19 +53,7 @@ const validatePayload = (payload: unknown) => {
     return { ok: false as const, errors: parsed.errors };
   }
   const overrideIssues = validateOverrideKeys(parsed.config.overrides);
-  const theme = mergeBrandTheme(
-    deriveBrandTheme({
-      primary: parsed.config.colors.primary,
-      surfaceLight: parsed.config.colors.surfaceLight,
-      surfaceDark: parsed.config.colors.surfaceDark,
-      textLight: parsed.config.colors.textLight,
-      accent: parsed.config.colors.accent,
-      serving: parsed.config.colors.serving,
-      ambient: parsed.config.colors.ambient,
-      logoPresentation: parsed.config.logo.presentation,
-    }),
-    parsed.config.overrides,
-  );
+  const theme = deriveConfiguredBrandTheme(parsed.config);
   const themeIssues = validateBrandTheme(theme);
   const issues = [...overrideIssues, ...themeIssues];
   if (issues.length > 0) {
@@ -118,6 +106,19 @@ export async function PUT(request: Request) {
     }
     await saveConfiguration(body.data.id, validated.config);
     if (body.data.activate) {
+      const serviceLabel = validated.config.identity.serviceLabel?.trim();
+      if (serviceLabel) {
+        const readiness = await checkBrandStringReadiness(serviceLabel);
+        if (!readiness.ready) {
+          return NextResponse.json(
+            {
+              error: "The appearance was saved as a draft, but its service heading is not translated for every enabled language.",
+              missingLanguages: readiness.missingLanguages,
+            },
+            { status: 409 },
+          );
+        }
+      }
       await activateConfiguration(body.data.id);
     }
     return NextResponse.json({ ok: true }, { status: 200 });
@@ -163,6 +164,19 @@ export async function POST(request: Request) {
         { error: "This configuration is no longer valid.", issues: validated.errors },
         { status: 422 },
       );
+    }
+    const serviceLabel = validated.config.identity.serviceLabel?.trim();
+    if (serviceLabel) {
+      const readiness = await checkBrandStringReadiness(serviceLabel);
+      if (!readiness.ready) {
+        return NextResponse.json(
+          {
+            error: "This appearance cannot be activated until its service heading is translated for every enabled language.",
+            missingLanguages: readiness.missingLanguages,
+          },
+          { status: 409 },
+        );
+      }
     }
     await activateConfiguration(body.data.id);
     return NextResponse.json({ ok: true }, { status: 200 });

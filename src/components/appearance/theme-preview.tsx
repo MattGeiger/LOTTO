@@ -14,9 +14,10 @@
 
 import * as React from "react";
 
+import { useLegacySafeColor } from "@/hooks/use-legacy-safe-color";
 import type { BrandThemeTokens } from "@/lib/brand-theme/tokens";
 
-type Scope = "light" | "dark";
+type Scope = keyof BrandThemeTokens;
 
 const swatchStyle = (
   tokens: Record<string, string>,
@@ -30,12 +31,26 @@ const swatchStyle = (
 });
 
 function ScopePreview({
-  tokens,
+  tokens: derived,
   label,
 }: {
   tokens: Record<string, string>;
   label: string;
 }) {
+  // Converted once, here, rather than at each `style` prop below. Every value
+  // in this map ends up inline on an element, where an `oklch()` the engine
+  // cannot parse is dropped rather than approximated — so one missed call site
+  // is an invisible panel, not a slightly-off colour. Doing it at the boundary
+  // means a new swatch added below is safe without anyone remembering.
+  const safe = useLegacySafeColor();
+  const tokens = React.useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(derived).map(([token, value]) => [token, safe(value)]),
+      ) as Record<string, string>,
+    [derived, safe],
+  );
+
   return (
     <div
       className="flex-1 space-y-2 rounded-xl p-3"
@@ -97,10 +112,12 @@ export function ThemePreview({ theme }: { theme: BrandThemeTokens }) {
   const scopes: { scope: Scope; label: string }[] = [
     { scope: "light", label: "Light" },
     { scope: "dark", label: "Dark" },
+    { scope: "hiVizLight", label: "High visibility · light" },
+    { scope: "hiVizDark", label: "High visibility · dark" },
   ];
   return (
     <div className="space-y-2">
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="grid gap-3 sm:grid-cols-2">
         {scopes.map(({ scope, label }) => (
           <ScopePreview
             key={scope}

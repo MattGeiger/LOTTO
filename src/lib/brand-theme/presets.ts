@@ -25,7 +25,7 @@ import { BRAND_CONFIG_SCHEMA_VERSION } from "./config-schema";
 
 const fromProfile = (
   profile: BrandProfile,
-  colors: BrandConfig["colors"],
+  colors: Omit<BrandConfig["colors"], "system" | "paletteRoles">,
 ): BrandConfig => ({
   schemaVersion: BRAND_CONFIG_SCHEMA_VERSION,
   identity: {
@@ -58,7 +58,7 @@ const fromProfile = (
     appleIcons: profile.pwa.appleIcons.map((icon) => ({ ...icon })),
     manifestIcons: profile.pwa.manifestIcons.map((icon) => ({ ...icon })),
   },
-  colors,
+  colors: { ...colors, system: "legacy-oklch" },
   staff: {
     signInTitle: profile.staff.signInTitle,
     emailGuidance: profile.staff.emailGuidance,

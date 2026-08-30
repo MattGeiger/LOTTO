@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2025 Matt Geiger, Temple Consulting, LLC.
 
-// Format-aware brand-asset storage: SVG logos stay vector (validated
-// self-contained, stored verbatim), rasters are re-encoded in their own
-// format, and hostile SVGs are rejected with actionable messages.
+// Format-aware brand-asset storage: SVG logos stay vector after structural
+// sanitization, rasters are re-encoded in their own format, and icon geometry
+// is validated before derivatives are written.
 
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -19,6 +19,7 @@ import {
   BrandAssetStorageError,
   generateIconSet,
   resolveAssetPath,
+  sanitizeBrandSvg,
   storeLogoAsset,
   UnsafeSvgError,
 } from "@/lib/brand-config/assets";
@@ -50,7 +51,7 @@ afterAll(async () => {
 });
 
 describe("brand asset storage formats", () => {
-  it("keeps SVG uploads as vectors, verbatim, with measured dimensions", async () => {
+  it("keeps SVG uploads as sanitized vectors with measured dimensions", async () => {
     const asset = await storeLogoAsset("logo-light", Buffer.from(CLEAN_SVG));
     expect(asset.type).toBe("image/svg+xml");
     expect(asset.src).toMatch(/\.svg$/);
@@ -59,8 +60,9 @@ describe("brand asset storage formats", () => {
       path.join(assetsDir(), asset.src.split("/").pop()!),
       "utf8",
     );
-    // Verbatim: the vector source is untouched (no rasterization).
-    expect(stored).toBe(CLEAN_SVG);
+    expect(stored).toContain('<svg xmlns="http://www.w3.org/2000/svg"');
+    expect(stored).toContain("Your Organization");
+    expect(stored).not.toContain("<script");
   });
 
   it("measures SVG dimensions from the viewBox when width/height are absent", async () => {
@@ -163,6 +165,16 @@ describe("brand asset storage formats", () => {
     expect(() => assertSelfContainedSvg(CLEAN_SVG)).not.toThrow();
   });
 
+  it("structurally removes active SVG content while retaining safe class styles", () => {
+    const source = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" onload="bad()"><style>.mark{fill:#123456}</style><script>bad()</script><path class="mark" href="https://evil.example/a" d="M0 0h10v10z"/></svg>`;
+    const sanitized = sanitizeBrandSvg(source).toString("utf8");
+    expect(sanitized).toContain(".mark{fill:#123456}");
+    expect(sanitized).toContain('class="mark"');
+    expect(sanitized).not.toContain("onload");
+    expect(sanitized).not.toContain("<script");
+    expect(sanitized).not.toContain("evil.example");
+  });
+
   it("generates the full crisp icon set from an SVG mark", async () => {
     const mark = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#33a478"/></svg>`;
     const iconSet = await generateIconSet(Buffer.from(mark), "#ffffff");
@@ -175,6 +187,13 @@ describe("brand asset storage formats", () => {
     );
     const metadata = await sharp(stored).metadata();
     expect([metadata.width, metadata.height]).toEqual([512, 512]);
+  });
+
+  it("refuses a non-square install mark before generating derivatives", async () => {
+    const mark = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100"><rect width="400" height="100"/></svg>`;
+    await expect(generateIconSet(Buffer.from(mark), "#ffffff")).rejects.toThrow(
+      /approximately square/i,
+    );
   });
 
   it("still refuses path traversal and unknown names", () => {

@@ -93,8 +93,18 @@ const toSrgbLiteral = (literal: string): string => {
     : `rgb(${rgb})`;
 };
 
-/** Rewrite every colour in a token value to sRGB, preserving surrounding syntax. */
-const toLegacyValue = (value: string): string =>
+/**
+ * Rewrite every colour in a token value to sRGB, preserving surrounding syntax.
+ *
+ * Exported because the stylesheet is not the only way a derived colour reaches
+ * the page. A React `style` prop carries the token value straight to the
+ * element, where there is no `@supports` to hide behind: iPadOS 15 parses
+ * `oklch(0.129 0.042 264)` as invalid — that engine requires a percentage
+ * lightness — and drops the declaration, leaving the element with no colour at
+ * all. Any inline style fed from `deriveBrandTheme` or `formatOklch` must pass
+ * through here first.
+ */
+export const toLegacyValue = (value: string): string =>
   value.replace(OKLCH_LITERAL, toSrgbLiteral);
 
 const serializeScope = (

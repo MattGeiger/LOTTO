@@ -92,7 +92,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ iconSet }, { status: 200 });
     }
 
-    const asset = await storeLogoAsset(kind, buffer);
+    const asset = await storeLogoAsset(kind, buffer, file.name);
     return NextResponse.json({ asset }, { status: 200 });
   } catch (error) {
     if (error instanceof UnsafeSvgError) {

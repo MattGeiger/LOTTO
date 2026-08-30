@@ -1,6 +1,22 @@
 
 ## Unreleased
 
+## Version 1.26.0-beta.1 — August 29, 2026
+
+Beta. The white-label Appearance workflow moves to the Tailwind v4 palette: five
+fixed semantic roles, a family/weight picker that can save only exact palette
+stops, logo extraction and canvas picks that snap to the same stops, and a
+preview covering light, dark, and both high-visibility modes.
+
+Also fixes the wizard preview on the iPadOS 15 support floor, where the
+four-mode preview and the logo swatches rendered with no colour at all. See
+`docs/ISSUES.md` Issue 44.
+
+**Not yet promoted.** This touches the client bundle, so it still needs a Vercel
+preview off `dev` and a successful sign-in on the real iPad mini 4. Two brand
+roles — Accent and Ambient — are also still collected and previewed without
+reaching every scope they are labelled for; that is tracked for beta.2.
+
 ## Version 1.25.1 — August 26, 2026
 
 **This is a security update.** Nothing changes about how LOTTO looks or works
