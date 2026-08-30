@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Documentation
+
+- **Recorded a change of approach for the white-label work.**
+  `docs/FEED_BRANDING_PARITY_PLAN.md` was written as a controlled parity port,
+  and what shipped in beta.1 followed its structure while re-implementing its
+  behaviour — which is why the wizard collects five colour roles, stores them,
+  previews them, and then mostly ignores them. Measured: Accent changes no
+  tokens in dark or either high-visibility mode, and setting Ambient to a
+  different family produces a byte-identical page backdrop.
+
+  The revised rule is that LOTTO adopts FEED's implementation rather than its
+  appearance — the same experience, because staff move between the two
+  applications — with deviations only where LOTTO is genuinely different, each
+  written down at the point of deviation. Localization of custom UI copy,
+  protected operational semiotics, the token vocabulary, the runtime boundaries,
+  and the legacy CSS emission are all recorded as legitimate exceptions; "our
+  version is simpler" is recorded as not one.
+
+- **Issue 45: dark-mode shadows lose their assigned hue.** `derive.ts` emits a
+  deliberately saturated dark-mode shadow tint at chroma 0.161, and the rendered
+  halo measures neutral grey. All 26 consumers mix toward `transparent` in
+  `oklch`, a polar space — the same construction that broke FEED, where the
+  symptom appeared inverted. Documented with the engine scope explicitly left
+  open; no code changed.
+
+- **Recorded the intent to retire the hard-coded St. Johns theme** once the
+  branding tool can reproduce it, and why the St. Johns icon viewBox test is
+  deliberately left red rather than reverted.
+
 ## [1.26.0-beta.1] - 2026-08-29
 
 ### Fixed

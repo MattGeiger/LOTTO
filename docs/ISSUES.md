@@ -2255,3 +2255,58 @@ floor can parse. Both were confirmed to fail with the fix disabled.
 **Rule.** Any inline style fed from `deriveBrandTheme`, `formatOklch`, or an
 extracted logo colour must pass through `useLegacySafeColor`. Tokens referenced
 as `var(--…)` are already safe — they resolve from the serialized stylesheet.
+
+## Issue 45: Dark-mode shadows lose their assigned hue
+
+**Status:** open — documented, not fixed. Same class as the defect FEED hit
+during its white-label work.
+
+Dark mode is supposed to tint its shadows with the brand. `derive.ts` emits a
+deliberately saturated shadow colour for the dark and hi-viz-dark scopes:
+
+    "base-shadow-color": formatOklch({ l: 0.742, c: 0.161, h: serving.h - 6 })
+
+Chroma 0.161 is not a subtle tint — it is a strong, hue-bearing colour, and the
+comment records the intent ("St. Johns reuses the light Called border as its
+dark shadow tint"). The rendered shadow does not carry it. Sampled off the
+iOS 15.4 simulator, the halo around a dark-mode control measured
+`rgb(87, 84, 86)` — r minus b of **+1**, which is neutral grey. The hue is being
+lost somewhere between the token and the pixel.
+
+**Where it most likely goes.** Every consumer is the same shape, 26 of them
+across the authored stylesheets:
+
+    color-mix(in oklch, var(--base-shadow-color), transparent 85%)
+
+`oklch` is a *polar* space: it carries a hue angle. Mixing toward `transparent`
+in a polar space is the exact construction that broke FEED, where the symptom
+was inverted — shadows there gained a violet cast instead of losing their hue,
+which is the same failure read from the other end. `transparent` is
+`rgb(0 0 0 / 0)`; an engine that premultiplies alpha correctly contributes none
+of its colour and the source hue survives, while an engine that does not drags
+the result toward chroma 0 and hue 0. FEED's fix was to mix in **`oklab`**
+instead — rectangular, no hue angle, nothing for the interpolation to drag —
+applied at 95 sites. The same remedy is the obvious candidate here.
+
+Note also that these live in *authored* CSS, so Lightning CSS would normally
+downlevel them; it cannot fold this one, because the first operand is a `var()`
+it cannot resolve at build time. The declaration ships as written.
+
+**What is not yet established**, and should be before anyone edits:
+
+- Which engines are affected. The measurement above is from the 15.4 floor
+  only. `color-mix()` did not ship in Safari until 16.2, so on that engine the
+  declaration may be dropped entirely and the grey halo may be coming from a
+  different rule — in which case the neutral reading confirms the symptom but
+  not this mechanism. Sample the same control on the iPadOS 26 simulator before
+  concluding.
+- Whether the operational-status gradients in `operational-status.css` share the
+  construction, since those are protected tokens and any change there needs the
+  shared-theme treatment.
+
+**A correction worth recording.** Earlier in the session this was measured and
+written off. The check was looking for FEED's symptom — a *warm* halo — found
+r−b of +1, and concluded "no halo bug." That reading was backwards: a neutral
+result was never evidence of health here, because the token is authored at
+chroma 0.161 and neutral is precisely what it should not be. Measuring for the
+symptom you already know is how you miss the one in front of you.
