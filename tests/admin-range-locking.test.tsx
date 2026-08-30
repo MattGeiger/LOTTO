@@ -143,4 +143,19 @@ describe("Admin range locking UX", () => {
       );
     });
   });
+
+  it("uses FEED's solid field surface for all ticket-range inputs", async () => {
+    render(<AdminPage />);
+
+    const inputs = [
+      await screen.findByLabelText("Start Number"),
+      screen.getByLabelText("End Number"),
+      screen.getByLabelText("Append additional tickets"),
+      screen.getByPlaceholderText('Type "RESET" to enable'),
+    ];
+    for (const input of inputs) {
+      expect(input).toHaveClass("bg-background");
+      expect(input).not.toHaveClass("bg-transparent", "dark:bg-input/30");
+    }
+  });
 });

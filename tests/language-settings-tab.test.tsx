@@ -56,6 +56,14 @@ describe("LanguageSettingsTab", () => {
     );
   });
 
+  it("uses the shared solid input surface for language search", async () => {
+    render(<LanguageSettingsTab />);
+
+    const search = await screen.findByRole("textbox", { name: "Search languages" });
+    expect(search).toHaveClass("bg-background");
+    expect(search).not.toHaveClass("bg-transparent", "dark:bg-input/30");
+  });
+
   it("automatically sweeps missing translations when a dynamic language is enabled", async () => {
     const user = userEvent.setup();
     render(<LanguageSettingsTab />);

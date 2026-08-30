@@ -107,6 +107,14 @@ export const seedTemplate = async (id: string, payload: unknown): Promise<void> 
   );
 };
 
+/** Remove a retired compiled template without touching saved appearances. */
+export const deleteTemplate = async (id: string): Promise<void> => {
+  const sql = getSql();
+  await withTimeout(
+    sql`DELETE FROM brand_configurations WHERE id = ${id} AND is_template`,
+  );
+};
+
 export const activateConfiguration = async (id: string): Promise<void> => {
   const sql = getSql();
   // Two statements; the partial unique index enforces the single-active

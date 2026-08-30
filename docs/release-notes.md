@@ -1,6 +1,33 @@
 
 ## Unreleased
 
+The Appearance color workflow now matches FEED's fixed-slot experience:
+**Extract from light logo**, progressive **Add color** roles, closest-family
+suggestions, palette search, and a compact family/weight picker. Ambient now
+controls page atmosphere, Accent is visible in every display mode, and neither
+can change LOTTO's universal ticket-status colors.
+
+Dark-mode shadows also retain the brand hue without becoming opaque on older
+iPads. LOTTO now derives ready-to-use soft, standard, and strong shadow colors
+instead of asking each browser to mix a runtime color toward transparency.
+
+LOTTO now compiles one William Temple House default using FEED's current colors
+and SVG identity assets. Staff create every other identity in Appearance. The
+theme control is now one tap—Light, Dark, Hi-viz, then Light again—and the WTH
+card wash renders consistently on old and new iPads.
+
+Help's Back control returns staff to Admin, animated navigation icons no longer
+crop, Arcade includes every ready activated language, and form fields use a
+solid fill that stays visible against their cards.
+
+The local beta has been checked on simulated iPadOS 15.4 and 26.5. Both reach
+**Persistence confirmed**, and the complete color picker and four-mode preview
+remain usable at the iPad's portrait dimensions.
+
+The production build, 42-chunk legacy scan, and hydration/interactivity smoke
+all pass. This remains beta work: promotion still requires a Vercel preview and
+sign-in on the real iPad mini 4.
+
 ## Version 1.26.0-beta.1 — August 29, 2026
 
 Beta. The white-label Appearance workflow moves to the Tailwind v4 palette: five
@@ -222,10 +249,10 @@ for staff or visitors.
 - **LOTTO can now serve more than one organization from the same codebase.**
   Deployments can carry their own name, logos, colors, install identity, staff
   guidance, database, and integrations while sharing queue improvements.
-- **Welcome, St. Johns Food Share.** A complete St. Johns profile adds its
-  teal, off-white, and charcoal identity across light, dark, high-visibility,
-  and Arcade views, plus its own rounded browser-tab and padded home-screen
-  icons. Its production home is `stjohnsfoodshare.app`.
+- **A second compiled identity proved the white-label boundaries.** The release
+  exercised light, dark, high-visibility, Arcade, metadata, and install-asset
+  overrides. That profile was later retired in favor of configurable
+  Appearance, leaving WTH as the single compiled default.
 - **Inventory is optional.** Queue-only agencies no longer see “What's in
   stock” unless their deployment is connected to its own FEED inventory app.
 - **Safer staff access for small organizations.** A deployment may authorize

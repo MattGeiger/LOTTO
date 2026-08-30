@@ -76,4 +76,71 @@ describe("Tailwind v4 brand palette", () => {
     }
     expect(combinations).toBe(234);
   });
+
+  it("gives every authored color role its promised consumers", () => {
+    const base = scratchConfig();
+    const themed = (accent: string, ambient: string) =>
+      deriveConfiguredBrandTheme({
+        ...base,
+        colors: {
+          ...base.colors,
+          paletteRoles: {
+            primary: "sky-700",
+            accent,
+            ambient,
+            surfaceDark: "slate-900",
+            surfaceLight: "slate-50",
+          },
+        },
+      });
+
+    const amberAccent = themed("amber-300", "rose-500");
+    const violetAccent = themed("violet-500", "rose-500");
+    for (const scope of ["light", "dark", "hiVizLight", "hiVizDark"] as const) {
+      expect(
+        amberAccent[scope].accent,
+        `${scope} consumes Accent`,
+      ).not.toBe(violetAccent[scope].accent);
+    }
+
+    // Accent is a signal, not atmosphere: changing it cannot move the shell.
+    expect(amberAccent.light["gradient-display-bg"]).toBe(
+      violetAccent.light["gradient-display-bg"],
+    );
+    expect(amberAccent.dark["gradient-display-bg"]).toBe(
+      violetAccent.dark["gradient-display-bg"],
+    );
+
+    const blueAtmosphere = themed("amber-300", "blue-600");
+    expect(blueAtmosphere.light["gradient-display-bg"]).not.toBe(
+      amberAccent.light["gradient-display-bg"],
+    );
+    expect(blueAtmosphere.dark["gradient-display-bg"]).not.toBe(
+      amberAccent.dark["gradient-display-bg"],
+    );
+  });
+
+  it("uses pre-alpha shadow tokens so old WebKit keeps hue and opacity", () => {
+    const foundations = fs.readFileSync(
+      path.join(process.cwd(), "src/app/styles/shared/foundations.css"),
+      "utf8",
+    );
+    const highVisibility = fs.readFileSync(
+      path.join(process.cwd(), "src/app/styles/shared/high-visibility.css"),
+      "utf8",
+    );
+    expect(foundations).not.toMatch(/color-mix\(/i);
+    expect(highVisibility).not.toMatch(/color-mix\(/i);
+    expect(foundations).toContain("var(--base-shadow-soft-color)");
+    expect(foundations).toContain("var(--base-shadow-strong-color)");
+    expect(highVisibility).toContain("var(--base-shadow-soft-color)");
+    expect(highVisibility).toContain("var(--base-shadow-strong-color)");
+
+    const theme = deriveConfiguredBrandTheme(scratchConfig());
+    for (const scope of ["light", "dark", "hiVizLight", "hiVizDark"] as const) {
+      expect(theme[scope]["base-shadow-soft-color"]).toMatch(/\/ 0\./);
+      expect(theme[scope]["base-shadow-color"]).toMatch(/\/ 0\./);
+      expect(theme[scope]["base-shadow-strong-color"]).toMatch(/\/ 0\./);
+    }
+  });
 });

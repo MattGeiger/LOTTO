@@ -26,6 +26,19 @@ describe("BottomTabBar", () => {
     expect(screen.queryByText("Admin")).not.toBeInTheDocument();
   });
 
+  it("lets animated icon geometry extend beyond the SVG viewport", () => {
+    renderBar(<BottomTabBar />);
+
+    const iconSlots = document.querySelectorAll(
+      '[data-slot="navigation-icon-label"]',
+    );
+    expect(iconSlots).toHaveLength(4);
+    for (const slot of iconSlots) {
+      expect(slot).toHaveClass("[&_svg]:overflow-visible");
+      expect(slot.querySelector("svg")).not.toBeNull();
+    }
+  });
+
   it("renders the staff nav (Admin · Dashboard · What's in stock · Games) when authenticated", () => {
     renderBar(
       <StaffAuthContext.Provider value={true}>

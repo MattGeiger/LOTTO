@@ -57,6 +57,9 @@ Routed pages, statically generated:
   guide article card on initial page load, then sticks below the top chrome while
   scrolling. `generateStaticParams` prerenders one page per guide.
 
+For authenticated staff, the Help index's upper-left **Back** control returns
+to `/admin`. It must not target the retired `/staff` landing route.
+
 ### Authoring content
 
 Guides are markdown files in `docs/user-guides/`, named `NN-slug.md` (the numeric

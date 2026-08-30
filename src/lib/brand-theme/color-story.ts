@@ -5,16 +5,10 @@
 // licensed under AGPL-3.0-or-later; see LICENSE. Agency branding is not covered
 // by this license; see TRADEMARKS.md.
 
-// The color-story model (docs/COLOR_SEMIOTICS.md): operators list their
-// brand's colors in hierarchy order (1–5, counted the way a brand owner
-// counts — neutrals included); this module classifies each color and assigns
-// semiotic roles under the signal ceiling:
-//
-//   rank 1 chromatic → state + identity (primary)
-//   rank 2 chromatic → accent
-//   ranks 3+ chromatic → ambient (texture only — never signals)
-//   dark neutral → dark surface / text anchor
-//   light neutral → light surface anchor
+// The color-story model (docs/COLOR_SEMIOTICS.md): one fixed slot per role.
+// Position is the job, exactly as in FEED. A charcoal in slot two is the
+// accent because the operator put it in the Accent slot; LOTTO never silently
+// reclassifies or reorders it by appearance.
 //
 // Pure and client-safe: the wizard uses it live, tests pin its behavior.
 
@@ -52,6 +46,15 @@ export type StoryRole =
   | "ambient"
   | "surface-dark"
   | "surface-light";
+
+/** Fixed FEED-parity slot order. */
+export const STORY_SLOTS: readonly StoryRole[] = [
+  "primary",
+  "accent",
+  "ambient",
+  "surface-dark",
+  "surface-light",
+];
 
 /** Plain-language role labels shown next to each color row in the wizard. */
 export const ROLE_LABELS: Record<StoryRole, string> = {
@@ -102,55 +105,29 @@ export const reservedBandWarning = (
   return null;
 };
 
-/**
- * Assign roles to an ordered color hierarchy (index 0 = most important).
- * Chromatic colors take primary → accent → ambient in rank order; the
- * darkest dark neutral becomes the dark anchor and the lightest light
- * neutral the light anchor (extra neutrals fall through to ambient).
- */
+/** Assign one color to each fixed role slot, in order. */
 export const proposeColorStory = (hierarchy: Oklch[]): ColorStoryResult => {
   const assignments: StoryAssignment[] = [];
   const colors: ColorStoryResult["colors"] = {};
   const ambient: Oklch[] = [];
-  let darkAnchor: Oklch | null = null;
-  let lightAnchor: Oklch | null = null;
-  let chromaticRank = 0;
 
-  for (const color of hierarchy.slice(0, 5)) {
-    const kind = classifyColor(color);
-    let role: StoryRole;
-    if (kind === "dark-neutral" && !darkAnchor) {
-      role = "surface-dark";
-      darkAnchor = color;
-    } else if (kind === "light-neutral" && !lightAnchor) {
-      role = "surface-light";
-      lightAnchor = color;
-    } else if (kind === "chromatic" && chromaticRank === 0) {
-      role = "primary";
-      chromaticRank += 1;
-    } else if (kind === "chromatic" && chromaticRank === 1) {
-      role = "accent";
-      chromaticRank += 1;
-    } else {
-      // Chromatic ranks 3+ and surplus neutrals: texture only.
-      role = "ambient";
-    }
-    if (role === "ambient" && ambient.length < 3) ambient.push(color);
+  hierarchy.slice(0, STORY_SLOTS.length).forEach((color, index) => {
+    const role = STORY_SLOTS[index];
+    if (role === "primary") colors.primary = color;
+    else if (role === "accent") colors.accent = color;
+    else if (role === "ambient") ambient.push(color);
+    else if (role === "surface-dark") colors.surfaceDark = color;
+    else colors.surfaceLight = color;
+
     assignments.push({
       color,
       role,
       label: ROLE_LABELS[role],
       warning: reservedBandWarning(color, role),
     });
-  }
+  });
 
-  const primary = assignments.find((entry) => entry.role === "primary");
-  if (primary) colors.primary = primary.color;
-  const accent = assignments.find((entry) => entry.role === "accent");
-  if (accent) colors.accent = accent.color;
   if (ambient.length > 0) colors.ambient = ambient;
-  if (darkAnchor) colors.surfaceDark = darkAnchor;
-  if (lightAnchor) colors.surfaceLight = lightAnchor;
 
   return {
     assignments,

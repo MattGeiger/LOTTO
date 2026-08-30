@@ -66,13 +66,12 @@ on their own phone, in their own language.
 If LOTTO looks useful, you can fork it, modify it, and deploy your own instance —
 see [LICENSE](./LICENSE) and [TRADEMARKS.md](./TRADEMARKS.md) for the terms.
 
-LOTTO supports deployment-selected brand profiles and database-backed appearance
-configurations from one repository. Each agency can manage its own logo, colors,
+LOTTO ships one compiled William Temple House default plus database-backed
+Appearance configurations. Each organization can manage its own logo, colors,
 copy, metadata, install identity, database, authentication allowlist/domain
 policy, and optional FEED integration while continuing to share queue logic and
 future updates. See
-[`docs/WHITE_LABEL_BRANDING_PLAN.md`](./docs/WHITE_LABEL_BRANDING_PLAN.md) and
-[`docs/CONFIGURABLE_BRANDING_PLAN.md`](./docs/CONFIGURABLE_BRANDING_PLAN.md), and
+[`docs/CONFIGURABLE_BRANDING_PLAN.md`](./docs/CONFIGURABLE_BRANDING_PLAN.md) and
 [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md).
 
 ---
@@ -224,11 +223,10 @@ plain English:
 4. The **William Temple House name, logos, visual identity, and domain are *not*
    open source** and may not be reused without separate written permission. See
    [TRADEMARKS.md](./TRADEMARKS.md).
-5. **Anyone deploying LOTTO must select or add an authorized brand profile** and
-   use their own name, logo, colors, domain, and contact information before a
-   public deployment. The no-configuration William Temple House profile exists
-   to preserve the originating production deployment; it is not permission to
-   reuse that identity.
+5. **Anyone deploying LOTTO must configure an authorized Appearance** and use
+   their own name, logo, colors, domain, and contact information before a public
+   deployment. The no-configuration William Temple House default preserves the
+   originating production deployment; it is not permission to reuse that identity.
 
 ---
 

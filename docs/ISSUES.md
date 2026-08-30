@@ -1431,22 +1431,22 @@ For future agencies, consider provisioning the Neon database directly at
 flow) and connecting it to Vercel as an *existing* database instead of using
 "Create Database." That path gives permanent access to the real connection
 string from Neon's own console, which means `npm run db:migrate` works locally
-against production without the embedded-query workaround. This wasn't done for
-St. Johns because the database already existed via the Marketplace flow before
-this constraint was discovered.
+against production without the embedded-query workaround. The first secondary
+agency database already existed via the Marketplace flow before this constraint
+was discovered.
 
 ---
 
 ## Issue 31: Vercel Framework Preset silently defaulting to "Other" causes every route to 404 despite a successful build
 
 ### Status
-- Fixed for St. Johns (redeployed after correcting the setting); added as an
+- Fixed for the affected agency deployment (redeployed after correcting the setting); added as an
   explicit check to the new-agency runbook so it isn't rediscovered by
   accident again.
 
 ### Observed
-After the St. Johns Vercel project's first production deployment showed
-**Ready** with no errors in the build log, every route on `stjohnsfoodshare.app`
+After a new agency Vercel project's first production deployment showed
+**Ready** with no errors in the build log, every route on its custom domain
 — including `/`, `/display`, and even the apex — returned Vercel's generic
 `404: NOT_FOUND` page (format: `Code: NOT_FOUND`, `ID: <region>::<hash>`).
 Confirmed the domain and SSL were correctly pointed at the deployment (DNS and
@@ -1492,8 +1492,8 @@ because nothing else in the setup flow surfaces this failure.
 - Fixed (`src/components/personalized-home-page.tsx`); merged and deployed.
 
 ### Observed
-On a real iPhone, the St. Johns personalized homepage showed the header logo
-("ST. JOHNS FOOD SHARE" wordmark + icon) sitting almost flush against the
+On a real iPhone, a secondary agency's personalized homepage showed its taller
+header logo sitting almost flush against the
 "NOW SERVING" label directly below it, with very little clearance — reported
 by comparing directly against the William Temple House variant on the same
 device, where the equivalent gap is clearly visible. Did **not** reproduce in
@@ -1516,8 +1516,8 @@ reasoning from computed CSS box measurements alone.
 - `src/components/brand-logo.tsx` previously sized the header logo by a fixed
   **width** (`className="w-full max-w-[220px]"`) with `h-auto`, so its
   rendered height was purely a function of each brand's own aspect ratio.
-  St. Johns' logo (icon above/beside a two-line "ST. JOHNS" / "FOOD SHARE"
-  wordmark, ~2.3:1 at the light-mode asset's declared dimensions) renders
+  The secondary logo's stacked wordmark (~2.3:1 at the light-mode asset's
+  declared dimensions) rendered
   noticeably taller than WTH's at the same width — enough, in practice, to
   exceed the reserved clearance and overlap the flowed content below it.
 
@@ -1527,32 +1527,29 @@ fixed **height** instead: `imageClassName="h-12 w-auto max-w-full"`. This caps
 the rendered logo to the same height for every brand regardless of its
 lockup's aspect ratio, so the fixed clearance below it is guaranteed to be
 sufficient without needing to be retuned per brand. Verified locally at a
-375×812 mobile viewport for both `st-johns-food-share` (no more overlap) and
-`william-temple-house` (visually unaffected — its logo was already under the
-new height cap).
+375×812 mobile viewport for both the secondary appearance (no more overlap)
+and WTH (visually unaffected — its logo was already under the new height cap).
 
 ### Prevention
-Documented in `docs/WHITE_LABEL_BRANDING_PLAN.md` under "Header logo sizing:
-fixed height, not fixed width" as required reading before integrating a new
-brand's logo assets, including the "don't trust a quick localhost check"
-lesson from how this one was actually found.
+Carried into `docs/CONFIGURABLE_BRANDING_PLAN.md` as the fixed-height header
+logo rule, including the "don't trust a quick localhost check" lesson from how
+this one was actually found.
 
 ---
 
-## Issue 33: St. Johns light-mode primary-button text had poor contrast
+## Issue 33: A secondary light-mode primary button had poor text contrast
 
 ### Status
-- Fixed (`src/app/styles/brands/st-johns-food-share.css`, light mode only);
-  merged and deployed.
+- Fixed in the retired secondary compiled stylesheet; merged and deployed.
 
 ### Observed
-Filled primary buttons in St. Johns' light theme (e.g. "Enter a new ticket
+Filled primary buttons in the secondary light theme (e.g. "Enter a new ticket
 number") showed dark, low-contrast text against the mid-green button fill —
 hard to read.
 
 ### Root Cause (Code References)
-- `src/app/styles/brands/st-johns-food-share.css`, `:root[data-brand="st-johns-food-share"]`
-  block: `--primary-foreground` was set to a near-black green
+- The retired secondary theme's light block set `--primary-foreground` to a
+  near-black green
   (`oklch(0.270912 0.040942 166.051)`), which sits too close in lightness to
   `--primary` (`oklch(0.644157 0.121025 163.057)`) for comfortable contrast on
   a filled `bg-primary text-primary-foreground` surface.
@@ -1570,9 +1567,8 @@ block that was actually observed to be broken rather than "fixing" an
 unconfirmed pairing preemptively.
 
 ### Prevention
-Documented in `docs/WHITE_LABEL_BRANDING_PLAN.md` under "Primary/foreground
-contrast" as a manual check to perform when authoring or reviewing a new
-brand's token blocks, since there's no automated gate for it today.
+The lesson moved into `docs/CONFIGURABLE_BRANDING_PLAN.md`: validate
+primary/foreground contrast automatically for every saved appearance.
 
 ## Issue 34: Page-wide Radix `useId` hydration mismatch reported on `/admin` (not reproducible on a consistent build)
 
@@ -2258,55 +2254,139 @@ as `var(--…)` are already safe — they resolve from the serialized stylesheet
 
 ## Issue 45: Dark-mode shadows lose their assigned hue
 
-**Status:** open — documented, not fixed. Same class as the defect FEED hit
-during its white-label work.
+**Status:** fixed in the Unreleased FEED-parity follow-up after
+v1.26.0-beta.1. Verified on the iOS 15.4 and iPadOS 26.5 simulators; the Vercel
+preview and real-device promotion gates remain part of the release checklist.
 
 Dark mode is supposed to tint its shadows with the brand. `derive.ts` emits a
 deliberately saturated shadow colour for the dark and hi-viz-dark scopes:
 
     "base-shadow-color": formatOklch({ l: 0.742, c: 0.161, h: serving.h - 6 })
 
-Chroma 0.161 is not a subtle tint — it is a strong, hue-bearing colour, and the
-comment records the intent ("St. Johns reuses the light Called border as its
-dark shadow tint"). The rendered shadow does not carry it. Sampled off the
+Chroma 0.161 is not a subtle tint — it is a strong, hue-bearing colour. The
+rendered shadow did not carry it. Sampled off the
 iOS 15.4 simulator, the halo around a dark-mode control measured
 `rgb(87, 84, 86)` — r minus b of **+1**, which is neutral grey. The hue is being
 lost somewhere between the token and the pixel.
 
-**Where it most likely goes.** Every consumer is the same shape, 26 of them
-across the authored stylesheets:
+**Root cause.** Every consumer had the same shape, 26 of them across the
+authored stylesheets:
 
     color-mix(in oklch, var(--base-shadow-color), transparent 85%)
 
-`oklch` is a *polar* space: it carries a hue angle. Mixing toward `transparent`
-in a polar space is the exact construction that broke FEED, where the symptom
-was inverted — shadows there gained a violet cast instead of losing their hue,
-which is the same failure read from the other end. `transparent` is
-`rgb(0 0 0 / 0)`; an engine that premultiplies alpha correctly contributes none
-of its colour and the source hue survives, while an engine that does not drags
-the result toward chroma 0 and hue 0. FEED's fix was to mix in **`oklab`**
-instead — rectangular, no hue angle, nothing for the interpolation to drag —
-applied at 95 sites. The same remedy is the obvious candidate here.
+That construction contains two distinct compatibility failures. In engines
+that implement the interpolation, polar-space mixing toward transparent can
+drag or erase the authored hue — FEED's violet-shadow defect. On LOTTO's
+iPadOS 15 floor the build cannot reduce the expression because its source is a
+runtime `var()`. Lightning CSS emitted an opaque custom-property fallback and
+kept the alpha mix behind a feature query the floor does not enter. The result
+was not merely an inaccurate hue: the fallback shadow was too opaque.
 
-Note also that these live in *authored* CSS, so Lightning CSS would normally
-downlevel them; it cannot fold this one, because the first operand is a `var()`
-it cannot resolve at build time. The declaration ships as written.
+Changing `oklch` to FEED's `oklab` fixed the modern interpolation half but did
+not fix the legacy fallback. LOTTO therefore ports FEED's principle at the
+token boundary: the generator and compiled brands now emit three already-
+alpha-bearing values — `--base-shadow-soft-color`, `--base-shadow-color`, and
+`--base-shadow-strong-color`. Shared shadow recipes compose geometry from those
+tokens directly and contain no runtime `color-mix()`. The serializer converts
+each alpha-bearing OKLCH value to an sRGB baseline for iPadOS 15 and restores
+OKLCH in its existing `@supports` layer for modern engines.
 
-**What is not yet established**, and should be before anyone edits:
+Protected operational gradients were inspected and are not part of this
+change. The new token names remain in the derivable identity vocabulary, not
+the protected status vocabulary.
 
-- Which engines are affected. The measurement above is from the 15.4 floor
-  only. `color-mix()` did not ship in Safari until 16.2, so on that engine the
-  declaration may be dropped entirely and the grey halo may be coming from a
-  different rule — in which case the neutral reading confirms the symptom but
-  not this mechanism. Sample the same control on the iPadOS 26 simulator before
-  concluding.
-- Whether the operational-status gradients in `operational-status.css` share the
-  construction, since those are protected tokens and any change there needs the
-  shared-theme treatment.
-
-**A correction worth recording.** Earlier in the session this was measured and
+**A correction worth recording.** Earlier in the investigation this was measured and
 written off. The check was looking for FEED's symptom — a *warm* halo — found
 r−b of +1, and concluded "no halo bug." That reading was backwards: a neutral
 result was never evidence of health here, because the token is authored at
 chroma 0.161 and neutral is precisely what it should not be. Measuring for the
 symptom you already know is how you miss the one in front of you.
+
+**Regression cover.** `tests/brand-tailwind-palette.test.ts` requires every
+scope to emit the three alpha-bearing shadow tokens and requires the shared
+recipes to contain no `color-mix()`. The iOS 15.4 simulator rendered the
+custom dark theme without the former opaque neutral halo and completed
+hydration to **Persistence confirmed**. The iPadOS 26.5 simulator retained the
+authored branded tint without the polar-space artifact.
+
+## Issue 46: Built-in card gradients diverged between legacy and modern iPads
+
+**Status:** fixed in the current Unreleased work.
+
+The WTH card wash used `color-mix(in oklch, var(--primary) 8%, transparent)`.
+Modern WebKit produced the intended subtle wash, but the iPadOS 15 build
+fallback became an opaque primary stop. The same built-in appearance therefore
+looked materially warmer and heavier on the support-floor tablet.
+
+LOTTO now ports FEED's current WTH card atmosphere as explicit opaque gradient
+stops for light and dark mode. The browser performs no runtime mixing, so both
+engines consume the same visual result. Tests reject `color-mix()` in the WTH
+card-gradient tokens.
+
+## Issue 47: Theme selection required a dropdown for three choices
+
+**Status:** fixed in the current Unreleased work.
+
+FEED established a faster one-control pattern. LOTTO now uses the same
+single-tap interaction and cycles Light → Dark → Hi-viz → Light. The control's
+icon, tooltip, and accessible name describe the mode the next tap will select;
+the dropdown and its extra decision step are gone.
+
+## Issue 48: Two compiled appearances duplicated maintenance
+
+**Status:** fixed in the current Unreleased work.
+
+The configurable Appearance workflow supersedes compiled per-agency profiles.
+LOTTO now compiles only William Temple House, uses FEED's current WTH colors and
+SVG identity assets, and prunes retired template rows while preserving saved
+custom appearances. Agency differences live in database-backed Appearance
+records and Blob assets, not source selectors or a public build variable.
+
+## Issue 49: Help navigation targeted a retired staff route
+
+**Status:** fixed in the current Unreleased work.
+
+The authenticated Help index linked to `/staff`, which now redirects through
+sign-in instead of returning staff to their workspace. The upper-left control
+is now **Back** and links directly to `/admin`.
+
+## Issue 50: Animated navigation icons clipped during playback
+
+**Status:** fixed in the current Unreleased work.
+
+Some animated icon paths and panels temporarily leave their resting SVG
+viewBox. The navigation icon/label wrapper now keeps SVG overflow visible, so
+the full animation renders without changing hit targets or resting geometry.
+
+## Issue 51: Arcade omitted ready, staff-activated languages
+
+**Status:** fixed in the current Unreleased work.
+
+Arcade previously loaded the shared language catalog only after a dynamic
+language was already selected. Its first-open menu could therefore show only
+the built-in list. The switcher now loads the ready catalog on mount and offers
+every activated language without visitor polling.
+
+## Issue 52: Form inputs lost their surface fill
+
+**Status:** fixed in the current Unreleased work.
+
+The shared Input component used a transparent light-mode fill and a translucent
+dark-mode override. This made the ticket-range, append, reset-confirmation, and
+language-search fields visually disappear into their cards. Inputs now use the
+solid `bg-background` token in every mode, matching FEED's field standard.
+Focused tests cover each reported field.
+
+## Issue 53: Theme switcher changed icon and label during hydration
+
+**Status:** fixed in the current Unreleased work.
+
+The server cannot know the device's system theme and rendered the one-tap
+control as **Switch to dark theme**. On a dark-preferring client, `next-themes`
+could resolve Dark on the first render and produce **Switch to high-visibility
+theme** before hydration finished. React discarded the server tree on `/`.
+
+The already-disabled pre-mount control now has one deterministic Dark target on
+both sides. After the mount effect, it resolves the actual Light → Dark →
+Hi-viz cycle. The legacy production smoke and a pure target-selection
+regression cover the boundary.

@@ -170,6 +170,23 @@ converted in place, alpha preserved.
 **Any new runtime-generated CSS must follow this rule.** The build protects
 authored stylesheets; nothing protects CSS generated at request time.
 
+## The fourth thing that breaks: alpha mixed from runtime variables
+
+Issue 45 exposed a related boundary. FEED correctly replaced polar
+`color-mix(in oklch, color, transparent)` shadow interpolation with rectangular
+`oklab`, preserving hue on modern engines. That change alone is not sufficient
+for LOTTO's iPadOS 15 floor when `color` is a custom property: Lightning CSS
+cannot resolve `var(--base-shadow-color)` at build time, so the useful alpha
+mix remains behind a feature query while the legacy fallback can become the
+opaque source color.
+
+LOTTO therefore emits three complete colors — `--base-shadow-soft-color`,
+`--base-shadow-color`, and `--base-shadow-strong-color` — with alpha already
+applied. `foundations.css` only composes shadow geometry from those values; it
+must not reintroduce `color-mix()` for brand shadows. Runtime serialization
+then downlevels each complete alpha color through the same sRGB baseline and
+OKLCH `@supports` layers described above.
+
 ## Guardrails
 
 - **Static guard:** `npm run check:legacy-bundles` scans the built chunks for the

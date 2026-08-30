@@ -1,3 +1,19 @@
+# Unreleased follow-up to v1.26.0-beta.1
+
+The FEED parity work now ports the live color-step interaction instead of
+maintaining LOTTO's shorter reimplementation. Fixed slots, logo extraction,
+closest-family suggestions, search, family/weight selection, and add/clear
+behavior align with FEED. LOTTO retains only product-boundary differences:
+four preview modes, localization-safe activation, protected queue semantics,
+and Next/Vercel storage and legacy-emission adapters.
+
+The previously recorded Accent/Ambient reach gap is closed. Issue 45 is also
+fixed with pre-alpha soft/base/strong shadow tokens, which avoids both FEED's
+polar-space hue defect and LOTTO's opaque iPadOS 15 fallback. The full suite,
+production build, 42-chunk legacy scan, hydration smoke, and both simulator
+checks are recorded in the Unreleased changelog; Vercel preview plus real-device
+sign-in remain the promotion gate.
+
 # LOTTO v1.26.0-beta.1
 
 **Release Date:** August 29, 2026 (beta — not promoted)
@@ -433,16 +449,16 @@ Full implementation details are in `CHANGELOG.md`,
 
 **Release Date:** July 18, 2026
 
-LOTTO now supports deployment-selected branding from one repository. William
-Temple House remains the no-configuration production default, while the new
-St. Johns Food Share queue-only profile supplies its own visual identity,
-metadata, install assets, public URL, and optional-integration policy.
+LOTTO introduced deployment-selected branding from one repository. William
+Temple House remained the no-configuration production default while a second
+compiled profile proved the identity, metadata, install-asset, public-URL, and
+optional-integration boundaries later replaced by configurable Appearance.
 
 This release also separates shared operational status semantics from agency
 identity colors, adds additive exact-address and managed-domain staff
 authorization for organizations using public email providers, and restructures
 core and Arcade palettes around an OKLCH-only CSS authoring standard. Full
-details are in `CHANGELOG.md`, `docs/WHITE_LABEL_BRANDING_PLAN.md`, and
+details are in `CHANGELOG.md`, `docs/CONFIGURABLE_BRANDING_PLAN.md`, and
 `docs/CSS_THEME_ARCHITECTURE.md`.
 
 ---

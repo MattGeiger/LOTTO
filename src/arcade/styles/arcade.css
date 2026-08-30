@@ -1,7 +1,5 @@
 @import "./themes/william-temple-house.css";
 
-@import "./themes/st-johns-food-share.css";
-
 .arcade-scope {
   --font-arcade-ui: var(--font-arcade-display);
   background:

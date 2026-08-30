@@ -26,9 +26,9 @@ export default function HelpIndexPage() {
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-10 pb-28 sm:pb-32">
       <div>
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/staff">
+          <Link href="/admin">
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-            Staff home
+            Back
           </Link>
         </Button>
       </div>

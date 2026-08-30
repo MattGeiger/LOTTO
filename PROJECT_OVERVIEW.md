@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-LOTTO replaces a manual coffee-can raffle or sequential line with a production-grade web application. It began at William Temple House and now supports multiple agency deployments from one repository through typed brand profiles. Built through collaborative AI agent development, the system is designed to serve pantry clients with:
+LOTTO replaces a manual coffee-can raffle or sequential line with a production-grade web application. It began at William Temple House and now supports runtime-configurable appearances from one repository. Built through collaborative AI agent development, the system is designed to serve pantry clients with:
 
 - **Fair, transparent queue management** via randomized ticket drawing
 - **Multi-device access** (wall screens + mobile via QR codes)  
@@ -46,7 +46,7 @@ LOTTO replaces a manual coffee-can raffle or sequential line with a production-g
 - **Optional Public Inventory** (`/inventory`) — Capability-gated FEED inventory lookup, fetched read-only without credentials and rendered as category tables with limits, status tags, dietary flags, and freshness; queue-only deployments omit the route and nav item
 - **Staff Dashboard** (`/admin`) — Range management, append, mode toggle, undo/redo
 - **Authentication** (`/login`) — Magic link + OTP fallback
-- **Staff Landing** (`/staff`) — Welcome page with dashboard link
+- **Staff entry** (`/staff`) — Sign-in entry that redirects authenticated staff to Admin
 
 ### 3.2 Backend (Next.js API Routes)
 - `/api/state` — CRUD operations for raffle state (generate, append, update serving)
@@ -70,8 +70,7 @@ LOTTO replaces a manual coffee-can raffle or sequential line with a production-g
 
 ### 3.5 Deployment (Vercel)
 - **Production model:** One Vercel project, Neon database, auth/email configuration, and public domain per agency; all build the same repository
-- **William Temple House:** `williamtemple.app` (custom domain, Vercel DNS; default brand profile)
-- **St. Johns Food Share:** Local profile implemented; production infrastructure deferred for agency/webmaster coordination
+- **William Temple House:** `williamtemple.app` (custom domain, Vercel DNS; compiled default appearance)
 - **Runtime:** Node.js (proxy.ts, API routes)
 - **Monitoring:** Vercel Speed Insights, build logs
 - **CI/CD:** GitHub main branch auto-deploy
@@ -119,9 +118,9 @@ LOTTO replaces a manual coffee-can raffle or sequential line with a production-g
 - **Empty state:** Welcoming message when no tickets issued
 
 ### 4.7 Configurable Branding and Capabilities
-- **Build-time profile:** `NEXT_PUBLIC_LOTTO_BRAND` selects typed identity, logo, metadata, PWA, staff copy, theme tokens, and integration defaults
-- **Safe default:** An omitted profile selects William Temple House so the originating production project is unchanged
-- **Queue-only mode:** Inventory is hidden and no FEED request/CSP origin is added unless the selected profile or environment supplies an endpoint
+- **Runtime Appearance:** Admin-managed configuration selects identity, logo, metadata, PWA, staff copy, theme tokens, and integration capability
+- **Safe default:** William Temple House is the only compiled appearance, preserving the originating production project
+- **Queue-only mode:** Inventory is hidden and no FEED request/CSP origin is added unless the active Appearance or environment supplies an endpoint
 - **Tenant isolation:** Agency data and secrets are isolated by separate infrastructure rather than shared database rows
 
 ---
@@ -278,7 +277,7 @@ LOTTO replaces a manual coffee-can raffle or sequential line with a production-g
 - `CHANGELOG.md` — Version history, feature timeline
 - `PROJECT_OVERVIEW.md` — This document (architecture, design decisions)
 - `docs/UI_DESIGN.md` — Theme system, design tokens
-- `docs/WHITE_LABEL_BRANDING_PLAN.md` — Profile architecture, St. Johns visual reference, and validation plan
+- `docs/CONFIGURABLE_BRANDING_PLAN.md` — Runtime Appearance architecture and validation plan
 
 ### 11.2 Key Files
 - `/src/proxy.ts` — Authentication middleware (Next.js 16)
@@ -306,4 +305,4 @@ Built through collaborative AI agent development:
 
 **Version:** 1.20.1
 **Last Updated:** July 20, 2026
-**Status:** Production at William Temple House and St. Johns Food Share
+**Status:** Production at William Temple House

@@ -52,7 +52,7 @@ export type ResolvedBrand = {
 
 /** Resolve a compiled profile into the runtime shape (client-safe). */
 export const resolvedBrandFromProfile = (
-  profile: BrandProfile = getBrandProfile(process.env.NEXT_PUBLIC_LOTTO_BRAND),
+  profile: BrandProfile = getBrandProfile(),
 ): ResolvedBrand => {
   const inventory = getInventoryIntegration(profile);
   return {

@@ -5,47 +5,41 @@
 Shipped in LOTTO v1.20.0 and expanded with FEED 1.7.5-beta.4 UX parity in the
 current Unreleased work. The parity architecture and delivery gates are
 specified in `docs/FEED_BRANDING_PARITY_PLAN.md`.
-**The capstone brand-swap test passed in both directions on 2026-07-19**: weak
-form (template
-activation displaces the compiled identity, `tests/brand-runtime.test.ts`)
-and strong form (manual from-scratch recreation in the wizard only — a WTH
-dev deployment made on-brand for St. Johns, and a St. Johns-profile
-deployment made on-brand for WTH, each reviewed in light, dark, and Hi-viz
-against the hand-authored references). The production rollout requires the
+**The capstone brand-swap test passed on 2026-07-19**: template activation
+displaces the compiled identity (`tests/brand-runtime.test.ts`) and a manual
+from-scratch appearance can replace the WTH default across light, dark, and
+Hi-viz modes. The production rollout requires the
 additive `brand_configurations` schema migration in every agency database.
 Database-backed identity and built-in template assets are production-ready;
 custom uploaded assets use public Vercel Blob in production and the documented
 filesystem fallback only for local/self-hosted development. Schema v2 stores
 fixed Tailwind v4 role names and retains a schema-v1 compatibility path;
-compiled WTH and St. Johns themes remain exact fallbacks. The PWA theme color is
+the compiled WTH theme remains the exact fallback. The PWA theme color is
 currently auto-set from the uploaded mark's dominant color (can pick a
 background shade; an explicit override field is a wizard refinement), and
 Arcade palettes do not yet derive. One calibration note from Phase 0: the emphasis-pair contrast
-floor is 2.5:1 rather than 3:1 — measurement showed both shipped identities'
-deliberate emphasis choices (St. Johns' Issue 33 fix ≈2.78:1, WTH's light
-serving ramp ≈2.74:1) sit below WCAG's large-text line, while the *original*
-Issue 33 bug measures ≈4.7:1; the structural Issue 33 protection is the
+floor is 2.5:1 rather than 3:1 — measurement showed deliberate emphasis
+choices in the original compiled themes sat below WCAG's large-text line; the
+structural protection is the
 derivation's tint-preference ordering, not the numeric floor
 (`src/lib/brand-theme/validate.ts`).
 
 This document was originally the draft proposal below; the architecture
 described is the one implemented. This document plans the
 evolution of LOTTO's white-label branding from code-owned deployment profiles
-(see `docs/WHITE_LABEL_BRANDING_PLAN.md`, shipped in v1.19.0) into a
+into a
 database-persisted, admin-configurable appearance system that a non-technical
 agency operator can complete without editing source code.
 
-Nothing in this plan changes William Temple House production behavior. WTH
-remains the compiled, no-configuration default, and `NEXT_PUBLIC_LOTTO_BRAND`
-continues to work exactly as documented today. The configurable system layers
-on top of — and, when a saved configuration exists, in front of — the existing
-profile mechanism.
+William Temple House is the single compiled, no-configuration default. The
+configurable system layers on top of it and becomes authoritative when a saved
+configuration is activated.
 
 ## Motivation
 
 The v1.19.0 white-label release proved that LOTTO adapts cleanly to another
-agency's identity, but the St. Johns Food Share launch also measured the cost
-of the current approach per agency:
+agency's identity, but it also measured the cost of compiled profiles per
+agency:
 
 - ~95–190 lines of core brand CSS, a Hi-viz variant, and ~160 lines of Arcade
   palette CSS, all hand-authored and code-reviewed.
@@ -82,8 +76,7 @@ to come from deployment separation, not from conditional rows.
 ```text
 Brand resolution order (first match wins)
 1. Active brand configuration row in this deployment's database
-2. Compiled profile selected by NEXT_PUBLIC_LOTTO_BRAND
-3. William Temple House compiled default
+2. William Temple House compiled default
 ```
 
 ### Why persisted configuration instead of more compiled profiles
@@ -92,12 +85,12 @@ Brand resolution order (first match wins)
   an agency is a wizard session, not a branch, a CSS file, and a release.
 - Brand-content fixes (a logo swap, a color tweak, a copy change) become
   admin edits with immediate effect instead of source releases.
-- The guardrails learned from the St. Johns launch (contrast, logo aspect
+- The guardrails learned from the first secondary-agency launch (contrast, logo aspect
   ratio, protected operational tokens) move from code review and manual
   checklists into automated validation the wizard enforces on every save.
-- Compiled WTH and St. Johns profiles remain in the repo as the default and as
-  seeded read-only **templates**, preserving the build-time safety net for the
-  surfaces that ship without configuration.
+- The compiled WTH theme remains in the repo as the default and as a seeded
+  read-only **template**, preserving the build-time safety net for surfaces
+  that ship without configuration.
 - Saved/loadable configurations directly enable future scheduled appearance
   overlays (holiday and seasonal themes) with no additional architecture.
 
@@ -113,8 +106,8 @@ Brand resolution order (first match wins)
   `--operational-*`). These are simply absent from the configurable schema, so
   a saved configuration cannot express an override — a strictly stronger
   guarantee than the current code-review guardrail in `AGENTS.md`.
-- The WTH and St. Johns compiled profiles and their CSS files, retained as the
-  no-configuration default and as template sources.
+- The compiled WTH theme and CSS, retained as the no-configuration default and
+  template source.
 
 ## Configuration Schema
 
@@ -148,17 +141,21 @@ all 286 names. Legacy schema-v1 payloads normalize to
 `colors.system: "legacy-oklch"` and keep the original derivation until an
 operator enters the Colors step and saves the migrated draft.
 
-The Tailwind picker asks for family then weight instead of presenting a
-scrolling 286-cell wall. Logo extraction and direct canvas/EyeDropper picks
-snap to the nearest permitted stop. The same configured-theme function feeds
+The Tailwind picker follows FEED's compact flow instead of presenting a
+scrolling 286-cell wall: nearby logo matches first, searchable palette names,
+then a native family selector and 11-stop weight strip. **Extract from light
+logo** fills the fixed slots and snaps every result to the nearest permitted
+stop. The discontinued canvas/EyeDropper surface is not part of the parity
+workflow. The same configured-theme function feeds
 client preview, API validation, and request-time CSS, preventing preview/live
 drift. `tests/brand-tailwind-palette.test.ts` proves all 26 primary families
 against all nine neutral surface families (234 combinations), and final token
 validation continues to reject every protected operational family.
 
-St. Johns' "deliberately compact color system" (brand teal, off-white,
-charcoal; everything else derived tints/shades) is the model, now made
-programmatic. A pure TypeScript derivation module maps the 3–5 brand inputs to
+The configurable engine follows FEED's role semantics rather than
+reverse-engineering a retired compiled theme: Ambient owns page atmosphere, Accent
+owns secondary emphasis in all four scopes, and anchors own surfaces. A pure
+TypeScript derivation module maps the fixed brand inputs to
 the complete semantic token set — surfaces, cards, borders, rings, hover and
 disabled states, Called/Now Serving progression treatments, shadow color, and
 the dark and Hi-viz variants — using OKLCH lightness/chroma manipulation. The
@@ -167,12 +164,11 @@ principled: derivations are arithmetic on L/C/H, and output serializes
 directly to `oklch()` strings.
 
 Every derived pairing that renders text on a fill (`--primary` /
-`--primary-foreground` foremost — the exact St. Johns Issue 33 failure) is
+`--primary-foreground` foremost — the exact historical Issue 33 failure) is
 contrast-checked at derivation time against WCAG 2.1 AA (4.5:1 normal text,
 3:1 large text/UI). The derivation must either auto-correct the foreground to
 pass or refuse the save with a specific, plain-language explanation. Manual
-contrast checking, currently a documented reviewer obligation in
-`docs/WHITE_LABEL_BRANDING_PLAN.md`, becomes impossible to skip.
+contrast checking becomes impossible to skip.
 
 ### Forward compatibility: sparse overrides (planned Advanced tier)
 
@@ -237,9 +233,9 @@ CREATE TABLE IF NOT EXISTS brand_configurations (
 ```
 
 - At most one row has `is_active = true` (enforced by a partial unique index).
-- WTH and St. Johns are seeded as `is_template = true` rows generated from the
-  compiled profiles, so the wizard's "start from a template" option always
-  matches the code-owned source of truth. Templates are read-only; "Use this
+- WTH is seeded as an `is_template = true` row generated from the compiled
+  default, so the wizard's "start from a template" option always matches the
+  code-owned source of truth. Templates are read-only; "Use this
   template" duplicates into an editable configuration.
 - The payload is versioned (`schemaVersion`) and validated with a zod schema
   shared by the wizard client, the API route, and tests. Invalid payloads fail
@@ -312,9 +308,8 @@ inventing a new stepper idiom.
 
 Steps:
 
-1. **Start** — begin from the WTH template, the St. Johns template, or from
-   scratch (which pre-fills the neutral WTH-shaped defaults with placeholder
-   graphics).
+1. **Start** — begin from the WTH template or from scratch (which pre-fills the
+   neutral WTH-shaped defaults with placeholder graphics).
 2. **Identity** — organization name, app name, PWA short name, tagline,
    descriptions (with generated defaults), links, and the client-facing public
    service label. Only that public service label enters localization; sign-in
@@ -334,8 +329,7 @@ Steps:
 7. **Review & activate** — full-page preview, then save. Activation is
    explicit; a configuration can be saved inactive as a draft.
 
-When an admin signs in and no configuration exists (and no
-`NEXT_PUBLIC_LOTTO_BRAND` is set to a non-default profile), the Advanced
+When an admin signs in and no configuration exists, the Advanced
 section surfaces a prominent "Set up your organization's appearance" call to
 action. **Decision (2026-07-18):** the wizard does not auto-open on first
 admin sign-in — an interruptive modal could block an operator mid-incident,
@@ -431,9 +425,8 @@ Measured acceptance:
 - Unit tests cover schema validation, derivation determinism, and contrast
   enforcement (a knowingly-bad input, including the exact Issue 33 green, is
   rejected or corrected).
-- Derived St. Johns tokens match the hand-authored
-  `st-johns-food-share.css` values within documented tolerance, or every
-  deviation is reviewed and accepted as a derivation-rule decision.
+- Derived WTH template tokens remain internally consistent with the configured
+  role semantics; the compiled WTH stylesheet remains the visual reference.
 - The generator provably emits no protected operational token names
   (regression test over generator output, mirroring the existing
   selector-level brand-boundary test), and override keys outside the
@@ -456,11 +449,9 @@ Measured acceptance:
 
 Measured acceptance:
 
-- With no configuration row and no env variable, WTH output (metadata,
+- With no configuration row, WTH output (metadata,
   manifest, tokens, CSP) is byte-for-byte unchanged — existing WTH tests pass
   unmodified.
-- With `NEXT_PUBLIC_LOTTO_BRAND=st-johns-food-share` and no row, St. Johns
-  behavior is unchanged — existing brand tests pass unmodified.
 - With an active row, all identity surfaces reflect it, first paint carries
   the inline tokens (no FOUC), and an invalid payload falls back to the
   compiled profile with an Admin-visible warning.
@@ -505,14 +496,14 @@ Measured acceptance:
 
 ### Phase 3 — Later extensions (separately planned)
 
-- **Color-story configurator — implemented 2026-07-19.** The Colors step is
-  built around the semiotic model in `docs/COLOR_SEMIOTICS.md`: an ordered
-  1–5 color hierarchy with automatic classification and role assignment
-  under the signal ceiling, reserved-hue-band warnings, logo palette
-  extraction with click-to-pick and native EyeDropper support, plus the two
-  model-violation fixes (serving-hue continuity with a tested ≤8°
-  cross-mode drift invariant; ambient inputs as a backward-compatible
-  schema-v1 extension). See that document's "Implementation status" section.
+- **Color-story configurator — implemented 2026-07-19; FEED interaction port
+  completed in the current Unreleased work.** The Colors step uses five fixed
+  jobs under the signal ceiling, reserved-hue-band warnings, logo extraction,
+  and the compact FEED family/weight picker. Roles are assigned by slot, never
+  reclassified from the selected color. Serving-hue continuity retains its
+  tested ≤8° cross-mode invariant; legacy schema-v1 ambient arrays remain
+  readable while schema v2 stores one exact Tailwind stop per role. See
+  `docs/COLOR_SEMIOTICS.md`.
 - **Advanced appearance tier**: semantic-slot overrides (15–20
   designer-meaningful controls, not raw tokens) layered on the Basic wizard
   via the sparse-overrides pipeline designed in Phase 0. Includes
@@ -526,8 +517,9 @@ Measured acceptance:
   Year, Easter, Ramadan, etc.), resolving above the base active configuration
   during their window. The `brand_configurations` model already supports this;
   only the scheduler and resolution-order extension are new work.
-- Retiring compiled profiles is **not** planned: WTH remains the compiled
-  default, and templates remain generated from code.
+- WTH remains the compiled default. The compiled St. Johns profile is expected
+  to retire only after a wizard-produced configuration reproduces it to the
+  operators' satisfaction; see `docs/FEED_BRANDING_PARITY_PLAN.md`.
 
 ## Risks and Open Questions
 

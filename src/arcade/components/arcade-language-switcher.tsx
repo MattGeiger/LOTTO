@@ -31,11 +31,12 @@ export function ArcadeLanguageSwitcher() {
     availableLanguages.find((option) => option.code === language)?.label ?? language;
   const needsScroll = availableLanguages.length > 10;
 
+  // The Arcade picker is always present, so resolve the shared visitor catalog
+  // before the menu opens. Waiting for a click showed the static core list for
+  // the first open and made activated languages appear missing on iPad.
   React.useEffect(() => {
-    if (!availableLanguages.some((option) => option.code === language)) {
-      ensureAvailableLanguagesLoaded();
-    }
-  }, [availableLanguages, ensureAvailableLanguagesLoaded, language]);
+    ensureAvailableLanguagesLoaded();
+  }, [ensureAvailableLanguagesLoaded]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -55,13 +56,7 @@ export function ArcadeLanguageSwitcher() {
         variant="outline"
         size="sm"
         className="arcade-ui px-2 text-sm"
-        onClick={() => {
-          setOpen((previous) => {
-            const next = !previous;
-            if (next) ensureAvailableLanguagesLoaded();
-            return next;
-          });
-        }}
+        onClick={() => setOpen((previous) => !previous)}
         aria-expanded={open}
         aria-haspopup="listbox"
       >

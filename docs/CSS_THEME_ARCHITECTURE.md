@@ -28,21 +28,16 @@ allowing agency identity colors to replace universal queue/status semantics.
   contrast-first Hi-viz behavior and protected status values.
 - `src/app/styles/shared/components.css` contains shared component and utility
   selectors that consume semantic tokens rather than choosing agency colors.
-- `src/app/styles/brands/william-temple-house.css` owns WTH identity values.
-  During the initial extraction its existing unqualified `:root` and `.dark`
-  selectors remain the no-configuration production default.
-- `src/app/styles/brands/st-johns-food-share.css` owns St. Johns standard light
-  and dark identity values.
-- `src/app/styles/brands/st-johns-food-share-high-visibility.css` owns only the
-  St. Johns identity refinements applied after the shared Hi-viz themes.
+- `src/app/styles/brands/william-temple-house.css` owns the single compiled WTH
+  identity and remains the no-configuration production default.
+- Activated appearances add a request-time custom-property layer after the
+  compiled WTH layer; they do not add agency-specific stylesheets.
 
 ### Arcade
 
 - `src/arcade/styles/arcade.css` remains the Arcade-only entry point and owns
   pixel-art components, layout, animation, and game presentation rules.
-- `src/arcade/styles/themes/william-temple-house.css` owns the default WTH
-  `--arcade-*` palette.
-- `src/arcade/styles/themes/st-johns-food-share.css` owns the scoped St. Johns
+- `src/arcade/styles/themes/william-temple-house.css` owns the compiled WTH
   `--arcade-*` palette.
 
 Arcade is visually and technically isolated from core raffle styling, but it
@@ -77,6 +72,11 @@ move must not change either one.
   are not allowed in `src/**/*.css`.
 - Alpha is written with OKLCH slash syntax, for example
   `oklch(0.5 0.1 200 / 0.25)`.
+- Brand shadow opacity is carried by the token value, not calculated in the
+  shared recipe. Every theme scope supplies `--base-shadow-soft-color`,
+  `--base-shadow-color`, and `--base-shadow-strong-color`; shared foundations
+  compose geometry from them without `color-mix()`. This keeps hue stable on
+  modern engines and preserves alpha in the iPadOS 15 sRGB fallback.
 - Neutral colors use zero chroma and a zero hue for consistency.
 - Gradients preserve their original geometry and stop positions; only the
   color notation changes during migration.
@@ -122,8 +122,9 @@ move must not change either one.
 ## Measured Acceptance Criteria
 
 - No forbidden color literals remain in `src/**/*.css`.
-- WTH remains the default when `NEXT_PUBLIC_LOTTO_BRAND` is absent.
-- St. Johns continues to activate only through its deployment profile.
+- WTH remains the single compiled default when no saved appearance is active.
+- An activated saved appearance overrides identity tokens without changing
+  shared operational status semantics.
 - Computed core and Arcade tokens match the pre-refactor visual values within
   conversion precision.
 - Operational status colors remain identical across brands for a given theme.

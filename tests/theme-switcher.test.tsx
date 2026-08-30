@@ -12,6 +12,7 @@ import { describe, expect, it, beforeEach, vi } from "vitest";
 import { HapticsProvider } from "@/components/haptics-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import {
+  getThemeCycleTarget,
   ThemeSwitcher,
   THEME_SWITCHER_TRIGGER_ID,
 } from "@/components/theme-switcher";
@@ -86,58 +87,68 @@ describe("ThemeSwitcher", () => {
     Reflect.deleteProperty(document, "startViewTransition");
   });
 
-  it("shows all four theme options", async () => {
+  it("uses one control with no dropdown and starts by offering dark", async () => {
     renderSwitcher();
-    const user = userEvent.setup();
 
-    await user.click(screen.getByRole("button", { name: /theme options/i }));
-
-    expect(screen.getByText("Light")).toBeInTheDocument();
-    expect(screen.getByText("Dark")).toBeInTheDocument();
-    expect(screen.getByText("System")).toBeInTheDocument();
-    expect(screen.getByText("Hi-viz")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Switch to dark theme" }),
+    ).toBeEnabled();
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 
   it("uses a deterministic trigger id for hydration stability", () => {
     renderSwitcher();
 
     expect(
-      screen.getByRole("button", { name: /theme options/i }),
+      screen.getByRole("button", { name: "Switch to dark theme" }),
     ).toHaveAttribute("id", THEME_SWITCHER_TRIGGER_ID);
   });
 
-  it("applies hi-viz mode and persists system color scheme", async () => {
-    renderSwitcher();
-    const user = userEvent.setup();
-
-    await user.click(screen.getByRole("button", { name: /theme options/i }));
-    await user.click(screen.getByText("Hi-viz"));
-
-    await waitFor(() => {
-      expect(document.documentElement).toHaveClass("hi-viz");
-    });
-    expect(window.localStorage.getItem("contrast-mode")).toBe("hi-viz");
-    expect(window.localStorage.getItem("theme")).toBe("system");
+  it("keeps the pre-mount target stable when the client prefers dark", () => {
+    expect(getThemeCycleTarget(false, false, "dark")).toBe("dark");
+    expect(getThemeCycleTarget(false, true, "dark")).toBe("dark");
+    expect(getThemeCycleTarget(true, false, "dark")).toBe("hi-viz");
   });
 
-  it("switches back to dark mode and clears hi-viz", async () => {
+  it("cycles light to dark to hi-viz to light", async () => {
     renderSwitcher();
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole("button", { name: /theme options/i }));
-    await user.click(screen.getByText("Hi-viz"));
+    await user.click(
+      await screen.findByRole("button", { name: "Switch to dark theme" }),
+    );
     await waitFor(() => {
-      expect(document.documentElement).toHaveClass("hi-viz");
+      expect(window.localStorage.getItem("theme")).toBe("dark");
+      expect(
+        screen.getByRole("button", { name: "Switch to high-visibility theme" }),
+      ).toBeEnabled();
     });
 
-    await user.click(screen.getByRole("button", { name: /theme options/i }));
-    await user.click(screen.getByText("Dark"));
+    await user.click(
+      screen.getByRole("button", { name: "Switch to high-visibility theme" }),
+    );
+
+    await waitFor(() => {
+      expect(document.documentElement).toHaveClass("hi-viz");
+      expect(window.localStorage.getItem("contrast-mode")).toBe("hi-viz");
+      expect(window.localStorage.getItem("theme")).toBe("system");
+      expect(
+        screen.getByRole("button", { name: "Switch to light theme" }),
+      ).toBeEnabled();
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: "Switch to light theme" }),
+    );
 
     await waitFor(() => {
       expect(document.documentElement).not.toHaveClass("hi-viz");
+      expect(window.localStorage.getItem("contrast-mode")).toBeNull();
+      expect(window.localStorage.getItem("theme")).toBe("light");
+      expect(
+        screen.getByRole("button", { name: "Switch to dark theme" }),
+      ).toBeEnabled();
     });
-    expect(window.localStorage.getItem("contrast-mode")).toBeNull();
-    expect(window.localStorage.getItem("theme")).toBe("dark");
   });
 
   it("uses view transition when available for base theme changes", async () => {
@@ -146,8 +157,9 @@ describe("ThemeSwitcher", () => {
     renderSwitcher();
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole("button", { name: /theme options/i }));
-    await user.click(screen.getByText("Dark"));
+    await user.click(
+      await screen.findByRole("button", { name: "Switch to dark theme" }),
+    );
 
     await waitFor(() => {
       expect(startViewTransition).toHaveBeenCalledTimes(1);
@@ -162,6 +174,9 @@ describe("ThemeSwitcher", () => {
 
     await waitFor(() => {
       expect(document.documentElement).toHaveClass("hi-viz");
+      expect(
+        screen.getByRole("button", { name: "Switch to light theme" }),
+      ).toBeEnabled();
     });
   });
 
@@ -169,8 +184,9 @@ describe("ThemeSwitcher", () => {
     renderSwitcher(true);
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole("button", { name: /theme options/i }));
-    await user.click(screen.getByText("Dark"));
+    await user.click(
+      await screen.findByRole("button", { name: "Switch to dark theme" }),
+    );
 
     expect(rawTriggerMock).toHaveBeenCalledWith("soft");
   });

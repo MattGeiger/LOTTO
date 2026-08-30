@@ -8,8 +8,8 @@
 // The derivable brand token vocabulary.
 //
 // This is the complete set of CSS custom properties a brand configuration may
-// produce, mirroring the coverage of the hand-authored St. Johns identity
-// layers (`src/app/styles/brands/st-johns-food-share*.css`). LOTTO's protected
+// produce across the configurable light, dark, and high-visibility layers.
+// LOTTO's protected
 // operational status families (`--status-*`, `--gradient-status-*`,
 // `--ticket-unclaimed-text`, `--ticket-returned-text`, `--operational-*`) are
 // deliberately absent: they are not derivable, not overridable, and never
@@ -34,7 +34,9 @@ export const STANDARD_BRAND_TOKENS = [
   "border",
   "input",
   "ring",
+  "base-shadow-soft-color",
   "base-shadow-color",
+  "base-shadow-strong-color",
   "brand-logo-surface",
   "card-gradient",
   "ticket-serving",

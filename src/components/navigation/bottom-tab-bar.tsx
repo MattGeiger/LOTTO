@@ -167,7 +167,10 @@ export function BottomTabBar({ autoHideAfterSeconds }: BottomTabBarProps = {}) {
                 {active ? (
                   <span aria-hidden="true" className="absolute inset-0 rounded-2xl bg-primary/12" />
                 ) : null}
-                <span className="relative z-10 flex flex-col items-center gap-1">
+                <span
+                  data-slot="navigation-icon-label"
+                  className="relative z-10 flex flex-col items-center gap-1 [&_svg]:overflow-visible"
+                >
                   <Icon
                     ref={(handle) => {
                       iconRefs.current[item.id] = handle;

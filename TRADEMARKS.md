@@ -34,21 +34,15 @@ Nothing in the AGPL license for the application code grants any right to use
 these trademarks or branding assets. AGPL-3.0 itself explicitly does not grant
 trademark rights (see AGPL-3.0 §7).
 
-The St. Johns Food Share profile is also supplied only for an authorized agency
-deployment. The **St. Johns Food Share** name, logo, tagline, visual identity,
-and related assets under `public/brands/st-johns-food-share/` remain the property
-of St. Johns Food Share and are not granted under AGPL-3.0-or-later. Their
-presence in this repository does not authorize use by another deployment.
-
 ## What this means for you
 
 If you fork, modify, or self-host LOTTO:
 
 1. You are free to use, study, modify, redistribute, and self-host the
    **application code** under the AGPL terms.
-2. Before any public deployment, you **must select an authorized profile or
-   replace the bundled agency branding** — name, logo, colors, domain, and
-   contact information — with **your own organization's** branding.
+2. Before any public deployment, you **must replace the bundled appearance** —
+   name, logo, colors, domain, and contact information — with **your own
+   organization's** branding through LOTTO's Appearance workflow.
 3. You may not present your deployment in a way that suggests it is operated by,
    endorsed by, or affiliated with William Temple House.
 

@@ -12,7 +12,20 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ST_JOHNS_TEMPLATE, WTH_TEMPLATE } from "@/lib/brand-theme/presets";
+import { WTH_TEMPLATE } from "@/lib/brand-theme/presets";
+
+const CUSTOM_TEMPLATE = {
+  ...WTH_TEMPLATE,
+  identity: {
+    ...WTH_TEMPLATE.identity,
+    organizationName: "Example Food Pantry",
+    appName: "Example Pantry Queue",
+    shortName: "Example Pantry",
+  },
+  capabilities: {
+    inventory: { enabled: false, feedUrl: null },
+  },
+};
 
 const tempFile = () =>
   path.join(
@@ -53,25 +66,15 @@ describe("brand resolution order", () => {
     expect(result.configError).toBeNull();
   });
 
-  it("respects NEXT_PUBLIC_LOTTO_BRAND when no configuration is active", async () => {
-    vi.stubEnv("NEXT_PUBLIC_LOTTO_BRAND", "st-johns-food-share");
-    vi.stubEnv("NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL", "");
-    const { resolve } = await freshImports();
-    const result = await resolve.getResolvedRuntimeBrand();
-    expect(result.brand.source).toBe("profile");
-    expect(result.brand.brandId).toBe("st-johns-food-share");
-    expect(result.brand.inventory.enabled).toBe(false);
-  });
-
   it("prefers an active configuration over the compiled profile", async () => {
     const { store, resolve } = await freshImports();
-    await store.saveConfiguration("my-brand", ST_JOHNS_TEMPLATE);
+    await store.saveConfiguration("my-brand", CUSTOM_TEMPLATE);
     await store.activateConfiguration("my-brand");
 
     const result = await resolve.getResolvedRuntimeBrand();
     expect(result.brand.source).toBe("custom");
     expect(result.brand.brandId).toBe("custom");
-    expect(result.brand.organizationName).toBe("St. Johns Food Share");
+    expect(result.brand.organizationName).toBe("Example Food Pantry");
     expect(result.themeCss).toContain(':root[data-brand="custom"][data-brand="custom"]');
     expect(result.configError).toBeNull();
   });
@@ -90,57 +93,27 @@ describe("brand resolution order", () => {
 });
 
 describe("weak-form brand swap (template activation displaces compiled identity)", () => {
-  it("presents St. Johns on a WTH deployment and vice versa", async () => {
-    for (const [template, expected] of [
-      [
-        ST_JOHNS_TEMPLATE,
-        {
-          organizationName: "St. Johns Food Share",
-          appName: "St. Johns Food Share Queue",
-          shortName: "St Johns Food Share App",
-          logoLight: "/brands/st-johns-food-share/logo.png",
-          themeColor: "#33a478",
-          inventoryEnabled: false,
-        },
-      ],
-      [
-        WTH_TEMPLATE,
-        {
-          organizationName: "William Temple House",
-          appName: "William Temple House App",
-          shortName: "William Temple House App",
-          logoLight: "/wth-logo-horizontal.png",
-          themeColor: "#2762a2",
-          inventoryEnabled: true,
-        },
-      ],
-    ] as const) {
-      storeFile = tempFile();
-      vi.stubEnv("BRAND_CONFIG_FILE", storeFile);
-      const { store, resolve } = await freshImports();
-      await store.saveConfiguration("swap", template);
-      await store.activateConfiguration("swap");
+  it("lets a custom configuration displace the compiled identity", async () => {
+    const { store, resolve } = await freshImports();
+    await store.saveConfiguration("swap", CUSTOM_TEMPLATE);
+    await store.activateConfiguration("swap");
 
-      const result = await resolve.getResolvedRuntimeBrand();
-      expect(result.brand.source).toBe("custom");
-      expect(result.brand.organizationName).toBe(expected.organizationName);
-      expect(result.brand.appName).toBe(expected.appName);
-      expect(result.brand.shortName).toBe(expected.shortName);
-      expect(result.brand.logo.lightSrc).toBe(expected.logoLight);
-      expect(result.brand.pwa.themeColor).toBe(expected.themeColor);
-      expect(result.brand.inventory.enabled).toBe(expected.inventoryEnabled);
-      // The derived theme ships inline and carries the brand primary.
-      expect(result.themeCss).toContain("--primary: oklch(");
+    const result = await resolve.getResolvedRuntimeBrand();
+    expect(result.brand.source).toBe("custom");
+    expect(result.brand.organizationName).toBe("Example Food Pantry");
+    expect(result.brand.appName).toBe("Example Pantry Queue");
+    expect(result.brand.shortName).toBe("Example Pantry");
+    expect(result.brand.logo.lightSrc).toBe("/brand/wth-logo-horizontal-light.svg");
+    expect(result.brand.pwa.themeColor).toBe("#2762a2");
+    expect(result.brand.inventory.enabled).toBe(false);
+    expect(result.themeCss).toContain("--primary: oklch(");
 
-      // Manifest identity follows the active configuration too.
-      const { default: manifest } = await import("@/app/manifest");
-      expect(await manifest()).toMatchObject({
-        name: expected.appName,
-        short_name: expected.shortName,
-        theme_color: expected.themeColor,
-      });
-      await fs.rm(storeFile, { force: true });
-    }
+    const { default: manifest } = await import("@/app/manifest");
+    expect(await manifest()).toMatchObject({
+      name: "Example Pantry Queue",
+      short_name: "Example Pantry",
+      theme_color: "#2762a2",
+    });
   });
 });
 
@@ -148,9 +121,9 @@ describe("configurable service label", () => {
   it("passes a configured service heading through the resolver; profiles use the default", async () => {
     const { store, resolve } = await freshImports();
     await store.saveConfiguration("gpu-library", {
-      ...ST_JOHNS_TEMPLATE,
+      ...CUSTOM_TEMPLATE,
       identity: {
-        ...ST_JOHNS_TEMPLATE.identity,
+        ...CUSTOM_TEMPLATE.identity,
         serviceLabel: "GPU Library Queue For",
       },
     });
@@ -168,8 +141,8 @@ describe("configurable service label", () => {
 describe("brand configuration store (file backend)", () => {
   it("keeps a single active configuration and read-only templates", async () => {
     const { store } = await freshImports();
-    await store.seedTemplate("template-a", ST_JOHNS_TEMPLATE);
-    await store.saveConfiguration("one", ST_JOHNS_TEMPLATE);
+    await store.seedTemplate("template-a", CUSTOM_TEMPLATE);
+    await store.saveConfiguration("one", CUSTOM_TEMPLATE);
     await store.saveConfiguration("two", WTH_TEMPLATE);
 
     await store.activateConfiguration("one");
@@ -184,7 +157,7 @@ describe("brand configuration store (file backend)", () => {
     await store.saveConfiguration("template-a", WTH_TEMPLATE);
     rows = await store.listConfigurations();
     expect(rows.find((row) => row.id === "template-a")?.payload).toMatchObject({
-      identity: { organizationName: "St. Johns Food Share" },
+      identity: { organizationName: "Example Food Pantry" },
     });
     await store.deleteConfiguration("template-a");
     expect(await store.getConfiguration("template-a")).not.toBeNull();
@@ -203,9 +176,21 @@ describe("brand configuration API", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     const ids = body.configurations.map((row: { id: string }) => row.id);
-    expect(ids).toContain("template-william-temple-house");
-    expect(ids).toContain("template-st-johns-food-share");
+    expect(ids).toEqual(["template-william-temple-house"]);
     expect(body.activeId).toBeNull();
+  });
+
+  it("prunes retired templates without deleting saved appearances", async () => {
+    const { store } = await freshImports();
+    await store.seedTemplate("template-retired-profile", CUSTOM_TEMPLATE);
+    await store.saveConfiguration("saved-custom", CUSTOM_TEMPLATE);
+
+    const routes = await import("@/app/api/brand-config/route");
+    const body = await (await routes.GET()).json();
+    expect(body.configurations.map((row: { id: string }) => row.id)).toEqual([
+      "template-william-temple-house",
+      "saved-custom",
+    ]);
   });
 
   it("refuses to save an invalid or contrast-failing configuration", async () => {
@@ -226,9 +211,9 @@ describe("brand configuration API", () => {
         body: JSON.stringify({
           id: "low-contrast",
           payload: {
-            ...ST_JOHNS_TEMPLATE,
+            ...CUSTOM_TEMPLATE,
             overrides: {
-              ...ST_JOHNS_TEMPLATE.overrides,
+              ...CUSTOM_TEMPLATE.overrides,
               light: { "primary-foreground": "oklch(0.63 0.12 163)" },
             },
           },
@@ -247,7 +232,7 @@ describe("brand configuration API", () => {
     const saved = await routes.PUT(
       new Request("http://localhost/api/brand-config", {
         method: "PUT",
-        body: JSON.stringify({ id: "my-brand", payload: ST_JOHNS_TEMPLATE }),
+        body: JSON.stringify({ id: "my-brand", payload: CUSTOM_TEMPLATE }),
       }),
     );
     expect(saved.status).toBe(200);
@@ -283,8 +268,8 @@ describe("brand configuration API", () => {
       new Request("http://localhost/api/brand-config", {
         method: "PUT",
         body: JSON.stringify({
-          id: "template-st-johns-food-share",
-          payload: ST_JOHNS_TEMPLATE,
+          id: "template-william-temple-house",
+          payload: CUSTOM_TEMPLATE,
         }),
       }),
     );
@@ -293,7 +278,7 @@ describe("brand configuration API", () => {
     const activate = await routes.POST(
       new Request("http://localhost/api/brand-config", {
         method: "POST",
-        body: JSON.stringify({ action: "activate", id: "template-st-johns-food-share" }),
+        body: JSON.stringify({ action: "activate", id: "template-william-temple-house" }),
       }),
     );
     expect(activate.status).toBe(409);

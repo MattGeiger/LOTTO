@@ -104,6 +104,14 @@ const ambientHues = (inputs: ResolvedBrandThemeInputs): [number, number] => {
   return [first?.h ?? inputs.primary.h, second?.h ?? first?.h ?? inputs.primary.h];
 };
 
+/**
+ * The background role's actual color. FEED's rule is precedence, not merely
+ * hue extraction: an authored ambient outranks the primary for the page wash,
+ * and primary is used only when that slot is empty.
+ */
+const ambientColor = (inputs: ResolvedBrandThemeInputs): Oklch =>
+  inputs.ambient[0] ?? inputs.primary;
+
 // Brand-independent neutrals shared by both hand-authored identities
 // (WTH ≈ St. Johns to within rounding): pending-ticket cool grays and the
 // Hi-viz "ink" used for light-mode borders.
@@ -269,6 +277,7 @@ const deriveLight = (
   const servedTintDeep: Oklch = { l: 0.913, c: 0.068, h: serving.h };
   const servedTintPale: Oklch = { l: 0.956, c: 0.034, h: serving.h };
   const [ambientHueA, ambientHueB] = ambientHues(inputs);
+  const atmosphere = ambientColor(inputs);
   // The info/blue card family is neutral for mono/two-tone stories; a second
   // ambient hue (4–5-color stories, e.g. WTH's teals) tints it at whisper
   // chroma.
@@ -307,7 +316,9 @@ const deriveLight = (
     border: formatOklch({ l: surfaceLight.l - 0.109, c: 0, h: 0 }),
     input: formatOklch({ l: surfaceLight.l - 0.245, c: 0, h: 0 }),
     ring: formatOklch(primary),
-    "base-shadow-color": formatOklch(surfaceDark),
+    "base-shadow-soft-color": formatOklch(withAlpha(surfaceDark, 0.15)),
+    "base-shadow-color": formatOklch(withAlpha(surfaceDark, 0.2)),
+    "base-shadow-strong-color": formatOklch(withAlpha(surfaceDark, 0.38)),
     "brand-logo-surface":
       inputs.logoPresentation === "dark-surface"
         ? formatOklch(surfaceDark)
@@ -325,8 +336,8 @@ const deriveLight = (
     "ticket-upcoming-border": formatOklch(UPCOMING_LIGHT_BORDER),
     "serving-text-gradient": `linear-gradient(135deg, ${formatOklch(serving)}, ${formatOklch(serving)})`,
     "serving-label-color": formatOklch(serving),
-    "gradient-display-bg": `radial-gradient(circle at 18% 10%, ${formatOklch(withAlpha(surfaceDark, 0.025))}, transparent 31%),
-    linear-gradient(145deg, ${formatOklch(surfaceLight)}, ${formatOklch({ l: surfaceLight.l - 0.015, c: 0, h: 0 })} 48%, ${formatOklch({ l: Math.min(1, surfaceLight.l + 0.012), c: 0, h: 0 })})`,
+    "gradient-display-bg": `radial-gradient(circle at 18% 10%, ${formatOklch(withAlpha({ l: 0.68, c: Math.min(atmosphere.c, 0.08), h: atmosphere.h }, 0.08))}, transparent 31%),
+    linear-gradient(145deg, ${formatOklch(surfaceLight)}, ${formatOklch({ l: surfaceLight.l - 0.015, c: Math.min(atmosphere.c, 0.012), h: atmosphere.h })} 48%, ${formatOklch({ l: Math.min(1, surfaceLight.l + 0.012), c: Math.min(atmosphere.c, 0.005), h: atmosphere.h })})`,
     "gradient-card-info": toTop(
       { l: surfaceLight.l - 0.018, ...infoTint },
       WHITE,
@@ -353,7 +364,7 @@ const deriveLight = (
 const deriveDark = (
   inputs: ResolvedBrandThemeInputs,
 ): TokenMap<StandardBrandToken> => {
-  const { primary, surfaceLight, surfaceDark, serving } = inputs;
+  const { primary, surfaceLight, surfaceDark, accent, serving } = inputs;
 
   const card = adjust(surfaceDark, { l: -0.016 });
   // Deep shade of the primary hue (St. Johns oklch(0.271 0.041 166)).
@@ -371,8 +382,6 @@ const deriveDark = (
   // primary hue — so Now Serving keeps one hue across modes (the continuity
   // invariant, docs/COLOR_SEMIOTICS.md; the founding WTH blue/gold lesson).
   const servingGlow = adjust(serving, { l: 0.237, c: 0.044 });
-  // Dark accent: St. Johns oklch(0.732 0.138 163) is primary +0.088 L, +0.017 C.
-  const accentDark = adjust(primary, { l: 0.088, c: 0.017 });
   const servingRampBase = withComponents(servingGlow, {
     l: servingGlow.l - 0.055,
   });
@@ -382,6 +391,7 @@ const deriveDark = (
     { l: 0.401, c: 0.077, h: serving.h },
   ];
   const [ambientHueA, ambientHueB] = ambientHues(inputs);
+  const atmosphere = ambientColor(inputs);
 
   return {
     background: formatOklch(surfaceDark),
@@ -400,15 +410,19 @@ const deriveDark = (
       c: 0,
       h: 0,
     }),
-    accent: formatOklch(accentDark),
+    // FEED parity: slot two remains the accent in dark mode. The old rule
+    // rebuilt this token from primary, so choosing an accent changed nothing.
+    accent: formatOklch(accent),
     "accent-foreground": formatOklch(
-      bestForeground(accentDark, [primaryDeepShade, primaryTintForeground]),
+      bestForeground(accent, [primaryDeepShade, primaryTintForeground, WHITE]),
     ),
     border: formatOklch(adjust(surfaceDark, { l: 0.145 })),
     input: formatOklch(adjust(surfaceDark, { l: 0.17 })),
     ring: formatOklch(glow),
     // St. Johns reuses the light Called border as its dark shadow tint.
-    "base-shadow-color": formatOklch({ l: 0.742, c: 0.161, h: serving.h - 6 }),
+    "base-shadow-soft-color": formatOklch(withAlpha({ l: 0.742, c: 0.161, h: serving.h - 6 }, 0.15)),
+    "base-shadow-color": formatOklch(withAlpha({ l: 0.742, c: 0.161, h: serving.h - 6 }, 0.25)),
+    "base-shadow-strong-color": formatOklch(withAlpha({ l: 0.742, c: 0.161, h: serving.h - 6 }, 0.38)),
     "brand-logo-surface": formatOklch(surfaceDark),
     "card-gradient": toTop(withAlpha(primary, 0.08), withAlpha(BLACK, 0.12)),
     "ticket-serving": toTop(servingRampBase, servingGlow),
@@ -430,8 +444,8 @@ const deriveDark = (
     "ticket-upcoming-border": formatOklch(UPCOMING_DARK_BORDER),
     "serving-text-gradient": `linear-gradient(135deg, ${formatOklch(servingGlow)}, ${formatOklch(servingRampBase)})`,
     "serving-label-color": formatOklch(servingGlow),
-    "gradient-display-bg": `radial-gradient(circle at 18% 10%, ${formatOklch(withAlpha(primary, 0.08))}, transparent 31%),
-    linear-gradient(145deg, ${formatOklch(surfaceDark)}, ${formatOklch({ l: surfaceDark.l - 0.01, c: 0.0034, h: primary.h })} 48%, ${formatOklch(adjust(surfaceDark, { l: -0.037 }))})`,
+    "gradient-display-bg": `radial-gradient(circle at 18% 10%, ${formatOklch(withAlpha({ l: 0.58, c: Math.min(atmosphere.c, 0.1), h: atmosphere.h }, 0.12))}, transparent 31%),
+    linear-gradient(145deg, ${formatOklch(surfaceDark)}, ${formatOklch({ l: surfaceDark.l - 0.01, c: Math.min(atmosphere.c, 0.012), h: atmosphere.h })} 48%, ${formatOklch({ ...adjust(surfaceDark, { l: -0.037 }), c: Math.min(atmosphere.c, 0.006), h: atmosphere.h })})`,
     "gradient-card-info": toTop(
       { l: card.l + 0.025, c: 0.01, h: ambientHueB },
       card,
@@ -450,7 +464,7 @@ const deriveDark = (
     ),
     "card-title-color": formatOklch(surfaceLight),
     "card-icon-color": formatOklch(surfaceLight),
-    "icon-blue": formatOklch(accentDark),
+    "icon-blue": formatOklch(accent),
     "icon-emerald": formatOklch(glow),
   };
 };
@@ -458,7 +472,7 @@ const deriveDark = (
 const deriveHiVizLight = (
   inputs: ResolvedBrandThemeInputs,
 ): TokenMap<HiVizBrandToken> => {
-  const { primary, surfaceLight, surfaceDark, serving } = inputs;
+  const { primary, surfaceLight, surfaceDark, accent, serving } = inputs;
 
   const foreground = HI_VIZ_FOREGROUND_LIGHT;
   const card = withComponents(surfaceLight, {
@@ -473,7 +487,7 @@ const deriveHiVizLight = (
   // against the fixed near-black foreground (a dark brand primary would
   // otherwise produce an error the operator cannot act on).
   const hiVizPrimary = readableFill(serving, foreground);
-  const hiVizAccent = readableFill(primary, foreground);
+  const hiVizAccent = readableFill(accent, foreground);
 
   return {
     background: formatOklch(surfaceLight),
@@ -497,11 +511,13 @@ const deriveHiVizLight = (
     "sidebar-foreground": formatOklch(foreground),
     "sidebar-primary": formatOklch(hiVizPrimary),
     "sidebar-primary-foreground": formatOklch(foreground),
-    "sidebar-accent": formatOklch(secondary),
+    "sidebar-accent": formatOklch(hiVizAccent),
     "sidebar-accent-foreground": formatOklch(foreground),
     "sidebar-border": formatOklch(HI_VIZ_INK),
     "sidebar-ring": formatOklch(hiVizPrimary),
-    "base-shadow-color": formatOklch(surfaceDark),
+    "base-shadow-soft-color": formatOklch(withAlpha(surfaceDark, 0.25)),
+    "base-shadow-color": formatOklch(withAlpha(surfaceDark, 0.5)),
+    "base-shadow-strong-color": formatOklch(withAlpha(surfaceDark, 0.75)),
     "brand-logo-surface":
       inputs.logoPresentation === "dark-surface"
         ? formatOklch(surfaceDark)
@@ -531,7 +547,7 @@ const deriveHiVizLight = (
     "gradient-card-emerald": "var(--card)",
     "card-title-color": formatOklch(foreground),
     "card-icon-color": formatOklch(foreground),
-    "icon-blue": formatOklch(serving),
+    "icon-blue": formatOklch(hiVizAccent),
     "icon-emerald": formatOklch(serving),
   };
 };
@@ -539,13 +555,12 @@ const deriveHiVizLight = (
 const deriveHiVizDark = (
   inputs: ResolvedBrandThemeInputs,
 ): TokenMap<HiVizBrandToken> => {
-  const { primary, surfaceLight, surfaceDark, serving } = inputs;
+  const { primary, surfaceLight, surfaceDark, accent, serving } = inputs;
 
   const card = adjust(surfaceDark, { l: -0.088 });
   // Hi-viz dark emphasis: St. Johns oklch(0.876 0.123 166) ≈ primary
   // +0.232 L, +0.002 C.
   const hiVizGlow = adjust(primary, { l: 0.232, c: 0.002 });
-  const glow = adjust(primary, { l: 0.209, c: 0.036 });
   // Serving-state luminous rung in the SERVING hue (continuity invariant —
   // see deriveDark's servingGlow note).
   const hiVizServingGlow = adjust(serving, { l: 0.26, c: 0.009 });
@@ -558,7 +573,8 @@ const deriveHiVizDark = (
   // Self-correcting derived pairs (see the auto-correction note above): a
   // very dark brand primary keeps its glow readable here.
   const glowForeground = bestForeground(hiVizGlow, [primaryDeepShade, WHITE]);
-  const accentForeground = bestForeground(glow, [primaryDeepShade, WHITE]);
+  const hiVizAccent = accent;
+  const accentForeground = bestForeground(hiVizAccent, [primaryDeepShade, WHITE, BLACK]);
 
   return {
     background: formatOklch(surfaceDark),
@@ -573,7 +589,7 @@ const deriveHiVizDark = (
     "secondary-foreground": formatOklch(surfaceLight),
     muted: formatOklch(adjust(surfaceDark, { l: -0.058 })),
     "muted-foreground": formatOklch(mutedForeground),
-    accent: formatOklch(glow),
+    accent: formatOklch(hiVizAccent),
     "accent-foreground": formatOklch(accentForeground),
     border: formatOklch(surfaceLight),
     input: formatOklch(surfaceLight),
@@ -582,11 +598,13 @@ const deriveHiVizDark = (
     "sidebar-foreground": formatOklch(surfaceLight),
     "sidebar-primary": formatOklch(hiVizGlow),
     "sidebar-primary-foreground": formatOklch(glowForeground),
-    "sidebar-accent": formatOklch({ l: 0.336, c: 0.035, h: primary.h }),
-    "sidebar-accent-foreground": formatOklch(surfaceLight),
+    "sidebar-accent": formatOklch(hiVizAccent),
+    "sidebar-accent-foreground": formatOklch(accentForeground),
     "sidebar-border": formatOklch(surfaceLight),
     "sidebar-ring": formatOklch(hiVizGlow),
-    "base-shadow-color": formatOklch({ l: 0.742, c: 0.161, h: serving.h - 6 }),
+    "base-shadow-soft-color": formatOklch(withAlpha({ l: 0.742, c: 0.161, h: serving.h - 6 }, 0.25)),
+    "base-shadow-color": formatOklch(withAlpha({ l: 0.742, c: 0.161, h: serving.h - 6 }, 0.5)),
+    "base-shadow-strong-color": formatOklch(withAlpha({ l: 0.742, c: 0.161, h: serving.h - 6 }, 0.75)),
     "brand-logo-surface": formatOklch(surfaceDark),
     "card-gradient": "none",
     "ticket-serving": formatOklch(serving),
@@ -610,7 +628,7 @@ const deriveHiVizDark = (
     "gradient-card-emerald": "var(--card)",
     "card-title-color": formatOklch(surfaceLight),
     "card-icon-color": formatOklch(surfaceLight),
-    "icon-blue": formatOklch(hiVizGlow),
+    "icon-blue": formatOklch(hiVizAccent),
     "icon-emerald": formatOklch(hiVizGlow),
   };
 };

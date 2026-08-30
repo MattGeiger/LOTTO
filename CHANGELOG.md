@@ -2,6 +2,78 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Issues 46 and 45: built-in card gradients and branded shadows now render
+  consistently across the iPadOS 15 floor and modern WebKit.** WTH card washes
+  use FEED's explicit opaque stops instead of a runtime OKLCH/transparent mix;
+  shadow recipes consume pre-alpha identity tokens directly.
+- **Issues 49–52: corrected four cross-surface UX defects.** Help's **Back**
+  control returns authenticated staff to `/admin`; animated navigation SVGs no
+  longer crop during playback; Arcade preloads all ready activated languages;
+  and shared text inputs use FEED's solid field fill, covering range, append,
+  reset-confirmation, and language-search fields.
+- **Issue 53: the single-tap theme control now hydrates deterministically.** A
+  dark system preference could make the client select a different next-mode
+  icon and accessible label than the server. The disabled pre-mount render now
+  always offers Dark, then resolves the real cycle after mount.
+- **Issue 45: branded dark-mode shadows now keep their intended hue and
+  opacity on both modern and legacy engines.** FEED's `oklab` fix identified
+  the polar-space interpolation defect, but LOTTO's iPadOS 15 floor exposed a
+  second failure: Lightning CSS cannot downlevel
+  `color-mix(... var(--base-shadow-color) ..., transparent)` and emitted an
+  opaque fallback. Brand themes now provide soft/base/strong shadow colors
+  with alpha already applied, and shared shadow recipes no longer perform
+  runtime color interpolation.
+- **Every configurable color role now has the consumer its label promises.**
+  Ambient drives the page wash and card atmosphere, with Primary only as its
+  fallback; Accent reaches dark and both high-visibility scopes while remaining
+  structurally excluded from the page backdrop.
+
+### Changed
+
+- **Issue 47: simplified theme selection to FEED's single-tap control.** Each
+  tap advances Light → Dark → Hi-viz → Light; the icon, tooltip, and accessible
+  label describe the next mode, and the dropdown has been removed.
+- **Issue 48: LOTTO now compiles one WTH default appearance.** Removed the
+  retired secondary profile, selectors, Arcade palette, assets, environment
+  switch, and template. Existing custom appearances remain intact, obsolete
+  template rows are pruned, and FEED's current WTH colors and SVG assets are
+  now the shared identity baseline.
+- **Replaced LOTTO's improvised Colors step with FEED's interaction model.** A
+  new appearance begins with one fixed Main-color slot; **Add color** reveals
+  Accent, Background tint, Dark anchor, and Light anchor in order, and only the
+  final optional slot can be cleared. The picker offers closest logo families,
+  palette search, a native family selector, and the 11 Tailwind weights inside
+  a viewport-safe popover. **Extract from light logo** fills the slots; the
+  obsolete canvas/EyeDropper surface has been removed.
+- Preserved documented LOTTO adapters: four-mode preview, protected queue
+  status colors, translation-before-activation, Vercel Blob assets, and the
+  runtime sRGB/OKLCH emission layers. FEED's separate Accent-family override is
+  intentionally unnecessary because LOTTO stores the exact family and weight
+  directly in the Accent slot.
+
+### Tests
+
+- Added Colors-step interaction coverage for the fixed add/clear flow, five-role
+  logo extraction, nearby-family suggestions, palette search, and the native
+  family/weight control. Added derivation guards for role reach, Accent-free
+  shell gradients, Ambient-owned atmosphere, and alpha-bearing shadow tokens
+  in all four scopes.
+- Verified the live custom dark theme on iOS 15.4 and iPadOS 26.5 simulators;
+  both hydrate to **Persistence confirmed** without the former shadow artifact.
+  At a 768×1024 tablet viewport the wizard scrolls, its four previews remain
+  distinct, the complete picker stays reachable, and the browser console is
+  clean.
+- Full suite: 114 files and 802 tests pass; the one skipped test is the
+  production-only legacy-bundle fixture. Lint and TypeScript pass. The
+  production build succeeds, all 42 chunks pass the legacy syntax scan, and
+  `/` plus `/login` pass the production hydration/interactivity smoke. The
+  compiled WTH fallback was visually checked on iPadOS 15.4 and 26.5 with the
+  same card atmosphere and ready-language catalog. `.next` was removed and no
+  server remains on port 3000. Promotion still requires the Vercel preview and
+  real-device gate.
+
 ### Documentation
 
 - **Recorded a change of approach for the white-label work.**
@@ -27,9 +99,9 @@
   symptom appeared inverted. Documented with the engine scope explicitly left
   open; no code changed.
 
-- **Recorded the intent to retire the hard-coded St. Johns theme** once the
-  branding tool can reproduce it, and why the St. Johns icon viewBox test is
-  deliberately left red rather than reverted.
+- **Recorded and completed the decision to retire secondary compiled themes.**
+  WTH is the single compiled fallback; new agency identities are created in
+  the Appearance workflow.
 
 ## [1.26.0-beta.1] - 2026-08-29
 
@@ -682,10 +754,10 @@
     structurally absent from the schema, generator output, and override
     allowlist.
   - `src/lib/brand-config/`: `brand_configurations` JSONB store (Neon + local
-    file fallback, `BRAND_CONFIG_FILE` test isolation), read-only WTH and
-    St. Johns template rows generated from the compiled profiles, and a
-    fail-closed per-request resolver implementing the resolution order
-    (active configuration → `NEXT_PUBLIC_LOTTO_BRAND` profile → WTH default).
+    file fallback, `BRAND_CONFIG_FILE` test isolation), a read-only WTH
+    template generated from the compiled default, and a fail-closed per-request
+    resolver implementing the resolution order (active configuration → WTH
+    default).
   - Runtime delivery: the root layout, metadata, viewport, manifest, admin/
     display/inventory pages, OTP email identity, CSP-independent FEED gating,
     and all client brand consumers (logo, login, About, nav bars, translation
@@ -828,9 +900,9 @@
   primary buttons (e.g. "Enter a new ticket number") showed near-black text on
   a mid-green fill. `--primary-foreground` for St. Johns light mode is now a
   crisp near-white; dark mode is unchanged. See `docs/ISSUES.md` Issue 33.
-- **St. Johns PWA home-screen label was "Food Share Queue" instead of the
-  organization's proper name.** `shortName` now reads "St Johns Food Share
-  App" (no apostrophe, per organization naming).
+- **The retired secondary profile's PWA home-screen label used a service name
+  instead of the organization's proper name.** The profile metadata was
+  corrected before that compiled profile was later removed.
 
 ### Documentation
 - **Added `docs/COLOR_SEMIOTICS.md` — the design rationale for LOTTO's
@@ -867,7 +939,7 @@
   setup gotchas at Namecheap. Also documents a known, deferred, non-blocking
   issue where WTH's own PR preview builds fail due to Preview-scoped database
   env vars (production is unaffected).
-- Updated `docs/WHITE_LABEL_BRANDING_PLAN.md`: marked St. Johns Launch Work
+- Updated the original branding plan: marked the first secondary-agency launch
   complete (2026-07-18) with a pointer to the new runbook, and added two new
   brand-authoring guardrails for future agencies — logo header sizing (fixed
   height, not fixed width) and a manual primary/foreground contrast check,
@@ -929,15 +1001,13 @@
   consistently for OTP issuance, OTP verification, and Magic Link sign-in.
   Production fails closed when neither is configured; focused security tests
   and deployment guidance cover the policy.
-- **One-repository configurable branding.** Added typed William Temple House
-  and St. Johns Food Share deployment profiles selected by
-  `NEXT_PUBLIC_LOTTO_BRAND`, a shared brand-logo component, profile-aware page
+- **One-repository configurable branding.** Added typed compiled deployment
+  profiles, a shared brand-logo component, profile-aware page
   metadata, PWA identity, login/OTP/About copy, and semantic light/dark theme
   tokens. William Temple House remains the no-variable default, so its current
   Vercel production identity and FEED integration do not change. Added the
-  detailed architecture and validation plan in
-  `docs/WHITE_LABEL_BRANDING_PLAN.md` plus multi-project deployment guidance.
-- **St. Johns Food Share queue-only profile.** Added the authorized agency logo,
+  detailed architecture and validation plan plus multi-project deployment guidance.
+- **Secondary queue-only profile.** Added an authorized agency logo,
   protected dark logo plate in light mode, transparent white-outline logo
   treatment in dark mode, agency copy, a rounded-corner scalable SVG browser
   icon, and a dedicated padded 32–512 px PNG fallback/install set for browser
@@ -948,15 +1018,14 @@
   Serving** state uses `#319A72` in light mode and luminous mint in dark mode;
   called tickets use quieter teal-derived tints/shades so the active ticket is
   unmistakable.
-  The production profile targets `https://stjohnsfoodshare.app`; dedicated
-  Vercel, Neon, Resend, DNS, and staff-email values remain deployment-specific.
-- **St. Johns brand-aligned Hi-viz themes.** Added flat, contrast-first light
+  Dedicated Vercel, Neon, Resend, DNS, and staff-email values remain deployment-specific.
+- **Secondary-profile Hi-viz themes.** Added flat, contrast-first light
   and dark Hi-viz identity layers based on the approved mockups: off-white or
   charcoal foundations, teal/mint focus and queue-progression treatments,
   high-contrast neutral cards, and profile-aware navigation accents. The new
   selectors intentionally omit protected operational status tokens, so
   Returned/Unclaimed and other universal semiotics remain standard.
-- **St. Johns brand-aligned Arcade themes.** Added Arcade-scoped light and dark
+- **Secondary-profile Arcade themes.** Added Arcade-scoped light and dark
   deployment palettes based on the approved mockups: pale neutral or deep
   green-charcoal foundations, teal/mint pixel borders and headings, vivid teal
   light-mode actions, off-white dark-mode actions, and matching banner, grid,

@@ -53,6 +53,7 @@ describe("ArcadeLanguageSwitcher", () => {
     render(<ArcadeLanguageSwitcher />);
 
     expect(screen.getByRole("button", { name: "Bosanski" })).toBeInTheDocument();
+    expect(ensureAvailableLanguagesLoaded).toHaveBeenCalledTimes(1);
   });
 
   it("offers dynamic languages and selects them through the shared context", () => {
@@ -67,11 +68,12 @@ describe("ArcadeLanguageSwitcher", () => {
     expect(trigger).toHaveBeenCalledWith("uiSelect");
   });
 
-  it("loads the shared catalog when a persisted dynamic language is not yet listed", () => {
+  it("loads the shared catalog on mount even when the active language is built in", () => {
+    currentLanguage = "en";
     availableLanguages = [{ code: "en", label: "English", ready: true }];
     render(<ArcadeLanguageSwitcher />);
 
-    expect(screen.getByRole("button", { name: "bs" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "English" })).toBeInTheDocument();
     expect(ensureAvailableLanguagesLoaded).toHaveBeenCalledTimes(1);
   });
 });

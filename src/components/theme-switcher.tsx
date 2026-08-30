@@ -8,26 +8,25 @@
 "use client";
 
 import * as React from "react";
-import { Sun } from "@/components/animate-ui/icons/sun";
-import { Moon } from "@/components/animate-ui/icons/moon";
-import { SunMoon } from "@/components/animate-ui/icons/sun-moon";
-import { EyeIcon } from "@/components/lucide-animated/eye";
 import { useTheme } from "next-themes";
 
+import { Moon } from "@/components/animate-ui/icons/moon";
+import { Sun } from "@/components/animate-ui/icons/sun";
 import {
   ThemeToggler,
   type ResolvedThemeSelection,
   type ThemeSelection,
 } from "@/components/animate-ui/primitives/effects/theme-toggler";
 import { useAppHaptics } from "@/components/haptics-provider";
+import { EyeIcon } from "@/components/lucide-animated/eye";
 import { useContrastMode } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenuCheckboxItem,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function normalizeThemeSelection(theme: string | undefined): ThemeSelection {
   if (theme === "light" || theme === "dark" || theme === "system") {
@@ -51,6 +50,25 @@ function normalizeResolvedTheme(
 
 export const THEME_SWITCHER_TRIGGER_ID = "theme-switcher-trigger";
 
+export function getThemeCycleTarget(
+  mounted: boolean,
+  hiVizEnabled: boolean,
+  resolved: ResolvedThemeSelection,
+): "light" | "dark" | "hi-viz" {
+  // `next-themes` cannot know the system preference during SSR, but can know it
+  // on the client's first render. Keep both sides on the same disabled target
+  // until the mount effect runs; otherwise a dark system preference changes
+  // the icon and accessible label during hydration.
+  if (!mounted) return "dark";
+  if (hiVizEnabled) return "light";
+  return resolved === "light" ? "dark" : "hi-viz";
+}
+
+/**
+ * One tap cycles the three appearances staff need on the floor:
+ * Light → Dark → Hi-viz → Light. System remains an internal base state for
+ * Hi-viz, not a fourth decision exposed by the header control.
+ */
 export function ThemeSwitcher({ enableHaptics = false }: { enableHaptics?: boolean }) {
   const { theme, resolvedTheme, setTheme } = useTheme();
   const { contrastMode, setContrastMode } = useContrastMode();
@@ -72,108 +90,74 @@ export function ThemeSwitcher({ enableHaptics = false }: { enableHaptics?: boole
       setTheme={(nextTheme) => setTheme(nextTheme)}
       direction="ltr"
     >
-      {({ effective, toggleTheme }) => {
-        const activeMode = mounted ? (hiVizEnabled ? "hi-viz" : effective) : "system";
+      {({ resolved, toggleTheme }) => {
+        const targetMode = getThemeCycleTarget(mounted, hiVizEnabled, resolved);
+        const label =
+          targetMode === "hi-viz"
+            ? "Switch to high-visibility theme"
+            : `Switch to ${targetMode} theme`;
 
-        const setBaseTheme = (nextTheme: ThemeSelection) => {
-          if (!hiVizEnabled && effective === nextTheme) {
-            return;
+        const cycleTheme = () => {
+          if (targetMode === "hi-viz") {
+            // Hi-viz remains a contrast layer over the device's light/dark
+            // base; the header simply removes that data-model decision.
+            setContrastMode("hi-viz");
+            void toggleTheme("system");
+          } else {
+            setContrastMode("default");
+            void toggleTheme(targetMode);
           }
-          setContrastMode("default");
-          void toggleTheme(nextTheme);
-          if (enableHaptics) {
-            trigger("uiToggle");
-          }
-        };
-
-        const setHiVizTheme = () => {
-          if (hiVizEnabled) {
-            return;
-          }
-          void toggleTheme("system");
-          setContrastMode("hi-viz");
-          if (enableHaptics) {
-            trigger("uiToggle");
-          }
+          if (enableHaptics) trigger("uiToggle");
         };
 
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                id={THEME_SWITCHER_TRIGGER_ID}
-                variant="outline"
-                size="icon"
-                className="!h-[3.375rem] !w-[3.375rem] [&_svg]:!size-[1.8rem]"
-              >
-                {activeMode === "light" ? (
-                  <Sun
-                    key="trigger-light"
-                    size={29}
-                    animation="default"
-                    animateOnView="default"
-                    animateOnHover="default"
-                    animateOnTap="default"
-                    className="inline-flex text-current"
-                  />
-                ) : activeMode === "dark" ? (
-                  <Moon
-                    key="trigger-dark"
-                    size={29}
-                    animation="default"
-                    animateOnView="default"
-                    animateOnHover="default"
-                    animateOnTap="default"
-                    className="inline-flex text-current"
-                  />
-                ) : activeMode === "system" ? (
-                  <SunMoon
-                    key="trigger-system"
-                    size={29}
-                    animation="default"
-                    animateOnView="default"
-                    animateOnHover="default"
-                    animateOnTap="default"
-                    className="inline-flex text-current"
-                  />
-                ) : (
-                  <EyeIcon
-                    key="trigger-hi-viz"
-                    size={29}
-                    className="inline-flex text-current"
-                    animateOnView
-                    animateOnHover
-                    animateOnTap
-                  />
-                )}
-                <span className="sr-only">Theme options</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-popover/[45%] backdrop-blur-[6px]">
-              <DropdownMenuCheckboxItem checked={!hiVizEnabled && effective === "light"} onSelect={() => setBaseTheme("light")}>
-                <Sun size={16} animation="default" animateOnView="default" animateOnHover="default" animateOnTap="default" />
-                Light
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={!hiVizEnabled && effective === "dark"} onSelect={() => setBaseTheme("dark")}>
-                <Moon size={16} animation="default" animateOnView="default" animateOnHover="default" animateOnTap="default" />
-                Dark
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={!hiVizEnabled && effective === "system"} onSelect={() => setBaseTheme("system")}>
-                <SunMoon size={16} animation="default" animateOnView="default" animateOnHover="default" animateOnTap="default" />
-                System
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={hiVizEnabled} onSelect={setHiVizTheme}>
-                <EyeIcon
-                  size={16}
-                  className="inline-flex text-current"
-                  animateOnView
-                  animateOnHover
-                  animateOnTap
-                />
-                Hi-viz
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <TooltipProvider delayDuration={400}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  id={THEME_SWITCHER_TRIGGER_ID}
+                  variant="outline"
+                  size="icon"
+                  onClick={cycleTheme}
+                  disabled={!mounted}
+                  aria-label={label}
+                  className="!h-[3.375rem] !w-[3.375rem] [&_svg]:!size-[1.8rem]"
+                >
+                  {targetMode === "dark" ? (
+                    <Moon
+                      key="target-dark"
+                      size={29}
+                      animation="default"
+                      animateOnView="default"
+                      animateOnHover="default"
+                      animateOnTap="default"
+                      className="inline-flex text-current"
+                    />
+                  ) : targetMode === "hi-viz" ? (
+                    <EyeIcon
+                      key="target-hi-viz"
+                      size={29}
+                      className="inline-flex text-current"
+                      animateOnView
+                      animateOnHover
+                      animateOnTap
+                    />
+                  ) : (
+                    <Sun
+                      key="target-light"
+                      size={29}
+                      animation="default"
+                      animateOnView="default"
+                      animateOnHover="default"
+                      animateOnTap="default"
+                      className="inline-flex text-current"
+                    />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{label}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         );
       }}
     </ThemeToggler>

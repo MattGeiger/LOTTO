@@ -9,8 +9,7 @@
 //
 // Resolution order, first match wins:
 //   1. Active brand configuration row in this deployment's own store
-//   2. Compiled profile selected by NEXT_PUBLIC_LOTTO_BRAND
-//   3. William Temple House compiled default
+//   2. Compiled William Temple House default
 //
 // Fail-closed contract: any storage error or invalid payload falls back to
 // the compiled profile and surfaces `configError` for the Admin warning —
@@ -27,7 +26,12 @@ import { serializeBrandThemeCss } from "@/lib/brand-theme/serialize";
 import { BRAND_TEMPLATES } from "@/lib/brand-theme/presets";
 import type { BrandConfig } from "@/lib/brand-theme/config-schema";
 
-import { getActiveConfiguration, seedTemplate } from "./store";
+import {
+  deleteTemplate,
+  getActiveConfiguration,
+  listConfigurations,
+  seedTemplate,
+} from "./store";
 import {
   CUSTOM_BRAND_ID,
   resolvedBrandFromConfig,
@@ -56,12 +60,21 @@ export const buildThemeCss = (config: BrandConfig): string => {
 
 let templateSeeding: Promise<void> | null = null;
 
-/** Seed the WTH and St. Johns template rows once per process (idempotent). */
+/** Seed the single WTH template row once per process (idempotent). */
 export const seedBrandTemplates = (): Promise<void> => {
   if (!templateSeeding) {
     templateSeeding = (async () => {
+      const currentTemplateIds = new Set(
+        Object.keys(BRAND_TEMPLATES).map((id) => `template-${id}`),
+      );
       for (const [id, template] of Object.entries(BRAND_TEMPLATES)) {
         await seedTemplate(`template-${id}`, template);
+      }
+      const rows = await listConfigurations();
+      for (const row of rows) {
+        if (row.isTemplate && !currentTemplateIds.has(row.id)) {
+          await deleteTemplate(row.id);
+        }
       }
     })().catch((error) => {
       // Allow a retry on the next request rather than caching the failure.

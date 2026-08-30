@@ -2,12 +2,9 @@
 // Copyright (C) 2025 Matt Geiger, Temple Consulting, LLC.
 
 // Phase 0 acceptance for the configurable branding system
-// (docs/CONFIGURABLE_BRANDING_PLAN.md): derivation determinism and fidelity,
+// (docs/CONFIGURABLE_BRANDING_PLAN.md): derivation determinism,
 // post-merge contrast enforcement, protected-token guarantees, sparse-override
 // round-trips, and layered serialization (sRGB baseline + @supports OKLCH).
-
-import { readFileSync } from "node:fs";
-import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
@@ -35,19 +32,15 @@ import {
   validateOverrideKeys,
 } from "@/lib/brand-theme/validate";
 import { parseBrandConfig } from "@/lib/brand-theme/config-schema";
-import {
-  BRAND_TEMPLATES,
-  ST_JOHNS_TEMPLATE,
-  WTH_TEMPLATE,
-} from "@/lib/brand-theme/presets";
+import { BRAND_TEMPLATES, WTH_TEMPLATE } from "@/lib/brand-theme/presets";
 
-const stJohnsInputs: BrandThemeInputs = {
-  primary: ST_JOHNS_TEMPLATE.colors.primary,
-  surfaceLight: ST_JOHNS_TEMPLATE.colors.surfaceLight,
-  surfaceDark: ST_JOHNS_TEMPLATE.colors.surfaceDark,
-  accent: ST_JOHNS_TEMPLATE.colors.accent,
-  serving: ST_JOHNS_TEMPLATE.colors.serving,
-  logoPresentation: ST_JOHNS_TEMPLATE.logo.presentation,
+const referenceInputs: BrandThemeInputs = {
+  primary: { l: 0.644157, c: 0.121025, h: 163.057 },
+  surfaceLight: { l: 0.976139, c: 0, h: 0 },
+  surfaceDark: { l: 0.297163, c: 0, h: 0 },
+  accent: { l: 0.552135, c: 0.105614, h: 162.098 },
+  serving: { l: 0.615866, c: 0.113552, h: 163.742 },
+  logoPresentation: "transparent",
 };
 
 const wthInputs: BrandThemeInputs = {
@@ -60,59 +53,15 @@ const wthInputs: BrandThemeInputs = {
   logoPresentation: WTH_TEMPLATE.logo.presentation,
 };
 
-const readCss = (relativePath: string) =>
-  readFileSync(path.resolve(process.cwd(), relativePath), "utf8");
-
-/** Extract `--token: value` declarations from one selector block. */
-const parseCssBlock = (
-  css: string,
-  selector: string,
-): Record<string, string> => {
-  const start = css.indexOf(`${selector} {`);
-  expect(start, `selector ${selector} present`).toBeGreaterThanOrEqual(0);
-  const end = css.indexOf("\n}", start);
-  const body = css.slice(start + selector.length + 2, end);
-  const declarations: Record<string, string> = {};
-  for (const match of body.matchAll(/--([a-z0-9-]+)\s*:\s*([^;]+)(?:;|$)/gi)) {
-    declarations[match[1]] = match[2].trim();
-  }
-  return declarations;
-};
-
 const extractColors = (value: string): Oklch[] =>
   (value.match(/oklch\([^)]*\)/gi) ?? [])
     .map((literal) => parseOklch(literal))
     .filter((color): color is Oklch => color !== null);
 
-/**
- * Tolerance for "matches the hand-authored value": ΔL ≤ 0.02, ΔC ≤ 0.02,
- * Δh ≤ 8° (hue ignored when both chromas < 0.06 — imperceptible near
- * neutral), Δalpha ≤ 0.02.
- */
-const colorsMatch = (a: Oklch, b: Oklch): boolean => {
-  if (Math.abs(a.l - b.l) > 0.02) return false;
-  if (Math.abs(a.c - b.c) > 0.02) return false;
-  if (Math.abs((a.alpha ?? 1) - (b.alpha ?? 1)) > 0.02) return false;
-  if (a.c < 0.06 && b.c < 0.06) return true;
-  const hueDelta = Math.abs(a.h - b.h) % 360;
-  return Math.min(hueDelta, 360 - hueDelta) <= 8;
-};
-
-/**
- * Documented derivation-rule deviations from the hand-authored St. Johns CSS
- * (docs/CONFIGURABLE_BRANDING_PLAN.md Phase 0 acceptance: every deviation is
- * reviewed and accepted as a derivation-rule decision).
- */
-const ST_JOHNS_ACCEPTED_DEVIATIONS: ReadonlySet<string> = new Set([
-  // Hand-picked pale-mint Called fill drifts 12.7° toward cyan; the derived
-  // value stays in the serving hue family. Visually near-identical tints.
-  "hiVizLight:ticket-served",
-]);
-
 describe("brand theme derivation", () => {
   it("is deterministic: identical inputs produce identical themes and CSS", () => {
-    const first = deriveBrandTheme(stJohnsInputs);
-    const second = deriveBrandTheme(stJohnsInputs);
+    const first = deriveBrandTheme(referenceInputs);
+    const second = deriveBrandTheme(referenceInputs);
     expect(second).toEqual(first);
     expect(serializeBrandThemeCss(second, "custom")).toBe(
       serializeBrandThemeCss(first, "custom"),
@@ -129,82 +78,6 @@ describe("brand theme derivation", () => {
     expect(resolved.textLight).toEqual({ l: 0.25, c: 0, h: 0 });
     expect(resolved.accent.l).toBeCloseTo(0.51, 5);
     expect(resolved.serving.h).toBe(200);
-  });
-
-  it("reproduces the hand-authored St. Johns identity within tolerance", () => {
-    const derived = deriveBrandTheme(stJohnsInputs);
-    const standardCss = readCss("src/app/styles/brands/st-johns-food-share.css");
-    const hiVizCss = readCss(
-      "src/app/styles/brands/st-johns-food-share-high-visibility.css",
-    );
-
-    const handAuthored: Record<BrandThemeScope, Record<string, string>> = {
-      light: parseCssBlock(standardCss, ':root[data-brand="st-johns-food-share"]'),
-      dark: parseCssBlock(
-        standardCss,
-        ':root.dark[data-brand="st-johns-food-share"]',
-      ),
-      hiVizLight: parseCssBlock(
-        hiVizCss,
-        ':root.hi-viz[data-brand="st-johns-food-share"]',
-      ),
-      hiVizDark: parseCssBlock(
-        hiVizCss,
-        ':root.dark.hi-viz[data-brand="st-johns-food-share"]',
-      ),
-    };
-
-    const mismatches: string[] = [];
-    for (const [scope, handTokens] of Object.entries(handAuthored) as [
-      BrandThemeScope,
-      Record<string, string>,
-    ][]) {
-      const derivedTokens = derived[scope] as Record<string, string>;
-      for (const [token, handValue] of Object.entries(handTokens)) {
-        const key = `${scope}:${token}`;
-        if (ST_JOHNS_ACCEPTED_DEVIATIONS.has(key)) continue;
-        const derivedValue = derivedTokens[token];
-        expect(derivedValue, `derived token ${key} exists`).toBeDefined();
-
-        const handColors = extractColors(handValue);
-        const derivedColors = extractColors(derivedValue);
-        if (handColors.length === 0 && derivedColors.length === 0) {
-          // Keyword / var() values must match exactly.
-          if (handValue.replace(/\s+/g, " ") !== derivedValue.replace(/\s+/g, " ")) {
-            mismatches.push(`${key}: "${derivedValue}" vs "${handValue}"`);
-          }
-          continue;
-        }
-        if (handColors.length !== derivedColors.length) {
-          mismatches.push(
-            `${key}: color count ${derivedColors.length} vs ${handColors.length}`,
-          );
-          continue;
-        }
-        handColors.forEach((handColor, index) => {
-          if (!colorsMatch(handColor, derivedColors[index])) {
-            mismatches.push(
-              `${key}[${index}]: derived ${JSON.stringify(derivedColors[index])} vs hand ${JSON.stringify(handColor)}`,
-            );
-          }
-        });
-      }
-    }
-    expect(mismatches).toEqual([]);
-  });
-
-  it("keeps the accepted-deviation list honest (entries still deviate)", () => {
-    const derived = deriveBrandTheme(stJohnsInputs);
-    const hiVizCss = readCss(
-      "src/app/styles/brands/st-johns-food-share-high-visibility.css",
-    );
-    const hand = parseCssBlock(
-      hiVizCss,
-      ':root.hi-viz[data-brand="st-johns-food-share"]',
-    );
-    const handColor = extractColors(hand["ticket-served"])[0];
-    const derivedColor = extractColors(derived.hiVizLight["ticket-served"])[0];
-    expect(colorsMatch(handColor, derivedColor)).toBe(false);
   });
 
   it("derives a validation-clean theme from the scratch defaults", async () => {
@@ -247,9 +120,9 @@ describe("brand theme derivation", () => {
     }
   });
 
-  it("derives validation-clean themes for both templates", () => {
+  it("derives validation-clean themes for representative palettes", () => {
     for (const [name, inputs] of [
-      ["st-johns", stJohnsInputs],
+      ["reference", referenceInputs],
       ["wth", wthInputs],
     ] as const) {
       const theme = mergeBrandTheme(deriveBrandTheme(inputs), undefined);
@@ -310,7 +183,7 @@ describe("color semiotics (docs/COLOR_SEMIOTICS.md)", () => {
     }
   });
 
-  it("feeds ambient hues to card tints only (signal ceiling)", () => {
+  it("feeds ambient hues to atmosphere but never signaling tokens", () => {
     const ambient = [
       { l: 0.58, c: 0.16, h: 165 },
       { l: 0.62, c: 0.1, h: 195 },
@@ -322,7 +195,7 @@ describe("color semiotics (docs/COLOR_SEMIOTICS.md)", () => {
       ambient,
       logoPresentation: "transparent",
     });
-    // Ambient hue appears in the card-tint families…
+    // Ambient hue appears in both the card tints and page wash…
     expect(
       extractColors(theme.light["gradient-card-emerald"]).some(
         (stop) => hueDelta(stop.h, 165) <= 1,
@@ -331,6 +204,11 @@ describe("color semiotics (docs/COLOR_SEMIOTICS.md)", () => {
     expect(
       extractColors(theme.light["gradient-card-blue"]).some(
         (stop) => hueDelta(stop.h, 195) <= 1,
+      ),
+    ).toBe(true);
+    expect(
+      extractColors(theme.light["gradient-display-bg"]).some(
+        (stop) => hueDelta(stop.h, 165) <= 1,
       ),
     ).toBe(true);
     // …and never in signaling tokens.
@@ -342,15 +220,15 @@ describe("color semiotics (docs/COLOR_SEMIOTICS.md)", () => {
     }
   });
 
-  it("keeps St. Johns (no ambient) tinting ambience from the primary hue", () => {
-    const theme = deriveBrandTheme(stJohnsInputs);
+  it("uses the primary hue as ambience when no ambient color is supplied", () => {
+    const theme = deriveBrandTheme(referenceInputs);
     for (const stop of chromaticStops(theme.dark["gradient-card-accent"])) {
       expect(hueDelta(stop.h, 163.057)).toBeLessThanOrEqual(1);
     }
   });
 });
 
-describe("color story (classification and role assignment)", () => {
+describe("color story (fixed FEED-parity role slots)", () => {
   it("classifies chromatic colors and neutral anchors", async () => {
     const { classifyColor } = await import("@/lib/brand-theme/color-story");
     expect(classifyColor({ l: 0.64, c: 0.12, h: 163 })).toBe("chromatic");
@@ -358,19 +236,20 @@ describe("color story (classification and role assignment)", () => {
     expect(classifyColor({ l: 0.97, c: 0.005, h: 0 })).toBe("light-neutral");
   });
 
-  it("assigns roles for the three real deployments' stories", async () => {
+  it("assigns roles by position instead of reclassifying the operator's choice", async () => {
     const { proposeColorStory } = await import("@/lib/brand-theme/color-story");
 
-    // St. Johns: emerald + charcoal → primary + dark anchor.
-    const stJohns = proposeColorStory([
+    // A charcoal in slot two is an accent. It does not jump to slot four just
+    // because it looks like a dark anchor.
+    const twoColorStory = proposeColorStory([
       { l: 0.644, c: 0.121, h: 163 },
       { l: 0.297, c: 0, h: 0 },
     ]);
-    expect(stJohns.assignments.map((entry) => entry.role)).toEqual([
+    expect(twoColorStory.assignments.map((entry) => entry.role)).toEqual([
       "primary",
-      "surface-dark",
+      "accent",
     ]);
-    expect(stJohns.colors.surfaceDark).toEqual({ l: 0.297, c: 0, h: 0 });
+    expect(twoColorStory.colors.accent).toEqual({ l: 0.297, c: 0, h: 0 });
 
     // Lift Up: deep purple, light green, dark green → primary, accent, ambient.
     const liftUp = proposeColorStory([
@@ -384,20 +263,22 @@ describe("color story (classification and role assignment)", () => {
       "ambient",
     ]);
 
-    // WTH: blue, gold, teal, teal → primary, accent, ambient ×2.
+    // A complete story names all five jobs explicitly.
     const wth = proposeColorStory([
       { l: 0.51, c: 0.14, h: 258 },
       { l: 0.88, c: 0.18, h: 94 },
       { l: 0.58, c: 0.16, h: 165 },
-      { l: 0.62, c: 0.1, h: 195 },
+      { l: 0.24, c: 0.02, h: 250 },
+      { l: 0.97, c: 0.01, h: 250 },
     ]);
     expect(wth.assignments.map((entry) => entry.role)).toEqual([
       "primary",
       "accent",
       "ambient",
-      "ambient",
+      "surface-dark",
+      "surface-light",
     ]);
-    expect(wth.colors.ambient).toHaveLength(2);
+    expect(wth.colors.ambient).toHaveLength(1);
   });
 
   it("warns when a signaling color enters a reserved operational hue band", async () => {
@@ -476,7 +357,7 @@ describe("color story (classification and role assignment)", () => {
   it("round-trips a saved config's colors into a hierarchy for editing", async () => {
     const { storyFromColors } = await import("@/lib/brand-theme/color-story");
     const rows = storyFromColors(WTH_TEMPLATE.colors);
-    expect(rows).toHaveLength(4); // primary, accent, two ambient teals
+    expect(rows).toHaveLength(3); // primary, accent, and one ambient color
     expect(rows[0]).toEqual(WTH_TEMPLATE.colors.primary);
     expect(rows[2]).toEqual(WTH_TEMPLATE.colors.ambient?.[0]);
   });
@@ -484,7 +365,7 @@ describe("color story (classification and role assignment)", () => {
 
 describe("brand theme validation", () => {
   it("rejects an unreadable primary-button pair through overrides", () => {
-    const theme = mergeBrandTheme(deriveBrandTheme(stJohnsInputs), {
+    const theme = mergeBrandTheme(deriveBrandTheme(referenceInputs), {
       // Mid-green text on the mid-green primary fill: unmistakably unreadable.
       light: { "primary-foreground": "oklch(0.63 0.12 163)" },
     });
@@ -502,10 +383,8 @@ describe("brand theme validation", () => {
     expect(message).toMatch(/needs at least 2.5:1/);
   });
 
-  it("keeps both shipped emphasis choices passing (Issue 33 calibration)", () => {
-    // The shipped St. Johns light primary pair (~2.78:1) and WTH's light
-    // serving ramp (~2.74:1 at the light stop) must remain valid.
-    const stJohnsPair = contrastRatio(
+  it("keeps representative emphasis choices passing (Issue 33 calibration)", () => {
+    const referencePair = contrastRatio(
       { l: 0.644157, c: 0.121025, h: 163.057 },
       { l: 0.953, c: 0.051, h: 180.801 },
     );
@@ -513,12 +392,12 @@ describe("brand theme validation", () => {
       { l: 0.7, c: 0.22, h: 255 },
       { l: 0.98, c: 0, h: 0 },
     );
-    expect(stJohnsPair).toBeGreaterThan(2.5);
+    expect(referencePair).toBeGreaterThan(2.5);
     expect(wthServingPair).toBeGreaterThan(2.5);
   });
 
   it("never emits protected operational tokens from the generator", () => {
-    for (const inputs of [stJohnsInputs, wthInputs]) {
+    for (const inputs of [referenceInputs, wthInputs]) {
       const theme = deriveBrandTheme(inputs);
       for (const tokens of Object.values(theme)) {
         for (const name of Object.keys(tokens)) {
@@ -558,7 +437,7 @@ describe("sparse overrides round-trip", () => {
       dark: { ring: "oklch(0.9 0.05 100)" },
       light: { "serving-label-color": "oklch(0.45 0.1 163)" },
     };
-    const derived = deriveBrandTheme(stJohnsInputs);
+    const derived = deriveBrandTheme(referenceInputs);
     const merged = mergeBrandTheme(derived, overrides);
 
     expect(merged.dark.ring).toBe("oklch(0.9 0.05 100)");
@@ -574,7 +453,7 @@ describe("sparse overrides round-trip", () => {
   });
 
   it("ignores protected keys at merge time as defense in depth", () => {
-    const merged = mergeBrandTheme(deriveBrandTheme(stJohnsInputs), {
+    const merged = mergeBrandTheme(deriveBrandTheme(referenceInputs), {
       light: { "status-danger-bg": "oklch(1 0 0)" },
     });
     expect(
@@ -585,7 +464,7 @@ describe("sparse overrides round-trip", () => {
 
 describe("brand theme serialization", () => {
   it("emits double-specificity custom selectors for all four scopes", () => {
-    const css = serializeBrandThemeCss(deriveBrandTheme(stJohnsInputs), "custom");
+    const css = serializeBrandThemeCss(deriveBrandTheme(referenceInputs), "custom");
     expect(css).toContain(':root[data-brand="custom"][data-brand="custom"] {');
     expect(css).toContain(':root.dark[data-brand="custom"][data-brand="custom"] {');
     expect(css).toContain(
@@ -610,7 +489,7 @@ describe("brand theme serialization", () => {
   };
 
   it("emits a legacy-safe sRGB baseline ahead of the OKLCH layer", () => {
-    for (const inputs of [stJohnsInputs, wthInputs]) {
+    for (const inputs of [referenceInputs, wthInputs]) {
       const { baseline } = splitLayers(
         serializeBrandThemeCss(deriveBrandTheme(inputs), "custom"),
       );
@@ -624,7 +503,7 @@ describe("brand theme serialization", () => {
   });
 
   it("keeps the OKLCH authoring standard inside the @supports layer", () => {
-    for (const inputs of [stJohnsInputs, wthInputs]) {
+    for (const inputs of [referenceInputs, wthInputs]) {
       const { guarded } = splitLayers(
         serializeBrandThemeCss(deriveBrandTheme(inputs), "custom"),
       );
@@ -637,7 +516,7 @@ describe("brand theme serialization", () => {
   });
 
   it("re-declares every OKLCH token in both layers", () => {
-    const css = serializeBrandThemeCss(deriveBrandTheme(stJohnsInputs), "custom");
+    const css = serializeBrandThemeCss(deriveBrandTheme(referenceInputs), "custom");
     const { baseline, guarded } = splitLayers(css);
     const names = (block: string) =>
       new Set(block.match(/--[a-z0-9-]+(?=\s*:)/gi) ?? []);
@@ -652,7 +531,7 @@ describe("brand theme serialization", () => {
 
   it("converts colours inside gradients and preserves alpha", () => {
     const { baseline } = splitLayers(
-      serializeBrandThemeCss(deriveBrandTheme(stJohnsInputs), "custom"),
+      serializeBrandThemeCss(deriveBrandTheme(referenceInputs), "custom"),
     );
     const gradients = baseline
       .split("\n")
@@ -669,7 +548,7 @@ describe("brand theme serialization", () => {
   it("keeps the sRGB fallback perceptually equivalent to its OKLCH source", () => {
     // A wrong conversion would still be "legacy-safe" while shipping the wrong
     // brand colour, so check the round-trip rather than only the syntax.
-    const css = serializeBrandThemeCss(deriveBrandTheme(stJohnsInputs), "custom");
+    const css = serializeBrandThemeCss(deriveBrandTheme(referenceInputs), "custom");
     const { baseline, guarded } = splitLayers(css);
     const grab = (block: string, token: string) =>
       block.match(new RegExp(`${token}:\\s*([^;]+);`))?.[1]?.trim();
@@ -689,7 +568,7 @@ describe("brand theme serialization", () => {
 });
 
 describe("brand configuration schema", () => {
-  it("accepts both generated templates", () => {
+  it("accepts the generated WTH template", () => {
     for (const [id, template] of Object.entries(BRAND_TEMPLATES)) {
       const result = parseBrandConfig(template);
       expect(result.ok, `template ${id} parses`).toBe(true);
@@ -698,7 +577,7 @@ describe("brand configuration schema", () => {
 
   it("round-trips a configuration with non-empty overrides end to end", () => {
     const result = parseBrandConfig({
-      ...ST_JOHNS_TEMPLATE,
+      ...WTH_TEMPLATE,
       overrides: {
         light: { primary: "oklch(0.5 0.1 200)" },
         dark: {},
@@ -710,7 +589,7 @@ describe("brand configuration schema", () => {
     if (!result.ok) return;
     const theme = mergeBrandTheme(
       deriveBrandTheme({
-        ...stJohnsInputs,
+        ...referenceInputs,
         primary: result.config.colors.primary,
       }),
       result.config.overrides,
@@ -725,14 +604,14 @@ describe("brand configuration schema", () => {
   it("accepts LOTTO-hosted public Blob assets and rejects arbitrary remote assets", () => {
     const blobOrigin = "https://store-id.public.blob.vercel-storage.com";
     const hosted = {
-      ...ST_JOHNS_TEMPLATE,
+      ...WTH_TEMPLATE,
       logo: {
-        ...ST_JOHNS_TEMPLATE.logo,
+        ...WTH_TEMPLATE.logo,
         lightSrc: `${blobOrigin}/brand-assets/logo-light.svg`,
         darkSrc: `${blobOrigin}/brand-assets/logo-dark.svg`,
       },
       pwa: {
-        ...ST_JOHNS_TEMPLATE.pwa,
+        ...WTH_TEMPLATE.pwa,
         browserIcons: [
           {
             src: `${blobOrigin}/brand-assets/icon-32.png`,
@@ -781,7 +660,7 @@ describe("brand configuration schema", () => {
     expect(parseBrandConfig({}).ok).toBe(false);
 
     const badHexOverride = parseBrandConfig({
-      ...ST_JOHNS_TEMPLATE,
+      ...WTH_TEMPLATE,
       overrides: {
         light: { primary: "#33a478" },
         dark: {},
@@ -795,7 +674,7 @@ describe("brand configuration schema", () => {
     }
 
     const cssInjection = parseBrandConfig({
-      ...ST_JOHNS_TEMPLATE,
+      ...WTH_TEMPLATE,
       overrides: {
         light: { primary: "oklch(0.5 0.1 200); } :root { --status-danger-bg: oklch(1 0 0)" },
         dark: {},
@@ -806,7 +685,7 @@ describe("brand configuration schema", () => {
     expect(cssInjection.ok).toBe(false);
 
     const inventoryWithoutUrl = parseBrandConfig({
-      ...ST_JOHNS_TEMPLATE,
+      ...WTH_TEMPLATE,
       capabilities: { inventory: { enabled: true, feedUrl: null } },
     });
     expect(inventoryWithoutUrl.ok).toBe(false);

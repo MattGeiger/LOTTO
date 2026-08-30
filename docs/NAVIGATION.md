@@ -2,7 +2,7 @@
 
 **Status:** Shipped; current public navigation source of truth.
 **Scope:** Persistent bottom tab bar across enabled top-level public surfaces.
-**Last updated:** 2026-07-17
+**Last updated:** 2026-08-30
 
 ---
 
@@ -18,16 +18,15 @@ presentations (desktop dock + mobile tab bar).
 
 ### Capability-gated Inventory
 
-The selected brand profile determines whether FEED inventory is enabled. When
+The resolved Appearance configuration determines whether FEED inventory is enabled. When
 disabled, `navItems`, `authNavItems`, and the Arcade equivalents filter out the
 Inventory destination. Public navigation becomes **Your ticket · Dashboard ·
 Games** and authenticated navigation becomes **Admin · Dashboard · Games**.
 `/inventory` also returns not found; hiding only the tab is insufficient.
 
-William Temple House enables Inventory through its profile default. St. Johns
-Food Share is queue-only until its deployment explicitly supplies
-`NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL`. See
-`docs/WHITE_LABEL_BRANDING_PLAN.md` and `docs/FEED_PUBLIC_INVENTORY.md`.
+The WTH default enables Inventory. A saved appearance can be queue-only by
+leaving its FEED endpoint disabled. See `docs/CONFIGURABLE_BRANDING_PLAN.md`
+and `docs/FEED_PUBLIC_INVENTORY.md`.
 
 ### Authenticated staff variant (v2.0)
 
@@ -167,6 +166,10 @@ LOTTO already runs the same two animated-icon systems as FEED:
 |--------|----------|--------|
 | Native animate-ui | `src/components/animate-ui/icons/` | `AnimateIconContext` (context-driven) |
 | Imperative-ref | `src/components/lucide-animated/` | `forwardRef` + `startAnimation()`/`stopAnimation()` |
+
+Nav icon wrappers and their SVGs must keep visible overflow. Several playback
+sequences temporarily move paths or panels outside the static viewBox; hiding
+overflow crops the animation even though the resting icon looks correct.
 
 ### Which system for the nav bar: **imperative-ref**
 

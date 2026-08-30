@@ -20,12 +20,12 @@ describe("admin email policy", () => {
   it("combines exact addresses with an allowed domain", () => {
     const env = {
       NODE_ENV: "production",
-      ADMIN_EMAIL_ALLOWLIST: "stjohnsfoodshare@gmail.com",
+      ADMIN_EMAIL_ALLOWLIST: "queue-manager@example.org",
       ADMIN_EMAIL_DOMAIN: "templepdx.com",
     };
 
     expect(getAdminEmailPolicy(env).mode).toBe("restricted");
-    expect(isAdminEmailAllowed("stjohnsfoodshare@gmail.com", env)).toBe(true);
+    expect(isAdminEmailAllowed("queue-manager@example.org", env)).toBe(true);
     expect(isAdminEmailAllowed("matt@templepdx.com", env)).toBe(true);
     expect(isAdminEmailAllowed("another-staff-member@templepdx.com", env)).toBe(true);
     expect(isAdminEmailAllowed("unapproved@gmail.com", env)).toBe(false);
@@ -34,12 +34,12 @@ describe("admin email policy", () => {
   it("supports an exact domain policy without an allowlist", () => {
     const env = {
       NODE_ENV: "production",
-      ADMIN_EMAIL_DOMAIN: "stjohnsfoodshare.org",
+      ADMIN_EMAIL_DOMAIN: "example.org",
     };
 
-    expect(isAdminEmailAllowed("staff@stjohnsfoodshare.org", env)).toBe(true);
-    expect(isAdminEmailAllowed("staff@notstjohnsfoodshare.org", env)).toBe(false);
-    expect(isAdminEmailAllowed("staff@stjohnsfoodshare.org.example.com", env)).toBe(false);
+    expect(isAdminEmailAllowed("staff@example.org", env)).toBe(true);
+    expect(isAdminEmailAllowed("staff@notexample.org", env)).toBe(false);
+    expect(isAdminEmailAllowed("staff@example.org.example.com", env)).toBe(false);
   });
 
   it("fails closed in production when no policy is configured", () => {

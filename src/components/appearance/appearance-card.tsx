@@ -44,9 +44,7 @@ type ConfigRow = {
 
 const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
   "template-william-temple-house":
-    "Blue and gold on white — the William Temple House example.",
-  "template-st-johns-food-share":
-    "Teal, off-white, and charcoal — the St. Johns Food Share example.",
+    "FEED-aligned Tailwind colors and current William Temple House artwork.",
 };
 
 const templateName = (id: string) =>
