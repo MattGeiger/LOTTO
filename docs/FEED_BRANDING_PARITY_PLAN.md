@@ -135,3 +135,109 @@ Because pinning Tailwind changes a client-bundle dependency, production
 promotion additionally requires a Vercel preview and successful sign-in on the
 real iPadOS 15.8 device. Automated checks are necessary but do not replace that
 gate.
+
+---
+
+# Revised direction — decided 2026-08-29
+
+## What changed
+
+This plan was written as a *controlled parity port*: FEED as the interaction
+reference, adapted freely to LOTTO's runtime. What shipped in
+`v1.26.0-beta.1` followed the plan's **structure** but re-implemented its
+**behaviour**. That is the origin of the defects found in beta validation, and
+the reason for the change of approach recorded here.
+
+The evidence, from probing `deriveBrandTheme` directly:
+
+| role        | light            | dark | hiVizLight | hiVizDark |
+| ----------- | ---------------- | ---- | ---------- | --------- |
+| **Accent**  | 3 tokens         | 0    | 0          | 0         |
+| **Ambient** | 2 card gradients | 4 card gradients | 0 | 0     |
+
+Setting `ambient` to a wildly different family produces a **byte-identical**
+page backdrop; the backdrop is driven by `primary` regardless. Meanwhile the UI
+label reads *"Ambient — Quiet page atmosphere and background texture"* and this
+plan asserts, above, that "Every selected role has an observable, documented
+consumer." Neither is true today. The wizard collects five roles, stores them,
+previews them, and then mostly ignores them.
+
+The wizard's own components tell the same story: LOTTO's colour field is 161
+lines against FEED's 252. The shape crossed over; the behaviour did not.
+
+FEED reached its current state through many rounds of exactly this — roles that
+looked wired and were not, accents leaking into backdrops, neutral
+harmonisation picking mauve for orange, muddy accents needing foreground
+inversion rather than hue shifts. Re-deriving that from a screenshot re-earns
+every one of those bugs.
+
+## The new rule
+
+**LOTTO adopts FEED's implementation, not FEED's appearance.** Staff move
+between the two applications; the experience should be identical, because it is
+the same experience. FEED's version is better in every dimension that has been
+measured, and it is already built.
+
+Port the real thing — component structure, interaction model, derivation rules,
+role semantics, and the tests that pin them. Deviate only where LOTTO is
+genuinely different, and write the reason down at the point of deviation.
+
+### Legitimate exceptions
+
+These are LOTTO-specific and must not be flattened into FEED's shape:
+
+- **Localization of custom UI copy.** `serviceLabel` is a visitor-facing
+  `brand_string`; activation runs the bounded translation sequence documented
+  above. FEED has no equivalent and never will.
+- **Protected operational semiotics.** Returned, Unclaimed, success, warning,
+  danger, neutral, and the `--operational-*` actions are LOTTO's shared
+  vocabulary and stay outside `[data-brand]`. See `AGENTS.md`.
+- **The token vocabulary itself.** LOTTO derives `ticket-serving`,
+  `ticket-upcoming`, `base-shadow-color` and four scopes including two
+  high-visibility modes. FEED's token names do not map one-to-one, so what
+  ports is the *rule* — which role drives which surface, and with what
+  precedence — not the token list.
+- **Runtime and storage boundaries.** Next.js route handlers, Vercel Blob,
+  Neon. Unchanged.
+- **Legacy emission.** `serializeBrandThemeCss`'s sRGB baseline plus
+  `@supports` layer is *better* than FEED's approach and stays. FEED should
+  arguably adopt it, not the reverse. Note that it covers the stylesheet only —
+  see Issue 44 for the inline-style half.
+
+### Not an exception
+
+Anything justified only by "LOTTO's version is simpler" or "this was quicker to
+write." Simplification is what produced the table above.
+
+## Ordered work, ahead of promotion
+
+1. **Role semantics — the blocker.** Ambient drives the backdrop tint and
+   mid-stop hue, with `primary` as fallback only when ambient is unset. Accent
+   reaches dark and both hi-viz scopes. Add a structural test in the shape of
+   FEED's `shell-tokens.test.ts` that fails when a role stops having a consumer,
+   so this cannot silently regress. **Gated on explicit approval**: `AGENTS.md`
+   treats `derive.ts` rule edits as shared-theme edits.
+2. **Issue 45 — dark-mode shadows lose their assigned hue.** Confirm the engine
+   scope first, then apply FEED's remedy (mix in `oklab`, not `oklch`).
+3. **Port the picker properly**, rather than patching the reimplementation.
+4. **Re-validate on both simulators**, then the promotion gate: Vercel preview
+   off `dev`, sign-in on the real iPad mini 4.
+
+## Related decision: retiring the hard-coded St. Johns theme
+
+The compiled St. Johns and William Temple House themes exist because the
+branding tool did not. Once the tool is good enough — which is what the work
+above is for — the hand-authored themes become a second source of truth for the
+same thing, and `derive.ts` stops being reverse-engineered from CSS that no
+longer needs to exist.
+
+**Decision: St. Johns is expected to be dropped as a compiled theme**, once a
+configuration produced by the wizard reproduces it to the operators'
+satisfaction. Not scheduled, and not to be done piecemeal.
+
+This has one immediate consequence. `tests/brand-assets.test.ts` asserts a
+5120x5120 viewBox for the St. Johns browser icon while the committed asset is
+512x512, and that test is **red as of v1.26.0-beta.1**. It is left red
+deliberately: the asset is user-owned and current, the expectation is stale, and
+the whole fixture is on a path to deletion. Do not "fix" it by editing the
+asset back.
