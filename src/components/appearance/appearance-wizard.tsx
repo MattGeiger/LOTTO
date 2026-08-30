@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseBrandConfig } from "@/lib/brand-theme/config-schema";
+import { runStagedTranslation } from "@/lib/translation/run-translation";
 
 import { draftThemeIssues, scratchConfig } from "./draft";
 import { CapabilitiesStep } from "./steps/CapabilitiesStep";
@@ -176,11 +177,13 @@ export function AppearanceWizard({
 
   const handleSave = async (activate: boolean) => {
     setSaving(activate ? "activate" : "draft");
+    let draftSaved = false;
     try {
       const response = await fetch("/api/brand-config", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: draft.id, payload: draft.config, activate }),
+        // Activation happens only after candidate brand copy is translated.
+        body: JSON.stringify({ id: draft.id, payload: draft.config, activate: false }),
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -188,15 +191,46 @@ export function AppearanceWizard({
         toast.error(`${body.error ?? "Saving failed."}${detail}`);
         return;
       }
-      toast.success(
-        activate
-          ? "Appearance saved and activated."
-          : "Appearance saved as a draft.",
-      );
+      draftSaved = true;
+      if (activate) {
+        const serviceLabel = draft.config.identity.serviceLabel?.trim();
+        if (serviceLabel) {
+          toast.info("Preparing the service heading for enabled languages…");
+          const progress = await runStagedTranslation(
+            undefined,
+            ["brand_string"],
+            undefined,
+            [serviceLabel],
+          );
+          if (progress.remaining > 0 || progress.failed > 0) {
+            toast.error(
+              "The appearance was saved as a draft, but activation paused because its service heading is not ready in every enabled language. Review Translation Management and try again.",
+            );
+            return;
+          }
+        }
+        const activation = await fetch("/api/brand-config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "activate", id: draft.id }),
+        });
+        const activationBody = await activation.json().catch(() => ({}));
+        if (!activation.ok) {
+          toast.error(activationBody.error ?? "The draft was saved, but activation failed.");
+          return;
+        }
+        toast.success("Appearance saved and activated.");
+      } else {
+        toast.success("Appearance saved as a draft.");
+      }
       onSaved();
       onOpenChange(false);
     } catch {
-      toast.error("Saving failed. Please try again.");
+      toast.error(
+        draftSaved && activate
+          ? "The appearance was saved as a draft, but activation paused. Review Translation Management and try Save & activate again."
+          : "Saving failed. Please try again.",
+      );
     } finally {
       setSaving(null);
     }

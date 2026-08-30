@@ -2209,3 +2209,49 @@ hot-reload client.
   a display URL taken from fetched state. An earlier apparent fix was retracted
   after the traffic proving it was traced to a desktop browser left open on the
   same port.
+
+## Issue 44: The Appearance preview was blank on the support floor — the other half of Issue 42
+
+**Status:** fixed.
+
+Issue 42 made the *injected stylesheet* legacy-safe: `serializeBrandThemeCss`
+writes an sRGB baseline and restores OKLCH inside
+`@supports (color: oklch(0 0 0))`, so a custom appearance renders on iPadOS 15.
+That fix is correct and remains the model. It just does not cover every way a
+derived colour reaches the page.
+
+The Appearance wizard paints its four-mode preview and its logo swatches with
+React `style` props, fed straight from `deriveBrandTheme` and `formatOklch`:
+
+    style={{ background: tokens.background }}   // oklch(0.129 0.042 264.695)
+    style={{ background: formatOklch(entry.color) }}
+
+An inline style has no `@supports` to hide behind. It is one declaration, and on
+that engine `oklch()` with a bare-number lightness is invalid — the floor
+requires a percentage — so the declaration is **dropped**. The panels were not
+mis-coloured; they had no colour at all, and inherited the dialog's dark
+surface. Light and dark previews looked identical, and "Found in logo" rendered
+as empty circles. An operator on the shipped hardware could not see what they
+were choosing.
+
+The tell is worth remembering: an invalid colour in CSS is not approximated, it
+is discarded. A wrong colour means a bad rule; *no* colour means an unparseable
+one.
+
+**Fix.** `toLegacyValue` is exported from `serialize.ts`, and
+`useLegacySafeColor` (`src/hooks/use-legacy-safe-color.ts`) applies it to inline
+styles. It reads support through `useSyncExternalStore` rather than an effect,
+with the server snapshot set to the floor, so the first client paint agrees with
+the server and modern engines keep the wide-gamut original.
+`ThemePreview` converts its whole token map once at the component boundary
+rather than at each `style` prop — one missed call site is an invisible panel,
+so a new swatch should be safe without anyone remembering.
+
+**Regression cover.** `tests/brand-inline-style-legacy.test.tsx`. Note that
+jsdom *keeps* a declaration Safari would drop, so "the two panels differ" passes
+even unfixed; the assertions that bite are that each panel carries a colour the
+floor can parse. Both were confirmed to fail with the fix disabled.
+
+**Rule.** Any inline style fed from `deriveBrandTheme`, `formatOklch`, or an
+extracted logo colour must pass through `useLegacySafeColor`. Tokens referenced
+as `var(--…)` are already safe — they resolve from the serialized stylesheet.

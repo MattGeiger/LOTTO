@@ -170,14 +170,15 @@ The model above is implemented (2026-07-19). Where each piece lives:
    proves ambient hues never reach signaling tokens. The WTH template now
    carries its two logo teals as authored ambient colors.
 3. **The color-story configurator** — the wizard's Colors step
-   (`src/components/appearance/steps/ColorsStep.tsx`) is an ordered 1–5
-   color hierarchy. `src/lib/brand-theme/color-story.ts` classifies each
-   color (chromatic vs. neutral anchor), assigns roles under the signal
-   ceiling with plain-language labels, and raises reserved-hue-band
-   warnings (warnings, not blocks — a legitimately red brand may proceed,
-   informed). Colors can be typed, picked from the auto-extracted logo
-   palette, clicked directly off the logo canvas, or eyedropped from
-   anywhere on screen where the native EyeDropper API exists
+   (`src/components/appearance/steps/ColorsStep.tsx`) uses five fixed jobs:
+   Primary, Accent, Ambient, Dark anchor, and Light anchor. Values are exact
+   Tailwind v4 family/weight names from the generated palette; arbitrary hex
+   and OKLCH entry is no longer part of the standard workflow. Optional roles
+   clear from the end without shifting any later meaning. Logo colors can be
+   auto-extracted, clicked directly off the logo canvas, or eyedropped from
+   the screen, then snap deterministically to the nearest allowed stop.
+   `src/lib/brand-theme/color-story.ts` still classifies recommendations and
+   protects the signal ceiling/reserved bands before snapping
    (`src/components/appearance/logo-palette.tsx`). Surfaces and the
    textLight/serving specials remain available under "Fine-tune".
 

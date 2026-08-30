@@ -103,13 +103,15 @@ export const getInventorySources = async (): Promise<string[]> =>
   (await getInventorySource()).names;
 
 export const getContentItems = async (
-  options?: { inventoryNames?: string[] },
+  options?: { inventoryNames?: string[]; brandStrings?: string[] },
 ): Promise<ContentResult> => {
   const items: ContentItem[] = getUiStringSources().map((originalText) => ({
     originalText,
     type: "ui_string" as const,
   }));
-  for (const originalText of await getBrandStringSources()) {
+  const brandStrings = options?.brandStrings ?? await getBrandStringSources();
+  for (const originalText of brandStrings) {
+    if (!originalText.trim()) continue;
     items.push({ originalText, type: "brand_string" });
   }
   const announcement = await getAnnouncementSource();

@@ -16,13 +16,15 @@ let brandString: string | null = null;
 
 // Mirrors the real getContentItems: 2 UI strings, optional visitor-facing brand
 // copy, plus whatever inventory names the caller bridged in.
-const getContentItems = vi.fn(async (options?: { inventoryNames?: string[] }) => {
+const getContentItems = vi.fn(async (options?: { inventoryNames?: string[]; brandStrings?: string[] }) => {
   const names = options?.inventoryNames ?? [];
   const items: Array<{ originalText: string; type: "ui_string" | "brand_string" | "inventory" }> = [
     { originalText: "Now Serving", type: "ui_string" },
     { originalText: "Your ticket", type: "ui_string" },
   ];
-  if (brandString) items.push({ originalText: brandString, type: "brand_string" });
+  for (const value of options?.brandStrings ?? (brandString ? [brandString] : [])) {
+    items.push({ originalText: value, type: "brand_string" });
+  }
   for (const name of names) items.push({ originalText: name, type: "inventory" });
   return {
     items,
@@ -103,7 +105,7 @@ describe("translation auditor", () => {
     const { findMissing } = await import("@/lib/translation/auditor");
     const { details } = await findMissing(false, undefined, ["Apples", "Rice"]);
     // The bridged names reach the content source unchanged.
-    expect(getContentItems).toHaveBeenCalledWith({ inventoryNames: ["Apples", "Rice"] });
+    expect(getContentItems).toHaveBeenCalledWith({ inventoryNames: ["Apples", "Rice"], brandStrings: undefined });
     // 2 UI strings + 2 inventory names, each missing for Bosnian (a non-core
     // target that needs DB translations FEED doesn't carry).
     expect(details.byType.inventory).toBe(2);
@@ -127,5 +129,24 @@ describe("translation auditor", () => {
     // Bosnian also needs the two dynamic UI strings.
     expect(details.byLanguage.Bosnian).toBe(3);
     expect(details.count).toBe(4);
+  });
+
+  it("audits only candidate brand copy during appearance activation", async () => {
+    brandString = "Currently Active Label";
+    enabledLanguages.mockResolvedValue([
+      { name: "English", isEnabled: true, sortOrder: 0 },
+      { name: "Spanish", isEnabled: true, sortOrder: 1 },
+      { name: "Bosnian", isEnabled: true, sortOrder: 6 },
+    ]);
+    const { findMissing } = await import("@/lib/translation/auditor");
+    const { details } = await findMissing(
+      false,
+      ["brand_string"],
+      undefined,
+      ["Candidate Service For"],
+    );
+    expect(details.count).toBe(2);
+    expect(details.byType).toEqual({ brand_string: 2 });
+    expect(details.sampleItems.every((item) => item.startsWith("Candidate Service For"))).toBe(true);
   });
 });

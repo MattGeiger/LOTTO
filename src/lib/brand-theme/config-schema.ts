@@ -11,8 +11,9 @@
 // fail closed to the compiled profile — never take down public surfaces.
 
 import { z } from "zod";
+import { isTailwindPaletteName } from "./palette";
 
-export const BRAND_CONFIG_SCHEMA_VERSION = 1;
+export const BRAND_CONFIG_SCHEMA_VERSION = 2;
 
 /** A single OKLCH color as structured data (not CSS text). */
 export const oklchColorSchema = z.object({
@@ -102,8 +103,8 @@ const iconSchema = z.object({
   purpose: z.enum(["any", "maskable", "monochrome"]).optional(),
 });
 
-export const brandConfigSchema = z.object({
-  schemaVersion: z.literal(BRAND_CONFIG_SCHEMA_VERSION),
+const legacyBrandConfigSchema = z.object({
+  schemaVersion: z.literal(1),
 
   identity: z.object({
     organizationName: trimmedLine,
@@ -135,6 +136,10 @@ export const brandConfigSchema = z.object({
     darkWidth: z.number().int().positive(),
     darkHeight: z.number().int().positive(),
     presentation: z.enum(["transparent", "dark-surface"]),
+    lightFilename: trimmedLine.optional(),
+    darkFilename: trimmedLine.optional(),
+    lightType: z.string().trim().max(50).optional(),
+    darkType: z.string().trim().max(50).optional(),
   }),
 
   pwa: z.object({
@@ -189,7 +194,39 @@ export const brandConfigSchema = z.object({
   }),
 });
 
+const paletteNameSchema = z
+  .string()
+  .regex(/^[a-z]+-(?:50|100|200|300|400|500|600|700|800|900|950)$/)
+  .refine(isTailwindPaletteName, { message: "must name an installed Tailwind v4 color" });
+
+const v2ColorsSchema = legacyBrandConfigSchema.shape.colors.extend({
+  system: z.enum(["legacy-oklch", "tailwind-v4"]),
+  paletteRoles: z
+    .object({
+      primary: paletteNameSchema,
+      accent: paletteNameSchema.optional(),
+      ambient: paletteNameSchema.optional(),
+      surfaceDark: paletteNameSchema.optional(),
+      surfaceLight: paletteNameSchema.optional(),
+    })
+    .optional(),
+}).superRefine((colors, context) => {
+  if (colors.system === "tailwind-v4" && !colors.paletteRoles) {
+    context.addIssue({
+      code: "custom",
+      path: ["paletteRoles"],
+      message: "Tailwind v4 colors require fixed palette roles",
+    });
+  }
+});
+
+export const brandConfigSchema = legacyBrandConfigSchema.extend({
+  schemaVersion: z.literal(BRAND_CONFIG_SCHEMA_VERSION),
+  colors: v2ColorsSchema,
+});
+
 export type BrandConfig = z.infer<typeof brandConfigSchema>;
+type LegacyBrandConfig = z.infer<typeof legacyBrandConfigSchema>;
 
 export type BrandConfigParseResult =
   | { ok: true; config: BrandConfig }
@@ -209,6 +246,18 @@ export const parseBrandConfig = (payload: unknown): BrandConfigParseResult => {
       };
     }
     return { ok: true, config: result.data };
+  }
+  const legacyResult = legacyBrandConfigSchema.safeParse(payload);
+  if (legacyResult.success) {
+    const legacy: LegacyBrandConfig = legacyResult.data;
+    return {
+      ok: true,
+      config: {
+        ...legacy,
+        schemaVersion: BRAND_CONFIG_SCHEMA_VERSION,
+        colors: { ...legacy.colors, system: "legacy-oklch" },
+      },
+    };
   }
   return {
     ok: false,

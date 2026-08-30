@@ -11,8 +11,7 @@
 
 import type { BrandConfig } from "@/lib/brand-theme/config-schema";
 import { BRAND_CONFIG_SCHEMA_VERSION } from "@/lib/brand-theme/config-schema";
-import { deriveBrandTheme } from "@/lib/brand-theme/derive";
-import { mergeBrandTheme } from "@/lib/brand-theme/serialize";
+import { deriveConfiguredBrandTheme } from "@/lib/brand-theme/configured-theme";
 import type { BrandThemeTokens } from "@/lib/brand-theme/tokens";
 import {
   validateBrandTheme,
@@ -27,19 +26,7 @@ export type AppearanceDraft = {
 
 /** Derive the live theme for previews and inline validation. */
 export const draftTheme = (config: BrandConfig): BrandThemeTokens =>
-  mergeBrandTheme(
-    deriveBrandTheme({
-      primary: config.colors.primary,
-      surfaceLight: config.colors.surfaceLight,
-      surfaceDark: config.colors.surfaceDark,
-      textLight: config.colors.textLight,
-      accent: config.colors.accent,
-      serving: config.colors.serving,
-      ambient: config.colors.ambient,
-      logoPresentation: config.logo.presentation,
-    }),
-    config.overrides,
-  );
+  deriveConfiguredBrandTheme(config);
 
 export const draftThemeIssues = (config: BrandConfig): BrandThemeIssue[] =>
   validateBrandTheme(draftTheme(config));
@@ -108,6 +95,14 @@ export const scratchConfig = (): BrandConfig => ({
     primary: { l: 0.45, c: 0.04, h: 257 },
     surfaceLight: { l: 1, c: 0, h: 0 },
     surfaceDark: { l: 0.2, c: 0.01, h: 257 },
+    system: "tailwind-v4",
+    paletteRoles: {
+      primary: "slate-600",
+      accent: "sky-600",
+      ambient: "sky-100",
+      surfaceDark: "slate-900",
+      surfaceLight: "slate-50",
+    },
   },
   staff: {
     signInTitle: "Sign in to Your Organization",

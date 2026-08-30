@@ -22,8 +22,8 @@ import { cache } from "react";
 import { unstable_noStore as noStore } from "next/cache";
 
 import { parseBrandConfig } from "@/lib/brand-theme/config-schema";
-import { deriveBrandTheme } from "@/lib/brand-theme/derive";
-import { mergeBrandTheme, serializeBrandThemeCss } from "@/lib/brand-theme/serialize";
+import { deriveConfiguredBrandTheme } from "@/lib/brand-theme/configured-theme";
+import { serializeBrandThemeCss } from "@/lib/brand-theme/serialize";
 import { BRAND_TEMPLATES } from "@/lib/brand-theme/presets";
 import type { BrandConfig } from "@/lib/brand-theme/config-schema";
 
@@ -50,19 +50,7 @@ export type ResolvedRuntimeBrand = {
 
 /** Derive + merge + serialize a configuration's theme CSS. */
 export const buildThemeCss = (config: BrandConfig): string => {
-  const theme = mergeBrandTheme(
-    deriveBrandTheme({
-      primary: config.colors.primary,
-      surfaceLight: config.colors.surfaceLight,
-      surfaceDark: config.colors.surfaceDark,
-      textLight: config.colors.textLight,
-      accent: config.colors.accent,
-      serving: config.colors.serving,
-      ambient: config.colors.ambient,
-      logoPresentation: config.logo.presentation,
-    }),
-    config.overrides,
-  );
+  const theme = deriveConfiguredBrandTheme(config);
   return serializeBrandThemeCss(theme, CUSTOM_BRAND_ID);
 };
 

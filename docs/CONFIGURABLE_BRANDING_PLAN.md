@@ -2,7 +2,9 @@
 
 ## Status
 
-Shipped in LOTTO v1.20.0 and validated on localhost before production rollout.
+Shipped in LOTTO v1.20.0 and expanded with FEED 1.7.5-beta.4 UX parity in the
+current Unreleased work. The parity architecture and delivery gates are
+specified in `docs/FEED_BRANDING_PARITY_PLAN.md`.
 **The capstone brand-swap test passed in both directions on 2026-07-19**: weak
 form (template
 activation displaces the compiled identity, `tests/brand-runtime.test.ts`)
@@ -12,9 +14,10 @@ deployment made on-brand for WTH, each reviewed in light, dark, and Hi-viz
 against the hand-authored references). The production rollout requires the
 additive `brand_configurations` schema migration in every agency database.
 Database-backed identity and built-in template assets are production-ready;
-custom uploaded assets remain filesystem-backed and therefore are not durable
-on Vercel until the Blob storage work noted below ships. Known refinements
-deferred to Phase 3: the PWA theme color is
+custom uploaded assets use public Vercel Blob in production and the documented
+filesystem fallback only for local/self-hosted development. Schema v2 stores
+fixed Tailwind v4 role names and retains a schema-v1 compatibility path;
+compiled WTH and St. Johns themes remain exact fallbacks. The PWA theme color is
 currently auto-set from the uploaded mark's dominant color (can pick a
 background shade; an explicit override field is a wizard refinement), and
 Arcade palettes do not yet derive. One calibration note from Phase 0: the emphasis-pair contrast
@@ -124,9 +127,9 @@ The persisted configuration mirrors the existing `BrandProfile` type in
 | Identity | organization name, app name, PWA short name, tagline, page descriptions | Same fields as `BrandProfile.metadata`; descriptions offered with sensible generated defaults from the organization name. |
 | Public copy | public service label | Client-facing replacement for “Food Pantry Service For.” The active value enters Translation Management and is localized for every enabled non-English visitor language; blank uses the hand-authored standard string. |
 | Links | organization website, public app URL | Same as today. |
-| Logos | uploaded light/dark logo images, presentation mode (`transparent` / `dark-surface`) | Intrinsic dimensions measured server-side on upload, never typed by the user. Rendered through the existing height-capped `BrandLogo` slot. |
-| Icons | one uploaded square mark | Full browser/Apple/manifest/install set (32–512 px, padded, rounded) generated server-side; no per-size uploads. |
-| Colors | brand primary, page surface, text/dark surface, optional accent, optional Now Serving emphasis (defaults derived from primary) | OKLCH color inputs with a searchable picker; the full semantic token set for light, dark, and both Hi-viz themes is derived, not authored. |
+| Logos | uploaded light/dark logo images, presentation mode (`transparent` / `dark-surface`) | Safe SVG geometry and class styles remain vector; rasters are re-encoded in their detected format. Intrinsic dimensions, original filename/type, quality warnings, and a measured dark-plate suggestion come from the server. |
+| Icons | one uploaded square mark | Approximately square geometry is enforced before writing. Full browser/Apple/manifest/install sets (32–512 px) are generated at target-specific density. |
+| Colors | Primary, Accent, Ambient, Dark anchor, Light anchor | Schema v2 stores exact Tailwind v4 names from a generated 286-stop palette. Roles are fixed and optional clears do not reorder them. The full semantic token set for light, dark, and both Hi-viz themes is derived, not authored. |
 | Staff | sign-in heading, authorized-email guidance, email placeholder | Same as `BrandProfile.staff`. |
 | Capabilities | inventory enabled flag, FEED public inventory URL | Same contract as today: opt-in, validated URL, no cross-agency fallback, CSP built from the configured origin. |
 
@@ -137,6 +140,21 @@ inputs is a later phase; until then a custom configuration uses the WTH Arcade
 palette.
 
 ### Color derivation
+
+New and migrated configurations use `colors.system: "tailwind-v4"`. Tailwind
+4.3.3 and its PostCSS adapter are pinned exactly; the committed palette module
+is generated from the installed `theme.css`, and a drift regression compares
+all 286 names. Legacy schema-v1 payloads normalize to
+`colors.system: "legacy-oklch"` and keep the original derivation until an
+operator enters the Colors step and saves the migrated draft.
+
+The Tailwind picker asks for family then weight instead of presenting a
+scrolling 286-cell wall. Logo extraction and direct canvas/EyeDropper picks
+snap to the nearest permitted stop. The same configured-theme function feeds
+client preview, API validation, and request-time CSS, preventing preview/live
+drift. `tests/brand-tailwind-palette.test.ts` proves all 26 primary families
+against all nine neutral surface families (234 combinations), and final token
+validation continues to reject every protected operational family.
 
 St. Johns' "deliberately compact color system" (brand teal, off-white,
 charcoal; everything else derived tints/shades) is the model, now made

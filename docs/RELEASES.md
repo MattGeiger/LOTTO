@@ -1,3 +1,44 @@
+# LOTTO v1.26.0-beta.1
+
+**Release Date:** August 29, 2026 (beta — not promoted)
+
+LOTTO v1.26.0-beta.1 brings FEED's white-label colour and image workflow to the
+Appearance wizard. Colours are chosen as five fixed semantic roles — Primary,
+Accent, Ambient, Dark anchor, Light anchor — and every choice is an exact
+Tailwind v4 palette stop rather than free-form CSS, so a role's value is stable,
+comparable, and cannot drift. Clearing an optional role no longer reorders the
+ones after it. Logo extraction, canvas picks, and the EyeDropper all snap to the
+same palette, and the preview covers light, dark, and both high-visibility
+modes.
+
+## Fixed on the support floor
+
+The wizard's own preview did not survive iPadOS 15. `serializeBrandThemeCss`
+already made the injected brand stylesheet legacy-safe with an sRGB baseline and
+an `@supports (color: oklch(0 0 0))` layer on top, but the preview paints with
+React `style` props fed straight from the derived tokens, and an inline style has
+no `@supports` to hide behind. On that engine `oklch()` with a bare-number
+lightness is invalid, so the declaration was dropped outright — the panels had no
+background and inherited the dialog's dark surface, making the light and dark
+previews identical, and "Found in logo" rendered as empty circles. An operator on
+the shipped hardware could not see what they were choosing.
+
+Inline styles now pass through `useLegacySafeColor`, which reads engine support
+with `useSyncExternalStore` — the server snapshot is the floor, so the first
+client paint matches and modern engines keep the wide-gamut original. Verified on
+the iOS 15.4 simulator. See `docs/ISSUES.md` Issue 44.
+
+## Known gaps before promotion
+
+- **Accent and Ambient do not reach every scope they are labelled for.** Accent
+  changes no tokens in dark or either high-visibility mode; Ambient tints card
+  gradients but never the page backdrop, which is driven by Primary regardless.
+  Closing this means editing the derivation rules, which requires approval,
+  tests, and doc updates under `AGENTS.md`. Tracked for beta.2.
+- **Device validation is incomplete.** This is a client-bundle change, so a
+  Vercel preview off `dev` and a successful sign-in on the real iPad mini 4 are
+  still required before promotion.
+
 # LOTTO v1.25.1
 
 **Release Date:** August 26, 2026

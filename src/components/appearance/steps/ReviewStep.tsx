@@ -10,15 +10,19 @@
 import * as React from "react";
 
 import { CircleCheckIcon } from "@/components/animate-ui/icons/circle-check";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { StepWrapper } from "@/components/translation/ai-config/shared/StepWrapper";
 import { parseBrandConfig } from "@/lib/brand-theme/config-schema";
+import { useBrandPreview } from "@/contexts/brand-context";
+import { toast } from "sonner";
 
 import { draftTheme, draftThemeIssues } from "../draft";
 import { ThemePreview } from "../theme-preview";
 import type { AppearanceStepProps } from "../types";
 
 export function ReviewStep({ draft, animateIntro }: AppearanceStepProps) {
+  const { previewConfig, startPreview, clearPreview } = useBrandPreview();
   const parsed = parseBrandConfig(draft.config);
   const themeIssues = draftThemeIssues(draft.config);
   const problems = [
@@ -56,6 +60,27 @@ export function ReviewStep({ draft, animateIntro }: AppearanceStepProps) {
       <div className="space-y-2">
         <Label>Theme preview</Label>
         <ThemePreview theme={draftTheme(draft.config)} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              startPreview(draft.config);
+              toast.success("Preview applied to this browser session. Close the wizard to explore it.");
+            }}
+            disabled={problems.length > 0}
+          >
+            Preview in app
+          </Button>
+          {previewConfig ? (
+            <Button type="button" variant="ghost" onClick={clearPreview}>
+              Stop preview
+            </Button>
+          ) : null}
+          <p className="text-xs text-muted-foreground">
+            Session-only: other visitors do not see this until activation.
+          </p>
+        </div>
       </div>
 
       {problems.length > 0 ? (

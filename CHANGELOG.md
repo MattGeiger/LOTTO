@@ -2,6 +2,71 @@
 
 ## [Unreleased]
 
+## [1.26.0-beta.1] - 2026-08-29
+
+### Fixed
+
+- **The Appearance preview was blank on the iPadOS 15 support floor.** Issue 42
+  made the injected brand stylesheet legacy-safe, but the wizard paints its
+  four-mode preview and its logo swatches with React `style` props fed straight
+  from the derived tokens, and an inline style has no `@supports` to hide
+  behind. On that engine `oklch()` with a bare-number lightness is invalid, so
+  the declaration was dropped outright: the panels had no background and
+  inherited the dialog's dark surface, making the light and dark previews
+  identical, and "Found in logo" rendered as empty circles. Operators on the
+  shipped hardware could not see what they were choosing.
+
+  `toLegacyValue` is now exported from the serializer and applied to inline
+  styles through `useLegacySafeColor`, which reads engine support with
+  `useSyncExternalStore` — the server snapshot is the floor, so the first client
+  paint matches and modern engines keep the wide-gamut original. `ThemePreview`
+  converts its token map once at the component boundary rather than at each
+  style prop, because a missed call site there is an invisible panel rather than
+  a slightly-off colour. Verified on the iOS 15.4 simulator. See
+  `docs/ISSUES.md` Issue 44.
+
+### Added
+
+- Ported FEED 1.7.5-beta.4's white-label Appearance patterns to LOTTO. The
+  color step now has five fixed semantic roles and a family/weight picker that
+  can save only exact Tailwind v4 stops; logo extraction, canvas picks, and the
+  EyeDropper snap to the same palette. The preview now covers light, dark, and
+  both high-visibility modes, and a session-only **Preview in app** action can
+  be stopped without changing the saved or active configuration.
+- Added `docs/FEED_BRANDING_PARITY_PLAN.md` as the implementation and rollout
+  contract, plus a generated 286-stop palette and drift/234-combination
+  contrast proof.
+- Logo uploads now retain filename/type metadata, report raster quality
+  guidance, suggest a dark plate from measured transparency/lightness, and
+  structurally sanitize SVGs while retaining safe vector geometry and class
+  styles. Install marks must be approximately square and SVG derivatives use
+  target-sized raster density.
+
+### Changed
+
+- Pinned `tailwindcss` and `@tailwindcss/postcss` exactly to 4.3.3 and added the
+  server-only `@xmldom/xmldom` structural SVG parser.
+- Brand configuration schema v2 stores fixed Tailwind palette role names.
+  Schema-v1 payloads remain readable through the legacy OKLCH engine until an
+  operator deliberately edits and saves the Colors step.
+- Appearance activation now saves the candidate as a draft, runs the existing
+  bounded translation workflow only for its candidate `brand_string`, and
+  activates only after every enabled non-English language has a completed row.
+  Failure leaves the previous live appearance active; visitors never poll.
+
+### Security
+
+- Runtime-generated custom themes still emit an sRGB baseline followed by an
+  OKLCH `@supports` layer; the Tailwind migration does not weaken iPadOS 15
+  support or the protected operational-status token boundary.
+
+### Developer experience
+
+- Corrected `smoke:legacy` for the scanner-safe login order: Magic Link is now
+  the default tab, so the harness explicitly selects Verification Code before
+  typing into its animated off-canvas panel. The stale sequence falsely
+  reported failed hydration even though the tab controls were interactive.
+
 ## [1.25.1] - 2026-08-26
 
 ### Security
