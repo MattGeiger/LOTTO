@@ -9,13 +9,13 @@ required.
 1. Open the [Staff Dashboard](02-staff-controls.md) (`/admin`) and expand
    **Advanced**.
 2. Find the **Appearance** card. It shows which look is currently live: the
-   built-in brand or one of your saved appearances.
+   built-in William Temple House appearance or one of your saved appearances.
 3. Choose **Set up appearance** (or **New appearance** if you already have
    saved ones). A step-by-step window walks you through everything.
 
 ## The Steps
 
-1. **Starting point.** Begin from an example brand or from a neutral blank
+1. **Starting point.** Begin from the William Temple House template or from a neutral blank
    slate with placeholder graphics. Either way, every choice can be changed in
    the following steps. Give the configuration a short name — saving with the
    same name later updates it.
@@ -45,21 +45,21 @@ required.
    every browser, Apple, and install icon size is generated for you. A wide or
    tall mark is refused before anything is stored; use an approximately square
    source.
-4. **Your color story.** The five rows always keep the same jobs: **Primary**,
-   **Accent**, **Ambient**, **Dark anchor**, and **Light anchor**. Choose a
-   Tailwind color family and then its weight; the exact named stop shown is the
-   value LOTTO saves. Clearing an optional color never moves another color into
-   a different job. If you've uploaded a logo, the wizard reads it and
-   builds your whole color story automatically — check the preview and just
-   fix anything you don't like (or press **Recommend from logo** to rebuild
-   it). If a logo color sits in the range reserved for ticket status
+4. **Your color story.** The rows have fixed jobs in this order: **Main
+   color**, **Accent**, **Background tint**, **Dark anchor**, and **Light
+   anchor**. A new blank appearance starts with Main color; **Add color**
+   reveals the next job, and only the final optional row can be cleared, so no
+   existing color silently changes jobs. Open a row to choose from the closest
+   Tailwind families, search by a name such as `emerald-600`, or choose a family
+   and then one of its 11 weights. The exact named stop shown is what LOTTO
+   saves. If you've uploaded a logo, choose **Extract from light logo** to fill
+   the story, then review the nearby Tailwind matches and adjust anything you
+   dislike. If a logo color sits in the range reserved for ticket status
    (Returned red, Unclaimed gold), the recommendation works around it and a
    note explains how; you can still override manually. Prefer to choose
    yourself? Pick the fixed roles directly.
-   The easiest way: click colors straight off your uploaded logo, tap a
-   swatch from the palette found in it, or (in supported browsers) use the
-   eye-dropper to pick from anywhere on screen. The wizard tells you in
-   plain language what each fixed role will do. Light mode, dark mode, and both
+   The wizard tells you in plain language what each fixed role will do. Light
+   mode, dark mode, and both
    high-visibility modes are derived from the story with a live preview,
    and readability is checked as you go — if a combination would be hard
    to read, the wizard says exactly what to change, and it warns you if a

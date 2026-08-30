@@ -7,9 +7,7 @@
 
 export const DEFAULT_BRAND_PROFILE_ID = "william-temple-house" as const;
 
-export type BrandProfileId =
-  | typeof DEFAULT_BRAND_PROFILE_ID
-  | "st-johns-food-share";
+export type BrandProfileId = typeof DEFAULT_BRAND_PROFILE_ID;
 
 export type BrandLogoPresentation = "transparent" | "dark-surface";
 
@@ -92,18 +90,23 @@ export const BRAND_PROFILES: Record<BrandProfileId, BrandProfile> = {
         "Operator controls for the William Temple House queue and display.",
     },
     logo: {
-      lightSrc: "/wth-logo-horizontal.png",
-      darkSrc: "/wth-logo-horizontal-reverse.png",
-      width: 2314,
-      height: 606,
-      darkWidth: 2333,
-      darkHeight: 641,
+      lightSrc: "/brand/wth-logo-horizontal-light.svg",
+      darkSrc: "/brand/wth-logo-horizontal-dark.svg",
+      width: 800,
+      height: 300,
+      darkWidth: 800,
+      darkHeight: 300,
       presentation: "transparent",
     },
     pwa: {
       backgroundColor: "#ffffff",
       themeColor: "#2762a2",
       browserIcons: [
+        {
+          src: "/brand/wth-app-mark.svg",
+          sizes: "any",
+          type: "image/svg+xml",
+        },
         {
           src: "/brands/william-temple-house/favicon.ico",
           type: "image/x-icon",
@@ -150,106 +153,6 @@ export const BRAND_PROFILES: Record<BrandProfileId, BrandProfile> = {
       },
     },
   },
-  "st-johns-food-share": {
-    id: "st-johns-food-share",
-    organizationName: "St. Johns Food Share",
-    appName: "St. Johns Food Share Queue",
-    shortName: "St Johns Food Share App",
-    tagline: "Bridging the food gap since 1988",
-    organizationWebsite: "https://stjohnsfoodshare.org/",
-    publicAppUrl: "https://stjohnsfoodshare.app",
-    metadata: {
-      description:
-        "See your place in line and play a few retro games while you wait at St. Johns Food Share.",
-      displayDescription:
-        "The live ticket board showing who's being served at St. Johns Food Share.",
-      inventoryDescription:
-        "See what's available today at St. Johns Food Share.",
-      adminDescription:
-        "Operator controls for the St. Johns Food Share queue and display.",
-    },
-    logo: {
-      lightSrc: "/brands/st-johns-food-share/logo.png",
-      darkSrc: "/brands/st-johns-food-share/logo_darkmode_outline.png",
-      width: 800,
-      height: 349,
-      darkWidth: 3142,
-      darkHeight: 1340,
-      presentation: "dark-surface",
-    },
-    pwa: {
-      backgroundColor: "#2d2d2d",
-      themeColor: "#33a478",
-      browserIcons: [
-        {
-          src: "/brands/st-johns-food-share/icon.svg",
-          sizes: "any",
-          type: "image/svg+xml",
-        },
-        {
-          src: "/brands/st-johns-food-share/Icon_32.png",
-          sizes: "32x32",
-          type: "image/png",
-        },
-        {
-          src: "/brands/st-johns-food-share/Icon_64.png",
-          sizes: "64x64",
-          type: "image/png",
-        },
-      ],
-      appleIcons: [
-        {
-          src: "/brands/st-johns-food-share/Icon_256.png",
-          sizes: "256x256",
-          type: "image/png",
-        },
-      ],
-      manifestIcons: [
-        {
-          src: "/brands/st-johns-food-share/Icon_32.png",
-          sizes: "32x32",
-          type: "image/png",
-          purpose: "any",
-        },
-        {
-          src: "/brands/st-johns-food-share/Icon_64.png",
-          sizes: "64x64",
-          type: "image/png",
-          purpose: "any",
-        },
-        {
-          src: "/brands/st-johns-food-share/Icon_128.png",
-          sizes: "128x128",
-          type: "image/png",
-          purpose: "any",
-        },
-        {
-          src: "/brands/st-johns-food-share/Icon_256.png",
-          sizes: "256x256",
-          type: "image/png",
-          purpose: "any",
-        },
-        {
-          src: "/brands/st-johns-food-share/Icon_512.png",
-          sizes: "512x512",
-          type: "image/png",
-          purpose: "any",
-        },
-      ],
-    },
-    staff: {
-      signInTitle: "Sign in to St. Johns Food Share",
-      emailGuidance: "Staff access only — use your authorized work email.",
-      emailPlaceholder: "you@your-agency.org",
-    },
-    brandingNotice:
-      "St. Johns Food Share branding remains the property of St. Johns Food Share and is not included in LOTTO's open-source license.",
-    integrations: {
-      inventory: {
-        defaultUrl: null,
-      },
-    },
-  },
 };
 
 const isHttpUrl = (value: string): boolean => {
@@ -282,14 +185,8 @@ export function validateBrandProfile(profile: BrandProfile): string[] {
   return errors;
 }
 
-export function getBrandProfile(profileId?: string | null): BrandProfile {
-  const resolvedId = profileId?.trim() || DEFAULT_BRAND_PROFILE_ID;
-  if (!(resolvedId in BRAND_PROFILES)) {
-    throw new Error(
-      `Unknown NEXT_PUBLIC_LOTTO_BRAND "${resolvedId}". Expected one of: ${Object.keys(BRAND_PROFILES).join(", ")}.`,
-    );
-  }
-  const profile = BRAND_PROFILES[resolvedId as BrandProfileId];
+export function getBrandProfile(): BrandProfile {
+  const profile = BRAND_PROFILES[DEFAULT_BRAND_PROFILE_ID];
   const errors = validateBrandProfile(profile);
   if (errors.length > 0) {
     throw new Error(`Invalid brand profile "${profile.id}": ${errors.join("; ")}.`);
@@ -303,7 +200,7 @@ export type InventoryIntegration = {
 };
 
 export function getInventoryIntegration(
-  profile: BrandProfile = getBrandProfile(process.env.NEXT_PUBLIC_LOTTO_BRAND),
+  profile: BrandProfile = getBrandProfile(),
   configuredUrl: string | undefined = process.env.NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL,
 ): InventoryIntegration {
   const url = configuredUrl?.trim() || profile.integrations.inventory.defaultUrl;
@@ -316,5 +213,5 @@ export function getInventoryIntegration(
   return { enabled: true, url };
 }
 
-export const brandProfile = getBrandProfile(process.env.NEXT_PUBLIC_LOTTO_BRAND);
+export const brandProfile = getBrandProfile();
 export const inventoryIntegration = getInventoryIntegration(brandProfile);

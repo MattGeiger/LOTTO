@@ -148,7 +148,7 @@ reference, adapted freely to LOTTO's runtime. What shipped in
 **behaviour**. That is the origin of the defects found in beta validation, and
 the reason for the change of approach recorded here.
 
-The evidence, from probing `deriveBrandTheme` directly:
+The evidence before the parity port, from probing `deriveBrandTheme` directly:
 
 | role        | light            | dark | hiVizLight | hiVizDark |
 | ----------- | ---------------- | ---- | ---------- | --------- |
@@ -159,8 +159,8 @@ Setting `ambient` to a wildly different family produces a **byte-identical**
 page backdrop; the backdrop is driven by `primary` regardless. Meanwhile the UI
 label reads *"Ambient — Quiet page atmosphere and background texture"* and this
 plan asserts, above, that "Every selected role has an observable, documented
-consumer." Neither is true today. The wizard collects five roles, stores them,
-previews them, and then mostly ignores them.
+consumer." Neither was true in v1.26.0-beta.1. The Unreleased parity work
+closes both gaps and pins them with structural tests.
 
 The wizard's own components tell the same story: LOTTO's colour field is 161
 lines against FEED's 252. The shape crossed over; the behaviour did not.
@@ -209,19 +209,36 @@ These are LOTTO-specific and must not be flattened into FEED's shape:
 Anything justified only by "LOTTO's version is simpler" or "this was quicker to
 write." Simplification is what produced the table above.
 
-## Ordered work, ahead of promotion
+## Implementation status, ahead of promotion
 
-1. **Role semantics — the blocker.** Ambient drives the backdrop tint and
-   mid-stop hue, with `primary` as fallback only when ambient is unset. Accent
-   reaches dark and both hi-viz scopes. Add a structural test in the shape of
-   FEED's `shell-tokens.test.ts` that fails when a role stops having a consumer,
-   so this cannot silently regress. **Gated on explicit approval**: `AGENTS.md`
-   treats `derive.ts` rule edits as shared-theme edits.
-2. **Issue 45 — dark-mode shadows lose their assigned hue.** Confirm the engine
-   scope first, then apply FEED's remedy (mix in `oklab`, not `oklch`).
-3. **Port the picker properly**, rather than patching the reimplementation.
-4. **Re-validate on both simulators**, then the promotion gate: Vercel preview
-   off `dev`, sign-in on the real iPad mini 4.
+1. **Role semantics — implemented.** With the required approval, Ambient now
+   drives the page wash and mid-stop hue; Primary is the fallback only when the
+   Ambient slot is absent. Accent reaches standard dark and both Hi-viz scopes.
+   Structural tests require those consumers and also prove Accent never leaks
+   into the page backdrop.
+2. **Issue 45 — implemented.** FEED's `oklab` lesson uncovered a second,
+   LOTTO-specific legacy failure: a `color-mix(var(...), transparent)` cannot be
+   safely downlevelled for iPadOS 15. LOTTO now emits soft/base/strong shadow
+   tokens with alpha already applied and the shared recipes perform no color
+   interpolation. See `docs/ISSUES.md`.
+3. **FEED color interaction — ported.** The Colors step uses FEED's fixed-slot
+   add/clear flow, extraction action, nearby-family suggestions, search, native
+   family selector, weight strip, and viewport-safe popover. The improvised
+   canvas/EyeDropper surface has been removed.
+4. **Deliberate adapter.** FEED exposes a separate Accent-family override
+   because its hierarchy stores free OKLCH values and snaps at derivation time.
+   LOTTO schema v2 stores the exact family and weight in the Accent slot, so a
+   second family override would be two controls for one persisted decision.
+   LOTTO's four-mode preview remains because Hi-viz is a product requirement.
+5. **Verification.** Focused automated tests pass. iOS 15.4 and iPadOS 26.5
+   simulators both hydrate to **Persistence confirmed** with the corrected
+   shadows. At a 768×1024 tablet viewport the modal scrolls, all four previews
+   differ, the picker remains within the viewport, and its suggestions, search,
+   native family select, and 11 weights are reachable with no console errors.
+   The production build passes; all 42 production chunks pass the legacy scan,
+   and the `/` plus `/login` hydration/interactivity smoke passes. The generated
+   `.next` tree is removed afterward. Only the final Vercel preview plus real
+   iPad mini 4 sign-in remain promotion gates.
 
 ## Related decision: retiring the hard-coded St. Johns theme
 

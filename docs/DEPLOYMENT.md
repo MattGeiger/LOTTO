@@ -55,30 +55,13 @@ docker compose up --build
 
 See `.env.example` for the full list.
 
-### Select a brand profile
+### Configure an appearance
 
-`NEXT_PUBLIC_LOTTO_BRAND` selects a typed, public brand profile at build/start
-time. If it is omitted, LOTTO uses `william-temple-house` to preserve the
-existing production project. The included values are:
-
-```text
-william-temple-house
-st-johns-food-share
-```
-
-Run the St. Johns queue-only profile while retaining every database, Resend,
-auth, and storage value already present in `.env.local`:
-
-```bash
-NEXT_PUBLIC_LOTTO_BRAND=st-johns-food-share \
-NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL= \
-npm run dev
-```
-
-An unknown profile or malformed FEED URL fails early instead of silently using
-another agency's identity or inventory. The profile schema, assets, and process
-for adding another organization are documented in
-[`WHITE_LABEL_BRANDING_PLAN.md`](./WHITE_LABEL_BRANDING_PLAN.md).
+LOTTO compiles one William Temple House default. After the first staff sign-in,
+use **Admin → Advanced → Appearance** to create and activate the deployment's
+identity. Appearance data is stored in the deployment database; uploaded
+graphics use Vercel Blob in hosted environments. See
+[`CONFIGURABLE_BRANDING_PLAN.md`](./CONFIGURABLE_BRANDING_PLAN.md).
 
 ## Read-only board options
 
@@ -105,9 +88,9 @@ for adding another organization are documented in
 All agencies deploy the same repository and branch. Each agency must have a
 separate Vercel project, Neon database, auth secret, Resend sender/domain,
 allowed staff-email policy, and public domain. Do not share databases or secrets
-between agencies. Set `NEXT_PUBLIC_LOTTO_BRAND` independently in each Vercel
-project; set `NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL` only if that agency has its
-own FEED deployment.
+between agencies. Configure Appearance independently in each deployment; set
+`NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL` only if that agency has its own FEED
+deployment.
 
 **If another agency's production project already exists (e.g. `williamtemple.app`),
 treat it as read-only for the duration of a new agency's launch.** All of the
@@ -202,35 +185,8 @@ fallback only while no database token exists. Once an administrator generates
 the in-app token, the database hash takes precedence immediately and the
 legacy variable can be removed without redeploy-time pairing work.
 
-`NEXT_PUBLIC_LOTTO_BRAND` may remain unset for this existing project; the safe
-default is `william-temple-house`. It may also be set explicitly to that value.
-
-### St. Johns Food Share production
-
-The profile targets `https://stjohnsfoodshare.app` in its own Vercel project.
-Until managed `@stjohnsfoodshare.org` mailboxes exist, authorize the shared Gmail
-address exactly and combine it with the trusted Temple PDX administrative
-domain. Do not authorize the entire `gmail.com` domain:
-
-```text
-NEXT_PUBLIC_LOTTO_BRAND=st-johns-food-share
-AUTH_BYPASS=false
-AUTH_SECRET=<new St. Johns secret>
-AUTH_TRUST_HOST=true
-DATABASE_URL=<new St. Johns Neon connection>
-EMAIL_FROM=<verified St. Johns sender>
-RESEND_API_KEY=<St. Johns-capable Resend key>
-ADMIN_EMAIL_ALLOWLIST=stjohnsfoodshare@gmail.com
-ADMIN_EMAIL_DOMAIN=templepdx.com
-AUTH_URL=https://stjohnsfoodshare.app
-NODE_ENV=production
-```
-
-Leave `NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL` unset for queue-only deployment.
-Set `EMAIL_FROM=login@stjohnsfoodshare.app` after Resend verifies the purchased
-domain. This policy also authorizes `matt@templepdx.com`. When individual
-organizational mailboxes are available, remove the temporary Gmail exception
-and replace the domain with `ADMIN_EMAIL_DOMAIN=stjohnsfoodshare.org`.
+With no active Appearance row, the safe default is William Temple House. Use
+the in-app Appearance workflow rather than a build-time profile variable.
 
 ## New agency deployment runbook
 
@@ -253,13 +209,12 @@ whatever registrar/host the agency actually uses.
 > (it now includes `brand_configurations`) and a public Vercel Blob store must
 > be connected as described above so uploaded assets persist across deploys.
 
-- The agency's brand profile already exists in `src/config/brand.ts` (see
-  [`WHITE_LABEL_BRANDING_PLAN.md`](./WHITE_LABEL_BRANDING_PLAN.md) for the
-  schema and asset requirements) and its code has already merged to `main`.
-  Confirm both `npm run build` (default/no brand env) and
-  `NEXT_PUBLIC_LOTTO_BRAND=<new-profile> npm run build` succeed locally before
-  merging — a merge to `main` redeploys **every** agency sharing this repo (see
-  [Shared branch, one merge affects everyone](#shared-branch-one-merge-affects-everyone)).
+- The Appearance workflow and asset store are available. The first deployment
+  can launch temporarily with the compiled WTH default; activate the agency's
+  saved Appearance after the first staff sign-in. Confirm `npm run build` and
+  test both the default and a representative saved appearance before merging —
+  a merge to `main` redeploys **every** agency sharing this repo (see [Shared
+  branch, one merge affects everyone](#shared-branch-one-merge-affects-everyone)).
 - You have (or can get) admin access to: the shared Vercel team, a Neon
   account/project for this agency, a Resend account, and the agency's domain
   registrar.
@@ -383,11 +338,10 @@ silently reproduced the same gap. Always point at the file.
 
 ### 4. Set environment variables
 
-Set the agency's full variable block (see the St. Johns example above as a
-template) in the new Vercel project, scoped to **Production** (and Preview,
-for the app-config vars — not the database ones, which you already scoped in
-step 2). Double check `NEXT_PUBLIC_LOTTO_BRAND` matches the profile id exactly
-as it appears in `src/config/brand.ts`.
+Set the agency's full auth, database, email, storage, and optional FEED variable
+block in the new Vercel project, scoped to **Production** (and Preview for the
+app-config vars — not the database ones, which you already scoped in step 2).
+After deployment, sign in and activate the saved Appearance.
 
 ### 5. Point the domain at Vercel
 
@@ -403,7 +357,7 @@ as it appears in `src/config/brand.ts`.
    keep resolving to the registrar's placeholder instead of Vercel.
 3. DNS propagation for a fresh `A` record is often much faster than the
    "may take a few hours" warnings suggest (it took well under a minute for
-   `stjohnsfoodshare.app`), but don't assume — verify before moving on:
+   a new agency domain), but don't assume — verify before moving on:
    `dig +short A <domain> @8.8.8.8` should return Vercel's IP, and the
    Vercel Domains page should show "Valid Configuration"/no warning icon.
 
@@ -493,9 +447,9 @@ Every agency's Vercel project tracks the same `main` branch. Merging a PR to
 `main` triggers a new production deployment for **every** agency's project
 simultaneously — there is no way to ship a change to just one agency's
 project. Before merging anything (not just new-agency setup work): run
-`npm run build` for the default profile and for every other agency's
-`NEXT_PUBLIC_LOTTO_BRAND` locally first. A change that only breaks one
-agency's brand profile will still ship to everyone the moment it merges.
+`npm run build` for the WTH default and exercise a representative saved
+appearance locally first. A change that only breaks runtime appearance
+resolution will still ship to everyone the moment it merges.
 
 ## Theme / design tokens
 

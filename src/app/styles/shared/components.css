@@ -113,12 +113,9 @@ a, button, input, select, textarea, [role="button"] {
   color: var(--primary-foreground);
 }
 @layer components {
-  /* Universal card gradient (FEED "Prism" pattern, adapted).
-     Every surface carrying data-slot="card" gets a subtle, theme-aware brand
-     gradient. The stops are translucent (see --card-gradient), so this overlays
-     each card's own background-color rather than replacing it — opaque cards and
-     translucent (bg-card/80) cards both keep their fill. Arcade cards use a
-     separate component without data-slot="card" and are unaffected. */
+  /* Universal FEED "Prism" card gradient. The built-in appearance emits two
+     precomposited opaque stops so iPadOS 15 and modern engines render the same
+     surface; configured themes may continue to provide a complete gradient. */
   [data-slot="card"] {
     background-image: var(--card-gradient);
   }

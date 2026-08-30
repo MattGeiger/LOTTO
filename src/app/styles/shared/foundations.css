@@ -3,25 +3,25 @@
 
   /* Radius */
   --radius: 1.25rem;
-  --base-shadow-2xs: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 80%);
-  --base-shadow-xs: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 80%);
-  --base-shadow-sm: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%), 1px 1px 2px -0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%);
-  --base-shadow: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%), 1px 1px 2px -0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%);
-  --base-shadow-md: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%), 1px 2px 4px -0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%);
-  --base-shadow-lg: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%), 1px 4px 6px -0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%);
-  --base-shadow-xl: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%), 1px 8px 10px -0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%);
-  --base-shadow-2xl: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 62%)
+  --base-shadow-2xs: 1px 3.5px 7px 0.5px var(--base-shadow-soft-color);
+  --base-shadow-xs: 1px 3.5px 7px 0.5px var(--base-shadow-soft-color);
+  --base-shadow-sm: 1px 3.5px 7px 0.5px var(--base-shadow-color), 1px 1px 2px -0.5px var(--base-shadow-color);
+  --base-shadow: 1px 3.5px 7px 0.5px var(--base-shadow-color), 1px 1px 2px -0.5px var(--base-shadow-color);
+  --base-shadow-md: 1px 3.5px 7px 0.5px var(--base-shadow-color), 1px 2px 4px -0.5px var(--base-shadow-color);
+  --base-shadow-lg: 1px 3.5px 7px 0.5px var(--base-shadow-color), 1px 4px 6px -0.5px var(--base-shadow-color);
+  --base-shadow-xl: 1px 3.5px 7px 0.5px var(--base-shadow-color), 1px 8px 10px -0.5px var(--base-shadow-color);
+  --base-shadow-2xl: 1px 3.5px 7px 0.5px var(--base-shadow-strong-color)
 }
 .dark {
 
   /* Radius */
   --radius: 1.25rem;
-  --base-shadow-2xs: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 75%);
-  --base-shadow-xs: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 75%);
-  --base-shadow-sm: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 75%), 1px 1px 2px -0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%);
-  --base-shadow: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 75%), 1px 1px 2px -0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%);
-  --base-shadow-md: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 75%), 1px 2px 4px -0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%);
-  --base-shadow-lg: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 75%), 1px 4px 6px -0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%);
-  --base-shadow-xl: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 75%), 1px 8px 10px -0.5px color-mix(in oklch, var(--base-shadow-color), transparent 85%);
-  --base-shadow-2xl: 1px 2px 5.5px 0.5px color-mix(in oklch, var(--base-shadow-color), transparent 62%)
+  --base-shadow-2xs: 1px 3.5px 10.5px 0.5px var(--base-shadow-soft-color);
+  --base-shadow-xs: 1px 3.5px 10.5px 0.5px var(--base-shadow-soft-color);
+  --base-shadow-sm: 1px 3.5px 10.5px 0.5px var(--base-shadow-color), 1px 1px 2px -0.5px var(--base-shadow-color);
+  --base-shadow: 1px 3.5px 10.5px 0.5px var(--base-shadow-color), 1px 1px 2px -0.5px var(--base-shadow-color);
+  --base-shadow-md: 1px 3.5px 14px 0.5px var(--base-shadow-color), 1px 2px 4px -0.5px var(--base-shadow-color);
+  --base-shadow-lg: 1px 3.5px 20px 1px var(--base-shadow-color), 1px 4px 6px -0.5px var(--base-shadow-color);
+  --base-shadow-xl: 1px 3.5px 28px 2px var(--base-shadow-color), 1px 8px 10px -0.5px var(--base-shadow-color);
+  --base-shadow-2xl: 1px 3.5px 40px 3px var(--base-shadow-strong-color)
 }

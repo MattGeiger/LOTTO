@@ -9,8 +9,8 @@ import type { MetadataRoute } from "next";
 import { getResolvedBrand } from "@/lib/brand-config/resolve";
 
 // Web App Manifest — identity and install assets come from the resolved
-// runtime brand (saved configuration or compiled deployment profile). See
-// docs/WHITE_LABEL_BRANDING_PLAN.md and docs/CONFIGURABLE_BRANDING_PLAN.md.
+// runtime brand (saved configuration or compiled WTH default). See
+// docs/CONFIGURABLE_BRANDING_PLAN.md.
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const brand = await getResolvedBrand();
   return {

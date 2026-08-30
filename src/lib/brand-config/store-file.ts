@@ -98,6 +98,15 @@ export const seedTemplate = async (id: string, payload: unknown): Promise<void> 
   await writeState(state);
 };
 
+/** Remove a retired compiled template without touching saved appearances. */
+export const deleteTemplate = async (id: string): Promise<void> => {
+  const state = await readState();
+  state.configurations = state.configurations.filter(
+    (row) => row.id !== id || !row.isTemplate,
+  );
+  await writeState(state);
+};
+
 export const activateConfiguration = async (id: string): Promise<void> => {
   const state = await readState();
   const target = state.configurations.find((row) => row.id === id);

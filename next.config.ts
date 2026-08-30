@@ -4,7 +4,7 @@ import { getBrandProfile, getInventoryIntegration } from "./src/config/brand";
 const enableTweakcnPreview = process.env.VERCEL !== "1";
 const speedInsightsScriptHost = "https://va.vercel-scripts.com";
 const speedInsightsConnectHost = "https://vitals.vercel-insights.com";
-const brandProfile = getBrandProfile(process.env.NEXT_PUBLIC_LOTTO_BRAND);
+const brandProfile = getBrandProfile();
 const inventoryIntegration = getInventoryIntegration(brandProfile);
 const feedPublicInventoryHost = inventoryIntegration.url
   ? new URL(inventoryIntegration.url).origin

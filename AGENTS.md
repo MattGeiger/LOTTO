@@ -69,6 +69,12 @@ consistent with existing patterns and workflows.
   this to a single OKLCH layer, and do not replace it with two consecutive
   custom-property declarations — custom properties are not validated at parse
   time, so the later one always wins. See `docs/BROWSER_SUPPORT.md`.
+- **Do not derive brand-shadow alpha with `color-mix()` at the point of use.**
+  A mix whose source is `var(--base-shadow-color)` cannot be safely folded for
+  the iPadOS 15 floor and may fall back to an opaque color. Theme scopes must
+  emit the pre-alpha `--base-shadow-soft-color`, `--base-shadow-color`, and
+  `--base-shadow-strong-color` values; shared recipes consume them directly.
+  See `docs/BROWSER_SUPPORT.md` Issue 45 guidance.
 
 ## Translation AI / FEED Parity
 - The Translation card's AI surfaces are a FEED-first parity area. For

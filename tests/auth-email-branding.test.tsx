@@ -11,8 +11,8 @@ import { getBrandProfile } from "@/config/brand";
 import { createAuthEmailBrand } from "@/lib/auth-email-brand";
 import { resolvedBrandFromProfile } from "@/lib/brand-config/types";
 
-const renderedEmail = async (profileId: string, kind: "magic" | "otp") => {
-  const brand = createAuthEmailBrand(resolvedBrandFromProfile(getBrandProfile(profileId)));
+const renderedEmail = async (kind: "magic" | "otp") => {
+  const brand = createAuthEmailBrand(resolvedBrandFromProfile(getBrandProfile()));
   const element =
     kind === "magic"
       ? React.createElement(MagicLinkEmail, {
@@ -29,24 +29,21 @@ const renderedEmail = async (profileId: string, kind: "magic" | "otp") => {
 };
 
 describe("branded authentication email templates", () => {
-  it.each([
-    ["william-temple-house", "William Temple House"],
-    ["st-johns-food-share", "St. Johns Food Share"],
-  ])("renders %s identity as live text as well as a logo", async (profileId, organizationName) => {
-    const { brand, html, text } = await renderedEmail(profileId, "magic");
+  it("renders William Temple House identity as live text as well as a logo", async () => {
+    const { brand, html, text } = await renderedEmail("magic");
 
-    expect(html).toContain(organizationName);
+    expect(html).toContain("William Temple House");
     expect(html).toContain(brand.appName);
     expect(html).toContain(brand.logoUrl);
     expect(html).toContain(brand.primary);
-    expect(text).toContain(organizationName);
+    expect(text).toContain("William Temple House");
     expect(text).toContain(brand.appName);
     expect(text).not.toContain("<html");
   });
 
   it("keeps Magic Link and verification-code content distinct", async () => {
-    const magic = await renderedEmail("william-temple-house", "magic");
-    const otp = await renderedEmail("william-temple-house", "otp");
+    const magic = await renderedEmail("magic");
+    const otp = await renderedEmail("otp");
 
     expect(magic.text).toContain("Continue to sign in");
     expect(magic.text).toContain("confirm on the page that opens");
@@ -55,17 +52,8 @@ describe("branded authentication email templates", () => {
     expect(otp.text).not.toContain("Continue to sign in");
   });
 
-  it("honors the configured dark-surface logo treatment in both email flows", async () => {
-    const magic = await renderedEmail("st-johns-food-share", "magic");
-    const otp = await renderedEmail("st-johns-food-share", "otp");
-
-    expect(magic.brand.logoPresentation).toBe("dark-surface");
-    expect(magic.html).toContain(`background-color:${magic.brand.logoSurface}`);
-    expect(otp.html).toContain(`background-color:${otp.brand.logoSurface}`);
-  });
-
   it("does not add a logo plate when the active treatment is transparent", async () => {
-    const magic = await renderedEmail("william-temple-house", "magic");
+    const magic = await renderedEmail("magic");
 
     expect(magic.brand.logoPresentation).toBe("transparent");
     expect(magic.html).not.toContain(`background-color:${magic.brand.logoSurface}`);

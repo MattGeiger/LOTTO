@@ -1,7 +1,7 @@
 # Languages & Themes
 
-LOTTO supports eight languages and several visual themes, so it works for a wide
-range of guests and lighting conditions.
+LOTTO includes eight core languages, can add staff-activated languages, and
+offers three visual modes for different lighting and accessibility needs.
 
 ## Supported Languages
 
@@ -19,6 +19,8 @@ Staff can enable many more languages, auto-translated with AI — see
   screen won't keep re-asking once you've chosen.
 - On the [display board](03-display-board.md) a language switcher is always
   available.
+- On the Arcade page, the language menu includes every activated language whose
+  translations are ready, not only the eight built-in choices.
 
 ## Automatic Language Rotation (Display Board)
 
@@ -32,9 +34,10 @@ Staff can make the board greet everyone in turn:
 
 ## Themes
 
-LOTTO offers light, dark, and a flat **high-visibility** accessibility theme that
-maximizes contrast for visually impaired guests. Use the theme switcher in the
-page header to change it.
+LOTTO offers light, dark, and a flat **high-visibility** accessibility theme
+that maximizes contrast for visually impaired guests. The theme switcher is a
+single button: each tap advances **Light → Dark → Hi-viz → Light**. Its icon and
+accessible label show what the next tap will select.
 
 ## What To Read Next
 

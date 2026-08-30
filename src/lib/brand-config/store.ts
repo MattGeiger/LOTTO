@@ -24,6 +24,7 @@ export const getConfiguration = backend.getConfiguration;
 export const getActiveConfiguration = backend.getActiveConfiguration;
 export const saveConfiguration = backend.saveConfiguration;
 export const seedTemplate = backend.seedTemplate;
+export const deleteTemplate = backend.deleteTemplate;
 export const activateConfiguration = backend.activateConfiguration;
 export const deactivateAll = backend.deactivateAll;
 export const deleteConfiguration = backend.deleteConfiguration;

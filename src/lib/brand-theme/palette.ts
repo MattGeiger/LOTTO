@@ -30,33 +30,65 @@ const hueDistance = (left: number, right: number) => {
   return Math.min(direct, 360 - direct) / 180;
 };
 
-/** Deterministically snap extracted/legacy OKLCH to the nearest Tailwind stop. */
-export const nearestPaletteEntry = (
-  color: Oklch,
-  kind: "any" | "chromatic" | "neutral" = "any",
-): TailwindPaletteEntry => {
-  const candidates = TAILWIND_PALETTE.filter((entry) => {
+export type PaletteCandidate = {
+  entry: TailwindPaletteEntry;
+  distance: number;
+};
+
+const candidatePool = (kind: "any" | "chromatic" | "neutral") =>
+  TAILWIND_PALETTE.filter((entry) => {
     if (kind === "neutral") return neutralFamilies.has(entry.family);
     if (kind === "chromatic") return !neutralFamilies.has(entry.family);
     return true;
   });
-  let best = candidates[0];
-  let bestDistance = Number.POSITIVE_INFINITY;
-  for (const entry of candidates) {
-    // Lightness is perceptually dominant. Hue becomes irrelevant as chroma
-    // approaches zero, so scale it by the stronger chroma of the pair.
-    const chromaWeight = Math.max(color.c, entry.c, 0.015);
-    const distance =
-      (color.l - entry.l) ** 2 * 4 +
-      (color.c - entry.c) ** 2 * 3 +
-      hueDistance(color.h, entry.h) ** 2 * chromaWeight;
-    if (distance < bestDistance) {
-      best = entry;
-      bestDistance = distance;
-    }
-  }
-  return best;
+
+const paletteDistance = (color: Oklch, entry: TailwindPaletteEntry): number => {
+  // Lightness is perceptually dominant. Hue becomes irrelevant as chroma
+  // approaches zero, so scale it by the stronger chroma of the pair.
+  const chromaWeight = Math.max(color.c, entry.c, 0.015);
+  return (
+    (color.l - entry.l) ** 2 * 4 +
+    (color.c - entry.c) ** 2 * 3 +
+    hueDistance(color.h, entry.h) ** 2 * chromaWeight
+  );
 };
+
+/**
+ * Palette matches ordered nearest-first. FEED exposes the neighbouring
+ * families instead of silently treating the mathematical winner as the only
+ * defensible answer; LOTTO uses the same interaction contract.
+ */
+export const paletteCandidates = (
+  color: Oklch,
+  kind: "any" | "chromatic" | "neutral" = "any",
+  limit = 3,
+): PaletteCandidate[] =>
+  candidatePool(kind)
+    .map((entry) => ({ entry, distance: paletteDistance(color, entry) }))
+    .sort((left, right) => left.distance - right.distance)
+    .slice(0, limit);
+
+/** Nearest stops from distinct families, for FEED-parity picker suggestions. */
+export const nearbyPaletteEntries = (
+  color: Oklch,
+  kind: "any" | "chromatic" | "neutral" = "any",
+  limit = 6,
+): PaletteCandidate[] => {
+  const seen = new Set<string>();
+  return paletteCandidates(color, kind, TAILWIND_PALETTE.length).filter(
+    ({ entry }) => {
+      if (seen.has(entry.family)) return false;
+      seen.add(entry.family);
+      return true;
+    },
+  ).slice(0, limit);
+};
+
+/** Deterministically snap extracted/legacy OKLCH to the nearest Tailwind stop. */
+export const nearestPaletteEntry = (
+  color: Oklch,
+  kind: "any" | "chromatic" | "neutral" = "any",
+): TailwindPaletteEntry => paletteCandidates(color, kind, 1)[0].entry;
 
 export const paletteCss = (name: string): string => {
   const { l, c, h } = paletteEntry(name);

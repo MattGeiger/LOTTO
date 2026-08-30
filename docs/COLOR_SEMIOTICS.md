@@ -52,7 +52,7 @@ meaning must keep its hue everywhere that meaning appears.
 | **L1 State** | `--ticket-serving*`, `--ticket-served*`, `--serving-text-gradient`, `--serving-label-color` | Brand-tunable **hue**; system-controlled value relationships. Serving is the loudest value of the state hue per mode; Called is a subordinate value of the *same* hue. |
 | **L2 Identity** | `--primary`, `--ring`, selection, links | The brand's dominant hue — by default the same hue as L1 (state and identity share the center). |
 | **L3 Accent** | `--accent`, `--icon-*`, secondary emphasis | The second signaling hue, if the brand has one. |
-| **L4 Ambient** | `--card-gradient`, `--gradient-card-*`, `--gradient-display-bg`, decorative tints | Whisper-chroma texture. Colors 3–5 of a brand live here and only here. |
+| **L4 Ambient** | `--card-gradient`, `--gradient-card-*`, `--gradient-display-bg`, decorative tints | Whisper-chroma page atmosphere and texture. The Ambient slot owns this layer and never signals. |
 | **Anchors** | `--background`, `--foreground`, `--card`, borders, muted text | The neutral (or near-neutral) tonal foundation. Every tier has anchors; they are tones, not signals. |
 
 ## The value ladder
@@ -76,30 +76,27 @@ rung's hue — only which rung a role sits on.
 
 ## Color-story tiers
 
-Operators declare how many colors their brand has (1–5, counted the way a
-brand owner counts — a neutral like charcoal counts as a "color" to its
-owner; the system classifies chromatic hues vs. neutral anchors internally).
-Each tier has a differentiation strategy:
+Operators fill up to five fixed slots. Position is the job: the system does not
+reclassify a charcoal Accent into a surface anchor or let clearing a row shift
+later colors into different meanings. The classifier remains a recommendation
+and warning tool, not a role-assignment mechanism. Each tier has a
+differentiation strategy:
 
 - **Monochrome (1):** one hue; significance is created entirely by varying
   value and saturation on the ladder. All of L1–L4 derive from the single
   hue; anchors are neutral.
-- **Two-tone (2):** a dominant color and a second color. If the second is
-  chromatic, it takes L3 (accent); if it is a neutral (e.g. St. Johns'
-  charcoal), it takes the anchor roles and the system is tonally monochrome.
-  State and identity stay on the dominant hue.
-  *Example: St. Johns Food Share — emerald green + charcoal.*
+- **Two-tone (2):** Main color plus Accent. A neutral in slot two deliberately
+  becomes a neutral Accent; it is not silently promoted to an anchor. Operators
+  who want charcoal as the Dark anchor add the preceding slots and place it in
+  slot four. State and identity stay on the Main color.
 - **Three-tone (3):** dominant → L1+L2, second → L3 accent, third →
   **ambient by default** (surface tints, gradients). A third hue may serve
   as highlight only when it is a tint of the dominant or accent family;
   it never signals state. *Example: Lift Up — deep purple, light green,
   dark green.*
-- **Four/Five-tone (4–5):** an explicit hierarchy. Rank 1 → state+identity,
-  rank 2 → accent, ranks 3–5 → the ambient family (card tints, display
-  wash, gradient stops; later, Arcade palette seeds). The signal ceiling
-  holds: two hues signal, the rest are texture.
-  *Example: William Temple House — blue (state/identity), gold (accent),
-  two teals (ambient).*
+- **Four/Five-tone (4–5):** explicit Main, Accent, Ambient, Dark anchor, and
+  Light anchor jobs. The signal ceiling holds: two hues signal, Ambient is
+  texture, and anchors set the tonal foundation.
 
 ## Constraints (good constraints yield creative results)
 
@@ -164,28 +161,29 @@ The model above is implemented (2026-07-19). Where each piece lives:
    the "color semiotics" regression tests in `tests/brand-theme.test.ts`,
    including the adversarial case of a serving hue far from the primary hue —
    the exact configuration that produced the original blue/gold bug.
-2. **Ambient hues** — `colors.ambient` (0–3 colors, backward-compatible
-   schema-v1 extension) contributes *hue only* to the card-tint families;
-   loudness stays system-fixed at whisper chroma, and a regression test
-   proves ambient hues never reach signaling tokens. The WTH template now
-   carries its two logo teals as authored ambient colors.
+2. **Ambient hue** — schema v2's fixed Ambient role contributes hue to the page
+   wash and card-tint families; loudness stays system-fixed at whisper chroma,
+   and regression tests prove it never reaches signaling tokens. Primary is
+   the atmosphere fallback only when Ambient is absent. Legacy schema-v1
+   arrays remain readable during migration.
 3. **The color-story configurator** — the wizard's Colors step
    (`src/components/appearance/steps/ColorsStep.tsx`) uses five fixed jobs:
    Primary, Accent, Ambient, Dark anchor, and Light anchor. Values are exact
    Tailwind v4 family/weight names from the generated palette; arbitrary hex
    and OKLCH entry is no longer part of the standard workflow. Optional roles
-   clear from the end without shifting any later meaning. Logo colors can be
-   auto-extracted, clicked directly off the logo canvas, or eyedropped from
-   the screen, then snap deterministically to the nearest allowed stop.
-   `src/lib/brand-theme/color-story.ts` still classifies recommendations and
-   protects the signal ceiling/reserved bands before snapping
-   (`src/components/appearance/logo-palette.tsx`). Surfaces and the
-   textLight/serving specials remain available under "Fine-tune".
+   appear through **Add color** and clear from the end without shifting any
+   later meaning. **Extract from light logo** recommends a complete fixed-slot
+   story and snaps deterministically to the nearest allowed stops. FEED's
+   picker then exposes nearby logo families, search, a native family selector,
+   and the 11 weights. `src/lib/brand-theme/color-story.ts` still classifies
+   recommendations and protects LOTTO's signal ceiling/reserved bands before
+   snapping. Surfaces and the textLight/serving specials remain available under
+   "Fine-tune".
 
 ## How the shipped brands map
 
 | Brand | Story | L1/L2 (state+identity) | L3 (accent) | L4 (ambient) | Anchors |
 | --- | --- | --- | --- | --- | --- |
-| William Temple House | 4-color | Blue (≈ 258) | Gold (≈ 94) | Teal ×2 (currently derived, not authored — gap 2) | White / near-black |
-| St. Johns Food Share | 2-tone | Emerald (≈ 163) | — (derived shade of primary) | — | Off-white / charcoal |
+| William Temple House | 5-slot configured story | Blue (≈ 258) | Gold (≈ 94) | Teal | White / near-black |
+| St. Johns Food Share | Compiled reference; configurable target | Emerald (≈ 163) | Operator-selected | Optional | Off-white / charcoal |
 | Lift Up | 3-tone | Deep purple | Light green | Dark green | White / dark neutral |

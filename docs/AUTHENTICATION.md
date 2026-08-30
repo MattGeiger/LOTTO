@@ -66,8 +66,8 @@ ADMIN_EMAIL_ALLOWLIST=director@gmail.com,operations@gmail.com
 # Domain policy for an agency with managed organizational email
 ADMIN_EMAIL_DOMAIN=williamtemple.org
 
-# Combined policy for St. Johns launch administration
-ADMIN_EMAIL_ALLOWLIST=stjohnsfoodshare@gmail.com
+# Combined policy for a deployment with one external administrator
+ADMIN_EMAIL_ALLOWLIST=queue-manager@example.org
 ADMIN_EMAIL_DOMAIN=templepdx.com
 ```
 
@@ -123,7 +123,7 @@ in** completes authentication.
   safety contract and must be re-audited before an upgrade.
 - Prefer individual staff addresses over one shared mailbox for clearer
   offboarding and accountability.
-- When individual `@stjohnsfoodshare.org` mailboxes become available, replace
-  the temporary shared-Gmail exception with that organizational domain.
+- Replace temporary shared-mailbox exceptions with individual organizational
+  accounts as soon as they are available.
 - Architecture and release acceptance are recorded in
   [`V1.22_AUTHENTICATION_PLAN.md`](V1.22_AUTHENTICATION_PLAN.md).

@@ -133,7 +133,7 @@ async function fetchFeedPublicInventoryFromUrl(url: string): Promise<FeedPublicI
   //     Issue 23.
   const headers: Record<string, string> = { Accept: "application/json" };
   if (typeof window === "undefined") {
-    headers["User-Agent"] = `LOTTO/1.0 (+${getBrandProfile(process.env.NEXT_PUBLIC_LOTTO_BRAND).publicAppUrl})`;
+    headers["User-Agent"] = `LOTTO/1.0 (+${getBrandProfile().publicAppUrl})`;
   }
 
   const response = await fetch(url, {

@@ -20,6 +20,9 @@ Before calling anyone, tell LOTTO which ticket numbers are in play.
 A drawing can be **random** (numbers are shuffled into a fair order) or
 **sequential**, depending on how your event hands out tickets.
 
+Setup, append, reset-confirmation, and language-search fields use a solid card
+fill so their boundaries remain clear in every theme.
+
 ## Calling Numbers
 
 When you're ready for the next person:
@@ -86,6 +89,9 @@ Expand **Advanced** on the dashboard for less-frequent setup tasks: operating
 hours, display-language rotation, writing an
 [announcement](10-announcements.md), and
 [AI-powered translation](11-ai-translation.md).
+
+The **Help** link opens the searchable staff guides. Use **Back** in the
+upper-left corner of Help to return directly to the Staff Dashboard.
 
 ## What To Read Next
 

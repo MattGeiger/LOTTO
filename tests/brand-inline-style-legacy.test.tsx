@@ -14,9 +14,12 @@ import { paletteColor } from "@/lib/brand-theme/palette";
  * `serializeBrandThemeCss` writes an sRGB baseline and restores OKLCH inside
  * `@supports`, so the injected theme survives iPadOS 15. A React `style` prop
  * has no `@supports` to hide behind — one invalid declaration is dropped
- * outright — and the wizard's preview and logo swatches fed raw
+ * outright — and the wizard's preview once fed raw
  * `oklch(0.129 …)` straight into one. On the support floor those panels had no
  * background at all, so the light and dark previews were indistinguishable.
+ * The former canvas/EyeDropper swatch surface was removed when LOTTO adopted
+ * FEED's extraction-and-picker flow; this guard remains at the live inline
+ * preview boundary.
  */
 const tokens = deriveBrandTheme({
   primary: paletteColor("red-600"),

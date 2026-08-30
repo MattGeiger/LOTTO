@@ -98,10 +98,6 @@ export const scratchConfig = (): BrandConfig => ({
     system: "tailwind-v4",
     paletteRoles: {
       primary: "slate-600",
-      accent: "sky-600",
-      ambient: "sky-100",
-      surfaceDark: "slate-900",
-      surfaceLight: "slate-50",
     },
   },
   staff: {
