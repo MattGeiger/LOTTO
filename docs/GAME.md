@@ -1,8 +1,13 @@
-# Arcade Snake - Separation-First Technical Design
+# Arcade Architecture and Implementation Record
 
 ## Status
-- This document is the current source of truth for Arcade planning.
-- It supersedes the prior "integrate Snake into the Display Page" direction.
+- This document is the source of truth for Arcade separation rules and shipped
+  implementation history.
+- `docs/V1.30_PLANNED_FEATURES.md` is the current next-game candidate plan.
+- Per-game details live in this document for Snake and in `docs/BRICK_MAYHEM.md`
+  and `docs/ZOMBIE_ATTACK.md` for the larger canvas games.
+- This document supersedes the prior "integrate Snake into the Display Page"
+  direction.
 
 ## Decision Summary
 - Arcade is a distinct product area, not an extension of the raffle display.
@@ -118,7 +123,7 @@ public/
 - Verify frame stability on lower-powered emulated devices.
 - Verify accessibility basics (focus order, contrast, reduced motion handling).
 
-## Current Build State (2026-07-18)
+## Current Build State (2026-08-30)
 - Completed: isolated Arcade routes and layout (`/arcade`, `/arcade/snake`) with persistent `NOW SERVING` banner.
 - Completed: Arcade-scoped 8-bit visual system and Press Start 2P font.
 - Completed: The Arcade compiles one William Temple House default palette;
@@ -161,7 +166,10 @@ public/
 - Completed: While ticket-called overlay messaging is active, the top Arcade banner continues to show `NOW SERVING: #<ticket>` for live queue context.
 - Completed: Ticket-called center overlay now auto-hides when the alert window ends and also dismisses immediately when the player resumes Arcade gameplay.
 - Completed: Arcade and personalized `/new` now share one browser-safe semantic haptics layer for direct button-style interactions only. No dedicated haptics toggle is shown because the browser-only scope is intentionally narrow and top-bar space is more valuable for core controls.
-- Not yet completed: Snake gameplay engine modules under `src/arcade/game/snake/*`.
+- Technical debt: Snake is fully playable, but its core state transitions remain
+  page-local in `src/app/(arcade)/arcade/snake/page.tsx`. Extracting a pure
+  `src/arcade/game/snake/*` engine and completing engine-level coverage remains
+  a hardening task rather than an incomplete MVP feature.
 - Completed: Brick Mayhem game page scaffolding (`/arcade/brick-mayhem`) with page shell, CSS classes, translations (8 locales), and Arcade menu entry.
 - Completed: Brick Mayhem game engine — pure-function architecture under `src/arcade/game/brick-mayhem/` with types, constants, engine (tick/collision/reflection), levels (5 progressive layouts), and canvas renderer.
 - Completed: Brick Mayhem gameplay loop using `requestAnimationFrame` with fixed ~16ms timestep, AABB collision detection, paddle-position-influenced reflection (±60°), 3 starting lives, 10 points per brick, and ball speed progression across levels.
@@ -332,12 +340,14 @@ public/
 - Mobile simulation testing passes for controls and layout.
 
 ## Open Questions
-- Primary control scheme for mobile MVP: swipe, on-screen controls, or both?
-- Whether to enable local high score in MVP or Phase 2.
-- Whether Arcade entry point should be linked from `/staff`, `/`, or both.
+- Which candidate in `docs/V1.30_PLANNED_FEATURES.md` should advance after the
+  phone-size prototype pass?
+- Should Snake's page-local engine extraction happen before or alongside the
+  next game?
 
 ---
 
-Document Version: 4.0
-Last Updated: 2026-03-06
-Revision: Refined Arcade haptics to a browser-safe semantic mapping, removed the dedicated haptics toggles, and documented the button-input-only boundary shared with `/new`.
+Document Version: 4.1
+Last Updated: 2026-08-30
+Revision: Reframed this file as the shipped architecture record, corrected the
+Snake completion status, and linked the v1.30 public-domain game plan.

@@ -18,7 +18,7 @@ ticketed distributions (food pantries, clinics, giveaways, and similar).
 
 **Production deployment:** https://williamtemple.app
 **License:** [AGPL-3.0-or-later](./LICENSE)
-**Status:** v1.26.0-beta.2 — beta
+**Status:** v1.26.0 — latest stable release
 
 ---
 
@@ -43,12 +43,15 @@ on their own phone, in their own language.
   [FEED](https://feed.williamtemple.app) public endpoint, localized where FEED
   provides translations.
 - **Built-in arcade** (`/arcade`) — optional retro games (Snake, Brick Mayhem,
-  and more) to keep waiting guests entertained; gameplay pauses the instant a
+  and more planned) to keep waiting guests entertained; gameplay pauses the instant a
   player's ticket is called.
-- **Eight languages, three themes** — English, Spanish, Chinese, Russian,
-  Ukrainian, Vietnamese, Persian, and Arabic (with right-to-left support), plus
-  light, dark, and a flat high-visibility accessibility theme. The board can even
-  rotate through languages automatically.
+- **59-language-ready localization, three themes** — eight languages ship ready
+  to use, staff can activate additional AI-translated languages, and Arabic and
+  Persian receive right-to-left layout. Light, dark, and high-visibility themes
+  share the same type system; the board can rotate through languages automatically.
+- **Configurable Appearance** — staff can manage organization copy, SVG or raster
+  logos, install icons, and a Tailwind v4 color story with live four-mode previews.
+  Returned and Unclaimed keep their universal operational colors in every brand.
 - **In-app Help, About, and release notes** — a searchable, indexed staff help
   section (`/help`) with plain-language guides and workflows.
 
@@ -83,9 +86,14 @@ color-coded drawing-order grid, ticket search, and a QR code to their phone.
 
 ![LOTTO public display board](./docs/screenshots/display-board.png)
 
-**Staff landing** — quick access to the dashboard, the public board, and the arcade:
+**Staff sign-in** — scanner-safe Magic Link and Verification Code access:
 
-![Staff landing page](./docs/screenshots/staff.png)
+![Staff sign-in page](./docs/screenshots/login.png)
+
+**Appearance management** — create, activate, and preview an organization-wide
+identity directly from the Admin dashboard:
+
+![Appearance management and live preview](./docs/screenshots/admin-appearance.png)
 
 **What's in stock** — live, localized public inventory with limits and dietary flags:
 
@@ -102,11 +110,11 @@ color-coded drawing-order grid, ticket search, and a QR code to their phone.
 ### Dark mode
 
 Light, dark, and a flat high-visibility theme are all supported. The board and
-staff dashboard in dark:
+staff sign-in in dark:
 
-| Display board | Staff dashboard |
+| Display board | Staff sign-in |
 |---|---|
-| ![Display board, dark mode](./docs/screenshots/display-board-dark.png) | ![Staff landing, dark mode](./docs/screenshots/staff-dark.png) |
+| ![Display board, dark mode](./docs/screenshots/display-board-dark.png) | ![Staff sign-in, dark mode](./docs/screenshots/login-dark.png) |
 
 ### Localization
 
@@ -138,10 +146,10 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000 — the client homepage (`/`), the staff landing
-(`/staff`), and the public board (`/display`). On localhost, auth is bypassed
-automatically and state is read from a local `data/state.json` fallback, so no
-database or email setup is needed to explore.
+Open http://localhost:3000 — the client homepage (`/`), staff sign-in
+(`/login`), public board (`/display`), and Admin dashboard (`/admin`). On
+localhost, auth is bypassed automatically and state is read from a local
+`data/state.json` fallback, so no database or email setup is needed to explore.
 
 For the full stack with Postgres and a local mail inbox:
 
@@ -158,7 +166,7 @@ optional standalone read-only board, and persistence details are in
 ## Tech stack
 
 - **Framework:** Next.js 16 (App Router), React 19, TypeScript
-- **UI:** Tailwind CSS with CSS-variable design tokens, shadcn / Radix UI
+- **UI:** Tailwind CSS v4 with CSS-variable design tokens, shadcn / Radix UI
   components, `lucide-react` + [animate-ui](https://animate-ui.com/) motion variants
 - **Content:** `react-markdown` + `remark-gfm` for in-app help and release notes
 - **Data:** Neon Postgres in production; a file-based `data/state.json` fallback
@@ -175,7 +183,7 @@ optional standalone read-only board, and persistence details are in
 
 ```
 src/
-  app/            App Router routes: / (client), /staff, /display, /admin,
+  app/            App Router routes: / (client), /login, /display, /admin,
                   /inventory, /arcade, /help, and api/* route handlers
   components/     Feature components + shadcn/ui primitives, help/, navigation/
   arcade/         Arcade games, components, and styles (kept separate from raffle)
@@ -190,7 +198,9 @@ Project conventions and architecture notes live in [`AGENTS.md`](./AGENTS.md) �
 required reading for non-trivial contributions. Notable feature docs:
 [`docs/NAVIGATION.md`](./docs/NAVIGATION.md),
 [`docs/HELP_SYSTEM.md`](./docs/HELP_SYSTEM.md),
-[`docs/DISPLAY_LANGUAGE_ROTATION.md`](./docs/DISPLAY_LANGUAGE_ROTATION.md).
+[`docs/DISPLAY_LANGUAGE_ROTATION.md`](./docs/DISPLAY_LANGUAGE_ROTATION.md),
+[`docs/CONFIGURABLE_BRANDING_PLAN.md`](./docs/CONFIGURABLE_BRANDING_PLAN.md), and
+the [`v1.30 Arcade plan`](./docs/V1.30_PLANNED_FEATURES.md).
 
 ---
 

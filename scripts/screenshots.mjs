@@ -25,17 +25,18 @@ const CHROME_PATH =
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "docs", "screenshots");
 
-/** @type {{name:string,route:string,width:number,height:number,theme?:"light"|"dark",lang?:string}[]} */
+/** @type {{name:string,route:string,width:number,height:number,theme?:"light"|"dark",lang?:string,prepare?:"appearance"}[]} */
 const SHOTS = [
   // Light (default English)
-  { name: "staff", route: "/staff", width: 1440, height: 900 },
+  { name: "login", route: "/login", width: 1440, height: 900 },
   { name: "display-board", route: "/display", width: 1600, height: 900 },
   { name: "inventory", route: "/inventory", width: 1440, height: 1000 },
   { name: "arcade", route: "/arcade", width: 1440, height: 950 },
+  { name: "admin-appearance", route: "/admin", width: 1440, height: 1000, prepare: "appearance" },
   { name: "help", route: "/help", width: 1440, height: 1000 },
   // Dark mode
   { name: "display-board-dark", route: "/display", width: 1600, height: 900, theme: "dark" },
-  { name: "staff-dark", route: "/staff", width: 1440, height: 900, theme: "dark" },
+  { name: "login-dark", route: "/login", width: 1440, height: 900, theme: "dark" },
   // Localizations
   { name: "display-board-zh", route: "/display", width: 1600, height: 900, lang: "zh" },
   { name: "display-board-ru", route: "/display", width: 1600, height: 900, lang: "ru" },
@@ -60,6 +61,21 @@ async function run() {
       await page.setViewport({ width: shot.width, height: shot.height, deviceScaleFactor: 1 });
       await page.emulateMediaFeatures([{ name: "prefers-color-scheme", value: theme }]);
 
+      if (shot.prepare === "appearance") {
+        await page.setRequestInterception(true);
+        page.on("request", (request) => {
+          if (new URL(request.url()).pathname === "/api/brand-config") {
+            void request.respond({
+              status: 200,
+              contentType: "application/json",
+              body: JSON.stringify({ configurations: [], activeId: null }),
+            });
+            return;
+          }
+          void request.continue();
+        });
+      }
+
       // Visit once to get an origin, seed the same storage keys the app uses,
       // then reload so the app boots with the chosen theme + language.
       await page.goto(`${BASE_URL}${shot.route}`, { waitUntil: "domcontentloaded" });
@@ -75,6 +91,30 @@ async function run() {
       await page.reload({ waitUntil: "networkidle2" });
       // Let polling, the inventory fetch, and language/scramble transitions settle.
       await wait(4000);
+
+      // Screenshot the product rather than development-only controls. These are
+      // absent from production but intentionally present during `npm run dev`.
+      await page.evaluate(() => {
+        document.querySelectorAll("nextjs-portal").forEach((portal) => {
+          portal.style.display = "none";
+        });
+        const palette = document.querySelector('[aria-label="Open palette calibration"]');
+        if (palette instanceof HTMLElement) palette.style.display = "none";
+      });
+
+      if (shot.prepare === "appearance") {
+        await page.evaluate(() => {
+          const advanced = Array.from(document.querySelectorAll("button")).find((button) =>
+            button.textContent?.includes("Advanced"),
+          );
+          advanced?.click();
+        });
+        await page.waitForSelector("[data-appearance-preview]", { visible: true });
+        await page.$eval("[data-appearance-preview]", (element) => {
+          element.scrollIntoView({ block: "center", inline: "nearest" });
+        });
+        await wait(800);
+      }
 
       const path = join(OUT_DIR, `${shot.name}.png`);
       await page.screenshot({ path, type: "png" });

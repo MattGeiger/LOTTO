@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [1.26.0] - 2026-08-30
+
+This stable release promotes the Appearance and cross-device work developed in
+1.26.0-beta.1 and beta.2. The detailed beta entries remain below as the
+implementation record.
+
+### Added
+
+- **Admin now includes a live Appearance preview card.** Beside the saved
+  configuration list, staff can see the active logo, Now Serving, Served, Next
+  Up, primary action, ordinary card surface, and protected Unclaimed/Returned
+  treatments. It consumes the live semantic tokens, so built-in and custom
+  appearances and the current Light/Dark/Hi-viz mode stay in sync.
+- **Added the v1.30 Arcade candidate plan.**
+  `docs/V1.30_PLANNED_FEATURES.md` reviews public-domain and traditional game
+  concepts, distinguishes unprotected mechanics from protected expression and
+  branding, defines candidate and exclusion lists, and sets architecture,
+  accessibility, localization, legacy-device, and release gates.
+
 ### Changed
 
 - **Hi-viz now uses the regular application typesetting.** Both high-visibility
@@ -14,6 +33,15 @@
   People waiting consume the same semantic `--gradient-card-info` surface as
   Draw position. A shared class linkage and regression keep all eight cards in
   sync across the built-in WTH appearance and runtime custom appearances.
+- **Release documentation and project presentation now describe the current
+  application.** README feature language covers the 59-language-ready catalog,
+  Tailwind v4 Appearance workflow, current Arcade availability, and v1.30
+  roadmap. Project and Help screenshots were regenerated from the final WTH
+  appearance.
+- **Arcade planning documents now match the code.** Snake is documented as a
+  shipped page-local engine with extraction/testing debt rather than an
+  incomplete game, and the old Pantry Time "clone" wording now requires an
+  original implementation plus the v1.30 prototype/IP-expression review.
 
 ### Fixed
 
@@ -22,6 +50,20 @@
   stops, producing a visually solid card. It now uses the compiled WTH
   bottom-to-top serving ramp, validates text against both stops, and preserves
   intentionally flat Hi-viz plus canonical red/gold status treatments.
+- **All blocking modal overlays now blur the page behind them.** AlertDialog
+  joins Dialog and Sheet on the shared frosted overlay treatment, fixing Admin
+  confirmations such as Clear draw position and Confirm Lottery Reset.
+
+### Tests
+
+- Added focused regressions for the AlertDialog blur contract and the live
+  Appearance preview's identity, queue, primary-action, and protected-status
+  samples.
+- Release verification passes: lint is clean; 121 test files run 821 passing
+  tests with the expected production-only bundle fixture skipped; the Next.js
+  production build succeeds; all 42 production chunks pass the legacy syntax
+  scan; and `/` plus `/login` pass the production hydration/interactivity
+  smoke. The build tree and local server were removed afterward.
 
 ## [1.26.0-beta.2] - 2026-08-30
 

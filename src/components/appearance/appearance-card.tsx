@@ -17,6 +17,7 @@ import * as React from "react";
 import { Palette } from "lucide-react";
 import { toast } from "sonner";
 
+import { AppearancePreviewCard } from "@/components/appearance/appearance-preview-card";
 import { AppearanceWizard } from "@/components/appearance/appearance-wizard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -155,7 +156,8 @@ export function AppearanceCard() {
   };
 
   return (
-    <Card className="bg-card space-y-4">
+    <>
+      <Card data-appearance-manager className="bg-card space-y-4">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Palette className="size-4 text-muted-foreground" />
@@ -273,6 +275,8 @@ export function AppearanceCard() {
           window.location.reload();
         }}
       />
-    </Card>
+      </Card>
+      <AppearancePreviewCard />
+    </>
   );
 }

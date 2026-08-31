@@ -297,8 +297,8 @@ GPU-costed, so the material taxonomy stays small and effects stay cheap.
 | Dietary-filter dropdown | `public-inventory-page.tsx` | `bg-popover/[45%] backdrop-blur-[6px]` |
 | Inventory icon popovers (Limited Supply / Clearance / dietary) | `public-inventory-page.tsx` | `bg-popover/[45%] backdrop-blur-[6px]` |
 | Language switcher menu | `language-switcher.tsx` | `bg-popover/[45%] backdrop-blur-[6px]` |
-| Theme switcher menu | `theme-switcher.tsx` | `bg-popover/[45%] backdrop-blur-[6px]` |
 | Homepage onboarding dialog | `components/personalized-home-page.tsx` | translucent `bg-popover/[…]` + `backdrop-blur-[…]` (being tuned) |
+| Blocking modal overlays | `ui/dialog.tsx`, `ui/alert-dialog.tsx`, `ui/sheet.tsx` | dark scrim + `backdrop-blur-sm` |
 
 The arcade bottom bar is intentionally **not** part of this system — it uses its
 own pixel-art material (`--arcade-menu-card-bg`, `backdrop-blur-sm`) to keep the
@@ -313,6 +313,11 @@ production compatibility contract.
 
 ### Rules
 
+- **Every blocking modal blurs the page behind it.** `Dialog`, `AlertDialog`,
+  and `Sheet` share a darkened `backdrop-blur-sm` overlay. Add modal behavior
+  through those primitives rather than hand-building a non-blurred fixed
+  scrim. This keeps ordinary dialogs, destructive confirmations, and side
+  sheets visually consistent.
 - **Interactive solids stay opaque on glass.** Buttons and inputs that sit on a
   glass surface must remain visually solid so they read as actionable. Note the
   shadcn `outline` button and `input` are **translucent in dark mode by

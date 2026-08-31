@@ -10,6 +10,10 @@ required.
    **Advanced**.
 2. Find the **Appearance** card. It shows which look is currently live: the
    built-in William Temple House appearance or one of your saved appearances.
+   The **Appearance preview** card beside it shows the live logo, queue colors,
+   primary button, ordinary card surface, and the universal Unclaimed and
+   Returned treatments. It follows the current Light, Dark, or Hi-viz mode, so
+   you can check the active result without opening the setup window.
 3. Choose **Set up appearance** (or **New appearance** if you already have
    saved ones). A step-by-step window walks you through everything.
 
@@ -96,6 +100,9 @@ required.
 - **Drafts are safe.** A saved draft changes nothing until you activate it.
 - **Editing.** Choose **Edit** next to a saved appearance to reopen the
   steps with its current values.
+- **Confirmations stay visually focused.** Delete, deactivate, and other
+  confirmation windows blur the page behind them consistently with the rest of
+  LOTTO's modal windows.
 
 ## What To Read Next
 

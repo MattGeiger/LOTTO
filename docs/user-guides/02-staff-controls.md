@@ -1,7 +1,7 @@
 # Staff Controls
 
 Everything you do to run the queue happens on the **Staff Dashboard**. Go to
-`/staff` and sign in with your email. **Magic Link** is the default; open the
+`/login` and sign in with your email. **Magic Link** is the default; open the
 email, then select **Sign in** on the confirmation page. The extra confirmation
 keeps Microsoft Defender and similar email scanners from using the link first.
 Choose **Verification Code** instead to enter a 6-digit code from the email.
@@ -104,6 +104,11 @@ hours, display-language rotation, writing an
 
 The **Help** link opens the searchable staff guides. Use **Back** in the
 upper-left corner of Help to return directly to the Staff Dashboard.
+
+Destructive confirmations such as **Clear draw position** and **Reset for New
+Day** blur the dashboard behind the confirmation window. The blur is a visual
+focus cue; it does not change what will happen, and the action still requires a
+separate confirmation.
 
 ## What To Read Next
 

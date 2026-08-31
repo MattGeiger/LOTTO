@@ -1,6 +1,6 @@
 {
   "name": "app",
-  "version": "1.26.0-beta.2",
+  "version": "1.26.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {

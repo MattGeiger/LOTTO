@@ -1,22 +1,22 @@
 # In-App Help, Release Notes & About
 
-**Status:** Shipped (Unreleased)
+**Status:** Shipped
 
 These three staff-facing features were adapted from the FEED project
 (`williamtemple-feed`) and rebuilt for LOTTO's Next.js App Router. All content is
 **English-only**, matching the Staff page.
 
-## Entry points (Staff page)
+## Entry points (Login and Admin)
 
-`src/app/staff/page.tsx` (a Server Component) renders three controls in its
-footer:
+The shared sign-in footer (`src/components/staff-links-footer.tsx`) and the
+authenticated Admin footer render the staff-facing controls:
 
 - **Version number** → `ReleaseNotesDialog` (`src/components/release-notes-dialog.tsx`).
 - **About** → `AboutDialog` (`src/components/about-dialog.tsx`).
 - **Help** → a link to the `/help` route.
 
-The staff page reads `docs/release-notes.md` from disk (`fs`, at build time) and
-passes it to the release-notes modal.
+The server routes read `docs/release-notes.md` from disk at build/request time
+and pass it to the release-notes modal.
 
 ## Release Notes
 

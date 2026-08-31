@@ -1,6 +1,37 @@
 
 ## Unreleased
 
+## Version 1.26.0 — August 30, 2026
+
+LOTTO now includes the complete FEED-aligned Appearance workflow developed in
+the two 1.26 betas. Staff can build an organization identity from Tailwind v4
+colors, vector or raster logos, generated install icons, and localized service
+copy; preview all four display modes; and activate it without changing the
+universal red Returned or gold Unclaimed meanings.
+
+The Admin Advanced section now pairs the Appearance configuration card with a
+live preview of the active logo, queue colors, button, card, and protected
+statuses. Confirmation windows—including **Clear draw position** and **Confirm
+Lottery Reset**—now use the same blurred-background focus treatment as other
+LOTTO dialogs.
+
+This release also completes the cross-device polish from beta.2: card gradients
+and brand-colored shadows agree on old and new iPads; Next Up is a true gradient
+for custom appearances; Live State follows the Draw position surface; Hi-viz
+keeps the regular type system; iOS 15 navigation highlighting stays translucent;
+Arcade discovers all ready languages, applies active branding to its chrome,
+and keeps controls clear of phone home indicators; and installed-app
+pull-to-refresh can start anywhere on an unscrolled page.
+
+The Help and project screenshots now show the current William Temple House
+appearance. The README reflects the 59-language-ready catalog, current Arcade,
+and Appearance workflow. A new v1.30 planning document reviews traditional and
+public-domain game concepts under an original-art, original-code, and
+original-branding rule before another game is selected.
+
+The release passed the complete automated suite, production build, legacy-iPad
+bundle scan, and production hydration/interactivity smoke before publication.
+
 ## Version 1.26.0-beta.2 — August 30, 2026
 
 The Appearance color workflow now matches FEED's fixed-slot experience:

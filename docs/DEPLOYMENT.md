@@ -11,9 +11,8 @@ overview see the [README](../README.md); for release history see
 - Inventory lookup (only when FEED is configured): http://localhost:3000/inventory
 - Arcade: http://localhost:3000/arcade
 - Staff dashboard (admin): http://localhost:3000/admin
-- Staff landing: http://localhost:3000/staff
 - Help: http://localhost:3000/help
-- Login: http://localhost:3000/login
+- Staff sign-in: http://localhost:3000/login
 
 ## Scripts
 
@@ -66,11 +65,11 @@ graphics use Vercel Blob in hosted environments. See
 ## Read-only board options
 
 - Built-in: `/display` is the QR-enabled public board.
-- FEED inventory: `/inventory` is available only when the selected profile has
-  a default FEED endpoint or `NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL` is set. The
-  William Temple House profile declares its current production endpoint. The
-  St. Johns profile is queue-only by default, so its Inventory nav item is
-  omitted and `/inventory` returns not found.
+- FEED inventory: `/inventory` is available when the active Appearance enables
+  its FEED connection, or when the compiled WTH default or
+  `NEXT_PUBLIC_FEED_PUBLIC_INVENTORY_URL` supplies an endpoint. Queue-only
+  appearances omit the Inventory navigation item and `/inventory` returns not
+  found.
 - Optional standalone server: `npm run readonly` (port `4000`), polling
   `data/state.json` for legacy/edge hosting. Configure via `READONLY_PORT`,
   `READONLY_POLL_MS`, `READONLY_DATA_DIR`.
@@ -203,8 +202,8 @@ whatever registrar/host the agency actually uses.
 > [`CONFIGURABLE_BRANDING_PLAN.md`](./CONFIGURABLE_BRANDING_PLAN.md) work, a new
 > agency no longer needs a compiled brand profile at all — identity, logos,
 > icons, and colors are configured in the Admin **Appearance** wizard after
-> first sign-in, and the deployment starts as the WTH-shaped default. The
-> compiled-profile path below remains valid as a fallback and template source.
+> first sign-in, and the deployment starts as the WTH-shaped default. WTH is the
+> only compiled profile; do not add another compiled agency theme.
 > For the configurable path, `schema.sql` must be applied
 > (it now includes `brand_configurations`) and a public Vercel Blob store must
 > be connected as described above so uploaded assets persist across deploys.

@@ -7,10 +7,13 @@ entertained. It's optional and kept separate from the raffle.
 
 - **Snake** — eat pellets, grow longer, avoid the walls and yourself.
 - **Brick Mayhem** — a paddle-and-ball brick breaker.
-- **Day of the Dead** — a top-down survival game defending a helicopter rescue.
 
 Each game has difficulty settings, retro pixel-art visuals, and works on phones,
 tablets, and the 2015 iPad Mini baseline.
+
+**Day of the Dead** remains available to developers for evaluation, but it is
+not listed in the production Arcade and its direct production route returns to
+the game menu.
 
 ## Playing A Game
 

@@ -1,5 +1,44 @@
 # Unreleased
 
+# LOTTO v1.26.0
+
+**Release Date:** August 30, 2026
+
+LOTTO v1.26.0 promotes the complete beta.1/beta.2 Appearance program to the
+stable release line. FEED's fixed-role Tailwind v4 color workflow, image
+processing, family/weight picker, four-scope preview, and dev-only palette
+calibration experience are now adapted to LOTTO's Next.js, localization,
+Vercel Blob, protected queue-status, and iPadOS 15 emission boundaries.
+
+The final release adds two staff-facing presentation improvements. The Admin
+Advanced grid now places a live semantic preview beside Appearance management,
+so the active identity, queue progression, primary action, ordinary surface,
+and universal status colors are visible without opening the wizard. The shared
+AlertDialog overlay now includes the same backdrop blur already used by Dialog
+and Sheet, bringing Clear draw position, Lottery Reset, appearance deletion,
+and every other confirmation into one modal-focus contract.
+
+The release also closes the final beta follow-ups: Live State metrics share the
+Draw position gradient; custom Next Up uses a real two-stop serving gradient;
+and Hi-viz inherits the regular type hierarchy. The prior beta entries below
+retain the complete implementation, compatibility, and device-validation
+record.
+
+Documentation was reviewed as part of the release rather than treated as a
+version-number edit. README feature claims now match the dynamic language
+catalog, current production Arcade, Tailwind v4 branding, and project roadmap.
+Help guidance explains the live preview and modal focus treatment. Arcade
+planning no longer calls a shipped Snake incomplete or describes Pantry Time as
+a commercial-game clone. `docs/V1.30_PLANNED_FEATURES.md` establishes an
+original-expression review and a bounded candidate/prototype process for the
+next game.
+
+Release verification is green: lint passes; 121 test files contain 821 passing
+tests plus one intentionally skipped production-only fixture; the production
+build succeeds; all 42 chunks pass the legacy syntax scan; and the production
+hydration/interactivity smoke passes for `/` and `/login`. The local production
+server and `.next` tree were removed after verification.
+
 # LOTTO v1.26.0-beta.2
 
 **Release Date:** August 30, 2026 (beta — not promoted)
