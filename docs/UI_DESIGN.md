@@ -225,6 +225,10 @@ This applies to:
 - Display-board ticket-cell gradients for every state — now-serving
   (`--ticket-serving`), called (`--ticket-served`), returned, and unclaimed —
   so the whole board reads consistently.
+- Admin **Next up** consumes the same `--ticket-serving` surface as Now
+  Serving. Configured standard light/dark themes must emit two distinct
+  bottom-to-top stops; a degenerate two-stop gradient is a solid fill and does
+  not satisfy this contract. Hi-viz remains the intentional flat exception.
 
 **Do not** use diagonal (`135deg`) or left→right (`90deg`) directions for
 surface fills — those were the legacy style and have been migrated to `to top`.
@@ -241,6 +245,9 @@ accents, not surface fills. **The `hi-viz` themes are flat by design** — every
 surface/fill gradient (the card gradient, the semantic/feature card gradients,
 the status fills, and the ticket-cell and serving-text gradients) is overridden
 to a solid color for high-contrast legibility for visually-impaired users.
+Hi-viz does not introduce a separate type system: font family, size, weight,
+letter spacing, line height, and hierarchy remain identical to the corresponding
+regular light or dark appearance.
 
 ---
 

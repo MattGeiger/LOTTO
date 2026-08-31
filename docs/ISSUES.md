@@ -2481,3 +2481,20 @@ maps resolved background, panel, Primary, Accent, border, foreground, shadow,
 control, and Now Serving roles into Arcade chrome. Snake pieces, pellets,
 bricks, board art, and other gameplay cues remain fixed; protected raffle
 status tokens are not part of the bridge.
+
+## Issue 59: Custom Next up cards lost their gradient
+
+**Status:** fixed in the current Unreleased work.
+
+The Admin **Next up** card correctly consumed the configurable
+`--ticket-serving` token, but custom light appearances derived that token as a
+two-stop gradient whose stops were identical. It was syntactically a gradient
+and visually a solid fill, unlike the Unclaimed and Returned cards in the same
+stack and unlike compiled WTH.
+
+Custom standard light mode now derives a bottom-to-top serving ramp from the
+configured serving color to a lighter, slightly richer rung—the same
+relationship as compiled WTH. Contrast validation checks the chosen text
+against both stops. Custom dark mode already used a true ramp and is unchanged;
+both Hi-viz scopes remain deliberately flat. The protected red/gold operational
+tokens are unchanged.

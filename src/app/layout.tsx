@@ -6,13 +6,7 @@
 // is not covered by this license; see TRADEMARKS.md.
 
 import type { Metadata, Viewport } from "next";
-import {
-  Bodoni_Moda_SC,
-  Geist_Mono,
-  IBM_Plex_Mono,
-  Lato,
-  Open_Sans,
-} from "next/font/google";
+import { Geist_Mono, Lato } from "next/font/google";
 import "./globals.css";
 import { AuthSessionProvider } from "@/components/auth-session-provider";
 import { HapticsProvider } from "@/components/haptics-provider";
@@ -33,24 +27,6 @@ const lato = Lato({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-const openSans = Open_Sans({
-  variable: "--font-open-sans",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-});
-
-const bodoniModaSc = Bodoni_Moda_SC({
-  variable: "--font-bodoni-moda-sc",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-ibm-plex-mono",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
 });
 
 // Brand identity (saved configuration or compiled profile) resolves per
@@ -101,7 +77,7 @@ export default async function RootLayout({
       lang="en"
       data-brand={brand.brandId}
       suppressHydrationWarning
-      className={`${lato.variable} ${geistMono.variable} ${openSans.variable} ${bodoniModaSc.variable} ${ibmPlexMono.variable}`}
+      className={`${lato.variable} ${geistMono.variable}`}
     >
       <head>
         {process.env.NODE_ENV === "development" ? (

@@ -274,6 +274,10 @@ const deriveLight = (
   ]);
   const accentForeground = bestForeground(accent, [WHITE, textLight]);
   const servingBorder = adjust(serving, { l: -0.089, c: -0.017 });
+  // Match the compiled WTH queue treatment: the configured serving color is
+  // the deeper base and a lighter, slightly richer rung lifts the top. Using
+  // the same color for both stops made custom Next up cards visually solid.
+  const servingHighlight = adjust(serving, { l: 0.08, c: 0.01 });
   const servedTintDeep: Oklch = { l: 0.913, c: 0.068, h: serving.h };
   const servedTintPale: Oklch = { l: 0.956, c: 0.034, h: serving.h };
   const [ambientHueA, ambientHueB] = ambientHues(inputs);
@@ -325,10 +329,10 @@ const deriveLight = (
         ? formatOklch(surfaceDark)
         : "transparent",
     "card-gradient": toTop(withAlpha(surfaceDark, 0.025), withAlpha(WHITE, 0.12)),
-    "ticket-serving": toTop(serving, serving),
+    "ticket-serving": toTop(serving, servingHighlight),
     "ticket-serving-border": formatOklch(servingBorder),
     "ticket-serving-text": formatOklch(
-      bestForeground(serving, [WHITE, primaryDeepShade]),
+      bestForeground([serving, servingHighlight], [WHITE, primaryDeepShade]),
     ),
     "ticket-served": toTop(servedTintDeep, servedTintPale),
     "ticket-served-border": formatOklch({ l: 0.742, c: 0.161, h: serving.h - 6 }),

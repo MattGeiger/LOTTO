@@ -26,7 +26,9 @@ universal queue/status semantics.
   progression colors, including the brand-specific presentation of Now
   Serving, remain in brand files while preserving their shared state meaning.
 - `src/app/styles/shared/high-visibility.css` defines the shared flat,
-  contrast-first Hi-viz behavior and protected status values.
+  contrast-first Hi-viz behavior and protected status values. It does not own
+  typography: Hi-viz inherits the active appearance's regular light/dark font
+  tokens and component type rules.
 - `src/app/styles/shared/components.css` contains shared component and utility
   selectors that consume semantic tokens rather than choosing agency colors.
 - `src/app/styles/brands/william-temple-house.css` owns the single compiled WTH

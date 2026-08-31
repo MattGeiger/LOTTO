@@ -83,10 +83,6 @@
   --card-title-color: var(--foreground);
   --card-icon-color: var(--foreground);
 
-  --app-font-sans: var(--font-open-sans), ui-sans-serif, sans-serif, system-ui;
-  --app-font-serif: var(--font-bodoni-moda-sc), ui-serif, serif;
-  --app-font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
-
   /* Flat theme: hi-viz avoids gradients for high-contrast legibility. These
      solid fills intentionally override the gradient tokens defined above. */
   --ticket-serving: oklch(0.66 0.21 255);
@@ -186,10 +182,6 @@
   --gradient-card-accent: linear-gradient(to top, oklch(0.1800 0.0250 237.0000), oklch(0.2200 0.0100 286.0000));
   --card-title-color: var(--foreground);
   --card-icon-color: var(--foreground);
-
-  --app-font-sans: var(--font-open-sans), ui-sans-serif, sans-serif, system-ui;
-  --app-font-serif: var(--font-bodoni-moda-sc), ui-serif, serif;
-  --app-font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
 
   /* Flat theme: hi-viz avoids gradients for high-contrast legibility. These
      solid fills intentionally override the gradient tokens defined above. */
