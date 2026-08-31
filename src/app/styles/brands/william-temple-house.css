@@ -29,6 +29,7 @@
   --border: oklch(0.8690 0.0220 252.8940); /* slate-300 */
   --input: oklch(0.5880 0.1580 241.9660); /* sky-600 */
   --ring: oklch(0.5000 0.1340 242.7490); /* sky-700 */
+  --nav-active-background: oklch(0.5000 0.1340 242.7490 / 0.12);
 
   /* Chart colors */
   --chart-1: oklch(0.646 0.222 41.116);
@@ -125,6 +126,7 @@
   --border: oklch(0.5000 0.1340 242.7490); /* sky-700 */
   --input: oklch(0.5000 0.1340 242.7490); /* sky-700 */
   --ring: oklch(0.2780 0.0330 256.8480); /* gray-800 */
+  --nav-active-background: oklch(0.9050 0.1820 98.1110 / 0.18);
 
   /* Chart colors (dark) */
   --chart-1: oklch(0.488 0.243 264.376);

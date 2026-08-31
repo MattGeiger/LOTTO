@@ -2360,12 +2360,25 @@ the full animation renders without changing hit targets or resting geometry.
 
 ## Issue 51: Arcade omitted ready, staff-activated languages
 
-**Status:** fixed in the current Unreleased work.
+**Status:** fixed in the current Unreleased work; revised after simulator
+validation exposed a stale-provider case.
 
 Arcade previously loaded the shared language catalog only after a dynamic
 language was already selected. Its first-open menu could therefore show only
-the built-in list. The switcher now loads the ready catalog on mount and offers
-every activated language without visitor polling.
+the built-in list. Preloading on mount fixed a fresh provider, but the root
+`LanguageProvider` persists across client navigation and permits its guarded
+catalog request only once. If staff enabled another language after that request,
+opening Arcade beneath the same provider still showed the stale list.
+
+The switcher now awaits a fresh `GET /api/languages?client` response on each
+explicit menu-open action and reveals the options afterward. This is bounded,
+action-driven refresh—not visitor polling—and the server continues to withhold
+languages whose required translation pack is incomplete.
+
+Simulator validation showed that all 11 ready options were present but the
+last three sat below a 320 px viewport with no visual affordance. The menu now
+uses native touch scrolling and masks its bottom fifth with a blur/fade while
+more choices remain. The cue disappears at the final option.
 
 ## Issue 52: Form inputs lost their surface fill
 
@@ -2390,3 +2403,75 @@ The already-disabled pre-mount control now has one deterministic Dark target on
 both sides. After the mount effect, it resolves the actual Light → Dark →
 Hi-viz cycle. The legacy production smoke and a pure target-selection
 regression cover the boundary.
+
+## Issue 54: Queue progress borrowed canonical success green
+
+**Status:** fixed in the current Unreleased work.
+
+The configurable Appearance engine correctly made **Now Serving** and
+**Served** follow Primary, while **Returned** and **Unclaimed** stayed on their
+protected red/gold vocabulary. The Admin **Live State** values and **Next up**
+card still used `--status-success-*`, however, so one queue-progress surface
+remained green even when every related state used the agency's Primary color.
+
+The fix does not redefine protected success tokens. Live State values now use
+`text-primary`, and Next up consumes the configurable `ticket-serving`
+gradient with its matched border/text roles. The stack is ordered **Next up →
+Unclaimed → Returned**. Generic success alerts remain canonical; Returned and
+Unclaimed still consume only their protected status gradients, text, and
+operational action variants. `tests/queue-color-boundary.test.ts` guards both
+sides of the boundary.
+
+## Issue 55: Installed apps had no manual refresh affordance
+
+**Status:** implemented in the current Unreleased work; simulator and installed
+preview validation required before promotion.
+
+Adding LOTTO to an iOS or Android home screen removes browser chrome, including
+the ordinary reload control. Long-lived queue and Arcade sessions therefore had
+no direct way to request a full refresh.
+
+`PullToRefresh` detects standalone mode using both the standard display-mode
+media query and iOS's `navigator.standalone`. A single downward gesture may
+begin anywhere while the page is at scroll position zero. Crossing the resisted
+72 px threshold shows a branded indicator and reloads the current page.
+Inputs, sliders, and explicitly marked nested scrollers are excluded so their
+native gestures keep working. Browser-tab behavior is unchanged and the
+feature creates no background requests.
+
+## Issue 56: Standalone Arcade controls crowded the home indicator
+
+**Status:** fixed in the current Unreleased work; installed-phone visual
+validation required before promotion.
+
+Without browser chrome, the sticky game control docks sat directly above the
+swipe-home affordance used by modern iPhones. Snake, Brick Mayhem, and Day of
+the Dead now add 32 px below their controls in standalone mode, in addition to
+the device's `safe-area-inset-bottom`. Both the display-mode media query and the
+client standalone marker apply the same rule so the first paint and legacy iOS
+path agree.
+
+## Issue 57: iOS 15 iPhone active navigation became an opaque block
+
+**Status:** fixed in the current Unreleased work.
+
+The bottom navigation used Tailwind's `bg-primary/12` utility for its selected
+tab. On iOS 15 iPhones the required runtime color mix fell back to an opaque
+Primary fill, covering the animated icon and label; the wider iPad path happened
+to render the intended translucent surface.
+
+Every theme scope now emits `--nav-active-background` with alpha already
+applied, and the navigation consumes that token directly. Configured themes
+serialize an sRGB baseline and gate their OKLCH enhancement, so both engines
+receive the same translucency without runtime mixing.
+
+## Issue 58: Runtime Appearance stopped at the Arcade boundary
+
+**Status:** fixed in the current Unreleased work.
+
+Custom appearances styled core client and staff pages, but Arcade continued to
+use only its compiled William Temple House palette. An Arcade-scoped bridge now
+maps resolved background, panel, Primary, Accent, border, foreground, shadow,
+control, and Now Serving roles into Arcade chrome. Snake pieces, pellets,
+bricks, board art, and other gameplay cues remain fixed; protected raffle
+status tokens are not part of the bridge.

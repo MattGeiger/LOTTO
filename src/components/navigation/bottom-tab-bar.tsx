@@ -165,7 +165,10 @@ export function BottomTabBar({ autoHideAfterSeconds }: BottomTabBarProps = {}) {
                 )}
               >
                 {active ? (
-                  <span aria-hidden="true" className="absolute inset-0 rounded-2xl bg-primary/12" />
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-0 rounded-2xl bg-[var(--nav-active-background)]"
+                  />
                 ) : null}
                 <span
                   data-slot="navigation-icon-label"

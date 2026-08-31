@@ -21,6 +21,22 @@ This floor is declared in [`package.json`](../package.json) under `browserslist`
 Next.js / SWC uses it to **downlevel syntax** and core-js uses it to **polyfill
 runtime APIs** down to this baseline.
 
+## Installed home-screen mode
+
+iOS and Android home-screen installations remove ordinary browser refresh
+controls. LOTTO detects standards-based `(display-mode: standalone)` plus
+iOS's legacy `navigator.standalone` signal and enables a pull gesture only in
+that context. A single downward touch may begin anywhere while the page is
+already at scroll position zero; crossing the resisted 72 px threshold reloads
+the page. Inputs, sliders, and marked nested scrollers keep their native touch
+behavior. The move listener is non-passive only for an active downward pull,
+preventing the document from scrolling under the gesture.
+
+The same standalone signal adds 32 px beneath each Arcade control dock on top
+of `safe-area-inset-bottom`. CSS media rules provide the first-paint offset and
+the client marker provides an iOS-compatible fallback. Browser tabs do not get
+either behavior.
+
 ## The one thing browserslist cannot fix: regex literals
 
 Transpilers downlevel *syntax* (class fields, optional chaining, `??=`, etc.) and

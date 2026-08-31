@@ -45,6 +45,11 @@ The **Mark ticket** action is red for Returned and gold for Unclaimed. Until a
 valid ticket number is entered, the action stays neutral to show that it is not
 yet available.
 
+The dashboard's **Live State** values and **Next up** card use your active
+appearance's Primary color, matching **Now Serving** and **Served** queue
+progress. The exception is deliberate: **Returned** always stays red and
+**Unclaimed** always stays gold, regardless of agency branding.
+
 **Made a mistake?** In the **Returned tickets** and **Unclaimed tickets** lists,
 tap any ticket number and confirm **Revert** to clear its status — the ticket
 returns to normal without changing who's currently being served.

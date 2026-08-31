@@ -16,6 +16,7 @@ import {
 import "./globals.css";
 import { AuthSessionProvider } from "@/components/auth-session-provider";
 import { HapticsProvider } from "@/components/haptics-provider";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { BrandProvider } from "@/contexts/brand-context";
@@ -87,6 +88,12 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const enableTweakcnPreview = process.env.VERCEL !== "1";
+  // Match FEED's production-bundle boundary: load the calibration subtree only
+  // in local development instead of merely hiding an imported production UI.
+  const PaletteDevTools =
+    process.env.NODE_ENV === "development"
+      ? (await import("@/components/dev/palette-dev-tools")).default
+      : null;
   const { brand, themeCss } = await getResolvedRuntimeBrand();
 
   return (
@@ -145,7 +152,11 @@ export default async function RootLayout({
           <ThemeProvider>
             <HapticsProvider>
               <BrandProvider brand={brand}>
-                <LanguageProvider>{children}</LanguageProvider>
+                <LanguageProvider>
+                  <PullToRefresh />
+                  {children}
+                  {PaletteDevTools ? <PaletteDevTools /> : null}
+                </LanguageProvider>
               </BrandProvider>
               <Toaster />
             </HapticsProvider>

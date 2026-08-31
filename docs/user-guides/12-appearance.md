@@ -84,6 +84,9 @@ required.
   stays gold in every appearance — those colors mean the same thing in every
   LOTTO, so staff and guests can always trust them. The wizard shows them in
   the preview so you can see they stay put.
+- **Arcade shares your identity, not its game pieces.** Page surfaces, panels,
+  controls, text, and Now Serving use the active appearance. Snake pieces,
+  pellets, bricks, and other gameplay colors remain stable and recognizable.
 - **Activation is atomic and reversible.** LOTTO prepares changed localized
   service copy first, then applies the whole appearance for everyone at once.
   **Use built-in appearance** on the Appearance

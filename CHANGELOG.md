@@ -2,8 +2,40 @@
 
 ## [Unreleased]
 
+## [1.26.0-beta.2] - 2026-08-30
+
+### Added
+
+- **FEED's development-only palette calibration tool is now available in
+  LOTTO.** The right-side sheet keeps the live page visible while developers
+  adjust compiled light/dark CSS roles against Tailwind v4 candidates, filter
+  and sort by drift, preserve a browser session, reset, and export the changed
+  picks as JSON. It also updates Arcade chrome live. The tool is loaded only in
+  local development and emits an iOS-15-safe sRGB baseline before its gated
+  OKLCH enhancement.
+
 ### Fixed
 
+- **Queue color configuration now stops at the intended semantic boundary.**
+  Live State values and the complete **Next up** treatment follow the active
+  Primary color alongside **Now Serving** and **Served**. **Returned** remains
+  canonical red and **Unclaimed** remains canonical gold; protected operational
+  tokens and actions are unchanged.
+- **Issue 51 follow-up: Arcade now refreshes its ready-language catalog when the
+  visitor opens the language menu.** The former once-per-provider preload could
+  become stale after staff activated another language in a long-lived session.
+  The new request is bounded and action-driven, with no visitor polling.
+- **Issue 51 visibility follow-up: long Arcade language lists now advertise
+  their hidden choices.** A native touch-scrolling list masks its bottom fifth
+  with a blur/fade until the final enabled language is visible.
+- **Issue 57: the iOS 15 iPhone selected-navigation highlight is translucent
+  again.** A pre-alpha four-scope brand token replaces the runtime slash-opacity
+  utility that old WebKit rendered as an opaque Primary block over the icon and
+  label.
+- **Installed Arcade controls now clear gesture-navigation hardware.** Snake,
+  Brick Mayhem, and Day of the Dead reserve 32 additional pixels below their
+  control docks in standalone display mode so controls do not crowd the iPhone
+  home indicator.
 - **Issues 46 and 45: built-in card gradients and branded shadows now render
   consistently across the iPadOS 15 floor and modern WebKit.** WTH card washes
   use FEED's explicit opaque stops instead of a runtime OKLCH/transparent mix;
@@ -32,6 +64,16 @@
 
 ### Changed
 
+- **Installed LOTTO now supports pull-to-refresh.** In iOS/Android home-screen
+  mode, a downward drag may begin anywhere while the document is already at the
+  top, reloads after the branded indicator crosses its threshold, and yields to
+  inputs and nested scrollers. Ordinary browser tabs retain native behavior.
+- **Next up now matches LOTTO's queue-card gradient language and requested
+  order.** It consumes the configurable Now Serving treatment, followed by
+  canonical-gold Unclaimed and canonical-red Returned cards.
+- **Issue 58: active appearances now extend into Arcade.** Identity roles style
+  page chrome, panels, controls, text, and Now Serving while pixel-art gameplay
+  colors remain stable and protected queue statuses remain outside the bridge.
 - **Issue 47: simplified theme selection to FEED's single-tap control.** Each
   tap advances Light → Dark → Hi-viz → Light; the icon, tooltip, and accessible
   label describe the next mode, and the dropdown has been removed.
@@ -55,6 +97,11 @@
 
 ### Tests
 
+- Added regression coverage for the Primary/canonical queue-color boundary,
+  queue-card order and gradient, action-driven Arcade language refresh and its
+  scroll cue, anywhere-on-top standalone refresh gesture, the legacy-safe nav
+  token, the Arcade appearance boundary, palette calibration serialization,
+  and the 32 px safe control lane for all three Arcade games.
 - Added Colors-step interaction coverage for the fixed add/clear flow, five-role
   logo extraction, nearby-family suggestions, palette search, and the native
   family/weight control. Added derivation guards for role reach, Accent-free
@@ -65,7 +112,7 @@
   At a 768×1024 tablet viewport the wizard scrolls, its four previews remain
   distinct, the complete picker stays reachable, and the browser console is
   clean.
-- Full suite: 114 files and 802 tests pass; the one skipped test is the
+- Full suite: 120 files and 816 tests pass; the one skipped test is the
   production-only legacy-bundle fixture. Lint and TypeScript pass. The
   production build succeeds, all 42 chunks pass the legacy syntax scan, and
   `/` plus `/login` pass the production hydration/interactivity smoke. The

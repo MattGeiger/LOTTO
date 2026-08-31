@@ -23,9 +23,8 @@ runtime boundaries remain authoritative where the applications differ.
 - Original logo bytes live in Vercel Blob in production (and the documented
   local fallback in development). Configuration JSON stores references and
   presentation metadata, not image payloads.
-- Existing compiled William Temple House and St. Johns themes remain exact
-  fallbacks. Existing schema-v1 custom configurations remain readable during
-  migration.
+- William Temple House remains the single compiled fallback. Existing
+  schema-v1 custom configurations remain readable during migration.
 
 ## Target experience
 
@@ -230,7 +229,14 @@ write." Simplification is what produced the table above.
    LOTTO schema v2 stores the exact family and weight in the Accent slot, so a
    second family override would be two controls for one persisted decision.
    LOTTO's four-mode preview remains because Hi-viz is a product requirement.
-5. **Verification.** Focused automated tests pass. iOS 15.4 and iPadOS 26.5
+5. **Arcade adapter — implemented.** The active identity now styles Arcade
+   chrome and Now Serving through scoped variables; gameplay art remains
+   intentionally stable and separate.
+6. **Developer calibration — ported.** FEED's side-sheet live token editor,
+   filtering, drift sorting, session persistence, reset, and JSON export are
+   available only in local development. LOTTO emits its live choices with the
+   same sRGB-baseline/OKLCH-enhancement contract as runtime appearances.
+7. **Verification.** Focused automated tests pass. iOS 15.4 and iPadOS 26.5
    simulators both hydrate to **Persistence confirmed** with the corrected
    shadows. At a 768×1024 tablet viewport the modal scrolls, all four previews
    differ, the picker remains within the viewport, and its suggestions, search,
@@ -248,13 +254,10 @@ above is for — the hand-authored themes become a second source of truth for th
 same thing, and `derive.ts` stops being reverse-engineered from CSS that no
 longer needs to exist.
 
-**Decision: St. Johns is expected to be dropped as a compiled theme**, once a
-configuration produced by the wizard reproduces it to the operators'
-satisfaction. Not scheduled, and not to be done piecemeal.
+**Decision completed:** St. Johns has been removed as a compiled theme. William
+Temple House is the one built-in fallback; other identities are runtime
+Appearance configurations.
 
-This has one immediate consequence. `tests/brand-assets.test.ts` asserts a
-5120x5120 viewBox for the St. Johns browser icon while the committed asset is
-512x512, and that test is **red as of v1.26.0-beta.1**. It is left red
-deliberately: the asset is user-owned and current, the expectation is stale, and
-the whole fixture is on a path to deletion. Do not "fix" it by editing the
-asset back.
+The former St. Johns asset fixture and its stale icon viewBox assertion were
+removed with that compiled profile rather than preserving a permanently red
+test.

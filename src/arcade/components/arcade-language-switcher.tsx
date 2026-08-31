@@ -11,7 +11,6 @@ import * as React from "react";
 
 import { Button } from "@/arcade/ui/8bit";
 import { useAppHaptics } from "@/components/haptics-provider";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/contexts/language-context";
 import { isRTL } from "@/lib/rtl-utils";
 
@@ -21,22 +20,36 @@ export function ArcadeLanguageSwitcher() {
     setLanguage,
     t,
     availableLanguages,
-    ensureAvailableLanguagesLoaded,
+    refreshAvailableLanguages,
   } = useLanguage();
   const { trigger } = useAppHaptics();
   const [open, setOpen] = React.useState(false);
+  const [refreshingCatalog, setRefreshingCatalog] = React.useState(false);
+  const [showScrollCue, setShowScrollCue] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const listRef = React.useRef<HTMLDivElement>(null);
   const isRtlLanguage = isRTL(language);
   const activeLabel =
     availableLanguages.find((option) => option.code === language)?.label ?? language;
   const needsScroll = availableLanguages.length > 10;
 
-  // The Arcade picker is always present, so resolve the shared visitor catalog
-  // before the menu opens. Waiting for a click showed the static core list for
-  // the first open and made activated languages appear missing on iPad.
-  React.useEffect(() => {
-    ensureAvailableLanguagesLoaded();
-  }, [ensureAvailableLanguagesLoaded]);
+  const handleToggle = async () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+
+    // Arcade can live beneath a root provider that first resolved its catalog
+    // before staff enabled another language. Refresh on this explicit action,
+    // then reveal the menu so its first visible list is current. No polling.
+    setRefreshingCatalog(true);
+    try {
+      await refreshAvailableLanguages();
+    } finally {
+      setRefreshingCatalog(false);
+      setOpen(true);
+    }
+  };
 
   React.useEffect(() => {
     if (!open) return;
@@ -49,6 +62,23 @@ export function ArcadeLanguageSwitcher() {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [open]);
 
+  const updateScrollCue = React.useCallback(() => {
+    const list = listRef.current;
+    if (!list) {
+      setShowScrollCue(false);
+      return;
+    }
+    setShowScrollCue(list.scrollTop + list.clientHeight < list.scrollHeight - 1);
+  }, []);
+
+  React.useLayoutEffect(() => {
+    if (!open || !needsScroll) {
+      setShowScrollCue(false);
+      return;
+    }
+    updateScrollCue();
+  }, [availableLanguages, needsScroll, open, updateScrollCue]);
+
   return (
     <div ref={menuRef} className="relative">
       <Button
@@ -56,9 +86,11 @@ export function ArcadeLanguageSwitcher() {
         variant="outline"
         size="sm"
         className="arcade-ui px-2 text-sm"
-        onClick={() => setOpen((previous) => !previous)}
+        onClick={() => void handleToggle()}
         aria-expanded={open}
         aria-haspopup="listbox"
+        aria-busy={refreshingCatalog}
+        disabled={refreshingCatalog}
       >
         {activeLabel}
       </Button>
@@ -94,10 +126,31 @@ export function ArcadeLanguageSwitcher() {
               </ul>
             );
             return needsScroll ? (
-              <ScrollArea className="h-[min(60vh,20rem)]">{options}</ScrollArea>
-            ) : (
-              options
-            );
+              <div className="relative h-[min(60vh,20rem)]">
+                <div
+                  ref={listRef}
+                  className="h-full overflow-y-auto overscroll-contain"
+                  onScroll={updateScrollCue}
+                  data-pull-to-refresh-ignore
+                  data-testid="arcade-language-scroll-region"
+                >
+                  {options}
+                </div>
+                {showScrollCue ? (
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 bottom-0 h-1/5"
+                    data-testid="arcade-language-scroll-cue"
+                    style={{
+                      background:
+                        "linear-gradient(to top, var(--arcade-panel) 0%, transparent 100%)",
+                      backdropFilter: "blur(2px)",
+                      WebkitBackdropFilter: "blur(2px)",
+                    }}
+                  />
+                ) : null}
+              </div>
+            ) : options;
           })()}
         </div>
       ) : null}
