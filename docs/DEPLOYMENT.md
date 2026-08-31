@@ -108,6 +108,43 @@ for every brand profile.
 - **Email:** Resend (`login@williamtemple.app`; configure SPF/DKIM/DMARC in DNS).
 - **Database:** Neon Postgres (serverless) with a shared connection pool.
 
+### Planned v2.0 beta environment (not yet provisioned)
+
+The provisional realtime architecture proof will use a stable,
+production-shaped deployment at `https://beta.williamtemple.app`. This should
+be a **separate Vercel project**, not another preview in the live WTH project.
+The separation resolves the current WTH Preview database-variable gap and gives
+WebSocket, authentication, PWA, CSP, DNS, and physical-device tests a stable
+origin.
+
+The beta hostname must not be a second frontend attached to production state.
+Provision independent beta resources:
+
+- a fresh Neon database populated from `schema.sql` with synthetic/sanitized
+  state, not production auth, snapshots, credentials, or queue history;
+- a separate public Vercel Blob store and token;
+- a distinct `AUTH_SECRET`, auth tables, and beta callback URL;
+- a separate Resend key/configuration with clearly identifiable beta messages;
+- a Cloudflare beta Worker environment and Durable Object namespace;
+- a beta realtime hostname such as `realtime-beta.williamtemple.app` when DNS
+  ownership permits, or a dedicated `workers.dev` hostname for the first proof;
+  and
+- separate metrics, logs, spend alerts, and secrets at all three providers.
+
+Use beta-specific no-index policy and a visible non-production staff/admin
+banner. Confirm cookies remain host-only between the apex and beta origins. Do
+not place the Vercel app itself behind the Cloudflare proxy merely because the
+realtime hub uses Cloudflare; that would be a separate experiment.
+
+Promotion moves reviewed code, protocol versions, additive schema migrations,
+Worker configuration, and runbooks. Never promote beta database rows, Blob
+objects, Durable Object storage, auth tokens, or secrets into production.
+
+This environment remains a plan until its provisioning phase is explicitly
+approved. See
+[`V2.0_REALTIME_ARCHITECTURE_PLAN.md`](./V2.0_REALTIME_ARCHITECTURE_PLAN.md)
+for the phased gates and rollback requirements.
+
 ### Production environment variables
 
 ```

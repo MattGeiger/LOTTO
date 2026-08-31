@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Documented LOTTO's database usage costs and public-read architecture
+  options.** `USAGE_COSTS.md` models Neon compute, storage, history, and network
+  billing against the live polling strategy; inventories adjacent public-path
+  database reads; evaluates tagged CDN responses, Vercel Blob, managed caches,
+  realtime delivery, polling changes, and full migration; and records the
+  provisional Neon-authoritative Cloudflare Durable Object hub direction while
+  retaining CDN, Blob, and current polling as fallback decisions.
+- **Added the gated v2.0 realtime architecture proof plan.**
+  `docs/V2.0_REALTIME_ARCHITECTURE_PLAN.md` defines architectural invariants,
+  public revision and publication semantics, security and rollback controls,
+  measurable service objectives, a full testing matrix, eight pre-release
+  phases from baseline through release hardening, and a post-release observation
+  phase. The plan uses a separately provisioned `beta.williamtemple.app`
+  Vercel/Neon/Blob/Cloudflare stack so production remains intact throughout the
+  proof.
+- **Started the isolated v2.0 realtime proof implementation.** A standalone
+  `lotto-realtime-beta` Cloudflare Worker now provides one SQLite-backed Durable
+  Object per agency, authenticated checksummed publication, monotonic revision
+  enforcement, latest-state reads, and hibernatable subscribe-only WebSockets.
+  The shared protocol strictly excludes internal queue-session evidence, and
+  unit plus local end-to-end verification cover authentication, CORS,
+  idempotency, conflicts, snapshots, and live delivery. No Neon or public-client
+  path uses the Worker yet.
+
+### Changed
+
+- **Reserved v2.0 for the provisional realtime public-state architecture.**
+  `docs/V2.0_PLANNED_FEATURES.md` now makes the Durable Object proof—not Pantry
+  Time—the major-version gate; `docs/POLLING.md` preserves adaptive polling as
+  the current implementation and required fallback; and `docs/DEPLOYMENT.md`
+  records the isolated beta-environment requirements without presenting them as
+  already provisioned.
+
 ## [1.26.0] - 2026-08-30
 
 This stable release promotes the Appearance and cross-device work developed in
@@ -541,7 +576,7 @@ implementation record.
 
 - Hardened the authorization gate in `src/proxy.ts` to test for a populated
   `session.user` rather than mere session truthiness. Auth.js can resolve
-  `auth()` to an *error-carrying* object instead of `null` when the config
+  `auth()` to an _error-carrying_ object instead of `null` when the config
   factory throws, and the previous `!session` test would have treated that
   object as authenticated. This proxy is the only authorization check in front
   of the gated API prefixes, so the weaker form was exploitable rather than
@@ -771,6 +806,7 @@ implementation record.
   unchanged.
 
 ### Added
+
 - The Admin **Sync With FEED** section now shows a configuration-status tag and
   the local date and time when the active in-app token was generated.
 - **Administrators can pair LOTTO with FEED from the History card.** The modal
@@ -779,6 +815,7 @@ implementation record.
   another token immediately invalidates the previous value.
 
 ### Changed
+
 - The History card now separates snapshot controls from a dedicated **Sync With
   FEED** section, with a concise **Setup** action beneath older-snapshot controls.
 - The read-only FEED endpoint now authenticates against the singleton token
@@ -787,12 +824,14 @@ implementation record.
   is generated.
 
 ### Documentation
+
 - The LOTTO → FEED runbook, deployment guide, Admin architecture, and in-app
   Staff Controls guide now document the one-token pairing workflow.
 
 ## [1.21.0] - 2026-08-22
 
 ### Added
+
 - Durable, privacy-minimized queue-session timing. LOTTO now records the atomic
   transition that first issues each ticket, its write-once first call, batch
   boundaries, append activity, and Random-to-Sequential transitions.
@@ -806,12 +845,14 @@ implementation record.
   numbers, staff identity, or client identity.
 
 ### Documentation
+
 - Added `docs/LOTTO_FEED_INTEGRATION.md`, deployment configuration, and staff
   guidance explaining that Reset preserves the completed queue for Analytics.
 
 ## [1.20.1] - 2026-07-20
 
 ### Fixed
+
 - **Severe input lag when editing Announcement copy on older devices
   (iPad mini 4).** The announcement draft was held in root `AdminPageClient`
   state, so every keystroke re-rendered the entire `/admin` tree — including
@@ -838,6 +879,7 @@ implementation record.
     assertion cannot catch this class of bug on modern development hardware).
 
 ### Documentation
+
 - `docs/ISSUES.md`: added Issue 35 with root-cause analysis, the render-count
   measurement, and prevention guidance for future `/admin` inputs.
 - `docs/V1.5_OPTIMIZATIONS.md`: recorded the Announcement editor under the
@@ -849,6 +891,7 @@ implementation record.
 ## [1.20.0] - 2026-07-20
 
 ### Added
+
 - **Configurable branding, Phases 0–1 (derivation core + runtime delivery).**
   Implements the first two phases of `docs/CONFIGURABLE_BRANDING_PLAN.md`:
   - `src/lib/brand-theme/`: zod-validated brand-configuration schema
@@ -902,6 +945,7 @@ implementation record.
   light, dark, and Hi-viz against the hand-authored references.
 
 ### Added
+
 - **Color-story configurator with logo eye-dropper.** The Appearance
   wizard's Colors step is rebuilt around the semiotic model in
   `docs/COLOR_SEMIOTICS.md`: operators list their brand's colors in
@@ -925,6 +969,7 @@ implementation record.
   unchanged.
 
 ### Added
+
 - **Automatic appearance recommendation from the uploaded logo.** Reaching
   the color step with an untouched palette and a real logo now builds the
   entire color story automatically — palette extracted from the logo
@@ -946,6 +991,7 @@ implementation record.
   translated heading; a configured heading renders verbatim.
 
 ### Fixed
+
 - **Public-board service clock no longer triggers hydration warnings.** The
   clock initialized from `Date.now()` and rendered `Intl.DateTimeFormat`
   text that can legitimately differ between server render and hydration
@@ -1015,6 +1061,7 @@ implementation record.
   corrected before that compiled profile was later removed.
 
 ### Documentation
+
 - **Added `docs/COLOR_SEMIOTICS.md` — the design rationale for LOTTO's
   systematic use of color.** Documents the three axioms (hue signifies role,
   value signifies mode, saturation signifies loudness; a two-hue signal
@@ -1058,12 +1105,15 @@ implementation record.
   fix, and prevention for each.
 
 ## [1.19.0] - 2026-07-18
+
 ### Documentation
+
 - Added `docs/CSS_THEME_ARCHITECTURE.md` with the implementation plan, cascade
   contract, OKLCH-only CSS authoring standard, brand source boundaries, and
   deployment-aware Arcade theme architecture.
 
 ### Changed
+
 - **CSS colors now use an enforced OKLCH-only authoring standard.** Converted
   every authored core and Arcade CSS color literal from hex/RGB/HSL or named
   black/white to precise `oklch()` values while retaining alpha, gradients,
@@ -1079,6 +1129,7 @@ implementation record.
   palettes.
 
 ### Fixed
+
 - **Admin status actions no longer inherit agency branding.** The Returned and
   Unclaimed “Mark ticket” triggers and confirmation actions now use protected
   red/gold operational variants across light, dark, and Hi-viz themes. Their
@@ -1104,6 +1155,7 @@ implementation record.
   from overriding protected operational tokens.
 
 ### Added
+
 - **Exact-address staff authorization.** Added server-only
   `ADMIN_EMAIL_ALLOWLIST` support for agencies using public email providers.
   The comma-separated allowlist may be combined with `ADMIN_EMAIL_DOMAIN`; an
@@ -1161,7 +1213,9 @@ implementation record.
   the gap that let the above content fall behind.
 
 ## [1.18.0] - 2026-06-30
+
 ### Added
+
 - **Home-screen / PWA app icon (WTH emblem) for iOS and Android.** Adding the
   site to a phone home screen previously showed a generic glyph on black, because
   the only icon was a 48×48 transparent `favicon.ico` and iOS fills transparency
@@ -1175,6 +1229,7 @@ implementation record.
   See `docs/ISSUES.md` Issue 26.
 
 ### Fixed
+
 - **Browser tab and search-result title are now static (no stale pantry date).**
   `ReadOnlyDisplay` set `document.title` to the live pantry date on the client.
   Because it renders on the indexed home page (`/`), Googlebot crawled and froze
@@ -1220,6 +1275,7 @@ implementation record.
   server-side fetch remains a best-effort fallback for non-browser callers.
 
 ### Added
+
 - **Find Missing surfaces inventory-source health.** The auditor now reports how
   many source strings it scanned per content type (`sourceCounts`), and the Find
   Missing dialog shows a clear warning when the inventory feed yielded **zero**
@@ -1227,6 +1283,7 @@ implementation record.
   reporting "everything is translated." Turns a silent failure into a visible one.
 
 ### Changed
+
 - **"Getting ready" screen polish.** The "choose another language" escape button
   is now a primary button and is **localized** per language (hardcoded in all 52
   non-core catalog languages, like the waiting message) so it reads in the
@@ -1236,6 +1293,7 @@ implementation record.
   query per language, cutting the homepage "Choose your language" load time.
 
 ### Added — earlier this release
+
 - **Inventory translation domain (v2.0).** The "What's in stock" inventory feed
   is now a translatable content type. The auditor extracts English category and
   item names from the FEED public inventory and queues them for AI translation
@@ -1246,6 +1304,7 @@ implementation record.
   see localized item names even for languages FEED doesn't cover.
 
 ### Fixed
+
 - **Animated icons replay on first hover after mount/view animation.** Fixed the
   FEED-documented `AnimateIcon` stuck-state bug where icons that animated on
   page load or viewport entry stayed internally active, causing the first hover
@@ -1295,6 +1354,7 @@ implementation record.
   metric icons no longer advertise hover animation.
 
 ### Changed
+
 - **Admin configuration tools moved behind Advanced accordion.** Added the
   local animate-ui radix Accordion wrapper and grouped Set operating hours,
   Rotate display languages, Announcement, and Translation inside a collapsed
@@ -1347,6 +1407,7 @@ implementation record.
   modal pattern.
 
 ### Added
+
 - **Expanded localization — visitors see dynamic languages (v2.0, Feature 4).**
   The client bridge that completes the AI translation stack: `t()` now resolves
   hand-authored translation → DB-translated pack → English → key, so a newly
@@ -1376,7 +1437,7 @@ implementation record.
   translation engine calls the active AI provider over REST (OpenAI / Anthropic /
   Google); results are stored with a pending/completed/failed status in the new
   `translations` table behind a file/Postgres-selectable store. The auditor only
-  flags UI strings for *newly enabled* languages (the eight core languages keep
+  flags UI strings for _newly enabled_ languages (the eight core languages keep
   their hand-authored translations) while announcements are translated for every
   enabled language. New `/api/translations` routes (list, add, correct, delete,
   retry, bulk-retry, bulk-delete, find-missing, recover-stuck, metrics). English
@@ -1436,6 +1497,7 @@ implementation record.
   native underline and it needs an extra dependency.)
 
 ### Fixed
+
 - **Homepage announcement modal scrolls long content.** Long announcements no
   longer overflow the dialog or cover the Continue button — the message area is
   a bounded, scrollable region with the action pinned below it.
@@ -1447,12 +1509,14 @@ implementation record.
   card (the next five genuinely upcoming numbers are shown).
 
 ### Changed
+
 - **Admin: replaced the vestigial "Back" button with a "Help" button** (animated
   `CircleHelp` icon, links to `/help`) now that the login/nav flow is in place.
   The bottom navigation (public or authenticated variant) now also appears on the
   Help pages (`/help`, `/help/[slug]`).
 
 ### Added
+
 - **Staff login + authenticated navigation (v2.0):** the `/staff` route is now a
   sign-in screen (the former marketing landing was retired); already-authenticated
   visitors are redirected to `/admin`. `/login` and `/staff` share one login
@@ -1484,6 +1548,7 @@ implementation record.
   and language.
 
 ### Changed
+
 - **Help detail layout:** aligned the desktop "On this page" sidebar with the
   guide article card on initial page load while preserving its sticky scroll
   behavior.
@@ -1497,6 +1562,7 @@ implementation record.
   unaffected by the code license.
 
 ### Added
+
 - **Staff page: Release Notes modal, About modal, and searchable Help.** Adapted
   from the FEED project. The version number on `/staff` is now a button that
   opens a plain-language **release notes** modal (content in
@@ -1536,6 +1602,7 @@ implementation record.
   nav with scroll clearance.
 
 ### Changed
+
 - **Homepage onboarding step selection:** the personalized homepage (`/`) no
   longer re-prompts for a language once one has been chosen this browser session.
   The onboarding modal now decides its initial step after language hydration: a
@@ -1577,17 +1644,22 @@ implementation record.
   order before persistence.
 
 ### Fixed
+
 - **Display language rotation disable behavior:** an already-open `/display`
   board now returns to English when rotation is disabled or cleared.
 
 ## [1.17.2] - 2026-06-04
+
 ### Changed
+
 - **Admin "Rotate display languages" card:** bottom-left aligned the "Save
   language rotation" button so it lines up with the "Save operating hours" button
   in the adjacent card.
 
 ## [1.17.1] - 2026-06-04
+
 ### Fixed
+
 - **Display QR default target:** the QR code on the `/display` board now falls
   back to the site homepage (`/`, the personalized onboarding) instead of the
   board's own URL, so scanning sends clients somewhere useful rather than back to
@@ -1595,6 +1667,7 @@ implementation record.
   overrides the default.
 
 ### Changed
+
 - **Admin "Rotate display languages" card** now follows the established admin UX
   patterns: the enable toggle reuses the bordered control treatment from "Order
   mode" with a non-redundant label (no longer repeating the card title and
@@ -1603,7 +1676,9 @@ implementation record.
   a standalone full-width row.
 
 ## [1.17.0] - 2026-06-04
+
 ### Added
+
 - **Rotating language mode for the Display board:** the Admin page gains a
   "Rotate display languages" control (enable toggle, language multi-select, and a
   minutes-per-language interval). When enabled, the large-format `/display` board
@@ -1613,7 +1688,7 @@ implementation record.
   switch reuses the board's existing scramble transition and flips RTL for
   Arabic/Farsi.
   - **State:** new nullable `displayLanguageRotation` (`{ enabled, languages,
-    intervalSeconds }`) on `RaffleState` with a `setDisplayLanguageRotation`
+intervalSeconds }`) on `RaffleState` with a `setDisplayLanguageRotation`
     action (Zod-validated language enum + bounded interval), persisted by both
     state managers and preserved across draw reset/generate. Back-compatible via
     the existing `{ ...defaultState, ...payload }` merge (no migration).
@@ -1631,7 +1706,9 @@ implementation record.
   state-manager persistence/preservation.
 
 ## [1.16.0] - 2026-06-03
+
 ### Changed
+
 - **Personalized homepage promoted to `/`:** the language + ticket onboarding
   experience (formerly the `/new` preview) is now the default homepage,
   fulfilling the long-planned promotion tracked in
@@ -1652,6 +1729,7 @@ implementation record.
   close/Escape dismissal and the language-step gate.
 
 ### Removed
+
 - **`/new` route:** retired now that its experience is the homepage —
   `src/app/new/page.tsx` and `src/app/new/layout.tsx` are deleted and `/new` no
   longer resolves. Operators should confirm the board's configured display/QR
@@ -1659,7 +1737,9 @@ implementation record.
   `/` to `/display`.
 
 ## [1.15.4] - 2026-06-01
+
 ### Added
+
 - **Pride-month leaderboard seed:** `seed.arcade-high-scores.sql` preloads the
   arcade Top 10 with a tribute roster of civil rights icons and LGBTQ+, queer,
   trans, Two-Spirit, and nonbinary activists across every game and difficulty.
@@ -1667,6 +1747,7 @@ implementation record.
   live player scores.
 
 ### Changed
+
 - **Brick Mayhem cabinet polish:** the on-board Top 10 now shows only on the
   pristine first serve and at game over. Between lives and levels (which also
   return to READY) the playfield stays clear so players can aim the next serve.
@@ -1674,7 +1755,9 @@ implementation record.
   game-over overlay styles, superseded by the shared cabinet screen.
 
 ## [1.15.3] - 2026-06-01
+
 ### Changed
+
 - **Arcade cabinet leaderboard:** the Top 10 now renders directly on the play
   area as an arcade-cabinet screen — an attract-mode high-score table at READY
   and a unified GAME OVER screen (score + initials entry + Top 10 + replay) at
@@ -1687,7 +1770,9 @@ implementation record.
   tech.
 
 ## [1.15.2] - 2026-06-01
+
 ### Changed
+
 - **Arcade leaderboard prominence:** enlarged the shared Top 10 Scores panel,
   featured the #1 score as a cabinet-style champion row, and highlighted newly
   saved scores at game over so high scores read as bragging rights rather than
@@ -1696,7 +1781,9 @@ implementation record.
   imports/mock parameters and tightening admin/display hook dependencies.
 
 ## [1.15.1] - 2026-06-01
+
 ### Changed
+
 - **Arcade production visibility:** Day of the Dead is preserved in the codebase
   but hidden from the Arcade menu and redirected from `/arcade/zombie-attack` in
   production. Snake and Brick Mayhem remain publicly linked.
@@ -1704,43 +1791,59 @@ implementation record.
   the hidden production route and public game menu.
 
 ## [1.15.0] - 2026-06-01
+
 ### Added
+
 - **Arcade Top 10 Scores:** Snake, Brick Mayhem, and Day of the Dead now show per-game/per-difficulty leaderboards before start and at game over.
 - **High-score entry:** qualifying game-over scores get a 30-second, 3-initial entry flow with multilingual letter support and no profanity denylist.
 - **Isolated Arcade database:** added `schema.arcade.sql`, `ARCADE_DATABASE_URL`, an Arcade-only high-score store, and public `/api/arcade/high-scores` GET/POST routes. The leaderboard database is separate from the core LOTTO queue/auth `DATABASE_URL`.
 - **Docs and tests:** added `docs/ARCADE_HIGH_SCORES.md`, deployment notes for the separate Neon project, and unit/API/component/page coverage for leaderboard validation and UI integration.
 
 ### Fixed
+
 - Cleaned up the existing `tests/state-manager-db.test.ts` `prefer-const` lint blocker so full lint can pass.
 
 ## [1.14.5] - 2026-05-31
+
 ### Changed
+
 - **Day of the Dead HUD color follow-up:** `ROUND`, `LIVES`, and `SCORE` now match the `SETTING: ...` / instruction-list text color instead of the green pellet color.
 - **Docs:** updated the Day of the Dead design doc and Arcade current-state notes for the HUD color behavior.
 
 ## [1.14.4] - 2026-05-31
+
 ### Changed
+
 - **Day of the Dead visual polish:** player bullets now render `#FFAA00`; the extraction victory overlay text (`EXTRACTION COMPLETE!`) now renders `#00FF00`; and the "DIFFICULTY SETTING" / `SETTING: ...` text now matches the instruction-list color.
 - **Docs:** updated the Day of the Dead design doc and Arcade current-state notes to capture the bullet, victory-text, and settings-text color behavior.
 
 ## [1.14.3] - 2026-05-31
+
 ### Changed
+
 - **Day of the Dead instructions** refreshed (all eight languages): "HOLD A TO FIRE", "STOP ZOMBIES AT THE FENCE" (was the stale "bunker line"), and "SHOOT ROGUE AMBULANCES AND BUB'S GRENADES FOR A BLAST".
 - **Page metadata audit.** Unified the app brand to **"William Temple House App"** via a root title template (replacing the old `WTH Digital Raffle` / `LOTTO:` strings), and gave the main routes tailored, friendlier titles + descriptions: Home, **Arcade** ("Retro arcade games while you wait"), **Display**, **What's in Stock** (`/inventory`), **Your Ticket** (`/new`), and **Admin**. So tabs now read e.g. "Arcade | William Temple House App".
 
 ## [1.14.2] - 2026-05-31
+
 ### Changed
-- Renamed the game's display title from *Zombie Attack!* to **"Day of the Dead"** — a tribute to George A. Romero's 1985 film (the namesake of the Bub soldier zombie). Updated the title across all eight languages (localized for Chinese / Persian / Arabic) and the play-area labels. The internal slug (route `/arcade/zombie-attack`, modules, CSS, and translation keys) is unchanged.
+
+- Renamed the game's display title from _Zombie Attack!_ to **"Day of the Dead"** — a tribute to George A. Romero's 1985 film (the namesake of the Bub soldier zombie). Updated the title across all eight languages (localized for Chinese / Persian / Arabic) and the play-area labels. The internal slug (route `/arcade/zombie-attack`, modules, CSS, and translation keys) is unchanged.
 
 ## [1.14.1] - 2026-05-31
+
 ### Added
+
 - **Zombie Attack! evacuation reward:** completing an extraction now grants bonus lives, scaled by difficulty — Very Easy / Easy / Normal **+1**, Hard / Very Hard **+2**, Nightmare **+3**.
 
 ## [1.14.0] - 2026-05-31
+
 ### Changed
+
 - **Zombie Attack! render order:** the living zombies now draw newest-first, so freshly-spawned zombies sit **behind** older ones (matching the top-down depth).
 
 ### Added
+
 - **Per-difficulty parameters** (defined relative to the Normal baseline):
   - **Very Easy:** ½ spawn rate, civilians never revive, ×0.5 score.
   - **Easy:** ½ spawn rate, ×0.75 score.
@@ -1751,11 +1854,15 @@ implementation record.
   - The zombie walk/idle animation cadence is now derived from the actual move speed (per-difficulty and per-cycle), so faster zombies always animate faster.
 
 ## [1.13.1] - 2026-05-31
+
 ### Changed
+
 - Slowed the zombie walk/idle animation cadence (220ms → 440ms) so their stride matches the halved movement speed from 1.13.0. The hero's animation cadence is unchanged.
 
 ## [1.13.0] - 2026-05-31
+
 ### Changed
+
 - **Zombie Attack! — fence siege.** The fence is now a solid sprite barrier with
   **10 HP** instead of a sandbag count. Zombies that reach it go **idle and besiege
   it**, each with a `(zombies-at-the-fence × 10%)` chance per turn to land a hit —
@@ -1773,6 +1880,7 @@ implementation record.
   per-difficulty tuning comes next).
 
 ### Added
+
 - **Melee siege threats:** breached zombies **maul the hero at close range** (a
   life per turn, with invulnerability between hits) and **wreck the helo** if they
   reach it (10%/turn → game over — the helo has no health). The ambulance now
@@ -1783,7 +1891,9 @@ implementation record.
   deterministic cases via the RNG seam).
 
 ## [1.12.1] - 2026-05-31
+
 ### Changed
+
 - **Zombie Attack! polish.** Gave the helicopter a full per-phase animation: an
   in-flight rotor (takeoff-1/2) on the inbound approach, a touchdown sequence
   (takeoff-5 → 4 → 3 → spin-up → idle) on landing, a spin-up alternation
@@ -1800,12 +1910,15 @@ implementation record.
   fires when you're not lined up. He only shows the firing pose right after a shot.
 
 ## [1.12.0] - 2026-05-31
+
 ### Changed
+
 - Overhauled **Zombie Attack!** from a side-to-side shooter into a **top-down survival** game on a taller 240×360 board (`aspect-ratio: 240/360`). The renderer now blits preloaded **NES-era PNG sprites** (`drawImage`, nearest-neighbour) instead of string-bitmaps; sprite assets live in `src/arcade/game/zombie-attack/assets/` and are statically imported + preloaded (`assets.ts`). The old `sprites.ts` was removed.
 - Zombies now **spawn at the top and shamble downward**, each picking a **stochastic per-step direction** (50% straight down, 25% each 45° diagonal). Most zombies no longer shoot — the threat is sheer numbers reaching the bunker line.
 - The player is now a **top-down hero with an Uzi** (rapid fire, up to 3 tracers on screen). Civilian zombies are four varied **street-clothes sprites** (NES-era, not Atari-flat).
 
 ### Added
+
 - **Bub** — a zombie soldier (Day of the Dead homage) in fatigues + helmet: takes **2 shots**, fires a 1911 in a stochastic down/down-left/down-right spread (Bub bullets cost the hero a life), and has a **50% chance to drop a live grenade** on death. Shoot the dropped grenade to detonate an **AoE blast** that clears nearby zombies. Bub spawns occasionally (more often on Nightmare).
 - **Helicopter + helipad** at bottom-centre, driving a **time-based 4-round cycle**: (1) clear the pad / chopper inbound, (2) refueling, (3) boarding, (4) takeoff. Survive each round's clock to advance; completing round 4 **extracts the chopper** (a rescue), clears the lot, and loops the cycle at higher difficulty. The helicopter animates per round (idle → refuel → spinup → takeoff frames, climbing away on lift-off).
 - **Ambulance** hazard that drives down a lane; shoot it (3–6 hits by difficulty) to blow it up, clearing nearby zombies.
@@ -1813,13 +1926,16 @@ implementation record.
 - HUD for the new loop: a **round-objective banner**, a 2×2 ROUND / TIME / LIVES / SCORE readout, and a slim **round-timer bar**. Difficulty presets now tune spawn rate, descent speed, Bub frequency, bunkers, and ambulance toughness (Nightmare keeps the bunker death-line but draws no sandbags). Localized across all eight languages; engine test rewritten as `tests/arcade-zombie-attack-engine.test.ts` (9 cases). Docs updated in `docs/ZOMBIE_ATTACK.md`.
 
 ## [1.11.0] - 2026-05-30
+
 ### Changed
-- Re-themed the Arcade's third game from *Star Swarm* into **Zombie Attack!** — a last-stand against a shambling horde — and renamed its route, modules, CSS, and translation keys (`/arcade/star-swarm` → `/arcade/zombie-attack`, `src/arcade/game/star-swarm/*` → `zombie-attack/*`, `arcade-swarm-*` → `arcade-zombie-*`, `starSwarm*` → `zombieAttack*`). Design doc renamed `docs/STAR_SWARM.md` → `docs/ZOMBIE_ATTACK.md`.
+
+- Re-themed the Arcade's third game from _Star Swarm_ into **Zombie Attack!** — a last-stand against a shambling horde — and renamed its route, modules, CSS, and translation keys (`/arcade/star-swarm` → `/arcade/zombie-attack`, `src/arcade/game/star-swarm/*` → `zombie-attack/*`, `arcade-swarm-*` → `arcade-zombie-*`, `starSwarm*` → `zombieAttack*`). Design doc renamed `docs/STAR_SWARM.md` → `docs/ZOMBIE_ATTACK.md`.
 - Replaced the alien sprites with three **zombie builds** (skinny, ribs-exposed, fat), each with a two-frame shamble, and swapped the starfield for a **dirt-lot** background (deterministic pebbles, clods, dead grass, and rocks). The gun, shots, and bursts still follow the theme via CSS custom properties; the dirt/undead/fire/wood/sandbag tones are intentional constants.
 - Made the **play area 25% taller** (board `224 × 224` → `224 × 280`, `aspect-ratio: 224/280`) and re-tuned the responsive board sizing to fill the available height, reducing wasted space above the game on small phones.
 - Simplified the fire control to a compact **"A"** button (hold to autofire), widening the movement slider; masked text selection (`user-select: none` + `touch-action: none`) on the Play/Fire/dock surfaces so a held or dragged press never highlights a label mid-game.
 
 ### Added
+
 - **Fence** — a wooden barrier in front of the bunkers that the horde presses on. Its health drains faster the more zombies are pressing (`alive × 2` per step); when it collapses the horde breaks through toward the bunkers. Reaching the bunker line is game over. The fence is rebuilt each wave.
 - **Flaming vehicle** — a burning truck periodically barrels straight down toward the fence. It takes 3–5 shots to destroy (by difficulty, 250 pts); if it reaches the fence it crashes through and collapses it instantly.
 - **Bomb-carrier zombies** — a few zombies each wave carry a bomb (red marker + fuse). Shooting a carrier drops its bomb in place; shooting the dropped bomb detonates a blast (~25% of the board area) that wipes out every zombie inside it.
@@ -1827,7 +1943,9 @@ implementation record.
 - Rewrote the engine unit test as `tests/arcade-zombie-attack-engine.test.ts` (11 cases): zombie scoring, carrier bomb-drop, blast AoE (with a distant zombie spared), vehicle HP, thrown-bomb life loss, horde-reaches-bunkers game over, wave-clear + fence rebuild, bomb-proof vs. eroding bunkers, no-bunker difficulty, and the shot cooldown/cap.
 
 ## [1.10.0] - 2026-05-29
+
 ### Added
+
 - Added **Star Swarm**, the Arcade's third game — a fixed-shooter in the Space Invaders lineage. Pilot a ship along the bottom of a square pixel-art board, hold FIRE to shoot, and clear a descending formation of 40 invaders (five color-tiered rows) before they reach you. Includes destructible bunkers, invader bombs (which can be shot down mid-air), a periodic bonus saucer worth 50–300 points, post-hit invulnerability blink, escalating formation speed as the swarm thins, and endless waves that ramp difficulty. Six difficulty presets (Very Easy → Nightmare) tune the march cadence and bomb frequency.
   - Built on the same pure-engine + `requestAnimationFrame` fixed-timestep architecture as Brick Mayhem (`src/arcade/game/star-swarm/`: `constants`, `types`, `sprites`, `engine`, `renderer`), with the canvas palette driven by the active arcade theme's CSS custom properties so it follows light / dark / hi-viz automatically.
   - Mobile-first controls: a sticky bottom control dock with a thumb slider to move the ship and a large hold-to-autofire FIRE button (keyboard ←/→ + Space/↑ also supported). Pauses automatically when a raffle ticket is called, matching Snake and Brick Mayhem.
@@ -1835,12 +1953,15 @@ implementation record.
   - Covered by a deterministic engine unit test (`tests/arcade-star-swarm-engine.test.ts`): shot/invader scoring, wave-clear and next-wave progression, bomb-vs-ship life loss + invulnerability, game-over on last life and on formation breach, and the shot cooldown / on-screen shot cap.
 
 ## [1.9.0] - 2026-05-29
+
 ### Added
+
 - Added a frosted-glass treatment to the ticket-detail modal (shown when tapping a ticket cell on `/` or `/display`), matching the `/new` onboarding dialog so all dialogs share one material.
 - Split a dedicated **Current Time** card out of the service card on the display board, with a new `currentTime` translation key across all eight languages.
 - Added a `--gradient-status-success` token and `.bg-gradient-status-success` utility, plus dedicated high-contrast cell-number text tokens (`--ticket-unclaimed-text` vibrant yellow `#ffffaa`, `--ticket-returned-text` soft pink `#ffeeee`) reused by both the display cells and the `/admin` Live State boxes.
 
 ### Changed
+
 - Reoriented the display-board "Now Serving" (`--ticket-serving`) and "Called" (`--ticket-served`) ticket-cell gradients from diagonal to bottom→top, so the whole board (including returned/unclaimed) shares one gradient direction.
 - Reworked the **dark-mode display board** color system: Now Serving is a deep→medium blue cell with white numerals; Called is green/teal with mint numerals; Unclaimed is gold with vibrant-yellow numerals; Returned is red with soft-pink numerals. The large "NOW SERVING" page numeral is light powder blue. The light-mode Called cell gained a deep-teal numeral and a more pronounced gradient.
 - Made the `hi-viz` accessibility themes **fully flat** — every fill gradient (card, feature, status, ticket-cell, and serving-text) is overridden to a solid color for high-contrast legibility, in both the light and dark hi-viz variants.
@@ -1852,47 +1973,64 @@ implementation record.
 - Documented the surface-gradient-orientation preference and the flat-hi-viz rule in `docs/UI_DESIGN.md`.
 
 ### Fixed
+
 - Fixed the hi-viz "NOW SERVING" numeral disappearing: the flattened `--serving-text-gradient` had been set to a solid color, which is invalid for the `background-clip: text` technique (it needs a `background-image`). It is now a degenerate two-stop gradient that renders flat correctly.
 - Fixed the Current Time card's RTL alignment — the title and time now both right-align in Persian/Arabic, while the time digits stay left-to-right via an isolated inner span (which also carries the `service-time` test hook).
 
 ## [1.8.0] - 2026-05-28
+
 ### Added
+
 - Applied a frosted-glass material treatment (translucent fill + backdrop blur) to floating/overlay surfaces — bottom nav bar, the inventory dietary-filter dropdown and icon popovers, the language and theme switcher menus, and the `/new` onboarding dialog (with a lit edge highlight and dark-mode blue-teal glow shadow). Interim hand-tuned values; tokenization deferred to v2.0. Documented in `docs/UI_DESIGN.md` and `docs/V2.0_PLANNED_FEATURES.md`.
 - Added a universal, theme-aware "Prism" card gradient (FEED-aligned) on every `data-slot="card"` surface for cross-app brand consistency. Implemented as a translucent `--card-gradient` overlay (`color-mix` brand tint at the base lifting to a light/dark highlight at the top) so it augments each card's existing fill rather than replacing it — opaque and translucent (`bg-card/80`) cards both keep their fill. Disabled in the `hi-viz` themes to preserve high-contrast legibility; arcade cards are unaffected (separate component, no `data-slot="card"`).
 
 ### Changed
+
 - Restyled the `/inventory` category tables to sit cleanly on the new card gradient: removed the alternating row-fill zebra striping and the `CardHeader` (`bg-muted/45`) and column-header (`bg-background/70`) band fills, so the card gradient flows uninterrupted with only hairline `border-b` dividers for structure.
 
 ### Fixed
+
 - Fixed the `/` and `/display` ticket-detail modal: the top control bar (language switch, search, theme switch) was `z-50` — above the dialog's `z-40` blur overlay — so it stayed sharp in the foreground when a ticket was tapped. Lowered it to `z-30` (matching `/new` and `/inventory`) so those controls blur out with the rest of the background, keeping focus on the ticket info.
 
 ## [1.7.4] - 2026-05-28
+
 ### Changed
+
 - Removed the "X categories" / "X items" totals pills from the `/inventory` page's upper section (title/freshness area). The per-category header "X items" badge is unchanged. Pruned the now-unused `inventoryCategoriesLabel` translation key from all eight languages.
 
 ## [1.7.3] - 2026-05-26
+
 ### Changed
+
 - Migrated `readonly-display.tsx` (used by `/new` and `/display`) onto the shared `ScrambleOnLanguageChange` provider and `<T>` consumer, removing its duplicate local scramble-trigger logic (`PlainText`, `ScrambleText`, the local `T`, the trigger state, and the language-change effect). Behavior is unchanged — the `languageTextAnimation` prop still toggles the effect via the provider's `enabled` flag, with the same 0.35s/0.02 timing — but the scramble-on-language-change logic now lives in one place shared with `/inventory`.
 
 ## [1.7.2] - 2026-05-26
+
 ### Added
+
 - Added a reusable `ScrambleOnLanguageChange` provider and `<T>` consumer (`src/components/core/scramble-text.tsx`) that play the TextScramble transition on an explicit language change (static on mount, rerenders, and no-op updates), generalizing the effect previously local to the personalized display.
 
 ### Changed
+
 - The `/inventory` page now plays the TextScramble transition across the whole page when the language changes — page chrome (title, "Updated:", totals, dropdown, legend, column headers) as well as FEED-translated category/item names and limit strings — matching the motion language of `/new`.
-- Renamed the `/inventory` "Limited" status label to **"Limited Supply"** (with equivalents across all eight languages) to distinguish a limited *amount of stock* from the per-household / per-person *request limit* that already lives in the Limit column. Affects both the legend chip and the icon-badge popup; the translation key (`inventoryStatusLimited`) is unchanged.
+- Renamed the `/inventory` "Limited" status label to **"Limited Supply"** (with equivalents across all eight languages) to distinguish a limited _amount of stock_ from the per-household / per-person _request limit_ that already lives in the Limit column. Affects both the legend chip and the icon-badge popup; the translation key (`inventoryStatusLimited`) is unchanged.
 - Collapsed the dedicated **Status** column on the `/inventory` table: the Limited and Clearance status icons now render inline to the left of each item's name (desktop table cell and mobile list row), and the desktop column widths rebalance to Item 40% / Limit 20% / Dietary (remainder). The legend still explains what each icon means; the `inventoryColumnStatus` translation key is retained for potential reuse.
 
 ## [1.7.1] - 2026-05-26
+
 ### Changed
+
 - Localized the remaining English strings on the `/inventory` page so they render in the selected language: the freshness "Updated:" prefix, the totals badges ("X categories" / "X items"), the per-category items badge, the table column headers (Item / Limit / Status / Dietary), and the per-item / per-category limit text ("Limit N per household" / "Limit N per person"). Adds nine translation keys across all eight supported languages; the page now uses a local localized formatter with the same null/non-finite/≤0/≥100 sentinel-hiding logic as the lib's `formatFeedLimit` (which stays unchanged for its unit tests).
 
 ## [1.7.0] - 2026-05-26
+
 ### Added
+
 - Localized the `/new` onboarding modal: added `chooseLanguage`, `ticketFormatHint`, `drawingNotStartedHint`, and `justBrowsing` keys across all eight languages so the modal title, the ticket-format hint, the pre-drawing reassurance copy, and the "I don't have a ticket — just browsing" dismiss render in the selected language.
 - Added the "Enter a new ticket number" action to the `/new` "Pantry Has Closed For The Day" personalized state, matching the generated-numbers state (personalized view only; the public display is unaffected).
 
 ### Changed
+
 - Reworked the `secondary` color token into an adaptive neutral (light: near-white gray + near-black text; dark: dark gray + near-white text), fixing white-on-light-teal `secondary` badges and buttons that failed WCAG AA in both light and dark mode (most visibly the dark-mode `/inventory` count pills). Aligns with the FEED app's adaptive-neutral secondary; the `hi-viz` themes were left as-is.
 - Switched the `/inventory` informational count pills (category/item totals and per-category counts) to the quieter `outline` badge treatment.
 - Reworked the `/new` ticket onboarding so a client holding a physical ticket is never blocked before the operator starts the drawing: a valid-format number is always accepted and saved (the existing "not in the drawing yet — check back soon" holding state then shows), the red gate error became calm copy, and an "I don't have a ticket — just browsing" action dismisses the modal onto the page + nav bar.
@@ -1901,10 +2039,13 @@ implementation record.
 - Fixed bottom navigation label rendering in non-English languages — long translated labels (e.g. Russian "Что есть в наличии") now wrap centered with readable line spacing and keep tab icons aligned (top-aligned, matching the arcade variant) instead of rendering off-center.
 
 ### Fixed
+
 - Fixed the display-page QR code continuing to show the default URL after an admin configured a custom display URL. The QR target now derives from the live polled state (`state.displayUrl`) instead of a one-time fetch on mount, so an admin change propagates to the QR on the next poll without a page reload (and a redundant network round-trip is removed).
 
 ## [1.6.99] - 2026-05-26
+
 ### Added
+
 - Added an arcade-styled bottom navigation bar (`src/arcade/components/arcade-bottom-tab-bar.tsx`) for the `/arcade` index, reusing the same three destinations and `nav*` labels but rendered with pixel-art icons (`src/arcade/components/icons/{receipt,shopping-cart,gaming}-icon.tsx`) and arcade styling (arcade CSS variables, the control-dock border/neon-shadow pattern), inheriting the arcade font and theme from `.arcade-scope`. Kept separate from the core `BottomTabBar` per the Arcade guardrails.
 - Added an animated `package-check` icon (`src/components/animate-ui/icons/package-check.tsx`) built on the native animate-ui `path` draw-on primitive — the box, seam, top, stem, and finally the check stroke draw themselves in — used as the `/inventory` dietary-filter dropdown trigger.
 - Added `inventoryDietaryFilterLabel` and `inventoryClearFilters` translation keys across all eight supported languages.
@@ -1922,6 +2063,7 @@ implementation record.
 - Added a raw-library `/haptics` diagnostic page that renders one shadcn button per `web-haptics` built-in preset and triggers each preset directly, so device/browser support can be validated without the app's semantic mapping layer.
 
 ### Changed
+
 - Rendered the arcade-styled navigation bar on the `/arcade` index only (not on the game routes `/arcade/snake` and `/arcade/brick-mayhem`, which keep their own Back control) and increased the index's bottom padding so the fixed bar does not cover the game cards.
 - Applied the bottom tab navigation bar to `/new` and removed the now-duplicate "See what's in stock" (→`/inventory`) and "PLAY GAMES" (→`/arcade`) buttons from the personalized ticket-card cluster, along with the orphaned arcade pixel-frame and arcade display font from `readonly-display.tsx`. The "Enter a new ticket number" action stays as a standalone button (page action, not navigation). Added bottom clearance on the personalized display so the fixed bar does not cover the ticket card; the public `/display` is unaffected.
 - Updated the inventory test's `/new` entry-point cases to assert the bar's inventory/games links instead of the removed cluster buttons.
@@ -1952,6 +2094,7 @@ implementation record.
 - Removed unreliable web haptics from async and game-loop-driven events: tracked ticket-called celebrations, Snake pellet/collision feedback, and Brick impact/contact/level-clear/life-loss feedback are now visual-only on the web path.
 
 ### Fixed
+
 - Fixed a `/new` reset-edge loop where a tab left open across staff reset could accept a ticket while no active range existed, immediately invalidate the stored ticket, and reopen the ticket modal repeatedly; ticket submit now waits until today's ticket range is ready.
 - Lowered the `/new` floating header stacking level so the William Temple House logo stays behind the shared language onboarding modal backdrop while “Choose your language” has focus.
 - Fixed production inventory loading by allowing `https://feed.williamtemple.app` in the app Content Security Policy `connect-src` directive.
@@ -1964,19 +2107,25 @@ implementation record.
 - Aligned the haptics implementation with browser activation constraints by concluding the feature as tactile input feedback rather than broad event-driven vibration.
 
 ## [1.6.3] - 2026-04-16
+
 ### Fixed
+
 - Replaced the one-word `Unauthorized` Sonner toast shown when a staff member's admin sign-in expires mid-session with an ASK-compliant message (`Your sign-in expired. Sign back in to keep working.`) and an inline `Sign in` action button that routes to `/login?callbackUrl=<current-path>` so staff return to the same admin surface after re-auth (Issue 18).
 - Mapped 401 responses from `/api/state` and `/api/state/cleanup` to the new session-expired toast inside both the legacy and optimistic admin action dispatchers, so draw, mark, reset, and cleanup taps all surface the same ASK copy on auth expiry instead of echoing the raw HTTP token.
 
 ### Added
+
 - Added `src/lib/session-expired.ts` with `SESSION_EXPIRED_MESSAGE`, `SessionExpiredError`, and `showSessionExpiredToast()` so future callers can classify 401s without re-implementing the toast + callback URL plumbing.
 - Added `tests/admin-session-expired.test.tsx` verifying that `/admin` swallows the raw `Unauthorized` token on a 401 action response and surfaces the ASK copy + `Sign in` action instead.
 
 ### Changed
+
 - Logged the error-message violation and fix in `docs/ISSUES.md` as Issue 18 with the ASK rubric breakdown and Option 5 implementation notes.
 
 ## [1.6.2] - 2026-03-05
+
 ### Added
+
 - Added haptic feedback via `web-haptics` library across all arcade interactions. Scoped exclusively to arcade routes per project separation rules.
   - **Ticket called:** `buzz` pattern fires once when a tracked ticket is called (`NowServingBanner`), timed with the confetti burst for multi-modal confirmation.
   - **Brick Mayhem — brick destruction:** `error` pattern on brick hit, throttled to one trigger per 50ms to prevent buzz fatigue on multiball runs.
@@ -1989,54 +2138,80 @@ implementation record.
 - Platform support: Android Chrome/Firefox and iOS26 Safari. Graceful no-op on unsupported platforms via `WebHaptics.isSupported`.
 
 ## [1.6.1] - 2026-03-01
+
 ### Fixed
+
 - Resolved `/new` page-load animation issue (Issue 17) where morph text animated on initial render instead of appearing statically. Root cause: hydration-safe motion tiering starts as `"simple"`, then upgrades to `"full"` post-mount, causing a render-branch switch that Motion treats as new entering elements. Fixed by pinning the cycling language title to `motionMode="simple"`, which prevents the branch switch entirely. The title still animates smoothly between language cycles using whole-text transitions.
 - Removed unnecessary `LanguageMorphText` from the `/new` ticket-entry modal step (step 2), replacing with plain `<span>` elements. This step only appears after language selection, so the text never changes while visible.
+
 ### Changed
+
 - Updated `docs/ISSUES.md` Issue 17 with full root cause analysis covering the motion-tier branch-switch mechanism, why `AnimatePresence initial={false}` and `layoutId` interact to prevent suppression, and why previous approaches (fast-phase workaround, delay-mount pattern) failed.
 - Updated `docs/V1.5_OPTIMIZATIONS.md` with a known limitation note on the motion-tier system's interaction with `AnimatePresence` on immediate-mount components.
 - Updated `docs/V2.0_PLANNED_FEATURES.md` to reflect the `/new` cycling title compromise.
 
 ## [1.5.9] - 2026-02-28
+
 ### Added
+
 - Added personalized-ticket called celebration to `/new` (via `ReadOnlyDisplay` personalized mode): when the tracked ticket is called, the page now shows a centered overlay (`Ticket Called!` / `Please Check-in`) and runs a timed confetti effect.
 - Added regression coverage in `tests/readonly-display-personalized.test.tsx` to verify called-ticket overlay rendering and confetti trigger behavior.
+
 ### Changed
+
 - Updated the `/new` called-ticket overlay backdrop to match shared modal treatment (`bg-black/40` + `backdrop-blur-sm`) for stronger text readability during the alert.
 
 ## [1.5.8] - 2026-02-28
+
 ### Fixed
+
 - Stabilized hydration for top-bar dropdown controls by assigning deterministic trigger IDs to `LanguageSwitcher` and `ThemeSwitcher`, eliminating Radix auto-generated trigger-id drift between SSR and client hydration.
+
 ### Added
+
 - Added regression coverage in `tests/language-switcher.test.tsx` and expanded `tests/theme-switcher.test.tsx` to enforce deterministic dropdown trigger IDs.
 
 ## [1.5.7] - 2026-02-28
+
 ### Fixed
+
 - Fixed `/new` hydration mismatch tied to animated text tiering by making `useMotionTier` deterministic on first render (`simple`) across SSR and client hydration, then applying stored/runtime motion preferences after mount.
+
 ### Added
+
 - Added hydration-regression coverage in `tests/morphing-hydration.test.tsx` to guard against server/client DOM-shape divergence when a stored motion tier (for example `full`) is present before hydration.
 
 ## [1.5.6] - 2026-02-28
+
 ### Changed
+
 - Restored Brick Mayhem gameplay readout to the minimal 3-metric banner (`SCORE`, `LIVES`, `LEVEL`) by removing the additional active-effects HUD row.
 - Removed Brick Mayhem effect-HUD specific styling from Arcade CSS while keeping all gameplay effects (speed, multiball, clone paddle, timed buffs) active in the engine.
 - Updated `docs/GAME.md`, `docs/BRICK_MAYHEM.md`, and `docs/V2.0_PLANNED_FEATURES.md` to reflect the readout rollback.
 - Updated Brick Mayhem ball color to a neutral theme-aware mapping: dark mode `#ffffff`, light mode `#000000`.
 
 ## [1.5.5] - 2026-02-28
+
 ### Added
+
 - Added Brick Mayhem row-hit effect architecture in `src/arcade/game/brick-mayhem/`: shared row metadata (`effects.ts`), multiball-capable world state (`balls[]`), timed effect state (`pink` paddle width and `gold` points multiplier), and clone paddle state (`green`).
 - Added Brick Mayhem engine safety/behavior rules: baseline-based non-compounding speed effects (`red`/`cyan`/`purple`), runtime ball-speed clamps (`0.6..4.0 px/tick`), orange split-ball spawn handling, timed effect extension with hard cap (`30s` add, `120s` max), and level-clear effect reset semantics.
 - Added Brick Mayhem effect HUD in the game page (active balls count + active effect tags with timers) and localized the new Brick Mayhem HUD/effect labels across all 8 languages.
 - Added `tests/arcade-brick-mayhem-engine.test.ts` covering non-compounding speed effects, multiball life-loss behavior, timed effect cap behavior, clone paddle behavior, and effect reset on next-level world creation.
+
 ### Fixed
+
 - Fixed Brick Mayhem live score/readout synchronization so score updates immediately when bricks are destroyed during active play (not only on life loss/level transitions).
 - Removed duplicated Brick Mayhem row palette definitions by centralizing row color/effect data and reusing it from renderer + particle systems.
+
 ### Changed
+
 - Updated `docs/BRICK_MAYHEM.md`, `docs/GAME.md`, and `docs/V2.0_PLANNED_FEATURES.md` to reflect the shipped Brick Mayhem effect system, lifecycle rules, HUD changes, and new engine test coverage.
 
 ## [1.5.4] - 2026-02-27
+
 ### Changed
+
 - Updated root app metadata (`title` and `description`) to the new LOTTO branding/copy so homepage search snippets align with current staff-facing product messaging.
 - Updated `/staff` hero descriptive paragraph copy to exactly match the LOTTO branding description used in homepage metadata.
 - Removed the duplicate short `/staff` hero subtitle so only the LOTTO title and full descriptive paragraph are shown.
@@ -2048,7 +2223,9 @@ implementation record.
 - Updated `/arcade` game-menu CTAs so the Snake card button now reads `PLAY`, and centered the `More Games Coming Soon` card in the two-column desktop layout.
 
 ## [1.5.3] - 2026-02-20
+
 ### Added
+
 - Expanded automated test coverage from ~25-30% to ~60-65% with 226 new test cases across 13 new test files covering pure utilities (RTL, date, time, class merging), all 15 API route action handlers, the Postgres state manager (full CRUD + snapshots), admin page interactions and v1.5.1 memoized computations, and key UI components (public display page, confirmation dialog, operating hours editor, public board variant).
 - Updated `docs/V2.0_PLANNED_FEATURES.md` with cross-cutting test coverage expansion section.
 - Refreshed `docs/V1.5_OPTIMIZATIONS.md` with a source-backed compatibility baseline check for iPad mini 4 (best-effort support), updated unresolved `/admin` latency risks, and revised optimization priorities.
@@ -2058,7 +2235,9 @@ implementation record.
 - Updated `docs/ISSUES.md` and `docs/V1.5_OPTIMIZATIONS.md` to track the new draw-path pending/render isolation pass (split draw vs non-draw pending channels and memoized Draw Position controls).
 - Updated `docs/ISSUES.md` and `docs/V1.5_OPTIMIZATIONS.md` to track the new history-cost optimization pass (deferred draw snapshot refresh and capped progressive snapshot option rendering).
 - Added motion-tier classification test coverage (`tests/motion-tier.test.ts`) for automatic morph animation fallback behavior.
+
 ### Fixed
+
 - Corrected `/admin` Live State `Tickets issued` so reset sentinel state (`startNumber=0`, `endNumber=0`) now renders `—` instead of `1`, and added a regression test in `tests/admin-page-actions.test.tsx`.
 - Prevented unhandled promise rejections in `/admin` draw-navigation handlers (`next`, `prev`, and direct serving updates) by catching `sendAction` failures after toast reporting.
 - Isolated `/admin` Start/End range inputs and reset phrase input into local-state memoized sections so keystrokes no longer trigger root-page re-renders, and optimized range preview undrawn math to an O(1) end-extension path.
@@ -2075,7 +2254,9 @@ implementation record.
 - Added automatic morph-text motion tiering (`full/simple/off`) using reduced-motion preference + runtime frame probe + capability hints with local persistence, so older devices degrade animation without introducing manual controls.
 
 ## [1.5.1] - 2026-02-19
+
 ### Changed
+
 - Memoized all admin page derived computations (`returnedTickets`, `unclaimedTickets`, `currentIndex`, `nextFive`, `nextServingIndex`, `prevServingIndex`, `ticketsCalled`, `peopleWaiting`, `drawnSet`, `serverUndrawnCount`, `previewUndrawnCount`) with `React.useMemo` to eliminate redundant recomputation on every keystroke.
 - Removed duplicate snapshot fetch (`useEffect([state])` calling `listSnapshots`) from admin page; `canUndo` is now derived from the already-loaded `snapshots` array.
 - Changed DB `listSnapshots` query to fetch metadata only (`id`, `created_at`), omitting full `payload` column; reduces snapshot listing response size by ~95%.
@@ -2084,7 +2265,9 @@ implementation record.
 - Updated `docs/ISSUES.md` Issue 14 status to reflect partial resolution.
 
 ## [1.5.0] - 2026-02-18
+
 ### Changed
+
 - Promoted the public board routes for production testing: `/` is now the default public display and `/display` remains a live alias with the same behavior.
 - Added `/new` as the preview personalized homepage surface (language + ticket onboarding, personalized ticket card), intended for future promotion to the default homepage.
 - Added a shared public-display page implementation used by both `/` and `/display` to keep behavior parity while maintaining separate URLs.
@@ -2093,7 +2276,9 @@ implementation record.
 - Documented a new admin performance issue in `docs/ISSUES.md` capturing significant input/tap lag on slower devices (for example iPad mini 4), including root-cause references for render-time queue computations and repeated snapshot-history fetches.
 
 ## [1.4.4] - 2026-02-14
+
 ### Changed
+
 - Added explicit Arcade guardrails to `AGENTS.md` requiring clean route/code/style separation from raffle features.
 - Documented the Arcade architecture boundary (`src/app/(arcade)/arcade/*` and `src/arcade/*`) and clarified that Arcade must not be integrated into the public display page.
 - Replaced `docs/GAME.md` strategy with a separation-first Snake plan using standalone Arcade routes and simple pixel-art UI direction instead of raffle UI element reuse.
@@ -2213,7 +2398,9 @@ implementation record.
 - Updated `docs/GAME.md`, `docs/ISSUES.md`, and `docs/V2.0_PLANNED_FEATURES.md` to document the unified mode slider and Nightmare behavior.
 
 ## [1.4.3] - 2026-02-13
+
 ### Changed
+
 - Added a local Animate UI-style theme transition primitive at `src/components/animate-ui/primitives/effects/theme-toggler.tsx` with directional View Transition `clip-path` animation for Light/Dark/System theme changes.
 - Updated `ThemeSwitcher` to route base theme updates through the new transition primitive while preserving existing `Hi-viz` contrast behavior and menu UX.
 - Added reduced-motion and no-View-Transition fallback handling so theme updates remain immediate when animation should not run.
@@ -2221,7 +2408,9 @@ implementation record.
 - Verified full suite + production build after integration (125 tests passing; build clean).
 
 ## [1.4.2] - 2026-02-13
+
 ### Changed
+
 - Enforced concrete-bound batch validation messages so post-init `generateBatch` rejects now return actionable copy with the current locked value (start mismatch and end shrink cases).
 - Locked batch expansion semantics to atomic persistence: when `endNumber` is increased during `generateBatch`, the expanded end is only persisted if the draw succeeds.
 - Strengthened batch/append safety rules by rejecting append attempts while undrawn tickets remain in the active range.
@@ -2233,7 +2422,9 @@ implementation record.
 - Removed animated blur filters from morph text transitions (display now-serving, language morph text, and shared morphing primitive defaults) to improve frame consistency on low-power Chromium clients.
 
 ## [1.4.1] - 2026-02-11
+
 ### Changed
+
 - Increased base light/dark radius tokens to `1.25rem` in `globals.css` per updated design direction.
 - Updated Admin “Generate full” UX so the action stays disabled until Start/End inputs are valid, with wrapped disabled-tap Sonner guidance (ASK style).
 - Reduced the Admin header William Temple wordmark to match the display page logo footprint.
@@ -2271,12 +2462,15 @@ implementation record.
 - Fixed ThemeSwitcher hydration mismatch by rendering a mount-safe SSR fallback icon state before resolving client theme/contrast mode.
 
 ## [1.4.0] - 2026-02-11
+
 ### Added
+
 - Added a persisted high-contrast mode (`Hi-viz`) layered alongside existing light/dark/system color-scheme selection.
 - Added `ThemeProvider` contrast context and root-class synchronization (`html.hi-viz`) for token-based accessibility theme overrides.
 - Added integration tests for theme menu options, Hi-viz persistence, and switching back to standard themes.
 
 ### Changed
+
 - Updated the theme switcher dropdown to show iconized menu items: Light, Dark, System, and Hi-viz.
 - Added high-contrast token overrides in `globals.css` for both light and dark system contexts.
 - Updated Hi-viz custom fonts to Open Sans, Bodoni Moda SC, and IBM Plex Mono (via `next/font/google`) and wired Hi-viz font tokens to the loaded font variables.
@@ -2293,35 +2487,48 @@ implementation record.
 - Mapped the latest `docs/HC_UI.md` updates into Hi-viz tokens in `globals.css`, including the updated light card surface value and the revised 3px/4px shadow model for both light and dark Hi-viz variants.
 
 ## [1.2.1] - 2026-02-03
+
 ### Changed
+
 - Clamp open-window polling to a 5-minute maximum so the public display stays responsive during service hours even after long idle periods.
 
 ## [1.2.0] - 2026-01-20
+
 ### Changed
+
 - Polished the public display header search cluster so the pill shares the same palette-based gradient, hover fill, and elevation as the language/theme toggles while keeping responsive text/icon scaling, extra horizontal padding, and digit-only input behavior.
 
 ### Notes
+
 - 2026-01-22: Rolled back the experimental Blob snapshot caching and restored production to the polling + timezone warning revision.
 
 ## [1.1.3] - 2026-01-19
+
 - Added multilingual, mobile-friendly header search that launches the ticket detail modal or a “ticket not found” dialog so clients can find their number fast.
 
 ## [1.1.2] - 2026-01-16
+
 ### Changed
+
 - Public display polling now uses adaptive backoff with idle tiers and pauses when the tab is hidden.
 - Polling honors operating-hours slack windows and caps closed-window intervals by time to next opening.
 
 ## [1.1.1] - 2026-01-13
+
 ### Changed
+
 - Public display polling interval adjusted to 10 seconds (built-in + standalone).
 
 ### Fixed
+
 - Advancing the draw position now skips tickets marked as returned.
 - Confirmation modals now close after confirming, even if a follow-up error is surfaced.
 - Display date now refreshes correctly after long idle periods.
 
 ## [1.1.0] - 2026-01-13
+
 ### Added
+
 - Admin control to mark tickets as returned, stored in raffle state for queue adjustments.
 - Sonner toast notifications for admin and login error states.
 - Returned tickets list in the Live State card for quick verification.
@@ -2331,6 +2538,7 @@ implementation record.
 - Display ticket modal messaging for returned/unclaimed tickets and called-time context.
 
 ### Changed
+
 - Returned-ticket input styling now matches default input backgrounds for clarity.
 - Display URL validation errors now surface via toast notifications.
 - Returned tickets are excluded from display wait time estimates, and returning the current ticket auto-advances to the next available draw position.
@@ -2338,34 +2546,44 @@ implementation record.
 - Live State card description copy updated for clearer staff-facing language.
 
 ## [1.0.4] - 2025-12-12
+
 ### Changed
+
 - Login now defaults to OTP and places the OTP tab left of the Magic Link tab.
 - Documented the recommended OTP-first auth approach and Microsoft Defender magic-link limitation in `docs/AUTHENTICATION.md`.
 - Updated the staff landing page to display the app version from `package.json`.
 - Cleaned up lint warnings (unused imports/variables, and Next.js `next/image` guidance).
 
 ## [1.0.3] - 2025-11-29
+
 ### Added
+
 - Operating hours with timezone selection (default PST) persisted in state; display page now shows “Pantry Hours” and closed-day messaging with next open day.
 - Admin UI for setting open days/hours with per-day toggles and time inputs; timezone selector added.
 - Shadcn select/checkbox/popover primitives added to support the new editor.
 - Localized day names and closed labels; clarified reset-state messaging (before opening, after closing, closed today).
 
 ### Changed
+
 - Reset now preserves operating hours and timezone instead of wiping them.
 - Translations updated with pantry hours/closed messaging.
 
 ## [1.0.2] - 2025-11-28
+
 ### Changed
+
 - Refined global shadow tokens in `globals.css` (OKLCH base shadow mixes, adjusted transparency) and added `shadow-sm` to default/secondary buttons for clearer elevation.
 - Forced Gregorian calendar for all locales in date/time formatting to avoid Solar Hijri display in Farsi/Arabic locales on the public board.
 
 ## [1.0.1] - 2025-11-28
+
 ### Added
+
 - Added Vietnamese, Farsi, and Arabic translations (raffle-appropriate terminology) to the public display and language switcher.
 - Introduced RTL awareness for Arabic/Farsi via `DocumentDirection` (dynamic `dir`/`lang` on `<html>`), reusable RTL utility, and logical text alignment on the display card.
 
 ### Changed
+
 - Extended time/date locale formatting to cover all languages and documented RTL requirements in `docs/LANGUAGES.md`.
 - Updated README and PROJECT_OVERVIEW feature summaries to list all supported languages and RTL coverage.
 - Adjusted ticket detail dialog close button to use logical positioning (`end-4`) for RTL layouts.
@@ -2373,7 +2591,9 @@ implementation record.
 - Scoped RTL handling to the public display so staff/admin pages remain LTR and unaffected by display language choices.
 
 ## [1.0.0] - 2025-11-27
+
 ### Added
+
 - Production-ready deployment on Vercel at `williamtemple.app` using Neon Postgres, Resend magic links, and OTP fallback.
 - Branded OTP email template (React Email, Lato) and shared Neon pool for auth/OTP to avoid connection exhaustion.
 - Dual authentication paths (magic link + OTP) with @williamtemple.org domain restriction and rate limiting/lockouts.
@@ -2382,25 +2602,31 @@ implementation record.
 - Vercel Speed Insights integrated in root layout.
 
 ### Changed
+
 - Default sender updated from `noreply@williamtemple.app` to `login@williamtemple.app` for better deliverability.
 - Middleware migrated to `proxy` for Next.js 16; build-time `DATABASE_URL` enforcement and node runtime declarations retained.
 - Login UX rebuilt with shadcn Tabs and InputOTP for clearer flows; admin “Clear” draw position requires confirmation.
 
 ### Security
+
 - OTP/magic link tokens hashed, 10-minute expiry, 5-attempt lockout with cooldown, and 1/minute request throttling.
 - Auth restricted to `@williamtemple.org`; file storage disabled in production; shared DB pool to prevent connection churn.
 
 ## [0.9.0] - 2025-11-26
+
 ### Added
+
 - Production-ready deployment on Vercel using Neon Postgres and Resend magic links; custom domain `williamtemple.app` configured.
 - Phase-specific env templates for Vercel (preview, custom domain no-auth, full auth).
 
 ### Changed
+
 - NextAuth switched to the official Resend provider with email/SMPP fallback for local dev; login form now targets the Resend provider.
 - Middleware migrated to `proxy` for Next.js 16, with explicit node runtime in API routes and build-time `DATABASE_URL` enforcement (Turbopack enabled).
 - Admin “Clear” draw position now requires confirmation to avoid accidental taps.
 
 ## 2025-11-28
+
 - Made display QR rendering robust: added API `getDisplayUrl`, persisted `displayUrl` in state, and switched the display page QR to canvas (`qrcode`) to avoid SVG cropping for long URLs; display now respects admin-configured URLs.
 - Reinitialized Shadcn UI primitives (button, input, badge, card, label, separator, switch, dropdown, tooltip, alert-dialog) and aligned them to the generator OKLCH palette with proper `@theme inline` mapping.
 - Standardized status styling by adding success/warning/danger badge variants; removed manual per-button color overrides on admin controls for consistent hover/active states.
@@ -2411,12 +2637,14 @@ implementation record.
 - Added utilities for badge success styling and gradient cards; removed inline styles from login and staff pages.
 
 ## 2025-11-23
+
 - Replaced `/display` with the high-contrast read-only UI from the standalone server, now polling `/api/state` every 4 seconds inside Next.js.
 - Added `ReadOnlyDisplay` React component to render the wall-screen layout with served/upcoming styling and date/title updates.
 - Documented the built-in display route and clarified the standalone `npm run readonly` server is optional/legacy.
 - Made the public display the homepage (`/`) and moved the former landing page to `/staff`; updated internal links and docs accordingly.
 
 ## 2025-11-22
+
 - Removed client-side polling timers from `/admin` and `/display` to keep form inputs stable while editing.
 - Added a standalone read-only board server (`npm run readonly`) on its own port that polls the persisted JSON state.
 - Updated documentation to cover the new read-only board and the non-polling behavior of the main UI.
