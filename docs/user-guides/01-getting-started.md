@@ -17,7 +17,7 @@ entertained.
 LOTTO has three main areas:
 
 - **Staff Dashboard** (`/admin`) — where staff set the ticket range, call
-  numbers, and manage the day. Staff sign in first at `/staff` with the default
+  numbers, and manage the day. Staff sign in first at `/login` with the default
   Magic Link or a 6-digit Verification Code; an unauthenticated visit to
   `/admin` also prompts sign-in. Magic Links show a confirmation page before
   signing in so organizational email scanners cannot use them first. See
