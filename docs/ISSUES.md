@@ -2422,6 +2422,12 @@ Unclaimed still consume only their protected status gradients, text, and
 operational action variants. `tests/queue-color-boundary.test.ts` guards both
 sides of the boundary.
 
+Follow-up visual alignment links the seven neutral Live State metric cards to
+the exact `--gradient-card-info` surface used by **Draw position**. Both
+consumers reference one shared class constant, so built-in and custom
+appearances cannot drift between those related surfaces. The protected Next up,
+Unclaimed, and Returned treatments remain unchanged.
+
 ## Issue 55: Installed apps had no manual refresh affordance
 
 **Status:** implemented in the current Unreleased work; simulator and installed
