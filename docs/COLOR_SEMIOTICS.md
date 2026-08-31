@@ -52,7 +52,7 @@ meaning must keep its hue everywhere that meaning appears.
 | **L1 State** | `--ticket-serving*`, `--ticket-served*`, `--serving-text-gradient`, `--serving-label-color` | Brand-tunable **hue**; system-controlled value relationships. Serving is the loudest value of the state hue per mode; Served is a subordinate value of the *same* hue. Returned and Unclaimed remain in protected L0. |
 | **L2 Identity** | `--primary`, `--ring`, selection, links, Admin Live State values and Next up | The brand's dominant hue — by default the same hue as L1 (state and identity share the center). |
 | **L3 Accent** | `--accent`, `--icon-*`, secondary emphasis | The second signaling hue, if the brand has one. |
-| **L4 Ambient** | `--card-gradient`, `--gradient-card-*`, `--gradient-display-bg`, decorative tints | Whisper-chroma page atmosphere and texture. The Ambient slot owns this layer and never signals. |
+| **L4 Ambient** | `--card-gradient`, `--gradient-card-*`, `--gradient-display-bg`, decorative tints | Whisper-chroma page atmosphere and texture. The Ambient slot owns this layer and never signals. Admin Draw position and all seven neutral Live State metric surfaces share `--gradient-card-info` so they remain linked in built-in and custom appearances. |
 | **Anchors** | `--background`, `--foreground`, `--card`, borders, muted text | The neutral (or near-neutral) tonal foundation. Every tier has anchors; they are tones, not signals. |
 
 ## The value ladder

@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Admin Live State metrics now share the Draw position gradient.** Range,
+  Tickets issued, Current mode, Now serving, Max wait time, Tickets called, and
+  People waiting consume the same semantic `--gradient-card-info` surface as
+  Draw position. A shared class linkage and regression keep all eight cards in
+  sync across the built-in WTH appearance and runtime custom appearances.
+
 ## [1.26.0-beta.2] - 2026-08-30
 
 ### Added

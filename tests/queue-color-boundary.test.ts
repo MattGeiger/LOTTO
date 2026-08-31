@@ -10,6 +10,24 @@ const adminSource = readFileSync(
 );
 
 describe("queue color boundary", () => {
+  it("links Live State metric surfaces to the Draw position gradient", () => {
+    const drawPosition = adminSource.slice(
+      adminSource.indexOf("const DrawPositionControls"),
+      adminSource.indexOf("type AdminPageClientProps"),
+    );
+    const liveState = adminSource.slice(
+      adminSource.indexOf("Live State"),
+      adminSource.indexOf("{/* Row 5: full width */}"),
+    );
+
+    expect(adminSource).toContain(
+      'const DRAW_POSITION_GRADIENT_CLASS = "bg-gradient-card-info";',
+    );
+    expect(drawPosition).toContain("${DRAW_POSITION_GRADIENT_CLASS}");
+    expect(liveState.match(/\$\{DRAW_POSITION_GRADIENT_CLASS\}/g)).toHaveLength(7);
+    expect(liveState).not.toContain("bg-gradient-card-accent");
+  });
+
   it("uses Primary for Live State values and the complete Next up treatment", () => {
     const liveState = adminSource.slice(
       adminSource.indexOf("Live State"),

@@ -157,6 +157,12 @@ The Admin **Live State** values and **Next up** card are queue-progress/identity
 emphasis rather than generic success feedback, so they use the active Primary
 color instead of borrowing `--status-success-*`.
 
+The seven neutral Live State metric surfaces (`Range` through `People waiting`)
+and the **Draw position** surface deliberately consume the same
+`--gradient-card-info` token. Keep this as one semantic linkage rather than
+assigning parallel colors: built-in and runtime-configured appearances must
+change all eight surfaces together.
+
 Agency `[data-brand]` selectors must not override:
 
 - `--status-success-*`, `--status-warning-*`, `--status-danger-*`, or

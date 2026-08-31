@@ -123,6 +123,7 @@ const SNAPSHOT_RENDER_PAGE_SIZE = 100;
 const DRAW_SNAPSHOT_REFRESH_DELAY_MS = 1500;
 const ARCHIVE_ICON_RESET_DELAY_MS = 260;
 const EMPTY_GENERATED_ORDER: number[] = [];
+const DRAW_POSITION_GRADIENT_CLASS = "bg-gradient-card-info";
 
 type DrawNavigationPayload = Extract<
   ActionPayload,
@@ -947,7 +948,9 @@ const DrawPositionControls = React.memo(function DrawPositionControls({
   formatOrdinal,
 }: DrawPositionControlsProps) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-gradient-card-info p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      className={`flex flex-col gap-3 rounded-lg border border-border p-4 sm:flex-row sm:items-center sm:justify-between ${DRAW_POSITION_GRADIENT_CLASS}`}
+    >
       <div className="space-y-1">
         <p className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
           <TicketCheck className="size-4" />
@@ -2298,45 +2301,59 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
               {/* Row 1: 3 columns */}
-              <div className="space-y-1 rounded-lg border border-border bg-gradient-card-accent p-3 lg:col-span-2">
+              <div
+                className={`space-y-1 rounded-lg border border-border p-3 lg:col-span-2 ${DRAW_POSITION_GRADIENT_CLASS}`}
+              >
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Range</p>
                 <p className="text-lg font-semibold text-primary">
                   {state?.startNumber || "—"} – {state?.endNumber || "—"}
                 </p>
               </div>
-              <div className="space-y-1 rounded-lg border border-border bg-gradient-card-accent p-3 lg:col-span-2">
+              <div
+                className={`space-y-1 rounded-lg border border-border p-3 lg:col-span-2 ${DRAW_POSITION_GRADIENT_CLASS}`}
+              >
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Tickets issued</p>
                 <p className="text-lg font-semibold text-primary">
                   {ticketsIssued ?? "—"}
                 </p>
               </div>
-              <div className="space-y-1 rounded-lg border border-border bg-gradient-card-accent p-3 sm:col-span-2 lg:col-span-2">
+              <div
+                className={`space-y-1 rounded-lg border border-border p-3 sm:col-span-2 lg:col-span-2 ${DRAW_POSITION_GRADIENT_CLASS}`}
+              >
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Current mode</p>
                 <p className="text-lg font-semibold text-primary capitalize">
                   {state?.mode}
                 </p>
               </div>
               {/* Row 2: 2 columns */}
-              <div className="space-y-1 rounded-lg border border-border bg-gradient-card-accent p-3 lg:col-span-3">
+              <div
+                className={`space-y-1 rounded-lg border border-border p-3 lg:col-span-3 ${DRAW_POSITION_GRADIENT_CLASS}`}
+              >
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Now serving</p>
                 <p className="text-lg font-semibold text-primary">
                   {state?.currentlyServing ?? "—"}
                 </p>
               </div>
-              <div className="space-y-1 rounded-lg border border-border bg-gradient-card-accent p-3 lg:col-span-3">
+              <div
+                className={`space-y-1 rounded-lg border border-border p-3 lg:col-span-3 ${DRAW_POSITION_GRADIENT_CLASS}`}
+              >
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Max wait time</p>
                 <p className="text-lg font-semibold text-primary">
                   {maxWaitMinutes !== null ? formatWaitTime(maxWaitMinutes, "en") : "—"}
                 </p>
               </div>
               {/* Row 3: 2 columns */}
-              <div className="space-y-1 rounded-lg border border-border bg-gradient-card-accent p-3 lg:col-span-3">
+              <div
+                className={`space-y-1 rounded-lg border border-border p-3 lg:col-span-3 ${DRAW_POSITION_GRADIENT_CLASS}`}
+              >
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Tickets called</p>
                 <p className="text-lg font-semibold text-primary">
                   {state?.generatedOrder?.length ? ticketsCalled : "—"}
                 </p>
               </div>
-              <div className="space-y-1 rounded-lg border border-border bg-gradient-card-accent p-3 lg:col-span-3">
+              <div
+                className={`space-y-1 rounded-lg border border-border p-3 lg:col-span-3 ${DRAW_POSITION_GRADIENT_CLASS}`}
+              >
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">People waiting</p>
                 <p className="text-lg font-semibold text-primary">
                   {state?.generatedOrder?.length ? peopleWaiting : "—"}
