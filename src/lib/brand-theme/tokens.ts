@@ -34,6 +34,7 @@ export const STANDARD_BRAND_TOKENS = [
   "border",
   "input",
   "ring",
+  "nav-active-background",
   "base-shadow-soft-color",
   "base-shadow-color",
   "base-shadow-strong-color",

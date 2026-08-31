@@ -2300,91 +2300,62 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
               {/* Row 1: 3 columns */}
               <div className="space-y-1 rounded-lg border border-border bg-gradient-card-accent p-3 lg:col-span-2">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Range</p>
-                <p className="text-lg font-semibold text-status-success-text">
+                <p className="text-lg font-semibold text-primary">
                   {state?.startNumber || "—"} – {state?.endNumber || "—"}
                 </p>
               </div>
               <div className="space-y-1 rounded-lg border border-border bg-gradient-card-accent p-3 lg:col-span-2">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Tickets issued</p>
-                <p className="text-lg font-semibold text-status-success-text">
+                <p className="text-lg font-semibold text-primary">
                   {ticketsIssued ?? "—"}
                 </p>
               </div>
               <div className="space-y-1 rounded-lg border border-border bg-gradient-card-accent p-3 sm:col-span-2 lg:col-span-2">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Current mode</p>
-                <p className="text-lg font-semibold text-status-success-text capitalize">
+                <p className="text-lg font-semibold text-primary capitalize">
                   {state?.mode}
                 </p>
               </div>
               {/* Row 2: 2 columns */}
               <div className="space-y-1 rounded-lg border border-border bg-gradient-card-accent p-3 lg:col-span-3">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Now serving</p>
-                <p className="text-lg font-semibold text-status-success-text">
+                <p className="text-lg font-semibold text-primary">
                   {state?.currentlyServing ?? "—"}
                 </p>
               </div>
               <div className="space-y-1 rounded-lg border border-border bg-gradient-card-accent p-3 lg:col-span-3">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Max wait time</p>
-                <p className="text-lg font-semibold text-status-success-text">
+                <p className="text-lg font-semibold text-primary">
                   {maxWaitMinutes !== null ? formatWaitTime(maxWaitMinutes, "en") : "—"}
                 </p>
               </div>
               {/* Row 3: 2 columns */}
               <div className="space-y-1 rounded-lg border border-border bg-gradient-card-accent p-3 lg:col-span-3">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Tickets called</p>
-                <p className="text-lg font-semibold text-status-success-text">
+                <p className="text-lg font-semibold text-primary">
                   {state?.generatedOrder?.length ? ticketsCalled : "—"}
                 </p>
               </div>
               <div className="space-y-1 rounded-lg border border-border bg-gradient-card-accent p-3 lg:col-span-3">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">People waiting</p>
-                <p className="text-lg font-semibold text-status-success-text">
+                <p className="text-lg font-semibold text-primary">
                   {state?.generatedOrder?.length ? peopleWaiting : "—"}
                 </p>
               </div>
               {/* Row 4: full width */}
-              <div className="space-y-1 rounded-lg border border-status-success-border bg-gradient-status-success p-3 sm:col-span-2 lg:col-span-6">
-                <p className="text-xs uppercase tracking-wide text-status-success-text dark:text-[oklch(0.98_0.03_146)]">Next up</p>
+              <div className="ticket-serving space-y-1 rounded-lg border p-3 sm:col-span-2 lg:col-span-6">
+                <p className="text-xs uppercase tracking-wide">Next up</p>
                 <div className="flex flex-wrap gap-2">
                     {nextFive?.length
                     ? nextFive.map((ticket, idx) => (
-                        <Badge key={ticket} variant="success" className="animate-fade-in min-w-[3.25rem] px-4 py-2 text-2xl" style={{ animationDelay: `${idx * 50}ms` }}>
+                        <Badge key={ticket} variant="outline" className="animate-fade-in min-w-[3.25rem] border-current bg-transparent px-4 py-2 text-2xl text-inherit" style={{ animationDelay: `${idx * 50}ms` }}>
                           #{ticket}
                         </Badge>
                       ))
-                    : <span className="text-status-success-text">—</span>}
+                    : <span>—</span>}
                 </div>
               </div>
               {/* Row 5: full width */}
-              <div className="space-y-1 rounded-lg border border-[var(--status-danger-border)] bg-gradient-status-danger p-3 sm:col-span-2 lg:col-span-6">
-                <p className="text-xs uppercase tracking-wide text-[var(--ticket-returned-text)]">Returned tickets</p>
-                <p className="text-[0.7rem] text-[var(--ticket-returned-text)]/80">Tap a ticket to revert its status.</p>
-                <div className="flex flex-wrap gap-2">
-                    {returnedTickets.length
-                    ? returnedTickets.map((ticket, idx) => (
-                        <ConfirmAction
-                          key={ticket}
-                          title={`Revert returned ticket #${ticket}?`}
-                          description={`Ticket #${ticket} will no longer be marked as Returned and returns to its normal (not-called) state in the drawing. This does not change the current "now serving" position.`}
-                          confirmText="Revert Returned Ticket"
-                          onConfirm={() => handleRevertTicketStatus(ticket)}
-                        >
-                          <button
-                            type="button"
-                            className="animate-fade-in rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                            style={{ animationDelay: `${idx * 50}ms` }}
-                            title={`Revert returned ticket #${ticket}`}
-                          >
-                            <Badge variant="danger" className="cursor-pointer min-w-[3.25rem] px-4 py-2 text-2xl text-[var(--ticket-returned-text)] transition-opacity hover:opacity-80">
-                              #{ticket}
-                            </Badge>
-                          </button>
-                        </ConfirmAction>
-                      ))
-                    : "—"}
-                </div>
-              </div>
-              {/* Row 6: full width */}
               <div className="space-y-1 rounded-lg border border-[var(--status-warning-border)] bg-gradient-status-warning p-3 sm:col-span-2 lg:col-span-6">
                 <p className="text-xs uppercase tracking-wide text-[var(--ticket-unclaimed-text)]">Unclaimed tickets</p>
                 <p className="text-[0.7rem] text-[var(--ticket-unclaimed-text)]/80">Tap a ticket to revert its status.</p>
@@ -2405,6 +2376,35 @@ const AdminPageClient = ({ version = pkgVersion, releaseNotes = "" }: AdminPageC
                             title={`Revert unclaimed ticket #${ticket}`}
                           >
                             <Badge variant="warning" className="cursor-pointer min-w-[3.25rem] px-4 py-2 text-2xl text-[var(--ticket-unclaimed-text)] transition-opacity hover:opacity-80">
+                              #{ticket}
+                            </Badge>
+                          </button>
+                        </ConfirmAction>
+                      ))
+                    : "—"}
+                </div>
+              </div>
+              {/* Row 6: full width */}
+              <div className="space-y-1 rounded-lg border border-[var(--status-danger-border)] bg-gradient-status-danger p-3 sm:col-span-2 lg:col-span-6">
+                <p className="text-xs uppercase tracking-wide text-[var(--ticket-returned-text)]">Returned tickets</p>
+                <p className="text-[0.7rem] text-[var(--ticket-returned-text)]/80">Tap a ticket to revert its status.</p>
+                <div className="flex flex-wrap gap-2">
+                    {returnedTickets.length
+                    ? returnedTickets.map((ticket, idx) => (
+                        <ConfirmAction
+                          key={ticket}
+                          title={`Revert returned ticket #${ticket}?`}
+                          description={`Ticket #${ticket} will no longer be marked as Returned and returns to its normal (not-called) state in the drawing. This does not change the current "now serving" position.`}
+                          confirmText="Revert Returned Ticket"
+                          onConfirm={() => handleRevertTicketStatus(ticket)}
+                        >
+                          <button
+                            type="button"
+                            className="animate-fade-in rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                            style={{ animationDelay: `${idx * 50}ms` }}
+                            title={`Revert returned ticket #${ticket}`}
+                          >
+                            <Badge variant="danger" className="cursor-pointer min-w-[3.25rem] px-4 py-2 text-2xl text-[var(--ticket-returned-text)] transition-opacity hover:opacity-80">
                               #{ticket}
                             </Badge>
                           </button>

@@ -8,8 +8,9 @@ shipping one compiled global cascade. Every authored color literal in a CSS
 file uses `oklch()`; `transparent`, `currentColor`, `inherit`, CSS variables,
 and non-color keywords remain valid.
 
-This architecture supports multiple agencies from one repository without
-allowing agency identity colors to replace universal queue/status semantics.
+This architecture supports one compiled William Temple House default plus
+runtime agency appearances without allowing identity colors to replace
+universal queue/status semantics.
 
 ## Source Boundaries
 
@@ -39,6 +40,10 @@ allowing agency identity colors to replace universal queue/status semantics.
   pixel-art components, layout, animation, and game presentation rules.
 - `src/arcade/styles/themes/william-temple-house.css` owns the compiled WTH
   `--arcade-*` palette.
+- The Appearance bridge at the top of `arcade.css` maps only identity/chrome
+  roles (surfaces, panels, borders, actions, text, and Now Serving) from the
+  active core theme into Arcade variables. Pixel-art/gameplay colors remain in
+  the compiled Arcade palette.
 
 Arcade is visually and technically isolated from core raffle styling, but it
 is deployment-brand-aware. Arcade theme files may assign only `--arcade-*`
@@ -52,15 +57,14 @@ Core imports preserve this exact order:
 2. shared foundations and shadow recipes
 3. WTH/default light and dark identity values
 4. shared operational status semantics
-5. St. Johns standard light/dark identity overrides
-6. shared Hi-viz themes
-7. St. Johns identity-only Hi-viz overrides
-8. Tailwind token exposure and shared component/base utilities
+5. shared Hi-viz themes
+6. Tailwind token exposure and shared component/base utilities
+7. request-time runtime appearance tokens, when configured
 
 Arcade imports preserve this order:
 
 1. WTH/default dark and light Arcade tokens
-2. St. Johns dark and light Arcade overrides
+2. runtime-aware identity/chrome bridge
 3. Arcade component and game rules
 
 Selector specificity and order are part of the compatibility contract. A file
@@ -89,7 +93,7 @@ move must not change either one.
 
 ### Phase 1: baselines and enforcement — complete
 
-1. Record local WTH and St. Johns computed tokens and visual references for
+1. Record local WTH and the former secondary profile's computed tokens and visual references for
    `/`, `/display`, `/admin`, and `/arcade` in light, dark, and Hi-viz.
 2. Sanity-check the live WTH production surfaces before local changes.
 3. Add a regression test that rejects non-OKLCH authored color literals in all
@@ -107,13 +111,14 @@ move must not change either one.
    their relative order.
 2. Extract Arcade palette blocks while leaving component rules in the Arcade
    entry stylesheet.
-3. Verify that production-default WTH and scoped St. Johns computed values are
+3. Verify that production-default WTH and the then-scoped secondary profile's computed values are
    unchanged from Phase 2.
 
 ### Phase 4: final validation — complete
 
 1. Run the full test suite, lint, production build, and `git diff --check`.
-2. Test both brands in standard light/dark and Hi-viz.
+2. Test the compiled default and an active runtime appearance in standard
+   light/dark and Hi-viz.
 3. Check enabled and disabled operational controls to confirm brand profiles
    cannot affect protected semiotics.
 4. Recheck `williamtemple.app`; do not commit or push changes that would alter
@@ -140,7 +145,8 @@ token sets for `[data-brand="custom"]` light, dark, Hi-viz light, and Hi-viz
 dark. Cascade rules for this layer:
 
 1. The inline block is generated (`src/lib/brand-theme/serialize.ts`), never
-   hand-authored, and is OKLCH-only by construction.
+   hand-authored. It emits an sRGB baseline for iOS 15 and restores Tailwind
+   v4's OKLCH values only inside `@supports (color: oklch(0 0 0))`.
 2. Its selectors double the `[data-brand="custom"]` attribute so they sit one
    specificity step above every compiled brand layer, making the runtime
    theme win regardless of stylesheet-link order.
@@ -149,6 +155,8 @@ dark. Cascade rules for this layer:
    excluded from that vocabulary, so the shared
    `operational-status.css` semantics always win for a custom brand exactly
    as they do for compiled brands.
-4. Compiled brand files are unchanged by this layer; with no active
+4. Arcade chrome reads the same resolved identity tokens through its scoped
+   bridge, while Arcade game-art variables remain untouched.
+5. Compiled brand files are unchanged by this layer; with no active
    configuration the inline block is absent and the compiled cascade is
    byte-identical to the pre-runtime behavior.

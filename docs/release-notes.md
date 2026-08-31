@@ -1,6 +1,8 @@
 
 ## Unreleased
 
+## Version 1.26.0-beta.2 — August 30, 2026
+
 The Appearance color workflow now matches FEED's fixed-slot experience:
 **Extract from light logo**, progressive **Add color** roles, closest-family
 suggestions, palette search, and a compact family/weight picker. Ambient now
@@ -19,6 +21,21 @@ card wash renders consistently on old and new iPads.
 Help's Back control returns staff to Admin, animated navigation icons no longer
 crop, Arcade includes every ready activated language, and form fields use a
 solid fill that stays visible against their cards.
+
+Arcade language lists now show a blurred lower edge while more enabled choices
+remain below the fold. The active Appearance also reaches Arcade page chrome,
+panels, controls, text, and Now Serving while game pieces retain their stable
+pixel-art colors.
+
+Installed-app pull-to-refresh can begin anywhere on an unscrolled page and
+yields to inputs and nested menus. Next Up uses the configurable serving
+gradient and appears above canonical-gold Unclaimed and canonical-red Returned.
+The selected navigation tab stays translucent on iOS 15 iPhones instead of
+covering its icon and label.
+
+Developers gain FEED's live Tailwind palette calibration side sheet in local
+development, including filtering, drift sorting, session reset, and JSON
+export. It is excluded from production builds.
 
 The local beta has been checked on simulated iPadOS 15.4 and 26.5. Both reach
 **Persistence confirmed**, and the complete color picker and four-mode preview

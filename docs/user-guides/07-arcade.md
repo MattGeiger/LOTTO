@@ -21,6 +21,25 @@ tablets, and the 2015 iPad Mini baseline.
 The Arcade language menu uses the same organization-enabled language list as
 Home and Display. A language added through **Admin → Translation** is therefore
 available across every client-facing page once its translation pack is ready.
+Opening the Arcade language menu refreshes that ready list, so an Arcade page
+that has been open for a while can see a language staff activated later.
+When more choices continue below the visible list, the blurred lower edge is a
+scroll cue. Swipe the language list upward to reveal the remaining choices.
+
+## Installed App Mode
+
+When LOTTO is added to an iPhone, iPad, or Android home screen, browser refresh
+controls are hidden. While the page is already at the top, drag downward from
+anywhere outside an input or scrollable menu and release after the refresh
+indicator appears to reload the current page.
+
+Arcade game controls also reserve extra space above the phone's home indicator
+in installed mode. This keeps sliders and action buttons clear of the system's
+swipe-home gesture area.
+
+Arcade page backgrounds, panels, borders, buttons, text, and the Now Serving
+banner follow the active Appearance. The games keep their own pixel-art colors
+so changing agency branding does not change gameplay cues.
 
 ## Good Citizen: Ticket Calls Come First
 

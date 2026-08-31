@@ -36,6 +36,12 @@ type LanguageContextType = {
    * on mount; it fetches once per provider lifetime.
    */
   ensureAvailableLanguagesLoaded: () => void;
+  /**
+   * Re-fetch the visitor catalog after an explicit user action. This bypasses
+   * the once-per-provider guard so a long-lived client session can see
+   * languages that staff activated after the provider first loaded.
+   */
+  refreshAvailableLanguages: () => Promise<void>;
   /** Translated active announcement for the current language, when available. */
   announcementTranslation: string | null;
   /**
@@ -266,6 +272,7 @@ export function LanguageProvider({
         availableLanguages,
         availableLanguagesLoading,
         ensureAvailableLanguagesLoaded,
+        refreshAvailableLanguages: fetchAvailableLanguages,
         announcementTranslation,
         translateBrandString,
         translateInventory,

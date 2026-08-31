@@ -30,7 +30,7 @@ meaning must keep its hue everywhere that meaning appears.
 
 2. **The signal ceiling: at most two hues carry meaning.** In every brand
    system, regardless of how many colors it contains, only two hues signal:
-   the **state/identity hue** (Now Serving, Called, primary actions,
+   the **state/identity hue** (Now Serving, Served, primary actions,
    selection, focus) and the **accent hue** (secondary emphasis, icons,
    highlights). Every additional brand color is **ambience** — surface
    tints, gradient stops, icon families, decorative texture — and must never
@@ -49,8 +49,8 @@ meaning must keep its hue everywhere that meaning appears.
 | Layer | Tokens (examples) | Who controls it |
 | --- | --- | --- |
 | **L0 Universal operational** | `--status-danger-*` (Returned, red), `--status-warning-*` (Unclaimed, gold), success, neutral, `--operational-*` | Nobody. Identical across every agency and theme; excluded from the configurable vocabulary (`src/lib/brand-theme/tokens.ts`). |
-| **L1 State** | `--ticket-serving*`, `--ticket-served*`, `--serving-text-gradient`, `--serving-label-color` | Brand-tunable **hue**; system-controlled value relationships. Serving is the loudest value of the state hue per mode; Called is a subordinate value of the *same* hue. |
-| **L2 Identity** | `--primary`, `--ring`, selection, links | The brand's dominant hue — by default the same hue as L1 (state and identity share the center). |
+| **L1 State** | `--ticket-serving*`, `--ticket-served*`, `--serving-text-gradient`, `--serving-label-color` | Brand-tunable **hue**; system-controlled value relationships. Serving is the loudest value of the state hue per mode; Served is a subordinate value of the *same* hue. Returned and Unclaimed remain in protected L0. |
+| **L2 Identity** | `--primary`, `--ring`, selection, links, Admin Live State values and Next up | The brand's dominant hue — by default the same hue as L1 (state and identity share the center). |
 | **L3 Accent** | `--accent`, `--icon-*`, secondary emphasis | The second signaling hue, if the brand has one. |
 | **L4 Ambient** | `--card-gradient`, `--gradient-card-*`, `--gradient-display-bg`, decorative tints | Whisper-chroma page atmosphere and texture. The Ambient slot owns this layer and never signals. |
 | **Anchors** | `--background`, `--foreground`, `--card`, borders, muted text | The neutral (or near-neutral) tonal foundation. Every tier has anchors; they are tones, not signals. |
@@ -67,7 +67,7 @@ example, hue ≈ 163):
 | Rich base | ~0.62 | Now Serving fill in **light** mode; Hi-viz light emphasis |
 | Identity | ~0.64 | `--primary` in standard modes |
 | Luminous | ~0.85 | Now Serving in **dark** mode (the "glow"); dark-mode ring |
-| Pale tint | ~0.91–0.96 | Called fill (light mode), readable foregrounds on rich fills |
+| Pale tint | ~0.91–0.96 | Served fill (light mode), readable foregrounds on rich fills |
 
 The derivation (`src/lib/brand-theme/derive.ts`) encodes these as offsets
 from the brand inputs (glow = primary +0.209 L / +0.036 C, etc.), reverse-

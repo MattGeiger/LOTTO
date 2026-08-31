@@ -5,13 +5,13 @@
 // licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
 // is not covered by this license; see TRADEMARKS.md.
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ArcadeLanguageSwitcher } from "@/arcade/components/arcade-language-switcher";
 
 const setLanguage = vi.fn();
-const ensureAvailableLanguagesLoaded = vi.fn();
+const refreshAvailableLanguages = vi.fn(async () => {});
 const trigger = vi.fn();
 let currentLanguage = "bs";
 let availableLanguages = [
@@ -26,7 +26,7 @@ vi.mock("@/contexts/language-context", () => ({
     setLanguage,
     t: (key: string) => (key === "language" ? "Language" : key),
     availableLanguages,
-    ensureAvailableLanguagesLoaded,
+    refreshAvailableLanguages,
   }),
 }));
 
@@ -53,27 +53,59 @@ describe("ArcadeLanguageSwitcher", () => {
     render(<ArcadeLanguageSwitcher />);
 
     expect(screen.getByRole("button", { name: "Bosanski" })).toBeInTheDocument();
-    expect(ensureAvailableLanguagesLoaded).toHaveBeenCalledTimes(1);
+    expect(refreshAvailableLanguages).not.toHaveBeenCalled();
   });
 
-  it("offers dynamic languages and selects them through the shared context", () => {
+  it("refreshes the catalog before offering and selecting a dynamic language", async () => {
     currentLanguage = "en";
+    availableLanguages = [{ code: "en", label: "English", ready: true }];
+    refreshAvailableLanguages.mockImplementationOnce(async () => {
+      availableLanguages = [
+        { code: "en", label: "English", ready: true },
+        { code: "bs", label: "Bosanski", ready: true },
+      ];
+    });
     render(<ArcadeLanguageSwitcher />);
 
     fireEvent.click(screen.getByRole("button", { name: "English" }));
-    expect(ensureAvailableLanguagesLoaded).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(refreshAvailableLanguages).toHaveBeenCalledTimes(1));
 
-    fireEvent.click(screen.getByRole("button", { name: "Bosanski" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Bosanski" }));
     expect(setLanguage).toHaveBeenCalledWith("bs");
     expect(trigger).toHaveBeenCalledWith("uiSelect");
   });
 
-  it("loads the shared catalog on mount even when the active language is built in", () => {
+  it("does not poll for languages before the visitor opens the menu", () => {
     currentLanguage = "en";
     availableLanguages = [{ code: "en", label: "English", ready: true }];
     render(<ArcadeLanguageSwitcher />);
 
     expect(screen.getByRole("button", { name: "English" })).toBeInTheDocument();
-    expect(ensureAvailableLanguagesLoaded).toHaveBeenCalledTimes(1);
+    expect(refreshAvailableLanguages).not.toHaveBeenCalled();
+  });
+
+  it("masks the bottom fifth while more activated languages remain below the fold", async () => {
+    currentLanguage = "en";
+    availableLanguages = Array.from({ length: 11 }, (_, index) => ({
+      code: index === 0 ? "en" : `language-${index}`,
+      label: index === 0 ? "English" : `Language ${index}`,
+      ready: true,
+    }));
+    render(<ArcadeLanguageSwitcher />);
+
+    fireEvent.click(screen.getByRole("button", { name: "English" }));
+    const scrollRegion = await screen.findByTestId("arcade-language-scroll-region");
+    Object.defineProperties(scrollRegion, {
+      clientHeight: { configurable: true, value: 320 },
+      scrollHeight: { configurable: true, value: 448 },
+      scrollTop: { configurable: true, writable: true, value: 0 },
+    });
+    fireEvent.scroll(scrollRegion);
+
+    expect(screen.getByTestId("arcade-language-scroll-cue")).toBeInTheDocument();
+
+    scrollRegion.scrollTop = 128;
+    fireEvent.scroll(scrollRegion);
+    expect(screen.queryByTestId("arcade-language-scroll-cue")).not.toBeInTheDocument();
   });
 });

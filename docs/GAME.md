@@ -121,14 +121,21 @@ public/
 ## Current Build State (2026-07-18)
 - Completed: isolated Arcade routes and layout (`/arcade`, `/arcade/snake`) with persistent `NOW SERVING` banner.
 - Completed: Arcade-scoped 8-bit visual system and Press Start 2P font.
-- Completed: Deployment-scoped Arcade color profiles. St. Johns uses
-  off-white/charcoal foundations with teal and luminous mint retro accents in
-  light/dark mode, including the menu, persistent banner, navigation dock,
-  game chrome, controls, and leaderboard surfaces. William Temple House keeps
-  its original blue/pink/yellow defaults.
+- Completed: The Arcade compiles one William Temple House default palette;
+  runtime Appearance records remain the boundary for agency-specific identity.
 - Completed: Arcade home `PLAY SNAKE` CTA supports per-word wrapping for multi-word translations, avoiding overflow while preserving centered button layout.
 - Completed: Arcade top-bar mode switcher now uses the full 8bitcn retro icon geometry and consistent theme semantics (sun in light mode, moon in dark mode).
 - Completed: Snake movement shell with stable square board container and on-screen D-pad controls.
+- Completed: Standalone/app-mode play reserves an additional 32 px below every
+  game control dock, keeping Snake, Brick Mayhem, and Day of the Dead controls
+  clear of modern phone home indicators.
+- Completed: Arcade refreshes the shared ready-language catalog on each explicit
+  language-menu open, so long-lived sessions discover newly activated options
+  without polling.
+- Completed: Long language lists use a native touch scroller with a blurred
+  bottom-fifth cue until the final option is visible.
+- Completed: Runtime Appearance roles style Arcade page chrome, panels,
+  controls, text, and Now Serving. Game-art colors remain Arcade-owned.
 - Completed: D-pad chevron icon assets (Up/Down/Left/Right) with Arcade-yellow rendering.
 - Completed: `PLAY NOW` smooth-scroll/focus behavior to move users directly to the play area.
 - Completed: Arcade banner polling migrated to adaptive interval strategy used by Display.

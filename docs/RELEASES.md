@@ -1,4 +1,8 @@
-# Unreleased follow-up to v1.26.0-beta.1
+# Unreleased
+
+# LOTTO v1.26.0-beta.2
+
+**Release Date:** August 30, 2026 (beta — not promoted)
 
 The FEED parity work now ports the live color-step interaction instead of
 maintaining LOTTO's shorter reimplementation. Fixed slots, logo extraction,
@@ -13,6 +17,20 @@ polar-space hue defect and LOTTO's opaque iPadOS 15 fallback. The full suite,
 production build, 42-chunk legacy scan, hydration smoke, and both simulator
 checks are recorded in the Unreleased changelog; Vercel preview plus real-device
 sign-in remain the promotion gate.
+
+The beta also closes the simulator findings from the cross-device pass:
+
+- The iOS 15 iPhone active-navigation surface uses a pre-alpha theme token and
+  no longer becomes an opaque block over the icon and label.
+- Arcade's enabled-language list shows a bottom-fifth blur cue while more
+  choices remain, and its native scroller is not captured by pull-to-refresh.
+- Pull-to-refresh may begin anywhere on an unscrolled installed-app page.
+- Next Up uses the configurable serving gradient; the card order is Next Up,
+  Unclaimed, Returned, with the latter two still canonical.
+- Runtime Appearance roles now style Arcade chrome and Now Serving without
+  changing game-art colors.
+- FEED's development-only live palette calibration side sheet and JSON export
+  are ported with LOTTO's legacy-safe CSS emission boundary.
 
 # LOTTO v1.26.0-beta.1
 

@@ -152,8 +152,10 @@ Custom WTH tokens (status, ticket gradients, display/admin gradients) live along
 
 Returned/danger, Unclaimed/warning, success, and neutral are a shared LOTTO
 semiotics system—not agency branding. Their colors must remain stable across
-white-label profiles so staff and visitors can transfer the same meaning from
-Admin controls to display cells, legends, badges, and alerts.
+white-label profiles wherever they communicate those operational meanings.
+The Admin **Live State** values and **Next up** card are queue-progress/identity
+emphasis rather than generic success feedback, so they use the active Primary
+color instead of borrowing `--status-success-*`.
 
 Agency `[data-brand]` selectors must not override:
 
@@ -169,9 +171,17 @@ The light/dark and high-visibility theme blocks own these tokens. This cascade
 boundary is important: a light brand selector also matches in dark mode and is
 more specific than `.dark`, so putting status tokens in a brand block can
 silently defeat the standard dark values and create inaccessible combinations.
-Brand profiles may configure identity colors and explicitly approved queue
-progression treatments such as Now Serving/Called, but not the protected
-warning/danger vocabulary.
+Brand profiles may configure identity colors and the explicitly approved queue
+progression treatments **Now Serving** and **Served**. **Returned** remains red
+and **Unclaimed** remains gold; neither may be derived from Primary or Accent.
+
+Arcade consumes those identity roles through an Arcade-scoped bridge: its page,
+panels, borders, controls, text, and Now Serving presentation follow the active
+appearance. Gameplay art colors remain fixed under `--arcade-*`, and the bridge
+must never expose protected operational tokens. The active bottom-navigation
+surface uses the pre-alpha `--nav-active-background` token instead of a slash
+opacity utility, so iOS 15 receives the intended translucent highlight rather
+than an opaque fallback.
 
 Admin actions that directly assign these statuses use the corresponding
 `operational-danger` and `operational-warning` button variants. Their enabled
@@ -183,7 +193,7 @@ its meaning through the complete workflow.
 
 Hi-viz remains flat and contrast-first, but it may have a profile-specific
 identity layer after the shared Hi-viz blocks. That layer may override neutral
-surfaces, primary/accent/focus colors, and approved Now Serving/Called/pending
+surfaces, primary/accent/focus colors, and approved Now Serving/Served/pending
 tokens. It remains subject to the protected-status list above: brand-aware
 Hi-viz selectors must never redefine universal status tokens.
 

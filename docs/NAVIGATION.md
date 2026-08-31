@@ -230,6 +230,11 @@ bar is likewise persistent, so we adopt a measured middle ground:
 > The other tabs stay at rest until hovered/tapped. Client-side tab navigation
 > between the public pages does **not** replay the mount animation.
 
+The selected tab's background consumes `--nav-active-background`, a pre-alpha
+brand token emitted in every scope. Do not replace it with `bg-primary/<alpha>`:
+that Tailwind form requires runtime color mixing and iOS 15 can fall back to an
+opaque Primary block that covers the icon and label.
+
 This honors the "animate on render" request (the active destination gets a
 subtle entrance) while respecting FEED's anti-repetition principle (the bar
 doesn't erupt into simultaneous animations on every load, and route changes

@@ -1,5 +1,48 @@
 @import "./themes/william-temple-house.css";
 
+/* Appearance bridge: Arcade keeps its game-art palette (snake, pellets,
+   bricks, score effects) while its page chrome consumes the same live brand
+   roles as the core app. The selectors match the imported light rule so a
+   configured appearance wins in every light/dark/high-visibility scope. */
+.arcade-scope,
+html.light .arcade-scope {
+  --arcade-bg: var(--background);
+  --arcade-bg-alt: var(--secondary);
+  --arcade-wall: var(--primary);
+  --arcade-neon: var(--accent);
+  --arcade-ghost: var(--ring);
+  --arcade-panel: var(--card);
+  --arcade-panel-border: var(--primary);
+  --arcade-menu-card-bg: var(--card);
+  --arcade-slider-track: var(--primary);
+  --arcade-slider-track-border: var(--border);
+  --arcade-slider-range: var(--accent);
+  --arcade-slider-thumb-bg: var(--card);
+  --arcade-slider-thumb-border: var(--primary);
+  --arcade-text: var(--foreground);
+  --arcade-action-bg: var(--primary);
+  --arcade-action-hover: var(--accent);
+  --arcade-action-text: var(--primary-foreground);
+  --arcade-ghost-contrast: var(--primary-foreground);
+  --arcade-shell-glow-primary: var(--nav-active-background);
+  --arcade-shell-glow-secondary: var(--nav-active-background);
+  --arcade-grid-dot: var(--nav-active-background);
+  --arcade-grid-line-x: var(--nav-active-background);
+  --arcade-grid-line-y: var(--nav-active-background);
+  --arcade-menu-card-shadow: var(--base-shadow-color);
+  --arcade-nav-shadow: var(--base-shadow-color);
+  --arcade-serving-border: var(--ticket-serving-border);
+  --arcade-serving-background: var(--card);
+  --arcade-serving-color: var(--primary);
+  --arcade-serving-inset: var(--nav-active-background);
+  --arcade-readout-background: linear-gradient(180deg, var(--card), var(--secondary));
+  --arcade-readout-border: var(--primary);
+  --arcade-control-dock-background: linear-gradient(180deg, var(--background), var(--secondary));
+  --arcade-control-dock-border: var(--primary);
+  --arcade-control-dock-shadow: var(--base-shadow-color);
+  --arcade-input-background: var(--card);
+}
+
 .arcade-scope {
   --font-arcade-ui: var(--font-arcade-display);
   background:
@@ -56,6 +99,22 @@
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
+}
+
+/* Installed apps have no browser chrome above the home indicator. Preserve an
+   extra 32 px gesture lane below every game control dock in standalone mode. */
+@media (display-mode: standalone) {
+  .arcade-snake-control-dock,
+  .arcade-brick-control-dock,
+  .arcade-zombie-control-dock {
+    padding-bottom: calc(max(env(safe-area-inset-bottom), 0.9rem) + 2rem);
+  }
+}
+
+html[data-app-mode="standalone"] .arcade-snake-control-dock,
+html[data-app-mode="standalone"] .arcade-brick-control-dock,
+html[data-app-mode="standalone"] .arcade-zombie-control-dock {
+  padding-bottom: calc(max(env(safe-area-inset-bottom), 0.9rem) + 2rem);
 }
 
 .arcade-pixel-grid {

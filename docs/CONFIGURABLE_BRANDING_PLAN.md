@@ -16,8 +16,9 @@ filesystem fallback only for local/self-hosted development. Schema v2 stores
 fixed Tailwind v4 role names and retains a schema-v1 compatibility path;
 the compiled WTH theme remains the exact fallback. The PWA theme color is
 currently auto-set from the uploaded mark's dominant color (can pick a
-background shade; an explicit override field is a wizard refinement), and
-Arcade palettes do not yet derive. One calibration note from Phase 0: the emphasis-pair contrast
+background shade; an explicit override field is a wizard refinement). Arcade
+chrome now consumes the resolved identity roles while gameplay colors remain
+Arcade-owned. One calibration note from Phase 0: the emphasis-pair contrast
 floor is 2.5:1 rather than 3:1 — measurement showed deliberate emphasis
 choices in the original compiled themes sat below WCAG's large-text line; the
 structural protection is the
@@ -126,11 +127,11 @@ The persisted configuration mirrors the existing `BrandProfile` type in
 | Staff | sign-in heading, authorized-email guidance, email placeholder | Same as `BrandProfile.staff`. |
 | Capabilities | inventory enabled flag, FEED public inventory URL | Same contract as today: opt-in, validated URL, no cross-agency fallback, CSP built from the configured origin. |
 
-Explicitly **not** configurable: operational status colors, Arcade game
-mechanics, component geometry, fonts, queue workflow, and anything in the
-shared CSS layers. Arcade `--arcade-*` palette derivation from the brand
-inputs is a later phase; until then a custom configuration uses the WTH Arcade
-palette.
+Explicitly **not** configurable: operational status colors, Arcade game-art
+and mechanics, component geometry, fonts, queue workflow, and anything in the
+shared CSS layers. Arcade page chrome maps the already-derived surface,
+Primary, Accent, foreground, border, shadow, and Now Serving roles into scoped
+`--arcade-*` consumers; it does not create an independent second brand engine.
 
 ### Color derivation
 
@@ -397,9 +398,9 @@ both directions, contrast validation must pass throughout, and navigation
 shape must follow the capability setting (WTH's four public tabs vs. St.
 Johns' three).
 
-Known exclusions until Phase 3: Arcade palettes do not derive yet, so the
-swap test covers core surfaces only; and the capability swap is exercised as
-a toggle plus URL validation without pointing at the other agency's live FEED
+The swap test covers core surfaces and Arcade chrome; game-art colors remain a
+deliberate fixed Arcade vocabulary. The capability swap is exercised as a
+toggle plus URL validation without pointing at another agency's live FEED
 data.
 
 If both directions pass, the configuration system is demonstrably robust
@@ -510,7 +511,8 @@ Measured acceptance:
   customized-slot indicators, per-slot "reset to derived," and re-validation
   on base-input changes to flag stale overrides. See "Forward compatibility:
   sparse overrides" above.
-- Arcade `--arcade-*` palette derivation from brand inputs.
+- **Arcade appearance bridge — implemented.** Core identity roles feed Arcade
+  chrome and Now Serving while gameplay colors remain fixed.
 - Hi-viz derivation refinements based on operator feedback.
 - Scheduled appearance overlays: additional saved configurations with
   activation date ranges for holidays and seasonal observances (Lunar New
