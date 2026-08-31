@@ -1,3 +1,5 @@
+/* High-visibility color/material reference. Typography deliberately inherits
+   the active appearance's regular light/dark type tokens and component rules. */
 :root {
   --background: oklch(0.9850 0 0);
   --foreground: oklch(0.1410 0.0050 285.8230);
@@ -31,9 +33,6 @@
   --sidebar-accent-foreground: oklch(0.9850 0 0);
   --sidebar-border: oklch(0.1410 0.0050 285.8230);
   --sidebar-ring: oklch(0.6090 0.1260 221.7230);
-  --font-sans: Open Sans, ui-sans-serif, sans-serif, system-ui;
-  --font-serif: Bodoni Moda SC, ui-serif, serif;
-  --font-mono: IBM Plex Mono, ui-monospace, monospace;
   --radius: 1.25rem;
   --shadow-x: 3px;
   --shadow-y: 4px;
@@ -86,9 +85,6 @@
   --sidebar-accent-foreground: oklch(0.1410 0.0050 285.8230);
   --sidebar-border: oklch(0.9850 0 0);
   --sidebar-ring: oklch(0.8550 0.1380 181.0710);
-  --font-sans: Open Sans, ui-sans-serif, sans-serif, system-ui;
-  --font-serif: Bodoni Moda SC, ui-serif, serif;
-  --font-mono: IBM Plex Mono, ui-monospace, monospace;
   --radius: 1.25rem;
   --shadow-x: 3px;
   --shadow-y: 4px;

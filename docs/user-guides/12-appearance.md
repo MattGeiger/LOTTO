@@ -83,7 +83,9 @@ required.
 - **Ticket status colors never change.** Returned stays red and Unclaimed
   stays gold in every appearance — those colors mean the same thing in every
   LOTTO, so staff and guests can always trust them. The wizard shows them in
-  the preview so you can see they stay put.
+  the preview so you can see they stay put. Your Primary choice does style the
+  **Next up** queue card with a bottom-to-top gradient in regular light and dark
+  modes; Hi-viz deliberately flattens that surface along with the status cards.
 - **Arcade shares your identity, not its game pieces.** Page surfaces, panels,
   controls, text, and Now Serving use the active appearance. Snake pieces,
   pellets, bricks, and other gameplay colors remain stable and recognizable.

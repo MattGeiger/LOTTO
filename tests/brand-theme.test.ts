@@ -130,6 +130,22 @@ describe("brand theme derivation", () => {
       expect(issues, `${name} derived theme has no validation issues`).toEqual([]);
     }
   });
+
+  it("gives configured serving cards a real gradient in standard modes", () => {
+    const theme = deriveBrandTheme(wthInputs);
+
+    expect(theme.light["ticket-serving"]).toBe(
+      "linear-gradient(to top, oklch(0.62 0.21 255), oklch(0.7 0.22 255))",
+    );
+    for (const scope of ["light", "dark"] as const) {
+      const stops = extractColors(theme[scope]["ticket-serving"]);
+      expect(theme[scope]["ticket-serving"]).toMatch(/^linear-gradient\(to top,/);
+      expect(stops).toHaveLength(2);
+      expect(stops[0]).not.toEqual(stops[1]);
+    }
+    expect(theme.hiVizLight["ticket-serving"]).not.toContain("gradient(");
+    expect(theme.hiVizDark["ticket-serving"]).not.toContain("gradient(");
+  });
 });
 
 describe("color semiotics (docs/COLOR_SEMIOTICS.md)", () => {

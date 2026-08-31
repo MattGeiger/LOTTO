@@ -4,11 +4,24 @@
 
 ### Changed
 
+- **Hi-viz now uses the regular application typesetting.** Both high-visibility
+  scopes inherit their corresponding light/dark font family, size, weight,
+  spacing, line-height, and hierarchy instead of switching to a separate Open
+  Sans/Bodoni Moda SC/IBM Plex Mono stack. The unused font payloads were removed;
+  Hi-viz contrast colors and flat-material behavior are unchanged.
 - **Admin Live State metrics now share the Draw position gradient.** Range,
   Tickets issued, Current mode, Now serving, Max wait time, Tickets called, and
   People waiting consume the same semantic `--gradient-card-info` surface as
   Draw position. A shared class linkage and regression keep all eight cards in
   sync across the built-in WTH appearance and runtime custom appearances.
+
+### Fixed
+
+- **Custom light appearances now render Next up as a true gradient.** The
+  configured `--ticket-serving` value previously repeated one color at both
+  stops, producing a visually solid card. It now uses the compiled WTH
+  bottom-to-top serving ramp, validates text against both stops, and preserves
+  intentionally flat Hi-viz plus canonical red/gold status treatments.
 
 ## [1.26.0-beta.2] - 2026-08-30
 

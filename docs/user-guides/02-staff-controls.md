@@ -47,12 +47,15 @@ yet available.
 
 The dashboard's **Live State** values and **Next up** card use your active
 appearance's Primary color, matching **Now Serving** and **Served** queue
-progress. The seven Live State summary cards—from **Range** through **People
-waiting**—also share the same gradient surface as **Draw position**. That link
-is part of the active appearance, so it remains intact for both the built-in
-William Temple House appearance and staff-created appearances. The exception is
-deliberate: **Returned** always stays red and **Unclaimed** always stays gold,
-regardless of agency branding.
+progress. In regular light and dark modes, **Next up** uses the same
+bottom-to-top gradient treatment as the Unclaimed and Returned cards beneath
+it, while keeping its own appearance-driven queue color. Hi-viz keeps all three
+surfaces flat for maximum contrast. The seven Live State summary cards—from
+**Range** through **People waiting**—also share the same gradient surface as
+**Draw position**. That link is part of the active appearance, so it remains
+intact for both the built-in William Temple House appearance and staff-created
+appearances. The exception is deliberate: **Returned** always stays red and
+**Unclaimed** always stays gold, regardless of agency branding.
 
 **Made a mistake?** In the **Returned tickets** and **Unclaimed tickets** lists,
 tap any ticket number and confirm **Revert** to clear its status — the ticket

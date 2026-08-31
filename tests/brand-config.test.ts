@@ -115,11 +115,14 @@ describe("white-label brand configuration", () => {
 
   it("keeps high visibility shared and brand-neutral", () => {
     const css = readCss("src/app/styles/shared/high-visibility.css");
+    const layout = readCss("src/app/layout.tsx");
 
     expect(css).toContain(":root.hi-viz {");
     expect(css).toContain(":root.dark.hi-viz {");
     expect(css).toContain("--card-gradient: none");
     expect(css).not.toContain("[data-brand=");
+    expect(css).not.toMatch(/--app-font-(?:sans|serif|mono)/);
+    expect(layout).not.toMatch(/Open_Sans|Bodoni_Moda_SC|IBM_Plex_Mono/);
   });
 
   it("keeps Arcade on the single WTH palette and limits it to Arcade tokens", () => {
