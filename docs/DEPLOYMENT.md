@@ -150,12 +150,12 @@ accepted v2.0 architecture or a production promotion:
 | Vercel | Separate Hobby-team project `wth_apps/lotto-beta`; Production tracks only the beta branch |
 | App URL | `https://beta.williamtemple.app` is the stable beta origin; `https://lotto-beta-sigma.vercel.app` remains a generated alias. Both route only to the beta project at commit `130e308`. |
 | Neon | Separate Free resource `neon-copper-queen` in Portland (US West), connected to beta Production only |
-| Schema | All 32 comment-free statements from canonical `schema.sql` applied; all 15 expected `public` tables verified |
+| Schema | The pre-Phase-3 canonical schema is applied and the original 15 expected `public` tables are verified. The additive revision/outbox migration exists locally but has not yet been applied to beta Neon. |
 | Runtime config | Distinct beta `AUTH_SECRET` and `ENCRYPTION_MASTER_KEY`; production-safe auth bypass/domain/from-address settings plus `LOTTO_DEPLOYMENT_ENVIRONMENT=beta` applied |
 | Public smoke | `/` renders and `/api/state` returns `200` from the isolated Neon database; polling behavior is unchanged |
 | Authentication | A sending-only `LOTTO Beta` Resend key, restricted to the already verified `williamtemple.app` domain, is stored only in the beta Vercel Production environment. `AUTH_URL` and Auth.js provider callbacks use `https://beta.williamtemple.app`. Deployment `HqLiGzzahAf2QxHe5MPHqQKND5Ua` is ready; Resend delivered the custom-origin Magic Link, the link established an authenticated `/admin` session, and the page reached Persistence confirmed. A session created on the generated Vercel hostname did not cross to the custom hostname. The key remains in the existing Resend workspace for this proof; domain/account migration is explicitly deferred. |
 | Blob | Separate public store `lotto-beta-blob` is provisioned in Portland (`PDX1`) and connected only to the beta project; its read-write token/store ID/webhook key are generated for beta Production and Preview |
-| Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret; the remote protocol verifier passes, and a bounded 1/10/100/200-client run delivered all 311 target updates |
+| Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret; the remote protocol verifier passes, and a bounded 1/10/100/200-client run delivered all 311 target updates. Local Phase 3 shadow-publication code is ready for schema validation but remains disabled and undeployed. |
 | DNS | Cloudflare serves a DNS-only `beta` CNAME to Vercel plus the Vercel ownership-verification TXT value alongside the existing apex/`www` verification values. The apex, `www`, and `feed` records were not changed. The Worker already allowlists the stable beta origin. |
 | Safety UX | Beta-only `X-Robots-Tag`, blocking `robots.txt`, and visible sign-in/admin warning banner are implemented; production behavior remains unchanged because the feature requires the explicit beta environment value |
 
@@ -167,6 +167,28 @@ it. The beta email proof does not authorize moving `williamtemple.app` between
 Resend workspaces: that domain also serves live LOTTO and the separately hosted
 FEED application, so any future account migration requires a coordinated
 credential cutover for all three applications.
+
+The Phase 3 server settings are deliberately separate from future browser
+connection flags. Keep them server-only:
+
+```text
+LOTTO_REALTIME_SHADOW_PUBLISH=false
+LOTTO_REALTIME_HUB_URL=https://lotto-realtime-beta.et2-geiger.workers.dev
+LOTTO_REALTIME_EXPECTED_HUB_HOST=lotto-realtime-beta.et2-geiger.workers.dev
+LOTTO_REALTIME_AGENCY_ID=william-temple-house
+LOTTO_REALTIME_PUBLISH_TOKEN=<rotated beta-only secret>
+LOTTO_REALTIME_PUBLISH_TIMEOUT_MS=1500
+```
+
+Activation fails closed unless `LOTTO_DEPLOYMENT_ENVIRONMENT=beta`, the remote
+URL is HTTPS, and its hostname exactly matches the expected host. Deploy and
+verify the additive schema with the flag still false before installing a newly
+rotated token in both providers. Enabling the flag adds one outbox row in the
+existing mutation transaction, at most one bounded post-commit Worker request,
+and one best-effort outcome update. It does not change `/api/state`, public
+polling, or any browser behavior. See
+[`REALTIME_SHADOW_PUBLICATION.md`](./REALTIME_SHADOW_PUBLICATION.md) for the
+transaction, repair, rollback, and cost contract.
 
 See
 [`V2.0_REALTIME_ARCHITECTURE_PLAN.md`](./V2.0_REALTIME_ARCHITECTURE_PLAN.md)

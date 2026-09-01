@@ -7,25 +7,41 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  hashPublicState,
+  toPublicRaffleState,
+} from "@/lib/realtime/public-state-protocol";
 import { defaultState, type DisplayLanguageRotation } from "@/lib/state-types";
 import { UserInputError } from "@/lib/user-input-error";
 
 // --- Mock the neon SQL client ---
 
 let mockQueryResults: unknown[];
+let mockTransactionResults: unknown[];
+let mockDirectSql: string[];
+let mockTransactionSql: string[];
 
 // Tagged template function that simulates neon's sql``
-const mockSql = vi.fn(async () => {
-  return mockQueryResults.shift() ?? [];
+const mockSql = vi.fn(async (strings: TemplateStringsArray) => {
+  mockDirectSql.push(strings.join("?"));
+  const result = mockQueryResults.shift() ?? [];
+  if (result instanceof Error) throw result;
+  return result;
 }) as unknown as ReturnType<typeof import("@neondatabase/serverless").neon>;
 
 // Attach .transaction to the mock sql function
 const mockTransactionFn = vi.fn(async (callback: (tx: unknown) => unknown[]) => {
   // tx is a tagged template too — simulate it but don't execute real SQL
-  const mockTx = vi.fn(() => Promise.resolve([]));
+  const mockTx = vi.fn((strings: TemplateStringsArray) => {
+    mockTransactionSql.push(strings.join("?"));
+    const result = mockTransactionResults.shift() ?? [
+      { revision: 1, committed_at: "2026-09-01T12:00:00.000Z" },
+    ];
+    if (result instanceof Error) return Promise.reject(result);
+    return Promise.resolve(result);
+  });
   const statements = callback(mockTx);
-  await Promise.all(statements as Promise<unknown>[]);
-  return [];
+  return Promise.all(statements as Promise<unknown>[]);
 });
 (mockSql as unknown as Record<string, unknown>).transaction = mockTransactionFn;
 
@@ -64,6 +80,9 @@ describe("createDbStateManager", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     mockQueryResults = [];
+    mockTransactionResults = [];
+    mockDirectSql = [];
+    mockTransactionSql = [];
     // Reset redo state by re-creating the manager
     const { createDbStateManager } = await import("@/lib/state-manager-db");
     manager = createDbStateManager("postgresql://test:test@localhost:5432/test");
@@ -639,6 +658,247 @@ describe("createDbStateManager", () => {
       });
 
       expect(result2.timestamp!).toBeGreaterThanOrEqual(result1.timestamp!);
+    });
+  });
+
+  describe("realtime shadow publication", () => {
+    const enabledEnvironment = {
+      LOTTO_DEPLOYMENT_ENVIRONMENT: "beta",
+      LOTTO_REALTIME_SHADOW_PUBLISH: "true",
+      LOTTO_REALTIME_HUB_URL: "https://lotto-realtime-beta.et2-geiger.workers.dev",
+      LOTTO_REALTIME_AGENCY_ID: "william-temple-house",
+      LOTTO_REALTIME_PUBLISH_TOKEN: "a".repeat(32),
+      LOTTO_REALTIME_PUBLISH_TIMEOUT_MS: "1000",
+    };
+
+    it("publishes the committed public projection and records acceptance", async () => {
+      const fetchImpl = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ accepted: true }), { status: 202 }),
+      );
+      const { createDbStateManager } = await import("@/lib/state-manager-db");
+      const realtimeManager = createDbStateManager(
+        "postgresql://test:test@localhost:5432/test",
+        { environment: enabledEnvironment, fetchImpl },
+      );
+      queueStateRow(defaultState);
+
+      const result = await realtimeManager.generateState({
+        startNumber: 1,
+        endNumber: 5,
+        mode: "sequential",
+      });
+
+      expect(result.generatedOrder).toEqual([1, 2, 3, 4, 5]);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      const [url, request] = fetchImpl.mock.calls[0] as [URL, RequestInit];
+      expect(url.toString()).toBe(
+        "https://lotto-realtime-beta.et2-geiger.workers.dev/v1/agencies/william-temple-house/publish",
+      );
+      expect(request.headers).toMatchObject({
+        authorization: `Bearer ${"a".repeat(32)}`,
+      });
+      const envelope = JSON.parse(String(request.body));
+      expect(envelope.revision).toBe(1);
+      expect(envelope.state.generatedOrder).toEqual([1, 2, 3, 4, 5]);
+      expect(envelope.state).not.toHaveProperty("queueSession");
+      expect(mockSql).toHaveBeenCalledTimes(2);
+      expect(mockTransactionSql.join("\n")).toContain(
+        "insert into raffle_public_state_publications",
+      );
+      expect(mockTransactionSql.join("\n")).toContain(
+        "status = 'superseded'",
+      );
+    });
+
+    it("increments the authoritative revision without creating an outbox row when disabled", async () => {
+      queueStateRow(activeState());
+
+      await manager.setDisplayUrl("https://beta.williamtemple.app");
+
+      expect(mockTransactionSql.join("\n")).toContain(
+        "revision = raffle_state.revision + 1",
+      );
+      expect(mockTransactionSql.join("\n")).not.toContain(
+        "raffle_public_state_publications",
+      );
+    });
+
+    it("returns committed state when the hub rejects publication", async () => {
+      const fetchImpl = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ error: "unavailable" }), { status: 503 }),
+      );
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const { createDbStateManager } = await import("@/lib/state-manager-db");
+      const realtimeManager = createDbStateManager(
+        "postgresql://test:test@localhost:5432/test",
+        { environment: enabledEnvironment, fetchImpl },
+      );
+      queueStateRow(activeState());
+
+      await expect(
+        realtimeManager.setDisplayUrl("https://beta.williamtemple.app"),
+      ).resolves.toMatchObject({
+        displayUrl: "https://beta.williamtemple.app",
+      });
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining("Shadow publication delayed for revision 1"),
+      );
+    });
+
+    it("returns committed state when recording the hub outcome fails", async () => {
+      const fetchImpl = vi.fn().mockResolvedValue(new Response(null, { status: 202 }));
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const { createDbStateManager } = await import("@/lib/state-manager-db");
+      const realtimeManager = createDbStateManager(
+        "postgresql://test:test@localhost:5432/test",
+        { environment: enabledEnvironment, fetchImpl },
+      );
+      queueStateRow(activeState());
+      mockQueryResults.push(new Error("database unavailable"));
+
+      await expect(
+        realtimeManager.setDisplayUrl("https://beta.williamtemple.app"),
+      ).resolves.toMatchObject({
+        displayUrl: "https://beta.williamtemple.app",
+      });
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      expect(warn).toHaveBeenCalledWith(
+        "[Realtime] Publication evidence update failed for revision 1.",
+      );
+    });
+
+    it("repairs only the newest pending or failed row with its original identity", async () => {
+      const fetchImpl = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+      const { createDbStateManager } = await import("@/lib/state-manager-db");
+      const realtimeManager = createDbStateManager(
+        "postgresql://test:test@localhost:5432/test",
+        { environment: enabledEnvironment, fetchImpl },
+      );
+      const publicState = toPublicRaffleState(activeState());
+      const checksum = await hashPublicState(publicState);
+      mockQueryResults.push([
+        {
+          publication_id: "965104d8-44a2-41b7-b7d0-d82d9c9d3a50",
+          revision: "42",
+          checksum,
+          payload: publicState,
+          committed_at: "2026-09-01T12:00:00.000Z",
+        },
+      ]);
+
+      await expect(
+        realtimeManager.retryLatestRealtimePublication(),
+      ).resolves.toEqual({
+        enabled: true,
+        attempted: true,
+        revision: 42,
+        accepted: true,
+      });
+
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      const envelope = JSON.parse(
+        String((fetchImpl.mock.calls[0]?.[1] as RequestInit).body),
+      );
+      expect(envelope).toMatchObject({
+        publicationId: "965104d8-44a2-41b7-b7d0-d82d9c9d3a50",
+        revision: 42,
+        checksum,
+        committedAt: "2026-09-01T12:00:00.000Z",
+      });
+      expect(mockDirectSql[0]).toContain("order by revision desc");
+      expect(mockDirectSql[0]).toContain("limit 1");
+      expect(mockDirectSql[0]).toContain("where status in ('pending', 'failed')");
+    });
+
+    it("does not query or publish when repair is disabled", async () => {
+      await expect(manager.retryLatestRealtimePublication()).resolves.toEqual({
+        enabled: false,
+        attempted: false,
+      });
+      expect(mockSql).not.toHaveBeenCalled();
+    });
+
+    it("returns bounded publication diagnostics without payload or secrets", async () => {
+      const fetchImpl = vi.fn();
+      const { createDbStateManager } = await import("@/lib/state-manager-db");
+      const realtimeManager = createDbStateManager(
+        "postgresql://test:test@localhost:5432/test",
+        { environment: enabledEnvironment, fetchImpl },
+      );
+      mockQueryResults.push([
+        {
+          publication_id: "965104d8-44a2-41b7-b7d0-d82d9c9d3a50",
+          revision: "44",
+          status: "failed",
+          attempt_count: "1",
+          committed_at: "2026-09-01T12:00:00.000Z",
+          last_attempt_at: "2026-09-01T12:00:01.000Z",
+          accepted_at: null,
+          last_error: "Realtime hub returned HTTP 503.",
+          updated_at: "2026-09-01T12:00:01.000Z",
+        },
+      ]);
+
+      const status = await realtimeManager.getRealtimePublicationStatus();
+
+      expect(status).toEqual({
+        enabled: true,
+        latest: {
+          publicationId: "965104d8-44a2-41b7-b7d0-d82d9c9d3a50",
+          revision: 44,
+          status: "failed",
+          attemptCount: 1,
+          committedAt: "2026-09-01T12:00:00.000Z",
+          lastAttemptAt: "2026-09-01T12:00:01.000Z",
+          acceptedAt: null,
+          lastError: "Realtime hub returned HTTP 503.",
+          updatedAt: "2026-09-01T12:00:01.000Z",
+        },
+      });
+      expect(status).not.toHaveProperty("payload");
+      expect(JSON.stringify(status)).not.toContain("a".repeat(32));
+      expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    it("does not query for diagnostics when shadow publication is disabled", async () => {
+      await expect(manager.getRealtimePublicationStatus()).resolves.toEqual({
+        enabled: false,
+      });
+      expect(mockSql).not.toHaveBeenCalled();
+    });
+
+    it("refuses malformed or checksum-mismatched repair evidence before transmission", async () => {
+      const fetchImpl = vi.fn().mockResolvedValue(new Response(null, { status: 202 }));
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const { createDbStateManager } = await import("@/lib/state-manager-db");
+      const realtimeManager = createDbStateManager(
+        "postgresql://test:test@localhost:5432/test",
+        { environment: enabledEnvironment, fetchImpl },
+      );
+      mockQueryResults.push([
+        {
+          publication_id: "965104d8-44a2-41b7-b7d0-d82d9c9d3a50",
+          revision: 43,
+          checksum: `sha256:${"a".repeat(64)}`,
+          payload: {},
+          committed_at: "2026-09-01T12:00:00.000Z",
+        },
+      ]);
+
+      await expect(
+        realtimeManager.retryLatestRealtimePublication(),
+      ).resolves.toMatchObject({
+        enabled: true,
+        attempted: true,
+        revision: 43,
+        accepted: false,
+        error: "Stored public-state payload is invalid.",
+      });
+      expect(fetchImpl).not.toHaveBeenCalled();
+      expect(warn).toHaveBeenCalledWith(
+        "[Realtime] Repair rejected invalid publication evidence for revision 43.",
+      );
     });
   });
 
