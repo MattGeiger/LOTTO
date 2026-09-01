@@ -13,8 +13,10 @@ isolated Cloudflare Durable Object. No browser trusts or renders that copy yet.
 The additive schema was applied to the isolated `neon-copper-queen` beta
 database on September 1, 2026. A metadata query confirmed the revision column,
 outbox table, and four expected table indexes; the outbox contained zero rows.
-Server publication remains disabled until the beta code deploy and secret
-rotation are complete.
+The integrating code is deployed to the isolated beta Vercel project. Its
+rotated publish credential exists only in the beta Cloudflare and Vercel secret
+stores, and shadow publication is enabled only in the beta Production
+environment. Production LOTTO and `main` remain unchanged.
 
 ## Transaction boundary
 
@@ -147,6 +149,30 @@ When enabled, each committed mutation adds at most:
 It adds no public-origin request and does not change current polling frequency.
 Phase 4 comparison must prove revision/checksum agreement before any public
 client applies realtime state.
+
+## First production-shaped beta validation
+
+The initial September 1, 2026 activation used two controlled deployments from
+commit `d87d340`:
+
+1. With `LOTTO_REALTIME_SHADOW_PUBLISH=false`, an authenticated same-value
+   display-URL save advanced authoritative Neon revision `1` to `2` while the
+   outbox remained empty. This confirmed that installing the other runtime
+   settings does not activate publication or change the staff write path.
+2. With the flag set to `true`, the same bounded action advanced Neon to
+   revision `3`, created publication revision `3`, and recorded status
+   `accepted` after one attempt with no error.
+3. The Durable Object public snapshot returned revision `3` and the exact same
+   checksum as Neon:
+   `sha256:74c9beaa1b3ca3000be451ddf28f5c540f416f5ef9db16d8d19f01af9e516373`.
+4. The ordinary beta `/api/state` endpoint and authenticated Admin persistence
+   indicator remained healthy throughout both deployments.
+
+This proves one complete Neon-to-Durable-Object shadow-publication path under
+production-like beta hosting. It does not complete Phase 3: the full mutation
+matrix, undo/redo/restore/reset cases, injected Cloudflare failures, explicit
+repair, WebSocket observation from application clients, and legacy-device
+validation remain open. Public clients still poll Neon through `/api/state`.
 
 ## Rollout sequence
 

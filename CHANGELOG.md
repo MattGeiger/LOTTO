@@ -82,8 +82,12 @@
   newest pending/failed full state with its original idempotency identity.
   Network error details are redacted, public polling is unchanged, the flag
   defaults off. The additive schema is now applied and metadata-verified on the
-  isolated beta Neon database with an empty outbox; the integrating app code
-  has not yet been deployed.
+  isolated beta Neon database. The integrating code is deployed only to beta:
+  a flag-off authenticated write advanced the authoritative revision with an
+  empty outbox, then a flag-on write produced matching Neon/outbox revision `3`,
+  one accepted attempt with no error, and the identical checksum in the Durable
+  Object snapshot. Public clients still use `/api/state`; the remaining action,
+  failure/repair, WebSocket-canary, and legacy-device gates are open.
 
 ### Changed
 
