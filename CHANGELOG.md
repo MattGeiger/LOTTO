@@ -39,7 +39,7 @@
   legacy-device Phase 2 gates remain open.
 - **Provisioned the first production-shaped beta application boundary.** The
   separate `wth_apps/lotto-beta` Vercel project tracks only
-  `codex/v2-realtime-beta` and successfully deployed commit `1101324` without
+  `codex/v2-realtime-beta` and successfully deployed without
   changing `main` or the live WTH project. Its isolated Portland Neon resource,
   `neon-copper-queen`, received all canonical `schema.sql` statements and all
   15 expected tables were verified. The generated beta URL and Neon-backed
@@ -50,8 +50,11 @@
   that established an authenticated beta Admin session. Resend domain/account
   migration remains deferred because the verified
   domain also serves live LOTTO and the separately hosted FEED application;
-  custom DNS remains an explicit gate rather than assumed-complete
-  infrastructure.
+  `https://beta.williamtemple.app` is now a DNS-only Cloudflare CNAME assigned
+  to the beta Vercel project with `AUTH_URL` and Auth.js callbacks on that
+  origin. The custom-origin Magic Link completed successfully, and the prior
+  generated-host session did not cross to the custom hostname. The apex,
+  `www`, `feed`, live LOTTO project, and `main` remain unchanged.
 
 ### Changed
 
