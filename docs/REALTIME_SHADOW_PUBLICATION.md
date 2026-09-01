@@ -206,6 +206,41 @@ environment matrix. Destructive beta cases such as reset still require an
 explicit, controlled test window and revision/checksum comparison against both
 Neon and the Durable Object.
 
+## First live beta mutation matrix
+
+An authenticated production-shaped run on September 1, 2026 advanced the
+isolated beta environment from revision `3` through revision `14`. It exercised
+11 mutations in order:
+
+1. generate a temporary five-ticket queue;
+2. advance serving twice;
+3. move serving backward once;
+4. mark the current ticket Returned, including automatic serving advance;
+5. mark a called ticket Unclaimed;
+6. revert the Unclaimed status;
+7. undo that reversion;
+8. redo it;
+9. restore the initial generated snapshot; and
+10. reset the beta queue to its empty daily state.
+
+Generation is one mutation, so the sequence produced 11 total committed
+revisions. After every action, the newest Neon state revision and outbox
+revision matched; the outbox row was `accepted` after one attempt; and the
+Durable Object returned the same revision and checksum. The aggregate database
+check for revisions 4–14 reported 11 publication rows, 11 accepted rows, zero
+non-accepted rows, and a maximum attempt count of one.
+
+The final reset produced one immutable queue-session closeout, returned the
+ordinary beta `/api/state` endpoint to an empty queue with HTTP 200, and left
+the Durable Object at revision `14` with the identical empty-state checksum
+`sha256:acfb56cbf7edd7e04c1b7d6898c6609172f8210cb91353d4f59a1c0e52308cad`.
+Production LOTTO and `main` were not touched.
+
+The live matrix is representative, not exhaustive. Append, extend-range,
+batch generation, live configuration changes, deliberate hub failure, and
+newest-only repair remain production-shaped beta gates. Their deterministic
+state-manager paths are covered by `realtime:shadow:check`.
+
 ## Rollout sequence
 
 1. Apply the idempotent additive schema to the isolated beta Neon database.
