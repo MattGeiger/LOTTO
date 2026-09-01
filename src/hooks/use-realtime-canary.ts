@@ -291,12 +291,13 @@ export const useRealtimeCanary = (
   React.useEffect(() => {
     window.__LOTTO_REALTIME_CANARY__ = telemetry;
     window.dispatchEvent(new CustomEvent("lotto:realtime-canary", { detail: telemetry }));
-    return () => {
-      if (window.__LOTTO_REALTIME_CANARY__ === telemetry) {
-        delete window.__LOTTO_REALTIME_CANARY__;
-      }
-    };
   }, [telemetry]);
+
+  React.useEffect(() => {
+    return () => {
+      delete window.__LOTTO_REALTIME_CANARY__;
+    };
+  }, []);
 
   return telemetry;
 };
