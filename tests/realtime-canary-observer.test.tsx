@@ -122,6 +122,7 @@ describe("RealtimeCanaryObserver", () => {
       comparison: "matched",
       hubRevision: 7,
       messagesReceived: 1,
+      deliveryLatencyMs: null,
     });
     expect(fetch).not.toHaveBeenCalled();
 
@@ -139,6 +140,17 @@ describe("RealtimeCanaryObserver", () => {
     });
     expect(FakeWebSocket.instances).toHaveLength(1);
     expect(fetch).not.toHaveBeenCalled();
+
+    const broadcastEnvelope = await envelopeFor(state, 8);
+    await act(async () => {
+      socket.message(JSON.stringify(broadcastEnvelope));
+      await flushAsyncState();
+    });
+    expect(window.__LOTTO_REALTIME_CANARY__).toMatchObject({
+      hubRevision: 8,
+      messagesReceived: 2,
+      deliveryLatencyMs: expect.any(Number),
+    });
 
     view.unmount();
     expect(window.__LOTTO_REALTIME_CANARY__).toBeUndefined();
