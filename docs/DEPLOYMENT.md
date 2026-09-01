@@ -151,18 +151,18 @@ accepted v2.0 architecture or a production promotion:
 | App URL | `https://lotto-beta-sigma.vercel.app` is live from commit `1101324`; `beta.williamtemple.app` is not attached yet |
 | Neon | Separate Free resource `neon-copper-queen` in Portland (US West), connected to beta Production only |
 | Schema | All 32 comment-free statements from canonical `schema.sql` applied; all 15 expected `public` tables verified |
-| Runtime config | Distinct beta `AUTH_SECRET` and `ENCRYPTION_MASTER_KEY`; production-safe auth bypass/domain/from-address settings applied |
+| Runtime config | Distinct beta `AUTH_SECRET` and `ENCRYPTION_MASTER_KEY`; production-safe auth bypass/domain/from-address settings plus `LOTTO_DEPLOYMENT_ENVIRONMENT=beta` applied |
 | Public smoke | `/` renders and `/api/state` returns `200` from the isolated Neon database; polling behavior is unchanged |
 | Authentication | Login renders, but no beta `RESEND_API_KEY` is configured; `/api/auth/providers` returns `500` and sign-in is not validated |
 | Blob | Separate beta store is still unprovisioned |
 | Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret; the remote protocol verifier passes, and a bounded 1/10/100/200-client run delivered all 311 target updates |
-| Safety UX | Beta no-index policy and visible staff/admin non-production banner remain required before wider testing |
+| Safety UX | Beta-only `X-Robots-Tag`, blocking `robots.txt`, and visible sign-in/admin warning banner are implemented; production behavior remains unchanged because the feature requires the explicit beta environment value |
 
 The first Vercel deployment was created manually from the beta branch after
 Production branch tracking was changed from `main`. Do not change that tracking
-or attach the custom hostname until the missing email, Blob, no-index, and
-beta-banner gates are addressed. The deployed Worker is still standalone: no
-Neon write path publishes to it and no public client reads from it.
+or attach the custom hostname until the missing email and Blob gates are
+addressed. The deployed Worker is still standalone: no Neon write path
+publishes to it and no public client reads from it.
 
 See
 [`V2.0_REALTIME_ARCHITECTURE_PLAN.md`](./V2.0_REALTIME_ARCHITECTURE_PLAN.md)
