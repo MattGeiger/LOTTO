@@ -121,6 +121,19 @@
   newest-only repair preserved the original publication ID, reached accepted
   status at attempt `2`, and converged the hub to revision `15` with the
   matching checksum. Production, `main`, and live credentials were untouched.
+- **Added the first Phase 4 dual-read browser canary.** Home and Display can now
+  opt into one beta-only native WebSocket with `?realtime=observe` while their
+  existing adaptive `/api/state` polling remains the sole rendered authority.
+  The observer validates the strict public envelope, agency ID, and recomputed
+  checksum, compares it with the already-polled projection without another
+  fetch, pauses while hidden, and stops after five bounded reconnects. A small
+  diagnostic badge and in-memory event expose payload agreement and latency to
+  testers without recording identity or payload data. The server flag fails
+  closed outside beta, and CSP admits only the exact configured Worker host.
+  Focused tests cover gating, tamper rejection, zero observer fetches,
+  single-socket lifecycle, visibility, retry limits, and configuration
+  forwarding; the full suite, production build, legacy scan, and hydration
+  smoke pass. Pushed state is not rendered and no polling has been removed.
 
 ### Changed
 

@@ -168,8 +168,8 @@ Resend workspaces: that domain also serves live LOTTO and the separately hosted
 FEED application, so any future account migration requires a coordinated
 credential cutover for all three applications.
 
-The Phase 3 server settings are deliberately separate from future browser
-connection flags. Keep them server-only:
+The Phase 3 server settings are deliberately separate from browser connection
+flags. Keep them server-only:
 
 ```text
 LOTTO_REALTIME_SHADOW_PUBLISH=false
@@ -179,6 +179,20 @@ LOTTO_REALTIME_AGENCY_ID=william-temple-house
 LOTTO_REALTIME_PUBLISH_TOKEN=<rotated beta-only secret>
 LOTTO_REALTIME_PUBLISH_TIMEOUT_MS=1500
 ```
+
+The first Phase 4 browser observer has its own independent switch:
+
+```text
+LOTTO_REALTIME_CLIENT_CANARY=false
+```
+
+Set it to `true` only in the isolated beta deployment. The app then permits an
+exact beta Worker `wss://` origin in CSP and issues a read-only observer
+configuration only to Home/Display clients that also opt in with
+`?realtime=observe`. Polling remains authoritative and rendered; the observer
+adds no API request. See
+[`REALTIME_CLIENT_CANARY.md`](./REALTIME_CLIENT_CANARY.md) for test and rollback
+instructions.
 
 Activation fails closed unless `LOTTO_DEPLOYMENT_ENVIRONMENT=beta`, the remote
 URL is HTTPS, and its hostname exactly matches the expected host. Deploy and

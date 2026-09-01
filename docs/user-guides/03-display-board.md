@@ -28,6 +28,18 @@ The board can greet everyone in their own language:
 - The bottom navigation on the board hides itself after a quiet period and
   reappears as soon as anyone interacts, keeping the screen clean.
 
+## Beta Realtime Testing
+
+The separate beta site may show a small **Realtime observer** badge when a
+tester opens `/display?realtime=observe`. This is diagnostic-only: the board
+still refreshes from its normal database-backed source, while the badge compares
+that result with the experimental live feed. **Neon match** means the two public
+copies agree. If the badge reconnects or reports a mismatch, the normal board
+continues operating; report the result to the test lead rather than using the
+badge as a queue instruction.
+
+The live production board does not enable this experiment.
+
 ## What To Read Next
 
 - Turning on rotation: [Languages & Themes](06-languages-themes.md).
