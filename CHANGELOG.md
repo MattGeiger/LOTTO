@@ -113,6 +113,14 @@
   `no-store` responses. The client performs one initial read with no polling;
   status refresh and repair are user-driven and have request-count regression
   coverage. The Phase 3 shadow check now includes the endpoint and UI contract.
+- **Proved production-shaped hub failure and repair on isolated beta.** A
+  deliberate beta publish-token mismatch let an authenticated staff write
+  commit Neon revision `15` while the outbox recorded a redacted HTTP 401 after
+  one attempt and the Durable Object correctly remained at revision `14`.
+  After synchronizing only the beta Cloudflare and Vercel secrets, the explicit
+  newest-only repair preserved the original publication ID, reached accepted
+  status at attempt `2`, and converged the hub to revision `15` with the
+  matching checksum. Production, `main`, and live credentials were untouched.
 
 ### Changed
 
