@@ -81,7 +81,9 @@
   expose metadata only, while explicit recovery validates and retries just the
   newest pending/failed full state with its original idempotency identity.
   Network error details are redacted, public polling is unchanged, the flag
-  defaults off, and neither the schema nor code has yet been deployed to beta.
+  defaults off. The additive schema is now applied and metadata-verified on the
+  isolated beta Neon database with an empty outbox; the integrating app code
+  has not yet been deployed.
 
 ### Changed
 

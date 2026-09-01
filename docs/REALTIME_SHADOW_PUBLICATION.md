@@ -10,6 +10,12 @@ using the existing `/api/state` polling path.
 Shadow publication copies a committed, allowlisted public projection into the
 isolated Cloudflare Durable Object. No browser trusts or renders that copy yet.
 
+The additive schema was applied to the isolated `neon-copper-queen` beta
+database on September 1, 2026. A metadata query confirmed the revision column,
+outbox table, and four expected table indexes; the outbox contained zero rows.
+Server publication remains disabled until the beta code deploy and secret
+rotation are complete.
+
 ## Transaction boundary
 
 Every database-backed queue mutation already converges on the database state
