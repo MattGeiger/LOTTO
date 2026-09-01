@@ -27,9 +27,21 @@ The publish route accepts only protocol-valid, checksummed envelopes and
 rejects stale revisions or same-revision checksum conflicts. Subscribers cannot
 write data.
 
+## Remote beta
+
+The standalone proof is deployed at
+`https://lotto-realtime-beta.et2-geiger.workers.dev`. It is intentionally not
+connected to Neon or a LOTTO client yet. Hash-based Cloudflare preview URLs are
+disabled; the account `workers.dev` route is the only deployed hostname.
+
+After rotating `PUBLISH_TOKEN`, allow Cloudflare's serving deployment a short
+propagation window before running the remote verifier. The verifier has passed
+health, authentication, snapshot, WebSocket delivery, idempotency, monotonic
+revision, and CORS checks against the remote beta Worker.
+
 ## Deployment safety
 
-Deploy only to the isolated Cloudflare beta account and Worker named
+Deploy only to the isolated Cloudflare beta Worker named
 `lotto-realtime-beta`. Set `PUBLISH_TOKEN` with `wrangler secret put`; never add
 it to `wrangler.jsonc`, Git, screenshots, logs, or documentation.
 

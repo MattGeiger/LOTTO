@@ -27,6 +27,23 @@
   unit plus local end-to-end verification cover authentication, CORS,
   idempotency, conflicts, snapshots, and live delivery. No Neon or public-client
   path uses the Worker yet.
+- **Deployed and remotely verified the standalone Cloudflare proof.** The
+  isolated `lotto-realtime-beta` Worker is live on its dedicated `workers.dev`
+  hostname with a SQLite-backed Durable Object migration, Cloudflare-stored
+  publish secret, explicit beta-origin allowlist, observability, and hash-based
+  preview URLs disabled. Remote synthetic checks pass health, bearer auth,
+  snapshot, WebSocket, idempotency, monotonicity, and CORS behavior. This proves
+  the basic transport path only; concurrency, hibernation/wake, fault,
+  measurement, and legacy-device Phase 2 gates remain open.
+- **Provisioned the first production-shaped beta application boundary.** The
+  separate `wth_apps/lotto-beta` Vercel project tracks only
+  `codex/v2-realtime-beta` and successfully deployed commit `1101324` without
+  changing `main` or the live WTH project. Its isolated Portland Neon resource,
+  `neon-copper-queen`, received all canonical `schema.sql` statements and all
+  15 expected tables were verified. The generated beta URL and Neon-backed
+  `/api/state` pass initial smoke tests; Resend, Blob, custom DNS, beta no-index
+  policy, and the non-production staff banner remain explicit gates rather than
+  assumed-complete infrastructure.
 
 ### Changed
 
