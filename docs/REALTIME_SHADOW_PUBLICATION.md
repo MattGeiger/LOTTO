@@ -174,6 +174,38 @@ matrix, undo/redo/restore/reset cases, injected Cloudflare failures, explicit
 repair, WebSocket observation from application clients, and legacy-device
 validation remain open. Public clients still poll Neon through `/api/state`.
 
+## Automated mutation and failure matrix
+
+Run the bounded local Phase 3 contract suite with:
+
+```bash
+npm run realtime:shadow:check
+```
+
+The command covers the public-state protocol, configuration safety boundary,
+timeout and redaction behavior, newest-only repair, metadata-only diagnostics,
+and the database state manager. Its persisted-mutation matrix exercises 22
+variants:
+
+- full generation, batch generation, append, and range extension;
+- mode changes, explicit serving changes, and next/previous serving movement;
+- Returned, Unclaimed, and status reversion;
+- reset, snapshot restore, undo, and redo;
+- display URL and operating-hours updates;
+- display-language rotation set/clear; and
+- announcement set/clear.
+
+Every variant must allocate its revision and outbox row in one transaction,
+make exactly one post-commit request, record acceptance, emit a strict envelope
+without `queueSession`, and produce a checksum that recomputes from the emitted
+state. The first complete run passed 100 focused tests. The full project suite
+then passed 874 tests with the expected production-bundle fixture skipped.
+
+This is deterministic contract coverage, not a substitute for the beta
+environment matrix. Destructive beta cases such as reset still require an
+explicit, controlled test window and revision/checksum comparison against both
+Neon and the Durable Object.
+
 ## Rollout sequence
 
 1. Apply the idempotent additive schema to the isolated beta Neon database.
