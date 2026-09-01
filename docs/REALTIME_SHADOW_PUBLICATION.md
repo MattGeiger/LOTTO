@@ -131,9 +131,12 @@ requiring one network request per historical change.
 
 If the newest row fails and no later staff action occurs, an explicit bounded
 Admin repair operation will retry only that newest row with its original
-publication ID, revision, checksum, and commit timestamp. The first
-implementation may expose repair as an internal tested method before adding an
-Admin diagnostic surface. No public client may initiate repair.
+publication ID, revision, checksum, and commit timestamp. The beta-only
+`/admin/realtime` surface exposes the newest publication metadata and one
+user-driven repair action to an allowlisted administrator. Its API fails closed
+outside beta, sends `Cache-Control: no-store`, and never returns the stored
+payload or publish secret. The page performs one initial status read and does
+not poll. No public client may inspect or initiate repair.
 
 ## Cost envelope
 
@@ -198,8 +201,10 @@ variants:
 Every variant must allocate its revision and outbox row in one transaction,
 make exactly one post-commit request, record acceptance, emit a strict envelope
 without `queueSession`, and produce a checksum that recomputes from the emitted
-state. The first complete run passed 100 focused tests. The full project suite
-then passed 874 tests with the expected production-bundle fixture skipped.
+state. The first complete run passed 100 focused tests. After adding the
+beta-only diagnostics API and UI request-budget coverage, the command passed
+108 focused tests. The full project suite then passed 882 tests with the
+expected production-bundle fixture skipped.
 
 This is deterministic contract coverage, not a substitute for the beta
 environment matrix. Destructive beta cases such as reset still require an
@@ -237,9 +242,38 @@ the Durable Object at revision `14` with the identical empty-state checksum
 Production LOTTO and `main` were not touched.
 
 The live matrix is representative, not exhaustive. Append, extend-range,
-batch generation, live configuration changes, deliberate hub failure, and
-newest-only repair remain production-shaped beta gates. Their deterministic
-state-manager paths are covered by `realtime:shadow:check`.
+batch generation, and live configuration changes remain production-shaped beta
+gates. Their deterministic state-manager paths are covered by
+`realtime:shadow:check`.
+
+## First controlled failure and newest-only repair
+
+The September 1, 2026 beta fault injection deliberately rotated the isolated
+Worker's `PUBLISH_TOKEN` before rotating the corresponding Vercel secret. One
+authenticated same-value display-URL save then exercised the real application
+write path under a credential mismatch:
+
+1. Neon committed the authoritative mutation and advanced to revision `15`.
+   The Admin page continued to report **Persistence confirmed**, proving that
+   the post-commit hub failure did not reject the staff action.
+2. Publication `aea72a94-9f3c-410c-ab2d-88cf6c804c84` recorded status
+   `failed`, attempt count `1`, no acceptance timestamp, and the bounded error
+   `Realtime hub returned HTTP 401.`
+3. The Durable Object remained at revision `14` and its previous checksum,
+   proving that the rejected request could not alter public hub state.
+4. The matching token was then rotated into only the beta Vercel Production
+   secret and the same commit was redeployed. Selecting **Retry newest
+   publication** made one repair attempt with the original publication ID.
+5. The outbox changed to `accepted` at attempt count `2`. The Durable Object
+   converged to revision `15`, the same publication ID, and checksum
+   `sha256:e6a779e36f4a80e1a0a9ea964c3ab1dd0dab7f39afdb8415819cefa87a6d2593`.
+
+The temporary local token copy was removed after the two beta secret stores
+were synchronized. Production credentials, the live LOTTO deployment, and
+`main` were not touched. This closes the Phase 3 production-shaped
+authentication-failure/newest-only-repair gate; timeout, evidence-update, and
+invalid-evidence behavior remain covered deterministically by the focused test
+suite rather than additional live destructive injections.
 
 ## Rollout sequence
 
