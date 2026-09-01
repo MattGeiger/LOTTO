@@ -148,31 +148,32 @@ accepted v2.0 architecture or a production promotion:
 | ----- | ------------------- |
 | Git | `codex/v2-realtime-beta`; `main` and the live WTH project remain untouched |
 | Vercel | Separate Hobby-team project `wth_apps/lotto-beta`; Production tracks only the beta branch |
-| App URL | `https://beta.williamtemple.app` is the stable beta origin; `https://lotto-beta-sigma.vercel.app` remains a generated alias. Both route only to the beta project at commit `130e308`. |
+| App URL | `https://beta.williamtemple.app` is the stable beta origin; `https://lotto-beta-sigma.vercel.app` remains a generated alias. Both route only to the beta project, whose Production deployments track `codex/v2-realtime-beta`. |
 | Neon | Separate Free resource `neon-copper-queen` in Portland (US West), connected to beta Production only |
 | Schema | The original 15 expected `public` tables plus the additive Phase 3 `raffle_state.revision` and `raffle_public_state_publications` schema are applied. Metadata verification found the revision column, outbox table, four expected outbox indexes, and zero initial outbox rows. |
 | Runtime config | Distinct beta `AUTH_SECRET` and `ENCRYPTION_MASTER_KEY`; production-safe auth bypass/domain/from-address settings plus `LOTTO_DEPLOYMENT_ENVIRONMENT=beta` applied |
 | Public smoke | `/` renders and `/api/state` returns `200` from the isolated Neon database; polling behavior is unchanged |
 | Authentication | A sending-only `LOTTO Beta` Resend key, restricted to the already verified `williamtemple.app` domain, is stored only in the beta Vercel Production environment. `AUTH_URL` and Auth.js provider callbacks use `https://beta.williamtemple.app`. Deployment `HqLiGzzahAf2QxHe5MPHqQKND5Ua` is ready; Resend delivered the custom-origin Magic Link, the link established an authenticated `/admin` session, and the page reached Persistence confirmed. A session created on the generated Vercel hostname did not cross to the custom hostname. The key remains in the existing Resend workspace for this proof; domain/account migration is explicitly deferred. |
 | Blob | Separate public store `lotto-beta-blob` is provisioned in Portland (`PDX1`) and connected only to the beta project; its read-write token/store ID/webhook key are generated for beta Production and Preview |
-| Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret; the remote protocol verifier passes, and a bounded 1/10/100/200-client run delivered all 311 target updates. The Phase 3 schema is ready; shadow publication remains disabled and the integrating app code is not yet deployed. |
+| Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret. The remote protocol verifier passes, a bounded 1/10/100/200-client run delivered all 311 target updates, and beta-only Neon shadow publication is enabled and repair-proven through revision `16`. The explicit Home/Display `?realtime=observe` cohort is enabled only on beta: its first live mutation arrived in `127 ms`, briefly reported hub-ahead, and converged with the authoritative poll in `1,221 ms` with zero reconnects. Polling remains the rendered authority. |
 | DNS | Cloudflare serves a DNS-only `beta` CNAME to Vercel plus the Vercel ownership-verification TXT value alongside the existing apex/`www` verification values. The apex, `www`, and `feed` records were not changed. The Worker already allowlists the stable beta origin. |
 | Safety UX | Beta-only `X-Robots-Tag`, blocking `robots.txt`, and visible sign-in/admin warning banner are implemented; production behavior remains unchanged because the feature requires the explicit beta environment value |
 
 The first Vercel deployment was created manually from the beta branch after
 Production branch tracking was changed from `main`. Do not change that tracking
-or move the custom hostname to another project. The deployed Worker is still
-standalone: no Neon write path publishes to it and no public client reads from
-it. The beta email proof does not authorize moving `williamtemple.app` between
-Resend workspaces: that domain also serves live LOTTO and the separately hosted
-FEED application, so any future account migration requires a coordinated
-credential cutover for all three applications.
+or move the custom hostname to another project. Neon now publishes only an
+allowlisted derived projection to the beta Worker, and only explicit
+Home/Display observer URLs read it; neither path is authoritative or permitted
+to render pushed state. The beta email proof does not authorize moving
+`williamtemple.app` between Resend workspaces: that domain also serves live
+LOTTO and the separately hosted FEED application, so any future account
+migration requires a coordinated credential cutover for all three applications.
 
 The Phase 3 server settings are deliberately separate from browser connection
 flags. Keep them server-only:
 
 ```text
-LOTTO_REALTIME_SHADOW_PUBLISH=false
+LOTTO_REALTIME_SHADOW_PUBLISH=true
 LOTTO_REALTIME_HUB_URL=https://lotto-realtime-beta.et2-geiger.workers.dev
 LOTTO_REALTIME_EXPECTED_HUB_HOST=lotto-realtime-beta.et2-geiger.workers.dev
 LOTTO_REALTIME_AGENCY_ID=william-temple-house
@@ -183,10 +184,10 @@ LOTTO_REALTIME_PUBLISH_TIMEOUT_MS=1500
 The first Phase 4 browser observer has its own independent switch:
 
 ```text
-LOTTO_REALTIME_CLIENT_CANARY=false
+LOTTO_REALTIME_CLIENT_CANARY=true
 ```
 
-Set it to `true` only in the isolated beta deployment. The app then permits an
+It is currently `true` only in the isolated beta deployment. The app permits an
 exact beta Worker `wss://` origin in CSP and issues a read-only observer
 configuration only to Home/Display clients that also opt in with
 `?realtime=observe`. Polling remains authoritative and rendered; the observer

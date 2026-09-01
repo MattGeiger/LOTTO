@@ -280,6 +280,18 @@ authentication-failure/newest-only-repair gate; timeout, evidence-update, and
 invalid-evidence behavior remain covered deterministically by the focused test
 suite rather than additional live destructive injections.
 
+## First live browser delivery checkpoint
+
+The next harmless same-value display-URL save advanced isolated beta Neon and
+the outbox to revision `16`. The open Phase 4 observer received the accepted
+Durable Object broadcast in `127 ms`, while its existing polled checksum still
+matched revision `15`; after the normal visible-document refresh path ran, the
+two allowlisted projections matched by checksum in `1,221 ms`. The publication
+diagnostic reported revision `16`, status `accepted`, and attempt count `1`.
+Polling remained authoritative and the pushed payload was not rendered. See
+[`REALTIME_CLIENT_CANARY.md`](./REALTIME_CLIENT_CANARY.md) for the browser-side
+measurement and remaining gates.
+
 ## Rollout sequence
 
 1. Apply the idempotent additive schema to the isolated beta Neon database.

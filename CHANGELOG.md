@@ -133,7 +133,13 @@
   Focused tests cover gating, tamper rejection, zero observer fetches,
   single-socket lifecycle, visibility, retry limits, and configuration
   forwarding; the full suite, production build, legacy scan, and hydration
-  smoke pass. Pushed state is not rendered and no polling has been removed.
+  smoke pass. The observer is now deployed only to the explicit beta cohort. A
+  harmless authenticated configuration save produced live revision `16`: the
+  WebSocket delivered it in `127 ms`, reported hub-ahead while polling still
+  held revision `15`, and matched the refreshed authoritative projection in
+  `1,221 ms` with zero reconnects. That first convergence value remained fixed
+  through later refreshes, and the Admin diagnostic recorded accepted attempt
+  `1`. Pushed state is not rendered and no polling has been removed.
 
 ### Changed
 
