@@ -9,6 +9,18 @@ Either method lands on `/admin`. Already signed in? Going straight to `/admin`
 works too. Only email addresses authorized by your agency administrator can
 receive or complete a staff sign-in.
 
+## Recognizing the Beta Test Environment
+
+The experimental beta site shows a gold **Beta test environment** banner on
+staff sign-in, sign-in confirmation, and Staff Dashboard screens. Data and
+actions on a page carrying this banner stay in the isolated beta environment
+and do not affect the production LOTTO app. Use synthetic test queues there;
+do not treat beta as the live service-day dashboard.
+
+The production app does not show this banner. If you intended to test beta but
+cannot see it, stop before changing queue state and confirm the address with the
+person coordinating the test.
+
 ## Setting Today's Ticket Range
 
 Before calling anyone, tell LOTTO which ticket numbers are in play.

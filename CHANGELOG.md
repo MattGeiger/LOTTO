@@ -49,6 +49,13 @@
 
 ### Changed
 
+- **Added explicit beta-environment safety cues.** Deployments marked with
+  `LOTTO_DEPLOYMENT_ENVIRONMENT=beta` now send a site-wide
+  `X-Robots-Tag: noindex, nofollow, noarchive, nosnippet` header, disallow all
+  crawling in `robots.txt`, and show a gold warning banner on staff sign-in,
+  Magic Link confirmation, and Admin surfaces. Production omits all three
+  behaviors unless it is deliberately given the beta marker. The Staff Controls
+  guide now explains how testers distinguish beta from the live dashboard.
 - **Reserved v2.0 for the provisional realtime public-state architecture.**
   `docs/V2.0_PLANNED_FEATURES.md` now makes the Durable Object proof—not Pantry
   Time—the major-version gate; `docs/POLLING.md` preserves adaptive polling as

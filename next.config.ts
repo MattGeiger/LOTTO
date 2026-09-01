@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { getBrandProfile, getInventoryIntegration } from "./src/config/brand";
+import { isBetaDeployment } from "./src/lib/deployment-environment";
 
 const enableTweakcnPreview = process.env.VERCEL !== "1";
 const speedInsightsScriptHost = "https://va.vercel-scripts.com";
@@ -66,6 +67,15 @@ const nextConfig: NextConfig = {
     return config;
   },
   async headers() {
+    const indexingHeaders = isBetaDeployment()
+      ? [
+          {
+            key: "X-Robots-Tag",
+            value: "noindex, nofollow, noarchive, nosnippet",
+          },
+        ]
+      : [];
+
     return [
       {
         source: "/(.*)",
@@ -84,6 +94,7 @@ const nextConfig: NextConfig = {
               "form-action 'self'",
             ].join("; "),
           },
+          ...indexingHeaders,
         ],
       },
       {
