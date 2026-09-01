@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   hashPublicState,
+  publicStateEnvelopeSchema,
   toPublicRaffleState,
 } from "@/lib/realtime/public-state-protocol";
 import { defaultState, type DisplayLanguageRotation } from "@/lib/state-types";
@@ -671,6 +672,231 @@ describe("createDbStateManager", () => {
       LOTTO_REALTIME_PUBLISH_TIMEOUT_MS: "1000",
     };
 
+    type DbStateManager = ReturnType<
+      (typeof import("@/lib/state-manager-db"))["createDbStateManager"]
+    >;
+
+    type MutationCase = {
+      name: string;
+      run: (
+        candidate: DbStateManager,
+        resetObservation: () => void,
+      ) => Promise<unknown>;
+    };
+
+    const mutationCases: MutationCase[] = [
+      {
+        name: "generate",
+        run: async (candidate) => {
+          queueStateRow(defaultState);
+          return candidate.generateState({
+            startNumber: 1,
+            endNumber: 5,
+            mode: "sequential",
+          });
+        },
+      },
+      {
+        name: "append",
+        run: async (candidate) => {
+          queueStateRow(activeState());
+          return candidate.appendTickets(15);
+        },
+      },
+      {
+        name: "extend range",
+        run: async (candidate) => {
+          queueStateRow(activeState());
+          return candidate.extendRange(15);
+        },
+      },
+      {
+        name: "generate batch",
+        run: async (candidate) => {
+          queueStateRow(activeState({
+            generatedOrder: [1, 2, 3],
+            mode: "sequential",
+          }));
+          return candidate.generateBatch({
+            startNumber: 1,
+            endNumber: 10,
+            batchSize: 2,
+          });
+        },
+      },
+      {
+        name: "set mode",
+        run: async (candidate) => {
+          queueStateRow(activeState());
+          return candidate.setMode("sequential");
+        },
+      },
+      {
+        name: "set current ticket",
+        run: async (candidate) => {
+          queueStateRow(activeState({ currentlyServing: null }));
+          return candidate.updateCurrentlyServing(5);
+        },
+      },
+      {
+        name: "clear current ticket",
+        run: async (candidate) => {
+          queueStateRow(activeState());
+          return candidate.updateCurrentlyServing(null);
+        },
+      },
+      {
+        name: "advance serving next",
+        run: async (candidate) => {
+          queueStateRow(activeState({ currentlyServing: 3 }));
+          return candidate.advanceServing("next");
+        },
+      },
+      {
+        name: "advance serving previous",
+        run: async (candidate) => {
+          queueStateRow(activeState({ currentlyServing: 7 }));
+          return candidate.advanceServing("prev");
+        },
+      },
+      {
+        name: "mark returned",
+        run: async (candidate) => {
+          queueStateRow(activeState());
+          return candidate.markTicketReturned(5);
+        },
+      },
+      {
+        name: "mark unclaimed",
+        run: async (candidate) => {
+          queueStateRow(activeState({ currentlyServing: 7 }));
+          return candidate.markTicketUnclaimed(3);
+        },
+      },
+      {
+        name: "revert ticket status",
+        run: async (candidate) => {
+          queueStateRow(activeState({
+            ticketStatus: { 5: "returned" },
+          }));
+          return candidate.revertTicketStatus(5);
+        },
+      },
+      {
+        name: "reset",
+        run: async (candidate) => {
+          queueStateRow(activeState());
+          mockQueryResults.push([]);
+          return candidate.resetState();
+        },
+      },
+      {
+        name: "restore snapshot",
+        run: async (candidate) => {
+          mockQueryResults.push([{ payload: activeState({ currentlyServing: 7 }) }]);
+          return candidate.restoreSnapshot("snapshot-to-restore");
+        },
+      },
+      {
+        name: "undo",
+        run: async (candidate) => {
+          mockQueryResults.push(
+            [
+              { id: "snap-current", created_at: "2026-09-01T12:01:00.000Z" },
+              { id: "snap-previous", created_at: "2026-09-01T12:00:00.000Z" },
+            ],
+            [{ payload: activeState({ currentlyServing: 1 }) }],
+          );
+          return candidate.undo();
+        },
+      },
+      {
+        name: "redo",
+        run: async (candidate, resetObservation) => {
+          mockQueryResults.push(
+            [
+              { id: "snap-current", created_at: "2026-09-01T12:01:00.000Z" },
+              { id: "snap-previous", created_at: "2026-09-01T12:00:00.000Z" },
+            ],
+            [{ payload: activeState({ currentlyServing: 1 }) }],
+          );
+          await candidate.undo();
+          resetObservation();
+          mockQueryResults.push([{ payload: activeState({ currentlyServing: 7 }) }]);
+          return candidate.redo();
+        },
+      },
+      {
+        name: "set display URL",
+        run: async (candidate) => {
+          queueStateRow(activeState());
+          return candidate.setDisplayUrl("https://beta.williamtemple.app");
+        },
+      },
+      {
+        name: "set operating hours",
+        run: async (candidate) => {
+          queueStateRow(activeState());
+          return candidate.setOperatingHours(
+            defaultState.operatingHours!,
+            "America/Los_Angeles",
+          );
+        },
+      },
+      {
+        name: "set display-language rotation",
+        run: async (candidate) => {
+          queueStateRow(activeState());
+          return candidate.setDisplayLanguageRotation({
+            enabled: true,
+            languages: ["en", "es"],
+            intervalSeconds: 60,
+          });
+        },
+      },
+      {
+        name: "clear display-language rotation",
+        run: async (candidate) => {
+          queueStateRow(activeState({
+            displayLanguageRotation: {
+              enabled: true,
+              languages: ["en"],
+              intervalSeconds: 60,
+            },
+          }));
+          return candidate.setDisplayLanguageRotation(null);
+        },
+      },
+      {
+        name: "set announcement",
+        run: async (candidate) => {
+          queueStateRow(activeState());
+          return candidate.setAnnouncement({
+            enabled: true,
+            markdown: "Phase 3 validation",
+            startsAt: null,
+            endsAt: null,
+            updatedAt: Date.now(),
+          });
+        },
+      },
+      {
+        name: "clear announcement",
+        run: async (candidate) => {
+          queueStateRow(activeState({
+            announcement: {
+              enabled: true,
+              markdown: "Phase 3 validation",
+              startsAt: null,
+              endsAt: null,
+              updatedAt: Date.now(),
+            },
+          }));
+          return candidate.setAnnouncement(null);
+        },
+      },
+    ];
+
     it("publishes the committed public projection and records acceptance", async () => {
       const fetchImpl = vi.fn().mockResolvedValue(
         new Response(JSON.stringify({ accepted: true }), { status: 202 }),
@@ -709,6 +935,52 @@ describe("createDbStateManager", () => {
         "status = 'superseded'",
       );
     });
+
+    it.each(mutationCases)(
+      "publishes every persisted mutation: $name",
+      async ({ run }) => {
+        const fetchImpl = vi.fn().mockResolvedValue(
+          new Response(JSON.stringify({ accepted: true }), { status: 202 }),
+        );
+        const { createDbStateManager } = await import("@/lib/state-manager-db");
+        const realtimeManager = createDbStateManager(
+          "postgresql://test:test@localhost:5432/test",
+          { environment: enabledEnvironment, fetchImpl },
+        );
+        const resetObservation = () => {
+          fetchImpl.mockClear();
+          mockTransactionFn.mockClear();
+          mockDirectSql = [];
+          mockTransactionSql = [];
+        };
+
+        await run(realtimeManager, resetObservation);
+
+        expect(fetchImpl).toHaveBeenCalledTimes(1);
+        expect(mockTransactionFn).toHaveBeenCalledTimes(1);
+        expect(mockTransactionSql.join("\n")).toContain(
+          "insert into raffle_public_state_publications",
+        );
+        expect(mockTransactionSql.join("\n")).toContain(
+          "revision = raffle_state.revision + 1",
+        );
+        expect(mockDirectSql.join("\n")).toContain("set status = 'accepted'");
+
+        const [url, request] = fetchImpl.mock.calls[0] as [URL, RequestInit];
+        expect(url.toString()).toBe(
+          "https://lotto-realtime-beta.et2-geiger.workers.dev/v1/agencies/william-temple-house/publish",
+        );
+        expect(request).toMatchObject({ method: "POST", cache: "no-store" });
+        const envelope = publicStateEnvelopeSchema.parse(
+          JSON.parse(String(request.body)),
+        );
+        expect(envelope.revision).toBe(1);
+        expect(envelope.state).not.toHaveProperty("queueSession");
+        await expect(hashPublicState(envelope.state)).resolves.toBe(
+          envelope.checksum,
+        );
+      },
+    );
 
     it("increments the authoritative revision without creating an outbox row when disabled", async () => {
       queueStateRow(activeState());

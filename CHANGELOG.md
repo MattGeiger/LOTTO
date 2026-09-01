@@ -88,6 +88,14 @@
   one accepted attempt with no error, and the identical checksum in the Durable
   Object snapshot. Public clients still use `/api/state`; the remaining action,
   failure/repair, WebSocket-canary, and legacy-device gates are open.
+- **Automated the Phase 3 persisted-mutation contract matrix.** The new
+  `realtime:shadow:check` command runs protocol, safety-configuration, timeout,
+  redaction, repair, diagnostics, and database integration coverage. A
+  parameterized matrix proves 22 generate/range/serving/status/history/config
+  variants each create the atomic outbox intent, make exactly one post-commit
+  request, record acceptance, exclude internal queue-session evidence, and
+  recompute to the emitted checksum. The first run passed 100 focused tests;
+  the full suite passed 874 tests with one expected fixture skipped.
 
 ### Changed
 
