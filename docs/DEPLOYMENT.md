@@ -108,7 +108,7 @@ for every brand profile.
 - **Email:** Resend (`login@williamtemple.app`; configure SPF/DKIM/DMARC in DNS).
 - **Database:** Neon Postgres (serverless) with a shared connection pool.
 
-### Planned v2.0 beta environment (not yet provisioned)
+### v2.0 beta environment (provisioning in progress)
 
 The provisional realtime architecture proof will use a stable,
 production-shaped deployment at `https://beta.williamtemple.app`. This should
@@ -140,8 +140,31 @@ Promotion moves reviewed code, protocol versions, additive schema migrations,
 Worker configuration, and runbooks. Never promote beta database rows, Blob
 objects, Durable Object storage, auth tokens, or secrets into production.
 
-This environment remains a plan until its provisioning phase is explicitly
-approved. See
+Provisioning was explicitly approved on August 31, 2026. The current proof
+environment is intentionally incomplete and must not be mistaken for an
+accepted v2.0 architecture or a production promotion:
+
+| Layer | Current beta status |
+| ----- | ------------------- |
+| Git | `codex/v2-realtime-beta`; `main` and the live WTH project remain untouched |
+| Vercel | Separate Hobby-team project `wth_apps/lotto-beta`; Production tracks only the beta branch |
+| App URL | `https://lotto-beta-sigma.vercel.app` is live from commit `1101324`; `beta.williamtemple.app` is not attached yet |
+| Neon | Separate Free resource `neon-copper-queen` in Portland (US West), connected to beta Production only |
+| Schema | All 32 comment-free statements from canonical `schema.sql` applied; all 15 expected `public` tables verified |
+| Runtime config | Distinct beta `AUTH_SECRET` and `ENCRYPTION_MASTER_KEY`; production-safe auth bypass/domain/from-address settings applied |
+| Public smoke | `/` renders and `/api/state` returns `200` from the isolated Neon database; polling behavior is unchanged |
+| Authentication | Login renders, but no beta `RESEND_API_KEY` is configured; `/api/auth/providers` returns `500` and sign-in is not validated |
+| Blob | Separate beta store is still unprovisioned |
+| Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret; the remote protocol verifier passes health, auth, snapshot, WebSocket, idempotency, monotonicity, and CORS checks |
+| Safety UX | Beta no-index policy and visible staff/admin non-production banner remain required before wider testing |
+
+The first Vercel deployment was created manually from the beta branch after
+Production branch tracking was changed from `main`. Do not change that tracking
+or attach the custom hostname until the missing email, Blob, no-index, and
+beta-banner gates are addressed. The deployed Worker is still standalone: no
+Neon write path publishes to it and no public client reads from it.
+
+See
 [`V2.0_REALTIME_ARCHITECTURE_PLAN.md`](./V2.0_REALTIME_ARCHITECTURE_PLAN.md)
 for the phased gates and rollback requirements.
 

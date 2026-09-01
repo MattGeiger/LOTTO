@@ -3,6 +3,7 @@
   "name": "lotto-realtime-beta",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-31",
+  "preview_urls": false,
   "durable_objects": {
     "bindings": [
       {
@@ -18,7 +19,7 @@
     },
   ],
   "vars": {
-    "ALLOWED_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000,https://beta.williamtemple.app",
+    "ALLOWED_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000,https://lotto-beta-sigma.vercel.app,https://beta.williamtemple.app",
     "ENVIRONMENT": "beta",
   },
   "observability": {
