@@ -105,6 +105,14 @@
   hub revision `14`, and created one immutable session closeout. Production and
   `main` remained unchanged; append/range/batch/config and injected
   failure/repair gates remain.
+- **Added a beta-only realtime publication diagnostic and repair surface.**
+  Authorized administrators can open `/admin/realtime` to inspect only the
+  newest outbox metadata and issue one explicit newest-state retry. The route
+  fails closed outside beta, rechecks the administrator allowlist at the data
+  boundary, never returns the public payload or publish secret, and uses
+  `no-store` responses. The client performs one initial read with no polling;
+  status refresh and repair are user-driven and have request-count regression
+  coverage. The Phase 3 shadow check now includes the endpoint and UI contract.
 
 ### Changed
 

@@ -21,6 +21,21 @@ The production app does not show this banner. If you intended to test beta but
 cannot see it, stop before changing queue state and confirm the address with the
 person coordinating the test.
 
+### Realtime Beta Diagnostics
+
+During the v2.0 architecture proof, authorized beta testers can open
+`/admin/realtime` to inspect the newest shadow-publication record. This
+diagnostic page exists only when LOTTO is explicitly marked as beta; production
+returns Not Found. It loads once when opened and refreshes only when you select
+**Refresh status**, so leaving the page open does not create another polling
+loop.
+
+**Retry newest publication** retries only the newest pending or failed copy of
+public queue state. It does not alter, undo, or replace the authoritative Neon
+raffle state. If no repair is needed, LOTTO says so without issuing repeated
+requests. This is an engineering validation surface, not part of the normal
+service-day workflow.
+
 ## Setting Today's Ticket Range
 
 Before calling anyone, tell LOTTO which ticket numbers are in play.
