@@ -10,6 +10,38 @@ const inventoryIntegration = getInventoryIntegration(brandProfile);
 const feedPublicInventoryHost = inventoryIntegration.url
   ? new URL(inventoryIntegration.url).origin
   : null;
+type Environment = Readonly<Record<string, string | undefined>>;
+
+export const resolveRealtimeCanaryConnectHost = (
+  environment: Environment = process.env,
+) => {
+  const flag = environment.LOTTO_REALTIME_CLIENT_CANARY?.trim().toLowerCase();
+  if (!flag || flag === "false") return null;
+  if (flag !== "true" || !isBetaDeployment(environment)) {
+    throw new Error("The realtime client CSP may be enabled only in the beta deployment.");
+  }
+  const rawHubUrl = environment.LOTTO_REALTIME_HUB_URL?.trim();
+  if (!rawHubUrl) {
+    throw new Error("LOTTO_REALTIME_HUB_URL is required for the realtime client CSP.");
+  }
+  const hubUrl = new URL(rawHubUrl);
+  const expectedHost =
+    environment.LOTTO_REALTIME_EXPECTED_HUB_HOST?.trim()
+    ?? "lotto-realtime-beta.et2-geiger.workers.dev";
+  if (
+    hubUrl.protocol !== "https:"
+    || hubUrl.hostname !== expectedHost
+    || hubUrl.username
+    || hubUrl.password
+    || hubUrl.search
+    || hubUrl.hash
+    || (hubUrl.pathname !== "/" && hubUrl.pathname !== "")
+  ) {
+    throw new Error("The realtime client CSP requires the exact configured beta HTTPS hub origin.");
+  }
+  return hubUrl.origin.replace(/^https:/, "wss:");
+};
+const realtimeCanaryConnectHost = resolveRealtimeCanaryConnectHost();
 
 // React's development build calls eval() to reconstruct callstacks across the
 // server/client boundary. Modern engines take a different path, but older
@@ -34,6 +66,7 @@ const connectSrcHosts = [
   speedInsightsConnectHost,
   speedInsightsScriptHost,
   feedPublicInventoryHost,
+  realtimeCanaryConnectHost,
   ...(enableTweakcnPreview ? ["https://tweakcn.com", "https://*.tweakcn.com"] : []),
 ].filter(Boolean);
 const connectSrc = `connect-src ${connectSrcHosts.join(" ")}`;

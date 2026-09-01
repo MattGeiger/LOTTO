@@ -6,7 +6,12 @@
 // is not covered by this license; see TRADEMARKS.md.
 
 import { PersonalizedHomePage } from "@/components/personalized-home-page";
+import { resolveRealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
 
 export default function HomePage() {
-  return <PersonalizedHomePage />;
+  return (
+    <PersonalizedHomePage
+      realtimeCanary={resolveRealtimeCanaryClientConfig()}
+    />
+  );
 }

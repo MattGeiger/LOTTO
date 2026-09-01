@@ -25,6 +25,10 @@ import { formatDate } from "@/lib/date-format";
 import { getPollingIntervalMs } from "@/lib/polling-strategy";
 import { isRTL } from "@/lib/rtl-utils";
 import type { DayOfWeek, OperatingHours, RaffleState } from "@/lib/state-types";
+import {
+  isRealtimeCanaryCohort,
+  type RealtimeCanaryClientConfig,
+} from "@/lib/realtime/client-canary-config";
 import { formatWaitTime } from "@/lib/time-format";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +77,9 @@ const formatServiceClock = (input: Date | number, language: Language): string =>
 const POLL_ERROR_RETRY_MS = 30_000;
 const BURST_DURATION_MS = 2 * 60_000;
 const EMPTY_GENERATED_ORDER: number[] = [];
+const RealtimeCanaryObserver = React.lazy(
+  () => import("@/components/realtime-canary-observer"),
+);
 
 const DAYS: DayOfWeek[] = [
   "sunday",
@@ -131,6 +138,7 @@ type ReadOnlyDisplayProps = {
   languageTextAnimation?: "scramble" | "none";
   showQrCode?: boolean;
   showHeaderLogo?: boolean;
+  realtimeCanary?: RealtimeCanaryClientConfig | null;
 };
 
 export const ReadOnlyDisplay = ({
@@ -142,6 +150,7 @@ export const ReadOnlyDisplay = ({
   languageTextAnimation = "scramble",
   showQrCode = true,
   showHeaderLogo = true,
+  realtimeCanary = null,
 }: ReadOnlyDisplayProps) => {
   const { language, t, translateBrandString } = useLanguage();
 
@@ -158,6 +167,7 @@ export const ReadOnlyDisplay = ({
   const burstUntilRef = React.useRef<number | null>(null);
   const lastSearchRequestRef = React.useRef(0);
   const [deviceNowMs, setDeviceNowMs] = React.useState(() => Date.now());
+  const [realtimeCanarySelected, setRealtimeCanarySelected] = React.useState(false);
   const { serviceLabel } = useBrand();
 
   const formattedDate = formatDate(language, deviceNowMs);
@@ -258,6 +268,12 @@ export const ReadOnlyDisplay = ({
       window.clearInterval(intervalId);
     };
   }, []);
+
+  React.useEffect(() => {
+    setRealtimeCanarySelected(
+      Boolean(realtimeCanary && isRealtimeCanaryCohort(window.location.search)),
+    );
+  }, [realtimeCanary]);
 
 
   // The browser tab / document title is intentionally left to the static,
@@ -408,6 +424,11 @@ export const ReadOnlyDisplay = ({
 
   return (
     <ScrambleOnLanguageChange enabled={languageTextAnimation === "scramble"}>
+      {realtimeCanary && realtimeCanarySelected ? (
+        <React.Suspense fallback={null}>
+          <RealtimeCanaryObserver config={realtimeCanary} polledState={state} />
+        </React.Suspense>
+      ) : null}
       <div
         dir={isRTL(language) ? "rtl" : "ltr"}
         lang={language}
