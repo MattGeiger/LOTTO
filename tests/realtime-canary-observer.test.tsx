@@ -139,6 +139,9 @@ describe("RealtimeCanaryObserver", () => {
     });
     expect(FakeWebSocket.instances).toHaveLength(1);
     expect(fetch).not.toHaveBeenCalled();
+
+    view.unmount();
+    expect(window.__LOTTO_REALTIME_CANARY__).toBeUndefined();
   });
 
   it("rejects a checksummed envelope whose state was tampered with", async () => {
