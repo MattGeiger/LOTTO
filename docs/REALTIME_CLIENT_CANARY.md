@@ -143,6 +143,32 @@ selection, valid equality, tamper rejection, zero observer fetches, single
 socket reuse, visibility pause/resume, the five-attempt retry ceiling, and
 Display configuration forwarding.
 
+## First live beta observation
+
+The first production-shaped browser observation completed on the isolated beta
+stack on September 1, 2026:
+
+- the ordinary `/display` control did not create an observer, while
+  `/display?realtime=observe` connected and matched the polled revision-15
+  projection;
+- the first stored snapshot correctly reported no delivery latency because it
+  was not a live broadcast;
+- saving the existing beta display URL to itself committed a harmless Neon
+  revision `16`, which the open socket received as a live broadcast in `127 ms`;
+- the observer first reported `Hub ahead; polling unchanged`, then matched the
+  refreshed `/api/state` projection in `1,221 ms` without rendering the pushed
+  copy;
+- the first-match convergence value remained exactly `1,221 ms` through two
+  later refreshes, proving it is a fixed measurement rather than a growing
+  snapshot-age counter;
+- the socket received two valid frames with zero reconnects; and
+- `/admin/realtime` reported revision `16` as `accepted` on attempt `1`.
+
+The convergence refresh was triggered through the same visible-document path
+used when a tab returns to the foreground so the proof did not need to wait for
+the adaptive poll ceiling. Temporary in-page event sampling was removed after
+the run. This is one successful checkpoint, not a completed Phase 4 canary.
+
 ## Current limitations and Phase 4 gates
 
 - Only Home and Display are connected. Inventory celebration and Arcade banner
