@@ -43,9 +43,9 @@
   changing `main` or the live WTH project. Its isolated Portland Neon resource,
   `neon-copper-queen`, received all canonical `schema.sql` statements and all
   15 expected tables were verified. The generated beta URL and Neon-backed
-  `/api/state` pass initial smoke tests; Resend, Blob, custom DNS, beta no-index
-  policy, and the non-production staff banner remain explicit gates rather than
-  assumed-complete infrastructure.
+  `/api/state` pass initial smoke tests. A separate public Portland Blob store,
+  `lotto-beta-blob`, is connected only to the beta project; Resend and custom
+  DNS remain explicit gates rather than assumed-complete infrastructure.
 
 ### Changed
 

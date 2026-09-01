@@ -154,15 +154,15 @@ accepted v2.0 architecture or a production promotion:
 | Runtime config | Distinct beta `AUTH_SECRET` and `ENCRYPTION_MASTER_KEY`; production-safe auth bypass/domain/from-address settings plus `LOTTO_DEPLOYMENT_ENVIRONMENT=beta` applied |
 | Public smoke | `/` renders and `/api/state` returns `200` from the isolated Neon database; polling behavior is unchanged |
 | Authentication | Login renders, but no beta `RESEND_API_KEY` is configured; `/api/auth/providers` returns `500` and sign-in is not validated |
-| Blob | Separate beta store is still unprovisioned |
+| Blob | Separate public store `lotto-beta-blob` is provisioned in Portland (`PDX1`) and connected only to the beta project; its read-write token/store ID/webhook key are generated for beta Production and Preview |
 | Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret; the remote protocol verifier passes, and a bounded 1/10/100/200-client run delivered all 311 target updates |
 | Safety UX | Beta-only `X-Robots-Tag`, blocking `robots.txt`, and visible sign-in/admin warning banner are implemented; production behavior remains unchanged because the feature requires the explicit beta environment value |
 
 The first Vercel deployment was created manually from the beta branch after
 Production branch tracking was changed from `main`. Do not change that tracking
-or attach the custom hostname until the missing email and Blob gates are
-addressed. The deployed Worker is still standalone: no Neon write path
-publishes to it and no public client reads from it.
+or attach the custom hostname until the missing email gate is addressed. The
+deployed Worker is still standalone: no Neon write path publishes to it and no
+public client reads from it.
 
 See
 [`V2.0_REALTIME_ARCHITECTURE_PLAN.md`](./V2.0_REALTIME_ARCHITECTURE_PLAN.md)
