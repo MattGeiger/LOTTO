@@ -180,6 +180,7 @@ export const useRealtimeCanary = (
 
       const socket = new WebSocket(config.eventsUrl);
       socketRef.current = socket;
+      let messagesOnSocket = 0;
 
       const scheduleReconnect = () => {
         if (disposed || terminalInvalid || document.visibilityState === "hidden") return;
@@ -229,6 +230,8 @@ export const useRealtimeCanary = (
 
           const envelope = parsed.data;
           const receivedAt = Date.now();
+          const isInitialSnapshot = messagesOnSocket === 0;
+          messagesOnSocket += 1;
           hubEnvelopeRef.current = envelope;
           hubReceivedAtRef.current = receivedAt;
           reconnectAttemptRef.current = 0;
@@ -245,7 +248,9 @@ export const useRealtimeCanary = (
             hubRevision: envelope.revision,
             hubChecksum: envelope.checksum,
             messagesReceived: current.messagesReceived + 1,
-            deliveryLatencyMs: Math.max(0, receivedAt - new Date(envelope.publishedAt).getTime()),
+            deliveryLatencyMs: isInitialSnapshot
+              ? null
+              : Math.max(0, receivedAt - new Date(envelope.publishedAt).getTime()),
             ...comparison,
           }));
         })();
