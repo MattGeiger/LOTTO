@@ -35,6 +35,9 @@ export const assertBetaOnlyTarget = (baseUrl, environment) => {
   }
 };
 
+/**
+ * @param {Record<string, string | undefined>} [environment]
+ */
 export const resolveBenchmarkConfig = (environment = process.env) => {
   const baseUrl = new URL(
     environment.REALTIME_TEST_BASE_URL ?? "http://127.0.0.1:8787",
