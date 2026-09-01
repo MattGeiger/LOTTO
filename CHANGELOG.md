@@ -37,6 +37,22 @@
   target revision across 1, 10, 100, and 200 simultaneous-client groups (311
   total connections); repeat/stress, hibernation/wake, fault, measurement, and
   legacy-device Phase 2 gates remain open.
+- **Added a beta-only polling-versus-realtime benchmark.** Equal synthetic
+  cohorts now observe the same checksummed Durable Object revisions while the
+  runner measures p50/p95/p99 delivery latency, connection latency, convergence,
+  and recurring snapshot reads. It enforces client, publication, timeout, and
+  duration caps; requires both an explicit beta acknowledgement and exact beta
+  hostname for remote use; writes timestamped gitignored JSON reports; and exits
+  nonzero when correctness or latency gates fail. Focused tests cover the
+  production-host refusal, workload limits, percentile reporting, and projected
+  polling reads. The first local 10-client/five-publication run delivered all
+  50 observations per cohort with realtime p95 5.63 ms versus polling p95
+  997.18 ms at the synthetic one-second cadence; this is transport evidence,
+  not yet a Neon-compute claim. The matching remote beta run delivered all 50
+  observations with realtime p95 78.58 ms versus polling p95 996.95 ms. A
+  separate five-client object survived a 60-second request-free idle window and
+  delivered the next revision to every socket at 88.16 ms p95; Cloudflare
+  metrics must still confirm actual Durable Object hibernation.
 - **Provisioned the first production-shaped beta application boundary.** The
   separate `wth_apps/lotto-beta` Vercel project tracks only
   `codex/v2-realtime-beta` and successfully deployed without

@@ -46,6 +46,17 @@ connections, and refuses a remote host unless
 `REALTIME_TEST_ALLOW_REMOTE=beta`. It writes only to the synthetic
 `william-temple-house-load-e2e` object.
 
+`npm run realtime:benchmark` runs equal polling and WebSocket cohorts against
+the separate synthetic `william-temple-house-benchmark-e2e` object. It records
+delivery latency, checksum convergence, snapshot request counts, and automated
+pass/fail gates in a timestamped JSON artifact. The benchmark adds a stricter
+remote-host equality check and cannot target an application or production
+hostname accidentally. See `docs/REALTIME_BENCHMARK.md` for configuration,
+safe local/remote commands, evidence interpretation, and the limits of this
+Phase 2 comparison. An optional nonzero `REALTIME_BENCHMARK_IDLE_MS` adds a
+realtime-only idle/wake probe on `william-temple-house-idle-e2e`; polling never
+touches that object during its idle window.
+
 ## Deployment safety
 
 Deploy only to the isolated Cloudflare beta Worker named
@@ -55,8 +66,8 @@ it to `wrangler.jsonc`, Git, screenshots, logs, or documentation.
 Production publication and client feature flags must remain disabled until the
 beta exit gates in `docs/V2.0_REALTIME_ARCHITECTURE_PLAN.md` pass.
 
-The verification script writes only to the dedicated
-`william-temple-house-e2e` object. Remote beta verification additionally
+The verification, load, and A/B benchmark scripts write only to their dedicated
+synthetic objects. Remote beta verification additionally
 requires `REALTIME_TEST_ALLOW_REMOTE=beta`, the beta Worker URL in
 `REALTIME_TEST_BASE_URL`, and `https://beta.williamtemple.app` in
 `REALTIME_TEST_ORIGIN`.
