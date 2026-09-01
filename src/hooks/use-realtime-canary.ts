@@ -70,12 +70,14 @@ const compareState = ({
   hubReceivedAt,
   polledChecksum,
   polledTimestamp,
+  existingConvergenceMs,
 }: {
   hubChecksum: string | null;
   hubTimestamp: number | null;
   hubReceivedAt: number | null;
   polledChecksum: string | null;
   polledTimestamp: number | null;
+  existingConvergenceMs: number | null;
 }): Pick<RealtimeCanaryTelemetry, "comparison" | "convergenceMs"> => {
   if (!hubChecksum || !polledChecksum) {
     return { comparison: "waiting", convergenceMs: null };
@@ -83,7 +85,9 @@ const compareState = ({
   if (hubChecksum === polledChecksum) {
     return {
       comparison: "matched",
-      convergenceMs: hubReceivedAt === null ? null : Math.max(0, Date.now() - hubReceivedAt),
+      convergenceMs:
+        existingConvergenceMs
+        ?? (hubReceivedAt === null ? null : Math.max(0, Date.now() - hubReceivedAt)),
     };
   }
   if (
@@ -112,6 +116,7 @@ export const useRealtimeCanary = (
   const polledTimestampRef = React.useRef<number | null>(null);
   const hubEnvelopeRef = React.useRef<PublicStateEnvelope | null>(null);
   const hubReceivedAtRef = React.useRef<number | null>(null);
+  const hubConvergenceRef = React.useRef<{ revision: number; ms: number } | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -141,7 +146,17 @@ export const useRealtimeCanary = (
         hubReceivedAt: hubReceivedAtRef.current,
         polledChecksum: checksum,
         polledTimestamp: timestamp,
+        existingConvergenceMs:
+          hub && hubConvergenceRef.current?.revision === hub.revision
+            ? hubConvergenceRef.current.ms
+            : null,
       });
+      if (hub && comparison.comparison === "matched" && comparison.convergenceMs !== null) {
+        hubConvergenceRef.current = {
+          revision: hub.revision,
+          ms: comparison.convergenceMs,
+        };
+      }
       setTelemetry((current) => withUpdatedAt({
         ...current,
         polledChecksum: checksum,
@@ -241,7 +256,19 @@ export const useRealtimeCanary = (
             hubReceivedAt: receivedAt,
             polledChecksum: polledChecksumRef.current,
             polledTimestamp: polledTimestampRef.current,
+            existingConvergenceMs:
+              hubConvergenceRef.current?.revision === envelope.revision
+                ? hubConvergenceRef.current.ms
+                : null,
           });
+          if (comparison.comparison === "matched" && comparison.convergenceMs !== null) {
+            hubConvergenceRef.current = {
+              revision: envelope.revision,
+              ms: comparison.convergenceMs,
+            };
+          } else if (hubConvergenceRef.current?.revision !== envelope.revision) {
+            hubConvergenceRef.current = null;
+          }
           setTelemetry((current) => withUpdatedAt({
             ...current,
             connection: "connected",

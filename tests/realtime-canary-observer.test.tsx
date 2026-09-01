@@ -126,6 +126,18 @@ describe("RealtimeCanaryObserver", () => {
     });
     expect(fetch).not.toHaveBeenCalled();
 
+    const initialConvergence = window.__LOTTO_REALTIME_CANARY__?.convergenceMs;
+    await act(async () => {
+      view.rerender(
+        <RealtimeCanaryObserver
+          config={config}
+          polledState={structuredClone(state)}
+        />,
+      );
+      await flushAsyncState();
+    });
+    expect(window.__LOTTO_REALTIME_CANARY__?.convergenceMs).toBe(initialConvergence);
+
     await act(async () => {
       view.rerender(
         <RealtimeCanaryObserver
