@@ -96,6 +96,15 @@
   request, record acceptance, exclude internal queue-session evidence, and
   recompute to the emitted checksum. The first run passed 100 focused tests;
   the full suite passed 874 tests with one expected fixture skipped.
+- **Completed the first authenticated live beta mutation matrix.** Generation,
+  serving next/next/previous, Returned, Unclaimed, status reversion, undo, redo,
+  snapshot restore, and reset advanced isolated beta revisions `3` through
+  `14`. All 11 publication rows were accepted on their first attempt with zero
+  non-accepted rows, and every Durable Object revision/checksum matched Neon.
+  The final reset returned beta `/api/state` to an empty HTTP-200 state, matched
+  hub revision `14`, and created one immutable session closeout. Production and
+  `main` remained unchanged; append/range/batch/config and injected
+  failure/repair gates remain.
 
 ### Changed
 
