@@ -243,3 +243,33 @@ All 12 findings have been fixed, tested (82 unit tests passing), and verified in
 | 10 | L3 — Redundant path traversal regex | Low | Remove regex; rely on `path.resolve` + `startsWith` |
 | 11 | L4 — `trustHost` set unconditionally | Low | Set conditionally: `trustHost: !!process.env.VERCEL` |
 | 12 | L5 — No explicit source map protection | Low | Add `productionBrowserSourceMaps: false` to `next.config.ts` |
+
+---
+
+## Provisional v2.0 Realtime Shadow-Publication Boundary
+
+The Phase 3 proof is beta-only and is not a production security approval.
+Neon remains authoritative; Cloudflare receives only the strict
+`PublicRaffleState` allowlist. Internal queue-session evidence, authentication
+data, staff identity, ticket searches, translation credentials, snapshots, and
+secrets are excluded by schema and tests.
+
+Server publication is disabled by default and fails closed outside
+`LOTTO_DEPLOYMENT_ENVIRONMENT=beta`. A remote hub must use HTTPS and match the
+configured hostname exactly. The proof bearer token is accepted only in a
+server-to-server `Authorization` header and must exist only in the beta Vercel
+and Cloudflare secret stores. It must never use a `NEXT_PUBLIC_` name, appear in
+logs, enter outbox payloads, or be returned by diagnostics.
+
+Network exceptions are reduced to generic evidence, HTTP failures record only
+the response status, and stored errors are bounded. Repair validates the strict
+public schema and recalculates its checksum before transmission. It retries
+only the newest pending/failed full-state row with the original publication ID
+and never creates a visitor, timer, cron, or unbounded retry loop.
+
+The current bearer mechanism is acceptable only for the isolated proof.
+Signature/replay protection, key identifiers, overlapping rotation, connection
+limits, threat modeling, and a formal security review remain gates before any
+production canary. See
+[`REALTIME_SHADOW_PUBLICATION.md`](./REALTIME_SHADOW_PUBLICATION.md) and
+[`V2.0_REALTIME_ARCHITECTURE_PLAN.md`](./V2.0_REALTIME_ARCHITECTURE_PLAN.md).

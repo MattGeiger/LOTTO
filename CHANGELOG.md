@@ -71,6 +71,17 @@
   origin. The custom-origin Magic Link completed successfully, and the prior
   generated-host session did not cross to the custom hostname. The apex,
   `www`, `feed`, live LOTTO project, and `main` remain unchanged.
+- **Prepared Phase 3 atomic revision and shadow publication.** The canonical
+  schema now adds a monotonic `raffle_state.revision` and a bounded
+  `raffle_public_state_publications` outbox. When the beta-only flag is enabled,
+  the central state transaction writes the strict checksummed public projection
+  with the authoritative mutation, then makes at most one timeout-bounded
+  post-commit request to the exact beta Worker host. Cloudflare or evidence
+  update failures cannot reject a committed staff action. Internal diagnostics
+  expose metadata only, while explicit recovery validates and retries just the
+  newest pending/failed full state with its original idempotency identity.
+  Network error details are redacted, public polling is unchanged, the flag
+  defaults off, and neither the schema nor code has yet been deployed to beta.
 
 ### Changed
 
