@@ -39,6 +39,13 @@ propagation window before running the remote verifier. The verifier has passed
 health, authentication, snapshot, WebSocket delivery, idempotency, monotonic
 revision, and CORS checks against the remote beta Worker.
 
+`npm run realtime:load` runs the bounded fanout harness with 1, 10, 100, and
+200 clients by default. It accepts a smaller comma-separated set through
+`REALTIME_LOAD_CLIENTS`, caps any one group at 500, caps one run at 1,000 total
+connections, and refuses a remote host unless
+`REALTIME_TEST_ALLOW_REMOTE=beta`. It writes only to the synthetic
+`william-temple-house-load-e2e` object.
+
 ## Deployment safety
 
 Deploy only to the isolated Cloudflare beta Worker named

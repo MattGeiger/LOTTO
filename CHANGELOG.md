@@ -33,8 +33,10 @@
   publish secret, explicit beta-origin allowlist, observability, and hash-based
   preview URLs disabled. Remote synthetic checks pass health, bearer auth,
   snapshot, WebSocket, idempotency, monotonicity, and CORS behavior. This proves
-  the basic transport path only; concurrency, hibernation/wake, fault,
-  measurement, and legacy-device Phase 2 gates remain open.
+  the basic transport path. A new bounded load harness then delivered every
+  target revision across 1, 10, 100, and 200 simultaneous-client groups (311
+  total connections); repeat/stress, hibernation/wake, fault, measurement, and
+  legacy-device Phase 2 gates remain open.
 - **Provisioned the first production-shaped beta application boundary.** The
   separate `wth_apps/lotto-beta` Vercel project tracks only
   `codex/v2-realtime-beta` and successfully deployed commit `1101324` without

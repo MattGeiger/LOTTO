@@ -13,6 +13,7 @@
     "realtime:dev": "wrangler dev --config workers/realtime-hub/wrangler.jsonc",
     "realtime:check": "wrangler deploy --dry-run --config workers/realtime-hub/wrangler.jsonc",
     "realtime:verify": "node scripts/verify-realtime-hub.mjs",
+    "realtime:load": "node scripts/load-test-realtime-hub.mjs",
     "realtime:deploy:beta": "wrangler deploy --config workers/realtime-hub/wrangler.jsonc",
     "check:legacy-bundles": "node scripts/check-legacy-safe-bundles.mjs",
     "smoke:legacy": "node scripts/smoke-legacy-compat.mjs",

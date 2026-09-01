@@ -155,7 +155,7 @@ accepted v2.0 architecture or a production promotion:
 | Public smoke | `/` renders and `/api/state` returns `200` from the isolated Neon database; polling behavior is unchanged |
 | Authentication | Login renders, but no beta `RESEND_API_KEY` is configured; `/api/auth/providers` returns `500` and sign-in is not validated |
 | Blob | Separate beta store is still unprovisioned |
-| Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret; the remote protocol verifier passes health, auth, snapshot, WebSocket, idempotency, monotonicity, and CORS checks |
+| Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret; the remote protocol verifier passes, and a bounded 1/10/100/200-client run delivered all 311 target updates |
 | Safety UX | Beta no-index policy and visible staff/admin non-production banner remain required before wider testing |
 
 The first Vercel deployment was created manually from the beta branch after
