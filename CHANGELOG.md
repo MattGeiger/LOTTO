@@ -44,8 +44,14 @@
   `neon-copper-queen`, received all canonical `schema.sql` statements and all
   15 expected tables were verified. The generated beta URL and Neon-backed
   `/api/state` pass initial smoke tests. A separate public Portland Blob store,
-  `lotto-beta-blob`, is connected only to the beta project; Resend and custom
-  DNS remain explicit gates rather than assumed-complete infrastructure.
+  `lotto-beta-blob`, is connected only to the beta project. A new sending-only
+  `LOTTO Beta` Resend key is restricted to `williamtemple.app`, stored only as
+  a beta Vercel Production secret, and proven through a delivered Magic Link
+  that established an authenticated beta Admin session. Resend domain/account
+  migration remains deferred because the verified
+  domain also serves live LOTTO and the separately hosted FEED application;
+  custom DNS remains an explicit gate rather than assumed-complete
+  infrastructure.
 
 ### Changed
 
