@@ -25,7 +25,12 @@ import { useLanguage, type Language } from "@/contexts/language-context";
 import { formatDate } from "@/lib/date-format";
 import { getPollingIntervalMs } from "@/lib/polling-strategy";
 import { isRTL } from "@/lib/rtl-utils";
-import type { DayOfWeek, OperatingHours, RaffleState } from "@/lib/state-types";
+import {
+  defaultState,
+  type DayOfWeek,
+  type OperatingHours,
+  type RaffleState,
+} from "@/lib/state-types";
 import type { RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
 import { readPolledStateRevision } from "@/lib/realtime/polled-state-revision";
 import { formatWaitTime } from "@/lib/time-format";
@@ -162,10 +167,16 @@ export const ReadOnlyDisplay = ({
   const lastChangeAtRef = React.useRef<number | null>(null);
   const burstUntilRef = React.useRef<number | null>(null);
   const lastSearchRequestRef = React.useRef(0);
-  const [deviceNowMs, setDeviceNowMs] = React.useState(() => Date.now());
+  // The server may prerender in UTC while the pantry browser is in another
+  // timezone. Keep the hydration value deterministic, then populate the live
+  // clock immediately after mount so React never has to discard this tree.
+  const [deviceNowMs, setDeviceNowMs] = React.useState<number | null>(null);
   const { serviceLabel } = useBrand();
 
-  const formattedDate = formatDate(language, deviceNowMs);
+  const formattedDate =
+    deviceNowMs === null
+      ? "—"
+      : formatDate(language, deviceNowMs, state?.timezone ?? defaultState.timezone);
 
   const clearPollTimeout = React.useCallback(() => {
     if (pollTimeoutRef.current !== null) {
@@ -259,6 +270,7 @@ export const ReadOnlyDisplay = ({
 
   React.useEffect(() => {
     const updateClock = () => setDeviceNowMs(Date.now());
+    updateClock();
     const intervalId = window.setInterval(updateClock, 30_000);
     return () => {
       window.clearInterval(intervalId);
@@ -294,7 +306,8 @@ export const ReadOnlyDisplay = ({
   const currentIndex =
     generatedOrder && currentlyServing !== null ? generatedOrder.indexOf(currentlyServing) : -1;
   const hasTickets = generatedOrder.length > 0;
-  const formattedServiceTime = formatServiceClock(deviceNowMs, language);
+  const formattedServiceTime =
+    deviceNowMs === null ? "—" : formatServiceClock(deviceNowMs, language);
   const isPersonalized = displayVariant === "personalized";
   const updatedTime = formatTime(state?.timestamp ?? null, language);
   const nowServingDisplayText = currentlyServing === null ? t("waiting") : String(currentlyServing);
