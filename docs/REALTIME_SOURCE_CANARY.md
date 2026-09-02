@@ -49,6 +49,12 @@ behavior; browser transport close/error, visibility, online/offline events, and
 the handshake timeout are the failure signals. Staff transactions never wait
 for or depend on the hub.
 
+The controller does not use the initial value of `navigator.onLine` as a
+connection gate. iOS 15.4 demonstrated that WebKit can retain a stale `false`
+hint while HTTPS and WebSocket traffic are both available. A real `offline`
+event still closes the socket and selects polling fallback; the matching
+`online` event starts a fresh bounded connection attempt.
+
 ## Consumer boundary
 
 Home and Display apply the full allowlisted public projection to their existing
@@ -95,6 +101,40 @@ agreement after recovery, and any stale-state incident. Phase 5 exits only
 after at least ten representative service days, all fault drills recover, no
 staff write depends on Cloudflare, and healthy source clients generate no
 scheduled `/api/state` polling.
+
+## First live Phase 5 beta observation
+
+The first production-shaped source observation ran on the isolated beta stack
+on September 2, 2026. Deployment `BxpWgibZn6KM5rzotPXZvZWAAMQT` enabled the
+independent source flag, and only exact `?realtime=source` URLs opted in.
+
+- Home, Display, Inventory, and Arcade each completed the authoritative
+  Neon/hub handshake at revision `83`.
+- Saving the existing beta display URL to itself committed a harmless revision
+  `84`; all four source clients advanced to `live · r84` without waiting for
+  their scheduled poll.
+- A 40-second healthy Display observation exceeded its 30-second burst-poll
+  cadence and recorded zero network requests of any kind, including zero
+  `/api/state` reads, while the source stayed live at revision `84`.
+- Isolating that Display tab from the network changed the badge to
+  `Polling fallback · offline` and initiated exactly one immediate
+  `/api/state` read, which failed as expected while offline. Restoring the tab's
+  network initiated exactly one recovery read and returned the source to
+  `live · r84`. The emulated condition was removed after the drill.
+- The iOS 15.4 iPad mini 4 simulator initially exposed a compatibility defect:
+  the source remained at `starting` because WebKit reported a stale
+  `navigator.onLine === false`, even though the same page polled successfully
+  and the Phase 4 observer WebSocket connected at revision `84`. Commit
+  `c447696` stopped treating that hint as initial authority; deployment
+  `6NEuSQiJcXT3u7hcHsDQSioUcH9s` then reached `live · r84`, returned to that
+  exact state after Safari was backgrounded behind Settings and foregrounded,
+  and received the next harmless revision `85` while still live.
+
+This checkpoint proves the rendered-source path, healthy polling suppression,
+network-event fallback, and iOS 15.4 simulator compatibility. It does not close
+Phase 5. Ten representative service days, physical iPad mini 4 validation,
+provider-level Cloudflare/Vercel/Neon fault drills, and sustained platform
+usage/cost measurements remain required.
 
 ## Rollback
 

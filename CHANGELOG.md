@@ -15,9 +15,15 @@
   jitter, hidden tabs suspend work, and a beta badge reports live versus
   fallback state. New deterministic coverage verifies the independent gates,
   direct next-revision application, tamper/gap fallback, visibility recovery,
-  zero healthy-state scheduled reads, and immediate fallback reads. Live beta
-  deployment, failure drills, ten representative service days, and physical
-  iPad validation remain Phase 5 gates.
+  zero healthy-state scheduled reads, and immediate fallback reads. The source
+  is now deployed only to the exact beta cohort: all four public surfaces
+  advanced directly from revision `83` to `84`; a 40-second healthy window made
+  zero requests; and a tab-local outage made one immediate fallback read plus
+  one recovery read. The iOS 15.4 simulator exposed a stale
+  `navigator.onLine` hint, prompting an event-driven compatibility fix; it then
+  reached `live · r84`, survived background/foreground, and received revision
+  `85`. Ten representative service days, provider-level fault/cost drills, and
+  physical-iPad validation remain Phase 5 gates.
 
 - **Documented LOTTO's database usage costs and public-read architecture
   options.** `USAGE_COSTS.md` models Neon compute, storage, history, and network
