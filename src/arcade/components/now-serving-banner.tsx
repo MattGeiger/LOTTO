@@ -11,10 +11,13 @@ import * as React from "react";
 import ReactCanvasConfetti from "react-canvas-confetti";
 
 import { ARCADE_PLAY_RESUMED_EVENT, ARCADE_TICKET_CALLED_EVENT } from "@/arcade/lib/events";
+import RealtimeCanaryMount from "@/components/realtime-canary-mount";
 import { useLanguage } from "@/contexts/language-context";
 import { readPersistedHomepageTicket } from "@/lib/home-ticket-storage";
 import { getPollingIntervalMs } from "@/lib/polling-strategy";
-import type { OperatingHours, TicketStatus } from "@/lib/state-types";
+import type { RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
+import { readPolledStateRevision } from "@/lib/realtime/polled-state-revision";
+import type { OperatingHours, RaffleState, TicketStatus } from "@/lib/state-types";
 import { formatWaitTimeAsHoursAndMinutes } from "@/lib/time-format";
 import { cn } from "@/lib/utils";
 
@@ -103,7 +106,11 @@ const getTicketWaitDetails = (
   };
 };
 
-export function NowServingBanner() {
+export function NowServingBanner({
+  realtimeCanary = null,
+}: {
+  realtimeCanary?: RealtimeCanaryClientConfig | null;
+}) {
   const { t, language } = useLanguage();
   const [currentlyServing, setCurrentlyServing] = React.useState<number | null>(null);
   const [lastPayload, setLastPayload] = React.useState<ServingPayload>({
@@ -112,6 +119,8 @@ export function NowServingBanner() {
     ticketStatus: {},
     calledAt: {},
   });
+  const [canaryState, setCanaryState] = React.useState<RaffleState | null>(null);
+  const [canaryRevision, setCanaryRevision] = React.useState<number | null>(null);
   const [ticketNumber, setTicketNumber] = React.useState<number | null>(null);
   const [servingAlertMode, setServingAlertMode] = React.useState<"idle" | "update" | "called">("idle");
   const [servingAlertShiftX, setServingAlertShiftX] = React.useState(0);
@@ -239,7 +248,7 @@ export function NowServingBanner() {
       if (!response.ok) {
         throw new Error("Unable to load current serving ticket.");
       }
-      const payload = (await response.json()) as ServingPayload;
+      const payload = (await response.json()) as RaffleState;
       const nextServing = typeof payload.currentlyServing === "number" ? payload.currentlyServing : null;
       const nextTicketNumber = readPersistedHomepageTicket(Date.now(), {
         startNumber: payload.startNumber ?? null,
@@ -247,6 +256,8 @@ export function NowServingBanner() {
       });
       setCurrentlyServing(nextServing);
       setLastPayload(payload);
+      setCanaryState(payload);
+      setCanaryRevision(readPolledStateRevision(response.headers));
       setTicketNumber(nextTicketNumber);
 
       const nowMs = Date.now();
@@ -491,6 +502,11 @@ export function NowServingBanner() {
 
   return (
     <>
+      <RealtimeCanaryMount
+        config={realtimeCanary}
+        polledState={canaryState}
+        polledRevision={canaryRevision}
+      />
       <header className="arcade-banner sticky top-0 z-50">
         <div className="arcade-banner-row mx-auto flex w-full max-w-6xl items-center justify-center gap-3 px-4 py-3 sm:px-6">
           <span

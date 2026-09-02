@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrambleOnLanguageChange, T } from "@/components/core/scramble-text";
 import { BrandLogo } from "@/components/brand-logo";
+import RealtimeCanaryMount from "@/components/realtime-canary-mount";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TicketDetailDialog } from "@/components/ticket-detail-dialog";
 import { useBrand } from "@/contexts/brand-context";
@@ -25,10 +26,8 @@ import { formatDate } from "@/lib/date-format";
 import { getPollingIntervalMs } from "@/lib/polling-strategy";
 import { isRTL } from "@/lib/rtl-utils";
 import type { DayOfWeek, OperatingHours, RaffleState } from "@/lib/state-types";
-import {
-  isRealtimeCanaryCohort,
-  type RealtimeCanaryClientConfig,
-} from "@/lib/realtime/client-canary-config";
+import type { RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
+import { readPolledStateRevision } from "@/lib/realtime/polled-state-revision";
 import { formatWaitTime } from "@/lib/time-format";
 import { cn } from "@/lib/utils";
 
@@ -77,10 +76,6 @@ const formatServiceClock = (input: Date | number, language: Language): string =>
 const POLL_ERROR_RETRY_MS = 30_000;
 const BURST_DURATION_MS = 2 * 60_000;
 const EMPTY_GENERATED_ORDER: number[] = [];
-const RealtimeCanaryObserver = React.lazy(
-  () => import("@/components/realtime-canary-observer"),
-);
-
 const DAYS: DayOfWeek[] = [
   "sunday",
   "monday",
@@ -155,6 +150,7 @@ export const ReadOnlyDisplay = ({
   const { language, t, translateBrandString } = useLanguage();
 
   const [state, setState] = React.useState<RaffleState | null>(null);
+  const [stateRevision, setStateRevision] = React.useState<number | null>(null);
   const [status, setStatus] = React.useState("");
   const [hasError, setHasError] = React.useState(false);
   const [selectedTicket, setSelectedTicket] = React.useState<number | null>(null);
@@ -167,7 +163,6 @@ export const ReadOnlyDisplay = ({
   const burstUntilRef = React.useRef<number | null>(null);
   const lastSearchRequestRef = React.useRef(0);
   const [deviceNowMs, setDeviceNowMs] = React.useState(() => Date.now());
-  const [realtimeCanarySelected, setRealtimeCanarySelected] = React.useState(false);
   const { serviceLabel } = useBrand();
 
   const formattedDate = formatDate(language, deviceNowMs);
@@ -203,6 +198,7 @@ export const ReadOnlyDisplay = ({
       }
       const payload = (await response.json()) as RaffleState;
       setState(payload);
+      setStateRevision(readPolledStateRevision(response.headers));
       onStateChange?.(payload);
       setStatus(`${t("lastChecked")}: ${formatTime(new Date(), language)}`);
 
@@ -268,13 +264,6 @@ export const ReadOnlyDisplay = ({
       window.clearInterval(intervalId);
     };
   }, []);
-
-  React.useEffect(() => {
-    setRealtimeCanarySelected(
-      Boolean(realtimeCanary && isRealtimeCanaryCohort(window.location.search)),
-    );
-  }, [realtimeCanary]);
-
 
   // The browser tab / document title is intentionally left to the static,
   // server-rendered, brand-aware `metadata.title` in src/app/layout.tsx. Do NOT
@@ -424,11 +413,11 @@ export const ReadOnlyDisplay = ({
 
   return (
     <ScrambleOnLanguageChange enabled={languageTextAnimation === "scramble"}>
-      {realtimeCanary && realtimeCanarySelected ? (
-        <React.Suspense fallback={null}>
-          <RealtimeCanaryObserver config={realtimeCanary} polledState={state} />
-        </React.Suspense>
-      ) : null}
+      <RealtimeCanaryMount
+        config={realtimeCanary}
+        polledState={state}
+        polledRevision={stateRevision}
+      />
       <div
         dir={isRTL(language) ? "rtl" : "ltr"}
         lang={language}

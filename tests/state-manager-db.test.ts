@@ -67,7 +67,7 @@ const activeState = (overrides?: Partial<typeof defaultState>) => ({
 
 // Helper: queue a SELECT result that returns a state payload
 const queueStateRow = (state: typeof defaultState) => {
-  mockQueryResults.push([{ payload: state }]);
+  mockQueryResults.push([{ payload: state, revision: 11 }]);
 };
 
 // Helper: queue an empty SELECT result (no state in DB)
@@ -106,6 +106,17 @@ describe("createDbStateManager", () => {
       expect(result.currentlyServing).toBe(3);
     });
 
+    it("returns the state and authoritative revision from one read", async () => {
+      const state = activeState();
+      queueStateRow(state);
+      await expect(manager.loadStateWithRevision()).resolves.toMatchObject({
+        state: { currentlyServing: 3 },
+        revision: 11,
+      });
+      expect(mockDirectSql[0]).toContain("select payload, revision from raffle_state");
+      expect(mockDirectSql).toHaveLength(1);
+    });
+
     it("returns default state when DB is empty (and persists it)", async () => {
       queueEmptyState();
       // persist will call sql.transaction
@@ -126,7 +137,7 @@ describe("createDbStateManager", () => {
         currentlyServing: 1,
         timestamp: Date.now(),
       };
-      mockQueryResults.push([{ payload: partialPayload }]);
+      mockQueryResults.push([{ payload: partialPayload, revision: 12 }]);
       const result = await manager.loadState();
       expect(result.startNumber).toBe(1);
       // Should have defaults merged in

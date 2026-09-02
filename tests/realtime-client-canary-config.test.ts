@@ -6,6 +6,10 @@ import {
   resolveRealtimeCanaryClientConfig,
 } from "@/lib/realtime/client-canary-config";
 import { resolveRealtimeCanaryConnectHost } from "../next.config";
+import {
+  POLLED_STATE_REVISION_HEADER,
+  readPolledStateRevision,
+} from "@/lib/realtime/polled-state-revision";
 
 const betaEnvironment = {
   LOTTO_DEPLOYMENT_ENVIRONMENT: "beta",
@@ -66,5 +70,16 @@ describe("realtime client canary configuration", () => {
     expect(isRealtimeCanaryCohort("?realtime=apply")).toBe(false);
     expect(isRealtimeCanaryCohort("?other=observe")).toBe(false);
     expect(isRealtimeCanaryCohort("")).toBe(false);
+  });
+
+  it("accepts only positive safe integer state-revision headers", () => {
+    expect(readPolledStateRevision(new Headers({
+      [POLLED_STATE_REVISION_HEADER]: "16",
+    }))).toBe(16);
+    for (const value of ["", "0", "-1", "1.5", "1e2", "9007199254740992"]) {
+      expect(readPolledStateRevision(new Headers({
+        [POLLED_STATE_REVISION_HEADER]: value,
+      }))).toBeNull();
+    }
   });
 });

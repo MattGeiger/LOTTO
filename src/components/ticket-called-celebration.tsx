@@ -10,9 +10,12 @@
 import * as React from "react";
 import ReactCanvasConfetti from "react-canvas-confetti";
 
+import RealtimeCanaryMount from "@/components/realtime-canary-mount";
 import { useLanguage } from "@/contexts/language-context";
 import { readPersistedHomepageTicket } from "@/lib/home-ticket-storage";
 import { getPollingIntervalMs } from "@/lib/polling-strategy";
+import type { RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
+import { readPolledStateRevision } from "@/lib/realtime/polled-state-revision";
 import type { RaffleState } from "@/lib/state-types";
 import {
   CALLED_ALERT_DURATION_MS,
@@ -58,6 +61,8 @@ type TicketCalledCelebrationProps = {
    * homepage ticket is read from storage (used by the display board / inventory).
    */
   ticketNumber?: number | null;
+  /** Beta-only observer configuration for a route using this component's poll. */
+  realtimeCanary?: RealtimeCanaryClientConfig | null;
 };
 
 /**
@@ -73,10 +78,18 @@ export function TicketCalledCelebration({
   state: stateProp,
   poll = false,
   ticketNumber: ticketNumberProp,
+  realtimeCanary = null,
 }: TicketCalledCelebrationProps) {
   const { t } = useLanguage();
-  const polledState = useSelfPolledState(poll);
-  const state = poll ? polledState : stateProp ?? null;
+  const polled = useSelfPolledState(poll);
+  const state = poll ? polled.state : stateProp ?? null;
+  const realtimeObserver = poll ? (
+    <RealtimeCanaryMount
+      config={realtimeCanary}
+      polledState={polled.state}
+      polledRevision={polled.revision}
+    />
+  ) : null;
 
   const [showCalledOverlay, setShowCalledOverlay] = React.useState(false);
   const confettiInstanceRef = React.useRef<ConfettiInstance | null>(null);
@@ -168,10 +181,11 @@ export function TicketCalledCelebration({
     }, CALLED_ALERT_DURATION_MS);
   }, [state, ticketNumberProp, clearConfettiLoop, fireConfetti]);
 
-  if (!showCalledOverlay) return null;
+  if (!showCalledOverlay) return realtimeObserver;
 
   return (
     <>
+      {realtimeObserver}
       <div className="pointer-events-none fixed inset-0 z-[65] bg-black/40 backdrop-blur-sm" />
       <div
         className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center px-6"
@@ -208,8 +222,12 @@ export function TicketCalledCelebration({
  * burst) so the inventory page reacts to a call about as fast as the board does.
  * Returns `null` and stays idle when `enabled` is false.
  */
-function useSelfPolledState(enabled: boolean): RaffleState | null {
+function useSelfPolledState(enabled: boolean): {
+  state: RaffleState | null;
+  revision: number | null;
+} {
   const [state, setState] = React.useState<RaffleState | null>(null);
+  const [revision, setRevision] = React.useState<number | null>(null);
   const timeoutRef = React.useRef<number | null>(null);
   const pollRef = React.useRef<() => void>(() => {});
   const lastSeenTimestampRef = React.useRef<number | null>(null);
@@ -243,6 +261,7 @@ function useSelfPolledState(enabled: boolean): RaffleState | null {
       if (!response.ok) throw new Error("Unable to load state");
       const payload = (await response.json()) as RaffleState;
       setState(payload);
+      setRevision(readPolledStateRevision(response.headers));
 
       const nowMs = Date.now();
       const nextTimestamp = typeof payload.timestamp === "number" ? payload.timestamp : nowMs;
@@ -291,5 +310,5 @@ function useSelfPolledState(enabled: boolean): RaffleState | null {
     };
   }, [clearPollTimeout, enabled, pollState]);
 
-  return enabled ? state : null;
+  return enabled ? { state, revision } : { state: null, revision: null };
 }

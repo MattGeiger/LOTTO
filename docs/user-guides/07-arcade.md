@@ -55,6 +55,15 @@ so nobody misses their turn. See [Tickets & the Queue](04-tickets-queue.md).
 Games track top scores. When you earn a top-10 result you can enter your initials
 to be added to the leaderboard.
 
+## Beta Realtime Testing
+
+This is not part of normal gameplay. On the isolated LOTTO beta, authorized
+architecture testers may open `/arcade?realtime=observe`. A small **Realtime
+observer** badge compares the queue state already fetched for the Now Serving
+banner with the experimental Cloudflare delivery. The banner and games continue
+to use the existing authoritative poll. Remove the query parameter to return
+immediately to the ordinary control path.
+
 ## What To Read Next
 
 - Get back to your ticket: [Tickets & the Queue](04-tickets-queue.md).

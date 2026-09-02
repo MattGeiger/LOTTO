@@ -217,14 +217,14 @@ export const createDbStateManager = (
     return mode === "random" ? shuffle(range) : range;
   };
 
-  const persist = async (
+  const persistVersioned = async (
     state: RaffleState,
     options?: {
       preserveTimestamp?: boolean;
       skipBackup?: boolean;
       closeout?: StoredQueueSessionSummary | null;
     },
-  ): Promise<RaffleState> => {
+  ): Promise<{ state: RaffleState; revision: number }> => {
     const timestamped =
       options?.preserveTimestamp && state.timestamp !== null ? state : withTimestamp(state);
     let ts = timestamped.timestamp ?? Date.now();
@@ -343,25 +343,47 @@ export const createDbStateManager = (
       await attemptShadowPublication(intent);
     }
 
-    return timestamped;
+    return { state: timestamped, revision };
   };
 
-  const safeReadState = async (): Promise<RaffleState> => {
+  const persist = async (
+    state: RaffleState,
+    options?: {
+      preserveTimestamp?: boolean;
+      skipBackup?: boolean;
+      closeout?: StoredQueueSessionSummary | null;
+    },
+  ): Promise<RaffleState> => (await persistVersioned(state, options)).state;
+
+  const safeReadStateWithRevision = async (): Promise<{
+    state: RaffleState;
+    revision: number;
+  }> => {
     const rows = (await withTimeout(sql`
-      select payload from raffle_state where id = 'singleton' limit 1;
-    `)) as Array<{ payload: RaffleState }>;
+      select payload, revision from raffle_state where id = 'singleton' limit 1;
+    `)) as Array<{ payload: RaffleState; revision: number | string }>;
     if (rows.length === 0) {
-      return persist(defaultState);
+      return persistVersioned(defaultState);
     }
     const payload = rows[0]?.payload ?? defaultState;
+    const revision = Number(rows[0]?.revision);
+    if (!Number.isSafeInteger(revision) || revision < 1) {
+      throw new Error("Stored state revision is invalid.");
+    }
     return {
-      ...defaultState,
-      ...payload,
-      timestamp: payload.timestamp ?? Date.now(),
+      state: {
+        ...defaultState,
+        ...payload,
+        timestamp: payload.timestamp ?? Date.now(),
+      },
+      revision,
     };
   };
 
+  const safeReadState = async (): Promise<RaffleState> =>
+    (await safeReadStateWithRevision()).state;
   const loadState = async () => safeReadState();
+  const loadStateWithRevision = async () => safeReadStateWithRevision();
 
   const generateState = async (input: {
     startNumber: number;
@@ -994,6 +1016,7 @@ export const createDbStateManager = (
 
   return {
     loadState,
+    loadStateWithRevision,
     generateState,
     generateBatch,
     appendTickets,
