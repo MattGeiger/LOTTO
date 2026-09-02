@@ -155,16 +155,17 @@ accepted v2.0 architecture or a production promotion:
 | Public smoke | `/` renders and `/api/state` returns `200` from the isolated Neon database; polling behavior is unchanged |
 | Authentication | A sending-only `LOTTO Beta` Resend key, restricted to the already verified `williamtemple.app` domain, is stored only in the beta Vercel Production environment. `AUTH_URL` and Auth.js provider callbacks use `https://beta.williamtemple.app`. Deployment `HqLiGzzahAf2QxHe5MPHqQKND5Ua` is ready; Resend delivered the custom-origin Magic Link, the link established an authenticated `/admin` session, and the page reached Persistence confirmed. A session created on the generated Vercel hostname did not cross to the custom hostname. The key remains in the existing Resend workspace for this proof; domain/account migration is explicitly deferred. |
 | Blob | Separate public store `lotto-beta-blob` is provisioned in Portland (`PDX1`) and connected only to the beta project; its read-write token/store ID/webhook key are generated for beta Production and Preview |
-| Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret. The remote protocol verifier passes, a bounded 1/10/100/200-client run delivered all 311 target updates, and beta-only Neon shadow publication is enabled and repair-proven. The explicit Home/Display/Inventory/Arcade `?realtime=observe` cohort is enabled only on beta. Its first live mutation arrived in `127 ms`, briefly reported hub-ahead, and converged with the authoritative poll in `1,221 ms`; the expanded cohort later matched exact hub/poll revisions on all four surfaces, and one Display socket remained matched through a 307-second observation plus an iOS 15.4 simulator background/foreground cycle. Deployment `Da5gC8yMFixrFfJVAHTuACTmB986` also revalidated the repaired UTC/Pacific hydration boundary with no browser console errors and an exact `r70 / r70` match. Polling remains the rendered authority. |
+| Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret. The remote protocol verifier passes, a bounded 1/10/100/200-client run delivered all 311 target updates, and beta-only Neon shadow publication is enabled and repair-proven. The explicit Home/Display/Inventory/Arcade `?realtime=observe` cohort remains a polling-authoritative control. The separate exact `?realtime=source` cohort is now enabled only on beta: all four surfaces handshook at revision `83` and rendered revision `84` directly; a 40-second healthy Display window made zero network requests, a tab-local outage made one immediate fallback read and one recovery read, and the iOS 15.4 simulator reached `live · r84`, survived background/foreground, and received revision `85`. Ordinary beta URLs and production remain polling-only. Ten service days, provider-level fault/cost evidence, and a physical iPad remain open gates. |
 | DNS | Cloudflare serves a DNS-only `beta` CNAME to Vercel plus the Vercel ownership-verification TXT value alongside the existing apex/`www` verification values. The apex, `www`, and `feed` records were not changed. The Worker already allowlists the stable beta origin. |
 | Safety UX | Beta-only `X-Robots-Tag`, blocking `robots.txt`, and visible sign-in/admin warning banner are implemented; production behavior remains unchanged because the feature requires the explicit beta environment value |
 
 The first Vercel deployment was created manually from the beta branch after
 Production branch tracking was changed from `main`. Do not change that tracking
 or move the custom hostname to another project. Neon now publishes only an
-allowlisted derived projection to the beta Worker, and only explicit
-Home/Display observer URLs read it; neither path is authoritative or permitted
-to render pushed state. The beta email proof does not authorize moving
+allowlisted derived projection to the beta Worker. Exact Home, Display,
+Inventory, and Arcade observer URLs compare it without rendering it; separately
+gated source URLs may render it only after the documented Neon/hub handshake and
+retain polling fallback. The beta email proof does not authorize moving
 `williamtemple.app` between Resend workspaces: that domain also serves live
 LOTTO and the separately hosted FEED application, so any future account
 migration requires a coordinated credential cutover for all three applications.
@@ -205,7 +206,9 @@ The exact `?realtime=source` URL cohort must also be present. Source clients
 perform an initial `/api/state` handshake, stop only scheduled polling after
 exact revision/checksum agreement, and immediately return to adaptive polling
 if source authority is lost. The flag is independent from the Phase 4 observer
-and shadow-publish switches. See
+and shadow-publish switches. The source flag is currently `true` only for the
+isolated beta Production environment; ordinary URLs do not join the cohort.
+See
 [`REALTIME_SOURCE_CANARY.md`](./REALTIME_SOURCE_CANARY.md) for the state machine,
 test URLs, validation gates, and rollback.
 
