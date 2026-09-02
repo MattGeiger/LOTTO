@@ -16,6 +16,8 @@ import { readPersistedHomepageTicket } from "@/lib/home-ticket-storage";
 import { getPollingIntervalMs } from "@/lib/polling-strategy";
 import type { RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
 import { readPolledStateRevision } from "@/lib/realtime/polled-state-revision";
+import { toRenderableRaffleState, type PublicRaffleState } from "@/lib/realtime/public-state-protocol";
+import type { RealtimeSourceReason } from "@/hooks/use-realtime-source-canary";
 import type { RaffleState } from "@/lib/state-types";
 import {
   CALLED_ALERT_DURATION_MS,
@@ -63,6 +65,8 @@ type TicketCalledCelebrationProps = {
   ticketNumber?: number | null;
   /** Beta-only observer configuration for a route using this component's poll. */
   realtimeCanary?: RealtimeCanaryClientConfig | null;
+  /** Beta-only realtime-source configuration for a route using this component's poll. */
+  realtimeSourceCanary?: RealtimeCanaryClientConfig | null;
 };
 
 /**
@@ -79,6 +83,7 @@ export function TicketCalledCelebration({
   poll = false,
   ticketNumber: ticketNumberProp,
   realtimeCanary = null,
+  realtimeSourceCanary = null,
 }: TicketCalledCelebrationProps) {
   const { t } = useLanguage();
   const polled = useSelfPolledState(poll);
@@ -86,8 +91,11 @@ export function TicketCalledCelebration({
   const realtimeObserver = poll ? (
     <RealtimeCanaryMount
       config={realtimeCanary}
-      polledState={polled.state}
-      polledRevision={polled.revision}
+      sourceConfig={realtimeSourceCanary}
+      polledState={polled.verificationState}
+      polledRevision={polled.verificationRevision}
+      onSourceState={polled.onSourceState}
+      onSourceAuthorityChange={polled.onSourceAuthorityChange}
     />
   ) : null;
 
@@ -224,12 +232,19 @@ export function TicketCalledCelebration({
  */
 function useSelfPolledState(enabled: boolean): {
   state: RaffleState | null;
-  revision: number | null;
+  verificationState: RaffleState | null;
+  verificationRevision: number | null;
+  onSourceState: (state: PublicRaffleState, revision: number) => void;
+  onSourceAuthorityChange: (authoritative: boolean, reason: RealtimeSourceReason) => void;
 } {
   const [state, setState] = React.useState<RaffleState | null>(null);
-  const [revision, setRevision] = React.useState<number | null>(null);
+  const [verificationState, setVerificationState] = React.useState<RaffleState | null>(null);
+  const [verificationRevision, setVerificationRevision] = React.useState<number | null>(null);
   const timeoutRef = React.useRef<number | null>(null);
   const pollRef = React.useRef<() => void>(() => {});
+  const stateRef = React.useRef<RaffleState | null>(null);
+  const sourceAuthoritativeRef = React.useRef(false);
+  const pollInFlightRef = React.useRef(false);
   const lastSeenTimestampRef = React.useRef<number | null>(null);
   const lastChangeAtRef = React.useRef<number | null>(null);
   const burstUntilRef = React.useRef<number | null>(null);
@@ -244,6 +259,7 @@ function useSelfPolledState(enabled: boolean): {
   const scheduleNextPoll = React.useCallback(
     (delayMs: number) => {
       clearPollTimeout();
+      if (sourceAuthoritativeRef.current) return;
       timeoutRef.current = window.setTimeout(() => {
         void pollRef.current();
       }, delayMs);
@@ -256,12 +272,17 @@ function useSelfPolledState(enabled: boolean): {
       clearPollTimeout();
       return;
     }
+    if (pollInFlightRef.current) return;
+    pollInFlightRef.current = true;
     try {
       const response = await fetch("/api/state", { cache: "no-store" });
       if (!response.ok) throw new Error("Unable to load state");
       const payload = (await response.json()) as RaffleState;
+      stateRef.current = payload;
       setState(payload);
-      setRevision(readPolledStateRevision(response.headers));
+      const nextRevision = readPolledStateRevision(response.headers);
+      setVerificationState(payload);
+      setVerificationRevision(nextRevision);
 
       const nowMs = Date.now();
       const nextTimestamp = typeof payload.timestamp === "number" ? payload.timestamp : nowMs;
@@ -283,8 +304,24 @@ function useSelfPolledState(enabled: boolean): {
       scheduleNextPoll(delayMs);
     } catch {
       scheduleNextPoll(POLL_ERROR_RETRY_MS);
+    } finally {
+      pollInFlightRef.current = false;
     }
   }, [clearPollTimeout, scheduleNextPoll]);
+
+  const onSourceState = React.useCallback((publicState: PublicRaffleState) => {
+    const payload = toRenderableRaffleState(publicState, stateRef.current);
+    stateRef.current = payload;
+    setState(payload);
+  }, []);
+
+  const onSourceAuthorityChange = React.useCallback((authoritative: boolean) => {
+    sourceAuthoritativeRef.current = authoritative;
+    clearPollTimeout();
+    if (!authoritative && document.visibilityState !== "hidden") {
+      void pollRef.current();
+    }
+  }, [clearPollTimeout]);
 
   React.useEffect(() => {
     pollRef.current = pollState;
@@ -310,5 +347,19 @@ function useSelfPolledState(enabled: boolean): {
     };
   }, [clearPollTimeout, enabled, pollState]);
 
-  return enabled ? { state, revision } : { state: null, revision: null };
+  return enabled
+    ? {
+        state,
+        verificationState,
+        verificationRevision,
+        onSourceState,
+        onSourceAuthorityChange,
+      }
+    : {
+        state: null,
+        verificationState: null,
+        verificationRevision: null,
+        onSourceState,
+        onSourceAuthorityChange,
+      };
 }

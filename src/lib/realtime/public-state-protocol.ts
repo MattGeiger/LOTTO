@@ -107,6 +107,14 @@ export const toPublicRaffleState = (state: RaffleState): PublicRaffleState => {
   return publicRaffleStateSchema.parse(publicState);
 };
 
+export const toRenderableRaffleState = (
+  state: PublicRaffleState,
+  previous: RaffleState | null,
+): RaffleState => ({
+  ...state,
+  queueSession: previous?.queueSession ?? null,
+});
+
 const canonicalize = (value: unknown): unknown => {
   if (Array.isArray(value)) {
     return value.map(canonicalize);

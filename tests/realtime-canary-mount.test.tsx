@@ -13,6 +13,12 @@ vi.mock("@/components/realtime-canary-observer", () => ({
   ),
 }));
 
+vi.mock("@/components/realtime-source-canary", () => ({
+  default: ({ polledRevision }: { polledRevision: number | null }) => (
+    <div data-testid="mounted-realtime-source" data-revision={polledRevision ?? undefined} />
+  ),
+}));
+
 const config = {
   agencyId: "william-temple-house",
   eventsUrl:
@@ -60,5 +66,42 @@ describe("RealtimeCanaryMount", () => {
       />,
     );
     expect(screen.queryByTestId("mounted-realtime-observer")).not.toBeInTheDocument();
+  });
+
+  it("loads the source only for its exact URL plus independent server configuration", async () => {
+    window.history.replaceState({}, "", "/display?realtime=source");
+    const callbacks = {
+      onSourceState: vi.fn(),
+      onSourceAuthorityChange: vi.fn(),
+    };
+    const { rerender } = render(
+      <RealtimeCanaryMount
+        config={config}
+        sourceConfig={config}
+        polledState={structuredClone(defaultState)}
+        polledRevision={21}
+        {...callbacks}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId("mounted-realtime-source")).toHaveAttribute(
+        "data-revision",
+        "21",
+      );
+    });
+    expect(screen.queryByTestId("mounted-realtime-observer")).not.toBeInTheDocument();
+
+    rerender(
+      <RealtimeCanaryMount
+        config={config}
+        sourceConfig={null}
+        polledState={structuredClone(defaultState)}
+        polledRevision={21}
+        {...callbacks}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.queryByTestId("mounted-realtime-source")).not.toBeInTheDocument();
+    });
   });
 });

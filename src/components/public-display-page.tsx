@@ -24,8 +24,10 @@ import type { RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-co
 
 export function PublicDisplayPage({
   realtimeCanary = null,
+  realtimeSourceCanary = null,
 }: {
   realtimeCanary?: RealtimeCanaryClientConfig | null;
+  realtimeSourceCanary?: RealtimeCanaryClientConfig | null;
 }) {
   const [searchValue, setSearchValue] = React.useState("");
   const [searchSubmission, setSearchSubmission] = React.useState<{ ticketNumber: number; triggerId: number } | null>(
@@ -127,6 +129,7 @@ export function PublicDisplayPage({
         ticketSearchRequest={searchSubmission ?? undefined}
         onStateChange={setLatestState}
         realtimeCanary={realtimeCanary}
+        realtimeSourceCanary={realtimeSourceCanary}
       />
       <BottomTabBar autoHideAfterSeconds={navAutoHideSeconds} />
       <TicketCalledCelebration state={latestState} />

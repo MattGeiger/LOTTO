@@ -25,6 +25,7 @@ describe("M3: Content Security Policy headers must be configured", () => {
     expect(configSource).toContain("connect-src");
     expect(configSource).toContain("realtimeCanaryConnectHost");
     expect(configSource).toContain("LOTTO_REALTIME_CLIENT_CANARY");
+    expect(configSource).toContain("LOTTO_REALTIME_SOURCE_CANARY");
     expect(configSource).toContain("getInventoryIntegration");
     expect(configSource).toContain("feedPublicInventoryHost");
     expect(configSource).toContain("frame-ancestors");

@@ -4,6 +4,21 @@
 
 ### Added
 
+- **Implemented the isolated-beta Phase 5 realtime-source canary.** The exact
+  `?realtime=source` cohort and independent
+  `LOTTO_REALTIME_SOURCE_CANARY=true` beta flag allow Home, Display, Inventory,
+  and Arcade to render the checksummed Durable Object public projection only
+  after an exact Neon revision/checksum handshake. Each surface retains its
+  existing adaptive poller, suppresses only scheduled reads while realtime is
+  healthy, and immediately polls on close, timeout, invalid data, revision
+  gap/conflict, network loss, or foreground resync. Reconnects are bounded with
+  jitter, hidden tabs suspend work, and a beta badge reports live versus
+  fallback state. New deterministic coverage verifies the independent gates,
+  direct next-revision application, tamper/gap fallback, visibility recovery,
+  zero healthy-state scheduled reads, and immediate fallback reads. Live beta
+  deployment, failure drills, ten representative service days, and physical
+  iPad validation remain Phase 5 gates.
+
 - **Documented LOTTO's database usage costs and public-read architecture
   options.** `USAGE_COSTS.md` models Neon compute, storage, history, and network
   billing against the live polling strategy; inventories adjacent public-path
