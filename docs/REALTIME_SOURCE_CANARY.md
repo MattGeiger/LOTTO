@@ -16,6 +16,12 @@ Both gates are required:
    `LOTTO_DEPLOYMENT_ENVIRONMENT=beta`.
 2. The exact browser query `?realtime=source`.
 
+The server-only master gate `LOTTO_REALTIME_APPLICATION_ENABLED=false`
+overrides the source flag for newly loaded pages. It is backward-compatible
+with the already-deployed beta when absent, but production-scoped v2
+deployments must set it explicitly. Changing the Vercel value requires a
+redeployment; it is not a client-visible runtime variable.
+
 The existing `?realtime=observe` cohort remains observational and continues to
 render polled state. A URL without either exact value remains polling-only.
 The source flag is independent from shadow publication and the Phase 4 observer
@@ -43,6 +49,14 @@ While realtime is authoritative:
   authority only through another exact polled handshake; and
 - hiding the document closes the socket and clears polling timers. Returning
   visible performs an immediate authoritative poll and begins a fresh handshake.
+
+Polled and pushed state update one shared last-observed-state activity clock.
+Therefore, a fallback shortly after a pushed change retains the responsive
+30-second burst, while a fallback after a long unchanged period proceeds to
+the normal open/pre-open clamp or closed-hours backoff. The immediate
+reconciliation read does not manufacture a new burst when its state timestamp
+matches the last pushed state. WebSocket reconnect attempts use their own
+bounded clock and cannot reset polling history.
 
 There is no application heartbeat. This preserves Durable Object hibernation
 behavior; browser transport close/error, visibility, online/offline events, and
@@ -136,9 +150,19 @@ Phase 5. Ten representative service days, physical iPad mini 4 validation,
 provider-level Cloudflare/Vercel/Neon fault drills, and sustained platform
 usage/cost measurements remain required.
 
+The owner subsequently deferred the ten-service-day, provider-wide, and
+physical-iPad exercises at the current single-pantry scale. They remain useful
+stable-release evidence but are not prerequisites for the controlled
+production test; see the scaled validation decision in the architecture plan.
+
 ## Rollback
 
-Set `LOTTO_REALTIME_SOURCE_CANARY=false` and redeploy beta, or remove
-`?realtime=source` from an individual browser. The page then uses its existing
-adaptive polling path. No schema, stored state, staff workflow, publication
-setting, or production deployment is reversed.
+For one browser, remove `?realtime=source`. For all newly loaded pages, set
+`LOTTO_REALTIME_APPLICATION_ENABLED=false` (or the legacy source flag to
+`false`) and redeploy. To move already-connected pages immediately, invoke the
+separately authenticated Cloudflare `{ "mode": "drain" }` control with
+`npm run realtime:control`. The Durable Object closes current sockets and
+rejects new ones while continuing to accept publications. Each page performs
+one authoritative reconciliation and resumes its existing adaptive polling
+path. No schema, stored state, staff workflow, or publication setting is
+reversed.

@@ -1284,6 +1284,11 @@ passed. This is the documented one-off worker-pressure signature, not evidence
 of a client state-machine defect, so no assertion or implementation was
 changed.
 
+The same timing signature appeared once during the September 2 kill-switch
+validation: the observer file passed 4/4 in isolation and the unchanged full
+suite then passed 908 tests with one expected skip. The assertion and
+implementation again remained unchanged.
+
 ---
 
 ## Issue 28: Operating-hours API accepts malformed or conflicting time values

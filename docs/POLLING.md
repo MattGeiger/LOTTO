@@ -34,6 +34,10 @@
 - Polling pauses when the tab is hidden and resumes immediately on visibility
   return (with change tracking reset).
 - Errors retry every 30 seconds.
+- Realtime and polled revisions feed the same last-observed-state activity
+  clock. When realtime fails, the immediate reconciliation read preserves the
+  elapsed quiet period if its timestamp matches the latest pushed state; it
+  does not restart the burst merely because transport authority changed.
 
 ## Rationale for Open-Window Clamp
 During service hours, long idle gaps make the board feel unresponsive and

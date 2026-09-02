@@ -11,12 +11,16 @@ const baseUrl = new URL(
   process.env.REALTIME_TEST_BASE_URL ?? "http://127.0.0.1:8787",
 );
 const publishToken = process.env.REALTIME_TEST_PUBLISH_TOKEN;
+const controlToken = process.env.REALTIME_TEST_CONTROL_TOKEN;
 const allowedOrigin =
   process.env.REALTIME_TEST_ORIGIN ?? "http://localhost:3000";
 const agencyId = "william-temple-house-e2e";
 
 if (!publishToken) {
   throw new Error("REALTIME_TEST_PUBLISH_TOKEN is required.");
+}
+if (!controlToken) {
+  throw new Error("REALTIME_TEST_CONTROL_TOKEN is required.");
 }
 if (
   baseUrl.hostname !== "127.0.0.1" &&
@@ -76,6 +80,16 @@ const publish = (body, token = publishToken) =>
     body: JSON.stringify(body),
   });
 
+const control = (mode, token = controlToken) =>
+  fetch(routeUrl("control"), {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ mode }),
+  });
+
 const existingResponse = await fetch(routeUrl("state"));
 const existing = existingResponse.ok ? await existingResponse.json() : null;
 const initialRevision =
@@ -94,6 +108,13 @@ const envelope = (revision, nextState = state) => ({
 
 let response = await fetch(new URL("/health", baseUrl));
 assert.equal(response.status, 200, "health endpoint");
+
+response = await control("resume", "wrong-token");
+assert.equal(response.status, 401, "control authentication");
+
+response = await control("resume");
+assert.equal(response.status, 200, "initial connection resume");
+assert.equal((await response.json()).connectionsDrained, false, "initial drain state");
 
 response = await publish(envelope(initialRevision), "wrong-token");
 assert.equal(response.status, 401, "publish authentication");
@@ -188,7 +209,69 @@ response = await fetch(routeUrl("state"), {
 });
 assert.equal(response.status, 403, "disallowed origin");
 
-socket.close(1000, "verification complete");
+response = await control("drain");
+assert.equal(response.status, 200, "connection drain");
+const drainResult = await response.json();
+assert.equal(drainResult.connectionsDrained, true, "drain state");
+assert.ok(drainResult.closedClients >= 1, "drain closes the connected client");
+
+await new Promise((resolve, reject) => {
+  const startedAt = Date.now();
+  const timer = setInterval(async () => {
+    const statusResponse = await fetch(routeUrl("control"), {
+      headers: { authorization: `Bearer ${controlToken}` },
+    });
+    const status = await statusResponse.json();
+    if (status.connectedClients === 0) {
+      clearInterval(timer);
+      resolve();
+    } else if (Date.now() - startedAt > 5_000) {
+      clearInterval(timer);
+      reject(new Error("Durable Object drain timeout"));
+    }
+  }, 20);
+});
+
+response = await fetch(routeUrl("events"));
+assert.equal(response.status, 503, "new connections refused while drained");
+
+const thirdState = {
+  ...secondState,
+  currentlyServing: 3,
+  timestamp: secondState.timestamp + 1,
+};
+const third = envelope(initialRevision + 2, thirdState);
+response = await publish(third);
+assert.equal(response.status, 202, "publication remains available while drained");
+assert.equal((await response.json()).connectionsDrained, true, "drained publication status");
+
+response = await fetch(routeUrl("control"), {
+  headers: { authorization: `Bearer ${controlToken}` },
+});
+assert.equal(response.status, 200, "control status");
+assert.equal((await response.json()).connectionsDrained, true, "status reports drain");
+
+response = await control("resume");
+assert.equal(response.status, 200, "connection resume");
+assert.equal((await response.json()).connectionsDrained, false, "resumed drain state");
+
+response = await fetch(routeUrl("events"));
+assert.equal(response.status, 426, "event endpoint available after resume");
+
+const resumedSocket = new WebSocket(eventsUrl);
+const resumedSnapshot = await new Promise((resolve, reject) => {
+  const timeout = setTimeout(
+    () => reject(new Error("Resumed WebSocket snapshot timeout")),
+    5_000,
+  );
+  resumedSocket.addEventListener("message", (event) => {
+    clearTimeout(timeout);
+    resolve(JSON.parse(String(event.data)));
+  }, { once: true });
+  resumedSocket.addEventListener("error", reject, { once: true });
+});
+assert.equal(resumedSnapshot.revision, initialRevision + 2, "resume sends latest state");
+resumedSocket.close(1000, "verification complete");
 console.log(
   JSON.stringify({
     health: "ok",
@@ -198,6 +281,8 @@ console.log(
     idempotency: "ok",
     monotonicity: "ok",
     cors: "ok",
-    latestRevision: initialRevision + 1,
+    drain: "ok",
+    resume: "ok",
+    latestRevision: initialRevision + 2,
   }),
 );

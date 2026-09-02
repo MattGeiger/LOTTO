@@ -14,7 +14,10 @@ import { ARCADE_PLAY_RESUMED_EVENT, ARCADE_TICKET_CALLED_EVENT } from "@/arcade/
 import RealtimeCanaryMount from "@/components/realtime-canary-mount";
 import { useLanguage } from "@/contexts/language-context";
 import { readPersistedHomepageTicket } from "@/lib/home-ticket-storage";
-import { getPollingIntervalMs } from "@/lib/polling-strategy";
+import {
+  getPollingIntervalMs,
+  recordPollingStateObservation,
+} from "@/lib/polling-strategy";
 import type { RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
 import { readPolledStateRevision } from "@/lib/realtime/polled-state-revision";
 import { toRenderableRaffleState, type PublicRaffleState } from "@/lib/realtime/public-state-protocol";
@@ -35,7 +38,6 @@ type ServingPayload = {
 };
 
 const POLL_ERROR_RETRY_MS = 30_000;
-const BURST_DURATION_MS = 2 * 60_000;
 const SERVING_ALERT_DURATION_MS = 5000;
 const CALLED_ALERT_DURATION_MS = 10_000;
 const CALLED_CONFETTI_INTERVAL_MS = 2_000;
@@ -155,6 +157,21 @@ export function NowServingBanner({
     }
   }, []);
 
+  const recordStateActivity = React.useCallback((timestamp: number | null | undefined) => {
+    const activity = recordPollingStateObservation({
+      activity: {
+        lastSeenTimestamp: lastSeenTimestampRef.current,
+        lastChangeAt: lastChangeAtRef.current,
+        burstUntil: burstUntilRef.current,
+      },
+      stateTimestamp: timestamp,
+      observedAt: Date.now(),
+    });
+    lastSeenTimestampRef.current = activity.lastSeenTimestamp;
+    lastChangeAtRef.current = activity.lastChangeAt;
+    burstUntilRef.current = activity.burstUntil;
+  }, []);
+
   const clearServingAlertTimeout = React.useCallback(() => {
     if (servingAlertTimeoutRef.current !== null) {
       window.clearTimeout(servingAlertTimeoutRef.current);
@@ -271,17 +288,7 @@ export function NowServingBanner({
       setTicketNumber(nextTicketNumber);
 
       const nowMs = Date.now();
-      const nextTimestamp =
-        typeof payload.timestamp === "number" ? payload.timestamp : nowMs;
-      const changeDetected =
-        lastSeenTimestampRef.current === null ||
-        lastSeenTimestampRef.current !== nextTimestamp;
-      lastSeenTimestampRef.current = nextTimestamp;
-
-      if (changeDetected) {
-        lastChangeAtRef.current = nowMs;
-        burstUntilRef.current = nowMs + BURST_DURATION_MS;
-      }
+      recordStateActivity(payload.timestamp);
 
       const { delayMs } = getPollingIntervalMs({
         now: new Date(nowMs),
@@ -297,10 +304,11 @@ export function NowServingBanner({
     } finally {
       pollInFlightRef.current = false;
     }
-  }, [clearPollTimeout, scheduleNextPoll]);
+  }, [clearPollTimeout, recordStateActivity, scheduleNextPoll]);
 
   const applySourceState = React.useCallback((publicState: PublicRaffleState) => {
     const payload = toRenderableRaffleState(publicState, stateRef.current);
+    recordStateActivity(payload.timestamp);
     stateRef.current = payload;
     const nextServing = typeof payload.currentlyServing === "number" ? payload.currentlyServing : null;
     const nextTicketNumber = readPersistedHomepageTicket(Date.now(), {
@@ -310,7 +318,7 @@ export function NowServingBanner({
     setCurrentlyServing(nextServing);
     setLastPayload(payload);
     setTicketNumber(nextTicketNumber);
-  }, []);
+  }, [recordStateActivity]);
 
   const handleSourceAuthorityChange = React.useCallback((authoritative: boolean) => {
     sourceAuthoritativeRef.current = authoritative;

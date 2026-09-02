@@ -15,6 +15,7 @@
     "realtime:verify": "node scripts/verify-realtime-hub.mjs",
     "realtime:load": "node scripts/load-test-realtime-hub.mjs",
     "realtime:benchmark": "node scripts/benchmark-realtime-delivery.mjs",
+    "realtime:control": "node scripts/control-realtime-hub.mjs",
     "realtime:shadow:check": "vitest run tests/realtime-public-state-protocol.test.ts tests/realtime-shadow-publication.test.ts tests/state-manager-db.test.ts tests/api-realtime-publication.test.ts tests/realtime-diagnostics-client.test.tsx",
     "realtime:deploy:beta": "wrangler deploy --config workers/realtime-hub/wrangler.jsonc",
     "check:legacy-bundles": "node scripts/check-legacy-safe-bundles.mjs",

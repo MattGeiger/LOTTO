@@ -17,13 +17,17 @@ import {
 type Env = {
   PUBLIC_STATE_HUB: DurableObjectNamespace<PublicStateHub>;
   PUBLISH_TOKEN?: string;
+  CONTROL_TOKEN?: string;
   ALLOWED_ORIGINS?: string;
   ENVIRONMENT?: string;
 };
 
 const MAX_PUBLISH_BYTES = 1_000_000;
+const MAX_CONTROL_BYTES = 1_024;
 const STATE_STORAGE_KEY = "latest-public-state";
+const CONNECTIONS_DRAINED_STORAGE_KEY = "connections-drained";
 const SUBSCRIBER_TAG = "public-state-subscriber";
+const OPERATOR_DRAIN_CLOSE_CODE = 4_001;
 
 const jsonResponse = (body: unknown, status = 200, headers?: HeadersInit) =>
   Response.json(body, {
@@ -89,14 +93,14 @@ const secureCompare = async (left: string, right: string) => {
 
 const parseRoute = (pathname: string) => {
   const match = pathname.match(
-    /^\/v1\/agencies\/([^/]+)\/(state|events|publish)\/?$/,
+    /^\/v1\/agencies\/([^/]+)\/(state|events|publish|control)\/?$/,
   );
   if (!match) return null;
   const agencyResult = agencyIdSchema.safeParse(decodeURIComponent(match[1]));
   if (!agencyResult.success) return null;
   return {
     agencyId: agencyResult.data,
-    action: match[2] as "state" | "events" | "publish",
+    action: match[2] as "state" | "events" | "publish" | "control",
   };
 };
 
@@ -112,6 +116,15 @@ export class PublicStateHub extends DurableObject<Env> {
     }
 
     if (action === "events" && request.method === "GET") {
+      const connectionsDrained =
+        (await this.ctx.storage.get<boolean>(CONNECTIONS_DRAINED_STORAGE_KEY)) === true;
+      if (connectionsDrained) {
+        return jsonResponse(
+          { error: "Realtime connections are temporarily disabled." },
+          503,
+          { "retry-after": "300" },
+        );
+      }
       if (request.headers.get("upgrade")?.toLowerCase() !== "websocket") {
         return jsonResponse(
           { error: "A WebSocket upgrade is required." },
@@ -147,10 +160,13 @@ export class PublicStateHub extends DurableObject<Env> {
         async (transaction) => {
           const latest =
             await transaction.get<PublicStateEnvelope>(STATE_STORAGE_KEY);
+          const connectionsDrained =
+            (await transaction.get<boolean>(CONNECTIONS_DRAINED_STORAGE_KEY)) === true;
           if (latest && envelope.revision < latest.revision) {
             return {
               status: "stale" as const,
               latestRevision: latest.revision,
+              connectionsDrained,
             };
           }
           if (latest && envelope.revision === latest.revision) {
@@ -158,17 +174,20 @@ export class PublicStateHub extends DurableObject<Env> {
               return {
                 status: "duplicate" as const,
                 latestRevision: latest.revision,
+                connectionsDrained,
               };
             }
             return {
               status: "conflict" as const,
               latestRevision: latest.revision,
+              connectionsDrained,
             };
           }
           await transaction.put(STATE_STORAGE_KEY, envelope);
           return {
             status: "stored" as const,
             latestRevision: envelope.revision,
+            connectionsDrained,
           };
         },
       );
@@ -186,7 +205,7 @@ export class PublicStateHub extends DurableObject<Env> {
         );
       }
 
-      if (outcome.status === "stored") {
+      if (outcome.status === "stored" && !outcome.connectionsDrained) {
         const message = JSON.stringify(envelope);
         for (const socket of this.ctx.getWebSockets(SUBSCRIBER_TAG)) {
           try {
@@ -202,9 +221,55 @@ export class PublicStateHub extends DurableObject<Env> {
           accepted: true,
           duplicate: outcome.status === "duplicate",
           revision: outcome.latestRevision,
+          connectionsDrained: outcome.connectionsDrained,
         },
         outcome.status === "stored" ? 202 : 200,
       );
+    }
+
+    if (action === "control" && request.method === "GET") {
+      const connectionsDrained =
+        (await this.ctx.storage.get<boolean>(CONNECTIONS_DRAINED_STORAGE_KEY)) === true;
+      return jsonResponse({
+        connectionsDrained,
+        connectedClients: this.ctx.getWebSockets(SUBSCRIBER_TAG).length,
+      });
+    }
+
+    if (action === "control" && request.method === "POST") {
+      const body = await request.json<unknown>();
+      const mode =
+        body && typeof body === "object" && "mode" in body
+          ? (body as { mode?: unknown }).mode
+          : null;
+      if (mode !== "drain" && mode !== "resume") {
+        return jsonResponse({ error: "Control mode must be drain or resume." }, 400);
+      }
+
+      if (mode === "resume") {
+        await this.ctx.storage.delete(CONNECTIONS_DRAINED_STORAGE_KEY);
+        return jsonResponse({
+          connectionsDrained: false,
+          closedClients: 0,
+        });
+      }
+
+      await this.ctx.storage.put(CONNECTIONS_DRAINED_STORAGE_KEY, true);
+      const sockets = this.ctx.getWebSockets(SUBSCRIBER_TAG);
+      for (const socket of sockets) {
+        try {
+          socket.close(
+            OPERATOR_DRAIN_CLOSE_CODE,
+            "Realtime source disabled by operator.",
+          );
+        } catch {
+          // A concurrently disconnected socket is already drained.
+        }
+      }
+      return jsonResponse({
+        connectionsDrained: true,
+        closedClients: sockets.length,
+      });
     }
 
     return jsonResponse({ error: "Not found." }, 404);
@@ -268,11 +333,18 @@ const worker: ExportedHandler<Env> = {
       return withCors(response, origin, allowedOrigins);
     }
 
-    if (request.method !== "POST") {
-      return jsonResponse({ error: "Method not allowed." }, 405);
-    }
-    if (!env.PUBLISH_TOKEN) {
-      return jsonResponse({ error: "Publishing is not configured." }, 503);
+    const isControl = route.action === "control";
+    const methodAllowed = isControl
+      ? request.method === "GET" || request.method === "POST"
+      : request.method === "POST";
+    if (!methodAllowed) return jsonResponse({ error: "Method not allowed." }, 405);
+
+    const requiredToken = isControl ? env.CONTROL_TOKEN : env.PUBLISH_TOKEN;
+    if (!requiredToken) {
+      return jsonResponse(
+        { error: isControl ? "Control is not configured." : "Publishing is not configured." },
+        503,
+      );
     }
 
     const authorization = request.headers.get("authorization") ?? "";
@@ -281,21 +353,34 @@ const worker: ExportedHandler<Env> = {
       : "";
     if (
       !submittedToken ||
-      !(await secureCompare(submittedToken, env.PUBLISH_TOKEN))
+      !(await secureCompare(submittedToken, requiredToken))
     ) {
       return jsonResponse({ error: "Unauthorized." }, 401, {
         "www-authenticate": "Bearer",
       });
     }
+    if (
+      isControl
+      && env.PUBLISH_TOKEN
+      && (await secureCompare(requiredToken, env.PUBLISH_TOKEN))
+    ) {
+      return jsonResponse({ error: "Control credential is misconfigured." }, 503);
+    }
 
+    if (isControl && request.method === "GET") {
+      const internalUrl = new URL("/control", request.url);
+      return stub.fetch(new Request(internalUrl, { method: "GET" }));
+    }
+
+    const maxBodyBytes = isControl ? MAX_CONTROL_BYTES : MAX_PUBLISH_BYTES;
     const contentLength = Number(request.headers.get("content-length") ?? 0);
-    if (Number.isFinite(contentLength) && contentLength > MAX_PUBLISH_BYTES) {
-      return jsonResponse({ error: "Publication is too large." }, 413);
+    if (Number.isFinite(contentLength) && contentLength > maxBodyBytes) {
+      return jsonResponse({ error: "Request body is too large." }, 413);
     }
 
     const rawBody = await request.text();
-    if (new TextEncoder().encode(rawBody).byteLength > MAX_PUBLISH_BYTES) {
-      return jsonResponse({ error: "Publication is too large." }, 413);
+    if (new TextEncoder().encode(rawBody).byteLength > maxBodyBytes) {
+      return jsonResponse({ error: "Request body is too large." }, 413);
     }
 
     let json: unknown;
@@ -303,6 +388,17 @@ const worker: ExportedHandler<Env> = {
       json = JSON.parse(rawBody);
     } catch {
       return jsonResponse({ error: "Invalid JSON." }, 400);
+    }
+
+    if (isControl) {
+      const internalUrl = new URL("/control", request.url);
+      return stub.fetch(
+        new Request(internalUrl, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(json),
+        }),
+      );
     }
 
     const parsed = publicStateEnvelopeSchema.safeParse(json);

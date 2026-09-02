@@ -24,9 +24,25 @@ const required = (environment: Environment, name: string) => {
   return value;
 };
 
+export const isRealtimeApplicationEnabled = (
+  environment: Environment = process.env,
+): boolean => {
+  const flag = environment.LOTTO_REALTIME_APPLICATION_ENABLED?.trim().toLowerCase();
+  if (!flag) {
+    // Backward-compatible for the existing beta canary, which is still
+    // independently gated by LOTTO_REALTIME_SOURCE_CANARY and its URL cohort.
+    return true;
+  }
+  if (flag !== "true" && flag !== "false") {
+    throw new Error("LOTTO_REALTIME_APPLICATION_ENABLED must be either true or false.");
+  }
+  return flag === "true";
+};
+
 export const resolveRealtimeCanaryClientConfig = (
   environment: Environment = process.env,
 ): RealtimeCanaryClientConfig | null => {
+  if (!isRealtimeApplicationEnabled(environment)) return null;
   const flag = environment.LOTTO_REALTIME_CLIENT_CANARY?.trim().toLowerCase();
   if (!flag || flag === "false") return null;
   if (flag !== "true") {

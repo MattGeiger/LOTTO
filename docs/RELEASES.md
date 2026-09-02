@@ -1,5 +1,18 @@
 # Unreleased
 
+Realtime operational hardening now includes two independent emergency
+controls: a server-only Vercel application gate for new page loads and a
+Cloudflare Durable Object drain/resume control for existing sockets. Draining
+does not stop publication, remove the latest public state, or affect Neon staff
+transactions. Realtime and polling also share one activity clock, preserving
+the existing quiet-time and off-hours cadence after fallback.
+
+The William Temple House production migration is planned for a new project in
+the consulting business's existing Vercel Pro account, with an attended change
+window no earlier than September 3, 2026 after 2:30 PM Pacific. The old
+production and Hobby beta account/project remain rollback/comparison targets
+until explicit acceptance.
+
 # LOTTO v2.0.0-rc.1
 
 **Release Date:** September 2, 2026 (beta release candidate — not promoted)
