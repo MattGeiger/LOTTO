@@ -82,6 +82,7 @@ export const useRealtimeSourceCanary = ({
   const reconnectTimerRef = React.useRef<number | null>(null);
   const handshakeTimerRef = React.useRef<number | null>(null);
   const reconnectAttemptRef = React.useRef(0);
+  const offlineRef = React.useRef(false);
   const authorityRef = React.useRef(false);
   const authoritativeRevisionRef = React.useRef<number | null>(null);
   const authoritativeChecksumRef = React.useRef<string | null>(null);
@@ -179,7 +180,7 @@ export const useRealtimeSourceCanary = ({
         disposed
         || terminalInvalid
         || document.visibilityState === "hidden"
-        || navigator.onLine === false
+        || offlineRef.current
       ) return;
       const existing = socketRef.current;
       if (existing && (existing.readyState === WebSocket.CONNECTING || existing.readyState === WebSocket.OPEN)) {
@@ -201,7 +202,7 @@ export const useRealtimeSourceCanary = ({
           disposed
           || terminalInvalid
           || document.visibilityState === "hidden"
-          || navigator.onLine === false
+          || offlineRef.current
         ) return;
         if (reconnectAttemptRef.current >= MAX_RECONNECT_ATTEMPTS) {
           revokeAuthority("exhausted");
@@ -337,6 +338,7 @@ export const useRealtimeSourceCanary = ({
       connect();
     };
     const handleOffline = () => {
+      offlineRef.current = true;
       clearReconnectTimer();
       clearHandshakeTimer();
       revokeAuthority("offline");
@@ -345,6 +347,7 @@ export const useRealtimeSourceCanary = ({
       socket?.close(1000, "Browser offline.");
     };
     const handleOnline = () => {
+      offlineRef.current = false;
       reconnectAttemptRef.current = 0;
       revokeAuthority("offline");
       connect();
