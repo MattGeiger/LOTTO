@@ -139,7 +139,12 @@
   held revision `15`, and matched the refreshed authoritative projection in
   `1,221 ms` with zero reconnects. That first convergence value remained fixed
   through later refreshes, and the Admin diagnostic recorded accepted attempt
-  `1`. Pushed state is not rendered and no polling has been removed.
+  `1`. The next additive slice extends the same observer to Inventory's existing
+  ticket-celebration poll and Arcade's existing Now Serving poll without adding
+  request loops. `/api/state` now returns the authoritative Neon revision in a
+  response header from the same database query, allowing exact revision plus
+  checksum comparison and an explicit polling-ahead diagnostic. Pushed state is
+  not rendered and no polling has been removed.
 
 ### Changed
 

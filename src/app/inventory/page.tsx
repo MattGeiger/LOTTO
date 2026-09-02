@@ -10,6 +10,7 @@ import { notFound } from "next/navigation";
 
 import { PublicInventoryPage } from "@/components/public-inventory-page";
 import { getResolvedBrand } from "@/lib/brand-config/resolve";
+import { resolveRealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
 
 export async function generateMetadata(): Promise<Metadata> {
   const brand = await getResolvedBrand();
@@ -22,5 +23,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function InventoryPage() {
   const brand = await getResolvedBrand();
   if (!brand.inventory.enabled) notFound();
-  return <PublicInventoryPage />;
+  return (
+    <PublicInventoryPage
+      realtimeCanary={resolveRealtimeCanaryClientConfig()}
+    />
+  );
 }

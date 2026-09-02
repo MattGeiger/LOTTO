@@ -40,6 +40,21 @@ vi.mock("@/components/animate-ui/primitives/texts/rolling", () => ({
   RollingText: ({ text }: { text: string }) => <span>{text}</span>,
 }));
 
+vi.mock("@/components/realtime-canary-mount", () => ({
+  default: ({
+    config,
+    polledRevision,
+  }: {
+    config: unknown;
+    polledRevision: number | null;
+  }) => config ? (
+    <div
+      data-testid="display-realtime-canary"
+      data-polled-revision={polledRevision ?? undefined}
+    />
+  ) : null,
+}));
+
 // Animated icons used by TicketDetailDialog
 vi.mock("@/components/animate-ui/icons/clock", () => ({
   Clock: (props: Record<string, unknown>) => <span data-testid="icon-clock" {...props} />,
@@ -85,7 +100,10 @@ const preDrawState: RaffleState = {
 function installFetch(state: RaffleState = baseState) {
   vi.stubGlobal(
     "fetch",
-    vi.fn(async () => new Response(JSON.stringify(state), { status: 200 })),
+    vi.fn(async () => new Response(JSON.stringify(state), {
+      status: 200,
+      headers: { "x-lotto-state-revision": "25" },
+    })),
   );
 }
 
@@ -116,6 +134,24 @@ describe("ReadOnlyDisplay (public variant)", () => {
     // (in the now-serving display and in the ticket grid)
     const fives = screen.getAllByText("5");
     expect(fives.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("forwards the exact revision from the existing poll to the beta observer", async () => {
+    renderPublicDisplay({
+      realtimeCanary: {
+        agencyId: "william-temple-house",
+        eventsUrl:
+          "wss://lotto-realtime-beta.et2-geiger.workers.dev/v1/agencies/william-temple-house/events",
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("display-realtime-canary")).toHaveAttribute(
+        "data-polled-revision",
+        "25",
+      );
+    });
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
   it("reserves mobile clearance below the public search toolbar", async () => {

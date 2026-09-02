@@ -24,6 +24,15 @@ queue-only; use the ticket, display, and games pages normally.
 2. Select one or more needs (gluten-free, vegan, halal, kosher, and more).
 3. Selections combine with the search box; use **Clear filters** to reset.
 
+## Beta Realtime Testing
+
+This is not part of the normal Inventory workflow. On the isolated LOTTO beta,
+authorized architecture testers may open `/inventory?realtime=observe`. A small
+**Realtime observer** badge compares the queue state already fetched for ticket
+call celebrations with the experimental Cloudflare delivery. Inventory and
+ticket-call rendering continue to use the existing authoritative poll. Remove
+the query parameter to return immediately to the ordinary control path.
+
 ## What To Read Next
 
 - Back to your ticket status: [Tickets & the Queue](04-tickets-queue.md).

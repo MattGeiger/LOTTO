@@ -7,10 +7,10 @@ provisional v2.0 realtime architecture. The implementation is beta-only,
 disabled by default, and observational. It is not the public-state source and
 does not reduce Neon or Vercel usage yet.
 
-The Home and Display surfaces can open one native WebSocket to the isolated
-Cloudflare Durable Object, validate its public-state envelope, and compare that
-state with the existing `/api/state` result. The ordinary adaptive polling path
-continues to fetch and render all visible queue state.
+Home, Display, Inventory, and the Arcade banner can open one native WebSocket to
+the isolated Cloudflare Durable Object, validate its public-state envelope, and
+compare that state with the existing `/api/state` result. The ordinary adaptive
+polling path continues to fetch and render all visible queue state.
 
 ## Safety boundary
 
@@ -31,6 +31,8 @@ The initial cohort URLs are:
 ```text
 https://beta.williamtemple.app/?realtime=observe
 https://beta.williamtemple.app/display?realtime=observe
+https://beta.williamtemple.app/inventory?realtime=observe
+https://beta.williamtemple.app/arcade?realtime=observe
 ```
 
 Removing the query parameter returns that browser to the ordinary polling-only
@@ -47,10 +49,14 @@ dependency is shipped.
    allowlisted public projection.
 4. Close permanently with policy code `1008` if the frame is malformed, belongs
    to another agency, or fails its checksum.
-5. Hash the public projection of the already-polled `RaffleState` locally. This
-   adds no fetch, Function invocation, or Neon read.
-6. Report whether the pushed and polled checksums match. The pushed state is
-   never passed to the rendering path.
+5. Read the authoritative Neon revision from the
+   `x-lotto-state-revision` header on the existing `/api/state` response and
+   hash that response's public projection locally. The revision and payload
+   come from one database query; this adds no fetch, Function invocation, or
+   Neon read.
+6. Require revision and checksum agreement when the revision header is
+   available. Local file storage omits the header and retains checksum-only
+   comparison. The pushed state is never passed to the rendering path.
 7. On a transport close, reconnect after 1, 2, 4, 8, and 16 seconds, then stop.
    A valid message resets the consecutive-failure count.
 8. When the document is hidden, clear any pending retry and close the socket.
@@ -64,7 +70,8 @@ one comparison state:
 | --- | --- |
 | `Waiting for comparison` | One side has not supplied a valid checksum yet |
 | `Neon match` | The pushed public payload and polled public payload are identical |
-| `Hub ahead; polling unchanged` | The hub carries a newer state timestamp while the polling result has not caught up |
+| `Hub ahead; polling unchanged` | The hub revision is newer than the authoritative poll revision |
+| `Polling ahead; hub delayed` | The authoritative poll revision is newer than the hub revision |
 | `State mismatch` | Both sides are present but do not agree and the hub is not demonstrably newer |
 
 The badge is test instrumentation, not a supported public status indicator.
@@ -80,8 +87,9 @@ window.__LOTTO_REALTIME_CANARY__
 ```
 
 Every change also dispatches a `lotto:realtime-canary` `CustomEvent`. The value
-contains only connection/comparison status, hub revision and checksums, message
-and reconnect counts, delivery/convergence timings, and an update timestamp.
+contains only connection/comparison status, hub and polled revisions and
+checksums, message and reconnect counts, delivery/convergence timings, and an
+update timestamp.
 It is in-memory only and is not posted to Vercel, Neon, Cloudflare, or an
 analytics provider by this slice.
 
@@ -108,8 +116,9 @@ the Durable Object has a current projection, but its switch remains independent.
 2. Open one ordinary control tab without a query parameter and one observer tab
    with `?realtime=observe`. Only the observer tab should show the badge and
    create a Worker WebSocket.
-3. Open Home and Display observer tabs. Confirm each reaches `connected` and
-   then `Neon match`; inspect the in-memory telemetry value.
+3. Open Home, Display, Inventory, and Arcade observer tabs. Confirm each reaches
+   `connected` and then `Neon match`; inspect the in-memory telemetry value and
+   require identical non-null hub/poll revisions.
 4. Perform a reversible authenticated staff action. Record the time from the
    Neon commit to the WebSocket message and from that message to polling
    convergence. The badge may briefly show `Hub ahead`; it must settle at
@@ -133,15 +142,20 @@ Run:
 
 ```bash
 npx vitest run tests/realtime-client-canary-config.test.ts \
+  tests/realtime-canary-mount.test.tsx \
   tests/realtime-canary-observer.test.tsx \
-  tests/public-display-page.test.tsx \
+  tests/api-state-actions.test.ts \
+  tests/readonly-display-public.test.tsx \
+  tests/ticket-called-celebration.test.tsx \
+  tests/arcade-now-serving-banner.test.tsx \
   tests/security-csp.test.ts
 ```
 
 Coverage includes beta/host/CSP configuration boundaries, explicit URL cohort
-selection, valid equality, tamper rejection, zero observer fetches, single
-socket reuse, visibility pause/resume, the five-attempt retry ceiling, and
-Display configuration forwarding.
+selection, exact revision parsing and comparison, valid equality, hub/poll-ahead
+states, tamper rejection, zero observer fetches, single socket reuse, visibility
+pause/resume, the five-attempt retry ceiling, and all four public consumer poll
+paths.
 
 ## First live beta observation
 
@@ -171,11 +185,12 @@ the run. This is one successful checkpoint, not a completed Phase 4 canary.
 
 ## Current limitations and Phase 4 gates
 
-- Only Home and Display are connected. Inventory celebration and Arcade banner
-  observation remain later Phase 4 work.
-- `/api/state` returns the state payload but not the authoritative Neon revision.
-  This slice therefore records the hub revision and proves payload equality by
-  checksum; exact polled-revision comparison remains an exit gate.
+- All four current public queue-state consumers are connected. Production-
+  shaped Inventory and Arcade observations still need to be recorded after the
+  expanded slice deploys.
+- Neon-backed `/api/state` exposes its authoritative positive revision in a
+  response header from the same query as the state payload. Local file storage
+  intentionally omits the header and uses checksum-only comparison.
 - No pushed state is rendered, and polling is never stopped. This slice cannot
   reduce Neon compute or Vercel requests; it exists to establish correctness
   before Phase 5 changes either behavior.

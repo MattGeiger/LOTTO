@@ -98,7 +98,13 @@ describe("RealtimeCanaryObserver", () => {
     const state = stateAt(Date.parse("2026-09-01T18:00:00.000Z"));
     let view!: ReturnType<typeof render>;
     await act(async () => {
-      view = render(<RealtimeCanaryObserver config={config} polledState={state} />);
+      view = render(
+        <RealtimeCanaryObserver
+          config={config}
+          polledState={state}
+          polledRevision={7}
+        />,
+      );
       await flushAsyncState();
     });
     const socket = FakeWebSocket.instances[0];
@@ -121,6 +127,7 @@ describe("RealtimeCanaryObserver", () => {
       connection: "connected",
       comparison: "matched",
       hubRevision: 7,
+      polledRevision: 7,
       messagesReceived: 1,
       deliveryLatencyMs: null,
     });
@@ -132,6 +139,7 @@ describe("RealtimeCanaryObserver", () => {
         <RealtimeCanaryObserver
           config={config}
           polledState={structuredClone(state)}
+          polledRevision={7}
         />,
       );
       await flushAsyncState();
@@ -143,6 +151,7 @@ describe("RealtimeCanaryObserver", () => {
         <RealtimeCanaryObserver
           config={config}
           polledState={stateAt(state.timestamp! + 1)}
+          polledRevision={7}
         />,
       );
       await flushAsyncState();
@@ -160,8 +169,28 @@ describe("RealtimeCanaryObserver", () => {
     });
     expect(window.__LOTTO_REALTIME_CANARY__).toMatchObject({
       hubRevision: 8,
+      polledRevision: 7,
+      comparison: "hub-ahead",
       messagesReceived: 2,
       deliveryLatencyMs: expect.any(Number),
+    });
+
+    await act(async () => {
+      view.rerender(
+        <RealtimeCanaryObserver
+          config={config}
+          polledState={stateAt(state.timestamp! + 2)}
+          polledRevision={9}
+        />,
+      );
+      await flushAsyncState();
+    });
+    await waitFor(() => {
+      expect(window.__LOTTO_REALTIME_CANARY__).toMatchObject({
+        hubRevision: 8,
+        polledRevision: 9,
+        comparison: "poll-ahead",
+      });
     });
 
     view.unmount();
@@ -171,7 +200,13 @@ describe("RealtimeCanaryObserver", () => {
   it("rejects a checksummed envelope whose state was tampered with", async () => {
     const state = stateAt(Date.parse("2026-09-01T18:00:00.000Z"));
     await act(async () => {
-      render(<RealtimeCanaryObserver config={config} polledState={state} />);
+      render(
+        <RealtimeCanaryObserver
+          config={config}
+          polledState={state}
+          polledRevision={1}
+        />,
+      );
       await flushAsyncState();
     });
     const socket = FakeWebSocket.instances[0];
@@ -199,7 +234,13 @@ describe("RealtimeCanaryObserver", () => {
   it("pauses while hidden and resumes with one fresh socket when visible", () => {
     let visibility: DocumentVisibilityState = "visible";
     vi.spyOn(document, "visibilityState", "get").mockImplementation(() => visibility);
-    render(<RealtimeCanaryObserver config={config} polledState={null} />);
+    render(
+      <RealtimeCanaryObserver
+        config={config}
+        polledState={null}
+        polledRevision={null}
+      />,
+    );
     const firstSocket = FakeWebSocket.instances[0];
     act(() => firstSocket.open());
 
@@ -218,7 +259,13 @@ describe("RealtimeCanaryObserver", () => {
 
   it("stops after five bounded reconnect attempts", async () => {
     vi.useFakeTimers();
-    render(<RealtimeCanaryObserver config={config} polledState={null} />);
+    render(
+      <RealtimeCanaryObserver
+        config={config}
+        polledState={null}
+        polledRevision={null}
+      />,
+    );
 
     for (const delay of [1_000, 2_000, 4_000, 8_000, 16_000]) {
       act(() => FakeWebSocket.instances.at(-1)?.emitClose());

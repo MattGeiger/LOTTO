@@ -30,12 +30,14 @@ export type RealtimeCanaryComparison =
   | "waiting"
   | "matched"
   | "hub-ahead"
+  | "poll-ahead"
   | "mismatch";
 
 export type RealtimeCanaryTelemetry = {
   connection: RealtimeCanaryConnection;
   comparison: RealtimeCanaryComparison;
   hubRevision: number | null;
+  polledRevision: number | null;
   hubChecksum: string | null;
   polledChecksum: string | null;
   messagesReceived: number;
@@ -55,6 +57,7 @@ const initialTelemetry = (): RealtimeCanaryTelemetry => ({
   connection: "connecting",
   comparison: "waiting",
   hubRevision: null,
+  polledRevision: null,
   hubChecksum: null,
   polledChecksum: null,
   messagesReceived: 0,
@@ -66,21 +69,33 @@ const initialTelemetry = (): RealtimeCanaryTelemetry => ({
 
 const compareState = ({
   hubChecksum,
+  hubRevision,
   hubTimestamp,
   hubReceivedAt,
   polledChecksum,
+  polledRevision,
   polledTimestamp,
   existingConvergenceMs,
 }: {
   hubChecksum: string | null;
+  hubRevision: number | null;
   hubTimestamp: number | null;
   hubReceivedAt: number | null;
   polledChecksum: string | null;
+  polledRevision: number | null;
   polledTimestamp: number | null;
   existingConvergenceMs: number | null;
 }): Pick<RealtimeCanaryTelemetry, "comparison" | "convergenceMs"> => {
   if (!hubChecksum || !polledChecksum) {
     return { comparison: "waiting", convergenceMs: null };
+  }
+  if (hubRevision !== null && polledRevision !== null) {
+    if (hubRevision > polledRevision) {
+      return { comparison: "hub-ahead", convergenceMs: null };
+    }
+    if (hubRevision < polledRevision) {
+      return { comparison: "poll-ahead", convergenceMs: null };
+    }
   }
   if (hubChecksum === polledChecksum) {
     return {
@@ -107,12 +122,14 @@ const withUpdatedAt = (
 export const useRealtimeCanary = (
   config: RealtimeCanaryClientConfig,
   polledState: RaffleState | null,
+  polledRevision: number | null,
 ): RealtimeCanaryTelemetry => {
   const [telemetry, setTelemetry] = React.useState<RealtimeCanaryTelemetry>(initialTelemetry);
   const socketRef = React.useRef<WebSocket | null>(null);
   const reconnectTimerRef = React.useRef<number | null>(null);
   const reconnectAttemptRef = React.useRef(0);
   const polledChecksumRef = React.useRef<string | null>(null);
+  const polledRevisionRef = React.useRef<number | null>(null);
   const polledTimestampRef = React.useRef<number | null>(null);
   const hubEnvelopeRef = React.useRef<PublicStateEnvelope | null>(null);
   const hubReceivedAtRef = React.useRef<number | null>(null);
@@ -122,12 +139,14 @@ export const useRealtimeCanary = (
     let cancelled = false;
     const timestamp = typeof polledState?.timestamp === "number" ? polledState.timestamp : null;
     polledTimestampRef.current = timestamp;
+    polledRevisionRef.current = polledRevision;
 
     if (!polledState) {
       polledChecksumRef.current = null;
       setTelemetry((current) => withUpdatedAt({
         ...current,
         polledChecksum: null,
+        polledRevision,
         comparison: "waiting",
         convergenceMs: null,
       }));
@@ -142,9 +161,11 @@ export const useRealtimeCanary = (
       const hub = hubEnvelopeRef.current;
       const comparison = compareState({
         hubChecksum: hub?.checksum ?? null,
+        hubRevision: hub?.revision ?? null,
         hubTimestamp: typeof hub?.state.timestamp === "number" ? hub.state.timestamp : null,
         hubReceivedAt: hubReceivedAtRef.current,
         polledChecksum: checksum,
+        polledRevision,
         polledTimestamp: timestamp,
         existingConvergenceMs:
           hub && hubConvergenceRef.current?.revision === hub.revision
@@ -160,6 +181,7 @@ export const useRealtimeCanary = (
       setTelemetry((current) => withUpdatedAt({
         ...current,
         polledChecksum: checksum,
+        polledRevision,
         ...comparison,
       }));
     });
@@ -167,7 +189,7 @@ export const useRealtimeCanary = (
     return () => {
       cancelled = true;
     };
-  }, [polledState]);
+  }, [polledRevision, polledState]);
 
   React.useEffect(() => {
     let disposed = false;
@@ -252,9 +274,11 @@ export const useRealtimeCanary = (
           reconnectAttemptRef.current = 0;
           const comparison = compareState({
             hubChecksum: envelope.checksum,
+            hubRevision: envelope.revision,
             hubTimestamp: typeof envelope.state.timestamp === "number" ? envelope.state.timestamp : null,
             hubReceivedAt: receivedAt,
             polledChecksum: polledChecksumRef.current,
+            polledRevision: polledRevisionRef.current,
             polledTimestamp: polledTimestampRef.current,
             existingConvergenceMs:
               hubConvergenceRef.current?.revision === envelope.revision

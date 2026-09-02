@@ -55,6 +55,7 @@ import {
   type FeedPublicInventory,
 } from "@/lib/feed-public-inventory";
 import { cn } from "@/lib/utils";
+import type { RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
 
 type DietaryFlagKey = keyof FeedInventoryItem["dietaryFlags"];
 
@@ -359,7 +360,11 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
   );
 }
 
-export function PublicInventoryPage() {
+export function PublicInventoryPage({
+  realtimeCanary = null,
+}: {
+  realtimeCanary?: RealtimeCanaryClientConfig | null;
+}) {
   const { language, t, translateInventory } = useLanguage();
   const inventoryUrl = useBrand().inventory.url;
   const [inventory, setInventory] = React.useState<FeedPublicInventory | null>(null);
@@ -509,7 +514,7 @@ export function PublicInventoryPage() {
         </ScrollArea>
       </div>
       <BottomTabBar />
-      <TicketCalledCelebration poll />
+      <TicketCalledCelebration poll realtimeCanary={realtimeCanary} />
     </main>
     </ScrambleOnLanguageChange>
   );
