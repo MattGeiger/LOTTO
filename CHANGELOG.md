@@ -162,6 +162,16 @@
   records the isolated beta-environment requirements without presenting them as
   already provisioned.
 
+### Fixed
+
+- **Public service dates now hydrate deterministically in the pantry
+  timezone.** Phase 4 browser observation exposed a pre-existing UTC/Pacific
+  text mismatch: Vercel could prerender the next calendar day while a West
+  Coast display rendered the current day, causing React to regenerate the
+  display tree. The clock now starts from one deterministic placeholder,
+  resolves immediately after mount, and formats the date using the persisted
+  pantry timezone. A UTC-boundary regression covers the reported case.
+
 ## [1.26.0] - 2026-08-30
 
 This stable release promotes the Appearance and cross-device work developed in

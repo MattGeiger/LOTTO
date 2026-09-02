@@ -183,11 +183,42 @@ used when a tab returns to the foreground so the proof did not need to wait for
 the adaptive poll ceiling. Temporary in-page event sampling was removed after
 the run. This is one successful checkpoint, not a completed Phase 4 canary.
 
+## Expanded Phase 4 beta observation
+
+The additive exact-revision and four-surface slice was deployed and observed on
+the isolated beta stack on September 1, 2026:
+
+- Home, Display, Inventory, and Arcade each connected and reported exact
+  `hub r16 / poll r16` matches. Initial comparison times were 284 ms, 499 ms,
+  0 ms, and 0 ms respectively.
+- A fresh `/arcade` control without the query parameter created no observer.
+- A direct `/api/state` response exposed `x-lotto-state-revision: 70`, matching
+  the later live browser cohort's `hub r70 / poll r70` result. The response body
+  contract remained unchanged.
+- One Display observer stayed connected for 307 seconds at exact revision `70`
+  with its original 99 ms convergence measurement unchanged. No mismatch or
+  visible reconnect occurred. This is application-level idle stability, not a
+  Cloudflare hibernation or billing claim.
+- Safari on the iOS 15.4 iPad mini 4 simulator hydrated the deployed observer,
+  reached `hub r70 / poll r70`, and returned to the same connected match after
+  a five-second real app background/foreground cycle.
+- The same Chrome observation exposed a pre-existing service-date hydration
+  mismatch on both the observer and polling-only control. Vercel rendered the
+  UTC date while the Pacific browser rendered the pantry date. The beta branch
+  now starts the clock from a deterministic hydration value and formats the
+  service date in the persisted pantry timezone; this fix must be redeployed
+  and rechecked before the compatibility checkpoint is considered clean.
+
+The deterministic suite remains the proof for zero overlapping sockets,
+visibility cleanup, and the five-attempt reconnect ceiling. A real isolated
+network-interruption drill is still required; disabling the host network would
+also interrupt the active development and authentication sessions and is not a
+safe substitute for per-device fault injection.
+
 ## Current limitations and Phase 4 gates
 
-- All four current public queue-state consumers are connected. Production-
-  shaped Inventory and Arcade observations still need to be recorded after the
-  expanded slice deploys.
+- All four current public queue-state consumers are connected and have passed
+  one production-shaped exact-revision observation on the isolated beta.
 - Neon-backed `/api/state` exposes its authoritative positive revision in a
   response header from the same query as the state payload. Local file storage
   intentionally omits the header and uses checksum-only comparison.
@@ -195,8 +226,10 @@ the run. This is one successful checkpoint, not a completed Phase 4 canary.
   reduce Neon compute or Vercel requests; it exists to establish correctness
   before Phase 5 changes either behavior.
 - There is no application heartbeat. Silent half-open behavior, Durable Object
-  hibernation evidence, sustained memory use, and physical legacy-device
-  recovery still require production-shaped measurement.
+  hibernation evidence, sustained memory/cost measurement, isolated network
+  interruption, and physical legacy-device recovery still require
+  production-shaped measurement. The iOS 15.4 simulator is useful compatibility
+  evidence but does not replace the physical iPad mini 4 gate.
 - The kill switch is deployment configuration. The observer is also removable
   per browser immediately by dropping `?realtime=observe`; runtime capability
   negotiation remains a later hardening decision.

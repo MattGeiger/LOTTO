@@ -10,6 +10,8 @@ Open it from the staff home page with **View Public Board**.
   blue for now serving, green for called, gold for unclaimed, red for returned.
 - **A QR code** clients can scan to look up their own ticket on their phone.
 - **A ticket search** so anyone can type a number and see its status.
+- **The service date**, calculated in the pantry timezone even when the screen
+  or hosting server is set to another timezone.
 
 ## Putting It On A Screen
 
