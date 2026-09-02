@@ -22,10 +22,19 @@ Public routes use the agency id `william-temple-house` during the beta proof:
 - `GET /v1/agencies/william-temple-house/events` with a WebSocket upgrade
 - `POST /v1/agencies/william-temple-house/publish` with
   `Authorization: Bearer <PUBLISH_TOKEN>`
+- authenticated `GET`/`POST /v1/agencies/william-temple-house/control` with a
+  distinct `CONTROL_TOKEN`
 
 The publish route accepts only protocol-valid, checksummed envelopes and
 rejects stale revisions or same-revision checksum conflicts. Subscribers cannot
 write data.
+
+The control route accepts `{ "mode": "drain" }` or `{ "mode": "resume" }`.
+Drain state is stored in the agency Durable Object so it survives hibernation
+and deployments. Draining closes current sockets and refuses new event upgrades
+with HTTP 503, but publication and snapshot storage continue. Resume allows new
+connections, which immediately receive the newest stored projection. The
+control token is intentionally different from the Vercel-held publish token.
 
 ## Remote beta
 
@@ -34,7 +43,7 @@ The standalone proof is deployed at
 connected to Neon or a LOTTO client yet. Hash-based Cloudflare preview URLs are
 disabled; the account `workers.dev` route is the only deployed hostname.
 
-After rotating `PUBLISH_TOKEN`, allow Cloudflare's serving deployment a short
+After rotating `PUBLISH_TOKEN` and the independent `CONTROL_TOKEN`, allow Cloudflare's serving deployment a short
 propagation window before running the remote verifier. The verifier has passed
 health, authentication, snapshot, WebSocket delivery, idempotency, monotonic
 revision, and CORS checks against the remote beta Worker.
@@ -60,8 +69,18 @@ touches that object during its idle window.
 ## Deployment safety
 
 Deploy only to the isolated Cloudflare beta Worker named
-`lotto-realtime-beta`. Set `PUBLISH_TOKEN` with `wrangler secret put`; never add
-it to `wrangler.jsonc`, Git, screenshots, logs, or documentation.
+`lotto-realtime-beta`. Set `PUBLISH_TOKEN` and the distinct `CONTROL_TOKEN` with
+`wrangler secret put`; never add either to `wrangler.jsonc`, Git, screenshots,
+logs, or documentation. Keep `CONTROL_TOKEN` out of Vercel entirely.
+
+Operators use `npm run realtime:control` with the token already present in
+`REALTIME_CONTROL_TOKEN`. Local targets need no confirmation. Every remote
+status, drain, or resume requires
+`REALTIME_CONTROL_CONFIRM=<mode>:<agency>@<exact-host>`, which prevents a copied
+command from controlling the wrong agency or Worker. Drain first during an
+incident, then set `LOTTO_REALTIME_APPLICATION_ENABLED=false` in Vercel and
+redeploy so newly loaded pages also remain on adaptive polling. Resume the hub
+before re-enabling the Vercel application gate.
 
 Production publication and client feature flags must remain disabled until the
 beta exit gates in `docs/V2.0_REALTIME_ARCHITECTURE_PLAN.md` pass.

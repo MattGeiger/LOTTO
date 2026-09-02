@@ -2,6 +2,36 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Added complementary realtime emergency controls.** A server-only
+  `LOTTO_REALTIME_APPLICATION_ENABLED=false` gate overrides all rendered
+  realtime connections for newly loaded pages, including the diagnostic
+  observer, while an independently authenticated Cloudflare
+  control durably drains or resumes one agency's existing Durable Object
+  sockets. Draining rejects new event connections but continues accepting
+  publications and retaining the newest state. The operator-only
+  `realtime:control` command requires an exact mode, agency, and hostname
+  confirmation for remote use; its credential is separate from the Vercel-held
+  publication token. Local end-to-end verification covers wrong-token refusal,
+  connected-client drain, connection refusal, publication while drained,
+  persisted status, resume, and latest-state delivery.
+
+### Changed
+
+- **Preserved the full adaptive schedule across realtime fallback.** Home,
+  Display, Inventory, and Arcade now feed polled and pushed state through one
+  activity clock. A later fallback retains the post-change burst when
+  appropriate but respects long-idle and off-hours backoff when the latest
+  pushed state has been quiet; WebSocket reconnects cannot reset that history.
+- **Recorded the William Temple House v2.0 production migration decision.** A
+  new project in the consulting business's existing Vercel Pro account will be
+  validated before Cloudflare routes `williamtemple.app` to it. The earliest
+  preferred attended cutover window is September 3, 2026 after 2:30 PM Pacific.
+  The Hobby beta account/project and prior production deployment remain intact through the
+  cutover and rollback checkpoint and are retired only after explicit
+  acceptance.
+
 ## [2.0.0-rc.1] - 2026-09-02
 
 This beta release-candidate marker identifies the completed opt-in realtime

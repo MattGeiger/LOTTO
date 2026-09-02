@@ -1,6 +1,20 @@
 
 ## Unreleased
 
+Realtime recovery is being hardened before default activation. A new
+server-side gate can keep newly loaded pages on adaptive polling, while a
+separately authenticated Cloudflare control can drain already-connected
+realtime clients without interrupting staff changes or state publication.
+Fallback now preserves the same post-change, operating-hours, long-idle,
+off-hours, visibility, and error backoff used by the existing app.
+
+The planned William Temple House production home is a new project in the
+consulting business's existing Vercel Pro account. The preferred attended
+cutover window begins after the pantry closes on Thursday, September 3, 2026 at
+2:30 PM Pacific. The current production deployment and beta Hobby
+account/project will remain available for comparison and rollback until the
+new deployment is accepted.
+
 ## Version 2.0.0-rc.1 — September 2, 2026
 
 This beta release candidate marks the completed realtime-source proof and the

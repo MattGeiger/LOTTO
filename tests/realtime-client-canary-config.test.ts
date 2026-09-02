@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Matt Geiger, Temple Consulting, LLC.
 
 import {
+  isRealtimeApplicationEnabled,
   isRealtimeCanaryCohort,
   isRealtimeSourceCanaryCohort,
   resolveRealtimeCanaryClientConfig,
@@ -95,6 +96,31 @@ describe("realtime client canary configuration", () => {
     expect(() => resolveRealtimeSourceClientConfig({
       ...betaEnvironment,
       LOTTO_REALTIME_SOURCE_CANARY: "yes",
+    })).toThrow("must be either true or false");
+  });
+
+  it("lets the application kill switch override the source flag", () => {
+    expect(isRealtimeApplicationEnabled({})).toBe(true);
+    expect(isRealtimeApplicationEnabled({ LOTTO_REALTIME_APPLICATION_ENABLED: "true" })).toBe(true);
+    expect(isRealtimeApplicationEnabled({ LOTTO_REALTIME_APPLICATION_ENABLED: "false" })).toBe(false);
+    expect(resolveRealtimeSourceClientConfig({
+      ...betaEnvironment,
+      LOTTO_REALTIME_SOURCE_CANARY: "true",
+      LOTTO_REALTIME_APPLICATION_ENABLED: "false",
+    })).toBeNull();
+    expect(resolveRealtimeCanaryClientConfig({
+      ...betaEnvironment,
+      LOTTO_REALTIME_CLIENT_CANARY: "true",
+      LOTTO_REALTIME_APPLICATION_ENABLED: "false",
+    })).toBeNull();
+    expect(resolveRealtimeCanaryConnectHost({
+      ...betaEnvironment,
+      LOTTO_REALTIME_CLIENT_CANARY: "true",
+      LOTTO_REALTIME_SOURCE_CANARY: "true",
+      LOTTO_REALTIME_APPLICATION_ENABLED: "false",
+    })).toBeNull();
+    expect(() => isRealtimeApplicationEnabled({
+      LOTTO_REALTIME_APPLICATION_ENABLED: "yes",
     })).toThrow("must be either true or false");
   });
 

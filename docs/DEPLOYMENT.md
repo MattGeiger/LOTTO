@@ -155,7 +155,7 @@ accepted v2.0 architecture or a production promotion:
 | Public smoke | `/` renders and `/api/state` returns `200` from the isolated Neon database; polling behavior is unchanged |
 | Authentication | A sending-only `LOTTO Beta` Resend key, restricted to the already verified `williamtemple.app` domain, is stored only in the beta Vercel Production environment. `AUTH_URL` and Auth.js provider callbacks use `https://beta.williamtemple.app`. Deployment `HqLiGzzahAf2QxHe5MPHqQKND5Ua` is ready; Resend delivered the custom-origin Magic Link, the link established an authenticated `/admin` session, and the page reached Persistence confirmed. A session created on the generated Vercel hostname did not cross to the custom hostname. The key remains in the existing Resend workspace for this proof; domain/account migration is explicitly deferred. |
 | Blob | Separate public store `lotto-beta-blob` is provisioned in Portland (`PDX1`) and connected only to the beta project; its read-write token/store ID/webhook key are generated for beta Production and Preview |
-| Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret. The remote protocol verifier passes, a bounded 1/10/100/200-client run delivered all 311 target updates, and beta-only Neon shadow publication is enabled and repair-proven. The explicit Home/Display/Inventory/Arcade `?realtime=observe` cohort remains a polling-authoritative control. The separate exact `?realtime=source` cohort is now enabled only on beta: all four surfaces handshook at revision `83` and rendered revision `84` directly; a 40-second healthy Display window made zero network requests, a tab-local outage made one immediate fallback read and one recovery read, and the iOS 15.4 simulator reached `live · r84`, survived background/foreground, and received revision `85`. Ordinary beta URLs and production remain polling-only. Ten service days, provider-level fault/cost evidence, and a physical iPad remain open gates. |
+| Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret. The remote protocol verifier passes, a bounded 1/10/100/200-client run delivered all 311 target updates, and beta-only Neon shadow publication is enabled and repair-proven. The explicit Home/Display/Inventory/Arcade `?realtime=observe` cohort remains a polling-authoritative control. The separate exact `?realtime=source` cohort is now enabled only on beta: all four surfaces handshook at revision `83` and rendered revision `84` directly; a 40-second healthy Display window made zero network requests, a tab-local outage made one immediate fallback read and one recovery read, and the iOS 15.4 simulator reached `live · r84`, survived background/foreground, and received revision `85`. Ordinary beta URLs and production remain polling-only. The owner has deferred the ten-day, provider-wide, and physical-iPad exercises until the stable-release decision. |
 | DNS | Cloudflare serves a DNS-only `beta` CNAME to Vercel plus the Vercel ownership-verification TXT value alongside the existing apex/`www` verification values. The apex, `www`, and `feed` records were not changed. The Worker already allowlists the stable beta origin. |
 | Safety UX | Beta-only `X-Robots-Tag`, blocking `robots.txt`, and visible sign-in/admin warning banner are implemented; production behavior remains unchanged because the feature requires the explicit beta environment value |
 
@@ -199,6 +199,7 @@ guidance.
 Phase 5 adds a separate beta-only rendered-source switch:
 
 ```text
+LOTTO_REALTIME_APPLICATION_ENABLED=true
 LOTTO_REALTIME_SOURCE_CANARY=true
 ```
 
@@ -211,6 +212,13 @@ isolated beta Production environment; ordinary URLs do not join the cohort.
 See
 [`REALTIME_SOURCE_CANARY.md`](./REALTIME_SOURCE_CANARY.md) for the state machine,
 test URLs, validation gates, and rollback.
+
+`LOTTO_REALTIME_APPLICATION_ENABLED` is the master rendered-source gate. An
+explicit `false` overrides the source flag for new page loads; change it in
+Vercel and redeploy the same known-good commit. The variable is server-only.
+The current beta predates the master gate, so an absent value retains the
+existing canary behavior; every production-scoped v2 deployment must set it
+explicitly.
 
 Activation fails closed unless `LOTTO_DEPLOYMENT_ENVIRONMENT=beta`, the remote
 URL is HTTPS, and its hostname exactly matches the expected host. Deploy and
@@ -225,6 +233,73 @@ transaction, repair, rollback, and cost contract.
 See
 [`V2.0_REALTIME_ARCHITECTURE_PLAN.md`](./V2.0_REALTIME_ARCHITECTURE_PLAN.md)
 for the phased gates and rollback requirements.
+
+### William Temple House v2.0 production migration decision
+
+The owner has confirmed that the consulting business's existing paid Vercel
+Pro account will own a new William Temple House v2.0 project. The exact tested
+release-candidate commit will be deployed there with production-scoped Neon,
+Blob, auth/Resend, and Cloudflare resources. The beta database, Blob contents,
+auth rows, Durable Object storage, and secrets are not migration inputs.
+
+The earliest preferred cutover window is **Thursday, September 3, 2026 after
+2:30 PM America/Los_Angeles**, after the pantry's last service period of the
+week. This is an operator-attended window, not an automated schedule. Before
+changing DNS, verify the Pro deployment on its generated Vercel hostname. Then
+assign `williamtemple.app` to the new project and update the Cloudflare apex
+record and Auth.js callback configuration as one coordinated change.
+
+Keep both the current production project and the Hobby beta account/project
+intact during cutover. The old production deployment is the DNS/domain rollback
+target; the beta remains the independent comparison environment. Shut them
+down only after the new Pro deployment serves the apex, sign-in and all four
+public surfaces pass, realtime and forced polling pass, provider signals are
+acceptable through the agreed checkpoint, and the owner explicitly accepts
+the migration. Retire their provider resources and secrets deliberately after
+acceptance rather than deleting them during DNS work.
+
+### Realtime emergency controls
+
+The application and hub have complementary controls:
+
+- Set `LOTTO_REALTIME_APPLICATION_ENABLED=false` in Vercel and redeploy the
+  known-good commit to prevent newly loaded pages from starting any rendered
+  realtime connection, including the diagnostic observer.
+- Use the Cloudflare control to persistently drain an agency's existing
+  sockets. Draining refuses new event connections but continues accepting
+  state publications, so staff commands and hub convergence remain available.
+
+Generate a dedicated `CONTROL_TOKEN` independently from `PUBLISH_TOKEN`, store
+it only as a Cloudflare Worker secret and in the approved operator credential
+store, and never install it in Vercel. The operator command reads the token from
+`REALTIME_CONTROL_TOKEN` and requires an exact remote confirmation. For the
+current beta Worker:
+
+```bash
+REALTIME_CONTROL_BASE_URL=https://lotto-realtime-beta.et2-geiger.workers.dev \
+REALTIME_CONTROL_AGENCY_ID=william-temple-house \
+REALTIME_CONTROL_MODE=drain \
+REALTIME_CONTROL_CONFIRM=drain:william-temple-house@lotto-realtime-beta.et2-geiger.workers.dev \
+npm run realtime:control
+```
+
+Use `REALTIME_CONTROL_MODE=status` with the corresponding `status:`
+confirmation to inspect the drain state. To restore service, resume the Worker
+first, then set the Vercel application gate to `true` and redeploy:
+
+```bash
+REALTIME_CONTROL_BASE_URL=https://lotto-realtime-beta.et2-geiger.workers.dev \
+REALTIME_CONTROL_AGENCY_ID=william-temple-house \
+REALTIME_CONTROL_MODE=resume \
+REALTIME_CONTROL_CONFIRM=resume:william-temple-house@lotto-realtime-beta.et2-geiger.workers.dev \
+npm run realtime:control
+```
+
+On drain or any other source failure, a visible client performs one immediate
+Neon reconciliation and then resumes the complete adaptive polling schedule:
+post-change burst, operating/pre-open clamps, long-idle/off-hours backoff,
+visibility pause, and bounded error retry. WebSocket reconnect timing is a
+separate bounded loop and does not reset polling history.
 
 ### Production environment variables
 

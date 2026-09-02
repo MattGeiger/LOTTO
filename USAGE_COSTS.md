@@ -1,6 +1,6 @@
 # LOTTO Usage Costs and Public-Read Architecture
 
-Last reviewed: August 31, 2026
+Last reviewed: September 2, 2026
 
 ## Purpose
 
@@ -23,6 +23,22 @@ all pass.
 
 The complete gated plan is in
 [`docs/V2.0_REALTIME_ARCHITECTURE_PLAN.md`](docs/V2.0_REALTIME_ARCHITECTURE_PLAN.md).
+
+On September 2, the owner confirmed that the consulting business's existing
+paid Vercel Pro account will own a new v2.0 production project. The Hobby beta
+is therefore temporary rather than the production cost model. The preferred
+William Temple House cutover window begins Thursday, September 3, 2026 after
+2:30 PM America/Los_Angeles. The existing production and beta deployments
+remain rollback/comparison targets until the Pro deployment is explicitly
+accepted; only then are the Hobby beta account/project and the old production
+deployment retired.
+
+The recovery design uses two cost-conservative controls. A server-only Vercel
+gate prevents rendered realtime from starting on new page loads after
+redeployment. A separately authenticated Cloudflare drain closes current
+sockets and refuses new ones while continuing to accept publications. Affected
+clients make one immediate Neon reconciliation and then use the unchanged
+adaptive polling schedule, including long-idle and closed-hours backoff.
 
 ## Executive conclusion
 
@@ -679,8 +695,10 @@ Before implementation, answer these product questions:
    commit-to-client-render objectives appropriate for public queue state?
 2. During a Neon outage, should public clients show the last known state, an
    explicit stale-state banner, or an unavailable message?
-3. Is the production Vercel project Hobby, Pro, or Enterprise, and which usage
-   allowances currently apply?
+3. Which Vercel Pro project and billing team identifiers should be recorded in
+   the final production manifest? The owner has confirmed that the consulting
+   business's paid account will own the deployment; the exact project does not
+   exist yet.
 4. How many always-visible kiosks and public inventory/Arcade clients exist at
    peak, and are their poll timers naturally staggered?
 5. Should the production-shaped beta use a dedicated long-lived staging branch,

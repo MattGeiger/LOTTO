@@ -17,11 +17,13 @@ export const resolveRealtimeCanaryConnectHost = (
 ) => {
   const observerFlag = environment.LOTTO_REALTIME_CLIENT_CANARY?.trim().toLowerCase();
   const sourceFlag = environment.LOTTO_REALTIME_SOURCE_CANARY?.trim().toLowerCase();
-  for (const flag of [observerFlag, sourceFlag]) {
+  const applicationFlag = environment.LOTTO_REALTIME_APPLICATION_ENABLED?.trim().toLowerCase();
+  for (const flag of [observerFlag, sourceFlag, applicationFlag]) {
     if (flag && flag !== "true" && flag !== "false") {
       throw new Error("Realtime client CSP flags must be either true or false.");
     }
   }
+  if (applicationFlag === "false") return null;
   if (observerFlag !== "true" && sourceFlag !== "true") return null;
   if (!isBetaDeployment(environment)) {
     throw new Error("The realtime client CSP may be enabled only in the beta deployment.");

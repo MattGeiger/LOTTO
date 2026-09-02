@@ -13,7 +13,10 @@ import ReactCanvasConfetti from "react-canvas-confetti";
 import RealtimeCanaryMount from "@/components/realtime-canary-mount";
 import { useLanguage } from "@/contexts/language-context";
 import { readPersistedHomepageTicket } from "@/lib/home-ticket-storage";
-import { getPollingIntervalMs } from "@/lib/polling-strategy";
+import {
+  getPollingIntervalMs,
+  recordPollingStateObservation,
+} from "@/lib/polling-strategy";
 import type { RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
 import { readPolledStateRevision } from "@/lib/realtime/polled-state-revision";
 import { toRenderableRaffleState, type PublicRaffleState } from "@/lib/realtime/public-state-protocol";
@@ -28,7 +31,6 @@ import {
 } from "@/lib/ticket-celebration";
 
 const POLL_ERROR_RETRY_MS = 30_000;
-const BURST_DURATION_MS = 2 * 60_000;
 
 type ConfettiAnimationOptions = {
   spread?: number;
@@ -256,6 +258,21 @@ function useSelfPolledState(enabled: boolean): {
     }
   }, []);
 
+  const recordStateActivity = React.useCallback((timestamp: number | null | undefined) => {
+    const activity = recordPollingStateObservation({
+      activity: {
+        lastSeenTimestamp: lastSeenTimestampRef.current,
+        lastChangeAt: lastChangeAtRef.current,
+        burstUntil: burstUntilRef.current,
+      },
+      stateTimestamp: timestamp,
+      observedAt: Date.now(),
+    });
+    lastSeenTimestampRef.current = activity.lastSeenTimestamp;
+    lastChangeAtRef.current = activity.lastChangeAt;
+    burstUntilRef.current = activity.burstUntil;
+  }, []);
+
   const scheduleNextPoll = React.useCallback(
     (delayMs: number) => {
       clearPollTimeout();
@@ -285,14 +302,7 @@ function useSelfPolledState(enabled: boolean): {
       setVerificationRevision(nextRevision);
 
       const nowMs = Date.now();
-      const nextTimestamp = typeof payload.timestamp === "number" ? payload.timestamp : nowMs;
-      const changeDetected =
-        lastSeenTimestampRef.current === null || lastSeenTimestampRef.current !== nextTimestamp;
-      lastSeenTimestampRef.current = nextTimestamp;
-      if (changeDetected) {
-        lastChangeAtRef.current = nowMs;
-        burstUntilRef.current = nowMs + BURST_DURATION_MS;
-      }
+      recordStateActivity(payload.timestamp);
 
       const { delayMs } = getPollingIntervalMs({
         now: new Date(nowMs),
@@ -307,13 +317,14 @@ function useSelfPolledState(enabled: boolean): {
     } finally {
       pollInFlightRef.current = false;
     }
-  }, [clearPollTimeout, scheduleNextPoll]);
+  }, [clearPollTimeout, recordStateActivity, scheduleNextPoll]);
 
   const onSourceState = React.useCallback((publicState: PublicRaffleState) => {
     const payload = toRenderableRaffleState(publicState, stateRef.current);
+    recordStateActivity(payload.timestamp);
     stateRef.current = payload;
     setState(payload);
-  }, []);
+  }, [recordStateActivity]);
 
   const onSourceAuthorityChange = React.useCallback((authoritative: boolean) => {
     sourceAuthoritativeRef.current = authoritative;

@@ -23,7 +23,10 @@ import { TicketDetailDialog } from "@/components/ticket-detail-dialog";
 import { useBrand } from "@/contexts/brand-context";
 import { useLanguage, type Language } from "@/contexts/language-context";
 import { formatDate } from "@/lib/date-format";
-import { getPollingIntervalMs } from "@/lib/polling-strategy";
+import {
+  getPollingIntervalMs,
+  recordPollingStateObservation,
+} from "@/lib/polling-strategy";
 import { isRTL } from "@/lib/rtl-utils";
 import {
   defaultState,
@@ -80,7 +83,6 @@ const formatServiceClock = (input: Date | number, language: Language): string =>
 };
 
 const POLL_ERROR_RETRY_MS = 30_000;
-const BURST_DURATION_MS = 2 * 60_000;
 const EMPTY_GENERATED_ORDER: number[] = [];
 const DAYS: DayOfWeek[] = [
   "sunday",
@@ -192,6 +194,21 @@ export const ReadOnlyDisplay = ({
     }
   }, []);
 
+  const recordStateActivity = React.useCallback((timestamp: number | null | undefined) => {
+    const activity = recordPollingStateObservation({
+      activity: {
+        lastSeenTimestamp: lastSeenTimestampRef.current,
+        lastChangeAt: lastChangeAtRef.current,
+        burstUntil: burstUntilRef.current,
+      },
+      stateTimestamp: timestamp,
+      observedAt: Date.now(),
+    });
+    lastSeenTimestampRef.current = activity.lastSeenTimestamp;
+    lastChangeAtRef.current = activity.lastChangeAt;
+    burstUntilRef.current = activity.burstUntil;
+  }, []);
+
   const scheduleNextPoll = React.useCallback(
     (delayMs: number) => {
       clearPollTimeout();
@@ -227,16 +244,7 @@ export const ReadOnlyDisplay = ({
       setStatus(`${t("lastChecked")}: ${formatTime(new Date(), language)}`);
 
       const nowMs = Date.now();
-      const nextTimestamp =
-        typeof payload.timestamp === "number" ? payload.timestamp : nowMs;
-      const changeDetected =
-        lastSeenTimestampRef.current === null ||
-        lastSeenTimestampRef.current !== nextTimestamp;
-      lastSeenTimestampRef.current = nextTimestamp;
-      if (changeDetected) {
-        lastChangeAtRef.current = nowMs;
-        burstUntilRef.current = nowMs + BURST_DURATION_MS;
-      }
+      recordStateActivity(payload.timestamp);
 
       const { delayMs } = getPollingIntervalMs({
         now: new Date(nowMs),
@@ -254,16 +262,17 @@ export const ReadOnlyDisplay = ({
     } finally {
       pollInFlightRef.current = false;
     }
-  }, [clearPollTimeout, language, onStateChange, scheduleNextPoll, t]);
+  }, [clearPollTimeout, language, onStateChange, recordStateActivity, scheduleNextPoll, t]);
 
   const handleSourceState = React.useCallback((publicState: PublicRaffleState, revision: number) => {
     const payload = toRenderableRaffleState(publicState, stateRef.current);
+    recordStateActivity(payload.timestamp);
     stateRef.current = payload;
     setState(payload);
     onStateChange?.(payload);
     setHasError(false);
     setStatus(`Realtime source · r${revision}`);
-  }, [onStateChange]);
+  }, [onStateChange, recordStateActivity]);
 
   const handleSourceAuthorityChange = React.useCallback((authoritative: boolean) => {
     sourceAuthoritativeRef.current = authoritative;
