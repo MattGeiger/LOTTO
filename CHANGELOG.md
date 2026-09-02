@@ -170,7 +170,10 @@
   Coast display rendered the current day, causing React to regenerate the
   display tree. The clock now starts from one deterministic placeholder,
   resolves immediately after mount, and formats the date using the persisted
-  pantry timezone. A UTC-boundary regression covers the reported case.
+  pantry timezone. A UTC-boundary regression covers the reported case. Fresh
+  canary and control pages on the repaired beta deployment logged no hydration
+  error, and the iOS 15.4 simulator passed a second background/foreground
+  cycle while remaining at an exact realtime/Neon revision match.
 
 ## [1.26.0] - 2026-08-30
 

@@ -2512,8 +2512,8 @@ tokens are unchanged.
 
 ## Issue 60: Public service date crossed timezones during hydration
 
-**Status:** fixed in the current Unreleased work; beta revalidation required
-before promotion.
+**Status:** fixed and revalidated on the isolated beta in the current
+Unreleased work.
 
 During the Phase 4 realtime observation window, both the observer page and its
 polling-only control logged React production error 418. The canary was not the
@@ -2531,3 +2531,9 @@ avoids a stale build-time timestamp, removes the UTC/Pacific hydration branch,
 and also gives remote clients the pantry's service date rather than their
 device date. A date-format regression fixes the observed instant at the UTC
 boundary and asserts both Pacific and UTC results.
+
+Deployment `Da5gC8yMFixrFfJVAHTuACTmB986` reproduced the server side as a stable
+em-dash placeholder, then showed **Tuesday, September 1st, 2026** on fresh
+observer and polling-only pages with no console errors. The observer remained
+matched at `hub r70 / poll r70`, and the repaired page passed the iOS 15.4 iPad
+mini 4 simulator background/foreground cycle again.

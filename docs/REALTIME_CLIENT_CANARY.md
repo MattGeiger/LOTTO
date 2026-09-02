@@ -206,8 +206,14 @@ the isolated beta stack on September 1, 2026:
   mismatch on both the observer and polling-only control. Vercel rendered the
   UTC date while the Pacific browser rendered the pantry date. The beta branch
   now starts the clock from a deterministic hydration value and formats the
-  service date in the persisted pantry timezone; this fix must be redeployed
-  and rechecked before the compatibility checkpoint is considered clean.
+  service date in the persisted pantry timezone. Deployment
+  `Da5gC8yMFixrFfJVAHTuACTmB986` was rechecked at the same UTC/Pacific boundary:
+  server HTML contained the deterministic placeholder, both fresh browser
+  pages showed Tuesday, neither logged a console error, and the observer
+  matched `r70 / r70` in 79 ms.
+- The repaired deployment then passed the iOS 15.4 simulator cycle again. The
+  foregrounded page showed the Pacific service date and returned to connected
+  `hub r70 / poll r70` after five seconds in the background.
 
 The deterministic suite remains the proof for zero overlapping sockets,
 visibility cleanup, and the five-attempt reconnect ceiling. A real isolated
