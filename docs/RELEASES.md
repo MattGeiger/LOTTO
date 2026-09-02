@@ -1,5 +1,24 @@
 # Unreleased
 
+# LOTTO v2.0.0-rc.1
+
+**Release Date:** September 2, 2026 (beta release candidate — not promoted)
+
+LOTTO v2.0.0-rc.1 identifies the completed Phase 5 realtime-source canary and
+the documented production-test direction. The Cloudflare Durable Object hub is
+a derived public read model; Neon remains authoritative for authenticated
+commands, atomic revisions, snapshots, undo/redo, and repair evidence. Home,
+Display, Inventory, and Arcade have all passed a full-stack pushed revision on
+the isolated beta, with automatic return to adaptive polling when realtime
+authority is lost.
+
+This is a release-metadata milestone, not the default-realtime behavior change.
+Ordinary beta URLs still poll, and the source controller still requires the
+exact `?realtime=source` cohort. The next Phase 6 implementation will make that
+controller the ordinary beta default, add a polling-only control, rerun the
+release gates, and prepare production-scoped resources. Production, `main`, and
+the apex domain are unchanged.
+
 # LOTTO v1.26.0
 
 **Release Date:** August 30, 2026

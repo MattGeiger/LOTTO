@@ -1,6 +1,29 @@
 
 ## Unreleased
 
+## Version 2.0.0-rc.1 — September 2, 2026
+
+This beta release candidate marks the completed realtime-source proof and the
+approved path toward a production test. Home, Display, Inventory, and Arcade
+can all receive an authenticated staff change from the Cloudflare realtime hub,
+stop their scheduled state checks while that source is healthy, and return
+automatically to the existing Neon-backed adaptive polling when the connection
+or data cannot be trusted.
+
+The live beta proof delivered the same revision to all four public areas, made
+no state requests during a healthy 40-second display observation, recovered
+from a simulated network interruption, and passed connection,
+background/foreground, and subsequent-update checks on the iOS 15.4 iPad mini
+simulator. Neon remains authoritative for staff actions, atomic state changes,
+undo, redo, snapshots, and recovery.
+
+This version label does **not** turn realtime on for every visitor yet. Ordinary
+beta URLs continue to use adaptive polling; testers must still use the exact
+`?realtime=source` option. Making realtime the default, adding a polling-only
+control, and completing the production-resource cutover checklist are the next
+implementation phase. The production app, `main` branch, and
+`williamtemple.app` domain are unchanged.
+
 ## Version 1.26.0 — August 30, 2026
 
 LOTTO now includes the complete FEED-aligned Appearance workflow developed in

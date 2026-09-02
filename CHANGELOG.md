@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [2.0.0-rc.1] - 2026-09-02
+
+This beta release-candidate marker identifies the completed opt-in realtime
+source proof and the documented production-test plan. It does not yet activate
+realtime on ordinary public URLs: those URLs retain adaptive polling unless the
+exact `?realtime=source` cohort is selected. Production, `main`, and the apex
+domain remain unchanged.
+
 ### Added
 
 - **Implemented the isolated-beta Phase 5 realtime-source canary.** The exact
