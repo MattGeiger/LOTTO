@@ -33,6 +33,7 @@ import {
 } from "@/lib/state-types";
 import type { RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
 import { readPolledStateRevision } from "@/lib/realtime/polled-state-revision";
+import { toRenderableRaffleState, type PublicRaffleState } from "@/lib/realtime/public-state-protocol";
 import { formatWaitTime } from "@/lib/time-format";
 import { cn } from "@/lib/utils";
 
@@ -139,6 +140,7 @@ type ReadOnlyDisplayProps = {
   showQrCode?: boolean;
   showHeaderLogo?: boolean;
   realtimeCanary?: RealtimeCanaryClientConfig | null;
+  realtimeSourceCanary?: RealtimeCanaryClientConfig | null;
 };
 
 export const ReadOnlyDisplay = ({
@@ -151,11 +153,13 @@ export const ReadOnlyDisplay = ({
   showQrCode = true,
   showHeaderLogo = true,
   realtimeCanary = null,
+  realtimeSourceCanary = null,
 }: ReadOnlyDisplayProps) => {
   const { language, t, translateBrandString } = useLanguage();
 
   const [state, setState] = React.useState<RaffleState | null>(null);
-  const [stateRevision, setStateRevision] = React.useState<number | null>(null);
+  const [lastPolledState, setLastPolledState] = React.useState<RaffleState | null>(null);
+  const [lastPolledRevision, setLastPolledRevision] = React.useState<number | null>(null);
   const [status, setStatus] = React.useState("");
   const [hasError, setHasError] = React.useState(false);
   const [selectedTicket, setSelectedTicket] = React.useState<number | null>(null);
@@ -163,6 +167,9 @@ export const ReadOnlyDisplay = ({
   const qrCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const pollTimeoutRef = React.useRef<number | null>(null);
   const pollStateRef = React.useRef<() => void>(() => {});
+  const stateRef = React.useRef<RaffleState | null>(null);
+  const sourceAuthoritativeRef = React.useRef(false);
+  const pollInFlightRef = React.useRef(false);
   const lastSeenTimestampRef = React.useRef<number | null>(null);
   const lastChangeAtRef = React.useRef<number | null>(null);
   const burstUntilRef = React.useRef<number | null>(null);
@@ -188,6 +195,7 @@ export const ReadOnlyDisplay = ({
   const scheduleNextPoll = React.useCallback(
     (delayMs: number) => {
       clearPollTimeout();
+      if (sourceAuthoritativeRef.current) return;
       pollTimeoutRef.current = window.setTimeout(() => {
         void pollStateRef.current();
       }, delayMs);
@@ -200,6 +208,8 @@ export const ReadOnlyDisplay = ({
       clearPollTimeout();
       return;
     }
+    if (pollInFlightRef.current) return;
+    pollInFlightRef.current = true;
     setStatus(t("refreshing"));
     setHasError(false);
     try {
@@ -208,8 +218,11 @@ export const ReadOnlyDisplay = ({
         throw new Error("Unable to load state");
       }
       const payload = (await response.json()) as RaffleState;
+      stateRef.current = payload;
       setState(payload);
-      setStateRevision(readPolledStateRevision(response.headers));
+      const revision = readPolledStateRevision(response.headers);
+      setLastPolledState(payload);
+      setLastPolledRevision(revision);
       onStateChange?.(payload);
       setStatus(`${t("lastChecked")}: ${formatTime(new Date(), language)}`);
 
@@ -238,8 +251,31 @@ export const ReadOnlyDisplay = ({
       setStatus(`${t("errorLoadingState")}: ${message}`);
       setHasError(true);
       scheduleNextPoll(POLL_ERROR_RETRY_MS);
+    } finally {
+      pollInFlightRef.current = false;
     }
   }, [clearPollTimeout, language, onStateChange, scheduleNextPoll, t]);
+
+  const handleSourceState = React.useCallback((publicState: PublicRaffleState, revision: number) => {
+    const payload = toRenderableRaffleState(publicState, stateRef.current);
+    stateRef.current = payload;
+    setState(payload);
+    onStateChange?.(payload);
+    setHasError(false);
+    setStatus(`Realtime source · r${revision}`);
+  }, [onStateChange]);
+
+  const handleSourceAuthorityChange = React.useCallback((authoritative: boolean) => {
+    sourceAuthoritativeRef.current = authoritative;
+    clearPollTimeout();
+    if (authoritative) {
+      setHasError(false);
+      return;
+    }
+    if (document.visibilityState !== "hidden") {
+      void pollStateRef.current();
+    }
+  }, [clearPollTimeout]);
 
   React.useEffect(() => {
     pollStateRef.current = pollState;
@@ -428,8 +464,11 @@ export const ReadOnlyDisplay = ({
     <ScrambleOnLanguageChange enabled={languageTextAnimation === "scramble"}>
       <RealtimeCanaryMount
         config={realtimeCanary}
-        polledState={state}
-        polledRevision={stateRevision}
+        sourceConfig={realtimeSourceCanary}
+        polledState={lastPolledState}
+        polledRevision={lastPolledRevision}
+        onSourceState={handleSourceState}
+        onSourceAuthorityChange={handleSourceAuthorityChange}
       />
       <div
         dir={isRTL(language) ? "rtl" : "ltr"}

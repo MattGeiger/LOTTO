@@ -17,6 +17,7 @@ import { readPersistedHomepageTicket } from "@/lib/home-ticket-storage";
 import { getPollingIntervalMs } from "@/lib/polling-strategy";
 import type { RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
 import { readPolledStateRevision } from "@/lib/realtime/polled-state-revision";
+import { toRenderableRaffleState, type PublicRaffleState } from "@/lib/realtime/public-state-protocol";
 import type { OperatingHours, RaffleState, TicketStatus } from "@/lib/state-types";
 import { formatWaitTimeAsHoursAndMinutes } from "@/lib/time-format";
 import { cn } from "@/lib/utils";
@@ -108,8 +109,10 @@ const getTicketWaitDetails = (
 
 export function NowServingBanner({
   realtimeCanary = null,
+  realtimeSourceCanary = null,
 }: {
   realtimeCanary?: RealtimeCanaryClientConfig | null;
+  realtimeSourceCanary?: RealtimeCanaryClientConfig | null;
 }) {
   const { t, language } = useLanguage();
   const [currentlyServing, setCurrentlyServing] = React.useState<number | null>(null);
@@ -136,6 +139,9 @@ export function NowServingBanner({
   const confettiInstanceRef = React.useRef<ConfettiInstance | null>(null);
   const celebratedCallRef = React.useRef<string | null>(null);
   const pollStateRef = React.useRef<() => void>(() => {});
+  const stateRef = React.useRef<RaffleState | null>(null);
+  const sourceAuthoritativeRef = React.useRef(false);
+  const pollInFlightRef = React.useRef(false);
   const lastSeenTimestampRef = React.useRef<number | null>(null);
   const lastChangeAtRef = React.useRef<number | null>(null);
   const burstUntilRef = React.useRef<number | null>(null);
@@ -230,6 +236,7 @@ export function NowServingBanner({
   const scheduleNextPoll = React.useCallback(
     (delayMs: number) => {
       clearPollTimeout();
+      if (sourceAuthoritativeRef.current) return;
       pollTimeoutRef.current = window.setTimeout(() => {
         void pollStateRef.current();
       }, delayMs);
@@ -242,6 +249,8 @@ export function NowServingBanner({
       clearPollTimeout();
       return;
     }
+    if (pollInFlightRef.current) return;
+    pollInFlightRef.current = true;
 
     try {
       const response = await fetch("/api/state", { cache: "no-store" });
@@ -249,6 +258,7 @@ export function NowServingBanner({
         throw new Error("Unable to load current serving ticket.");
       }
       const payload = (await response.json()) as RaffleState;
+      stateRef.current = payload;
       const nextServing = typeof payload.currentlyServing === "number" ? payload.currentlyServing : null;
       const nextTicketNumber = readPersistedHomepageTicket(Date.now(), {
         startNumber: payload.startNumber ?? null,
@@ -284,8 +294,31 @@ export function NowServingBanner({
     } catch {
       // Keep last good value visible when polling fails.
       scheduleNextPoll(POLL_ERROR_RETRY_MS);
+    } finally {
+      pollInFlightRef.current = false;
     }
   }, [clearPollTimeout, scheduleNextPoll]);
+
+  const applySourceState = React.useCallback((publicState: PublicRaffleState) => {
+    const payload = toRenderableRaffleState(publicState, stateRef.current);
+    stateRef.current = payload;
+    const nextServing = typeof payload.currentlyServing === "number" ? payload.currentlyServing : null;
+    const nextTicketNumber = readPersistedHomepageTicket(Date.now(), {
+      startNumber: payload.startNumber ?? null,
+      endNumber: payload.endNumber ?? null,
+    });
+    setCurrentlyServing(nextServing);
+    setLastPayload(payload);
+    setTicketNumber(nextTicketNumber);
+  }, []);
+
+  const handleSourceAuthorityChange = React.useCallback((authoritative: boolean) => {
+    sourceAuthoritativeRef.current = authoritative;
+    clearPollTimeout();
+    if (!authoritative && document.visibilityState !== "hidden") {
+      void pollStateRef.current();
+    }
+  }, [clearPollTimeout]);
 
   React.useEffect(() => {
     pollStateRef.current = pollState;
@@ -504,8 +537,11 @@ export function NowServingBanner({
     <>
       <RealtimeCanaryMount
         config={realtimeCanary}
+        sourceConfig={realtimeSourceCanary}
         polledState={canaryState}
         polledRevision={canaryRevision}
+        onSourceState={applySourceState}
+        onSourceAuthorityChange={handleSourceAuthorityChange}
       />
       <header className="arcade-banner sticky top-0 z-50">
         <div className="arcade-banner-row mx-auto flex w-full max-w-6xl items-center justify-center gap-3 px-4 py-3 sm:px-6">

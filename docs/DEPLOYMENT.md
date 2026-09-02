@@ -193,7 +193,21 @@ configuration only to Home/Display clients that also opt in with
 `?realtime=observe`. Polling remains authoritative and rendered; the observer
 adds no API request. See
 [`REALTIME_CLIENT_CANARY.md`](./REALTIME_CLIENT_CANARY.md) for test and rollback
-instructions.
+guidance.
+
+Phase 5 adds a separate beta-only rendered-source switch:
+
+```text
+LOTTO_REALTIME_SOURCE_CANARY=true
+```
+
+The exact `?realtime=source` URL cohort must also be present. Source clients
+perform an initial `/api/state` handshake, stop only scheduled polling after
+exact revision/checksum agreement, and immediately return to adaptive polling
+if source authority is lost. The flag is independent from the Phase 4 observer
+and shadow-publish switches. See
+[`REALTIME_SOURCE_CANARY.md`](./REALTIME_SOURCE_CANARY.md) for the state machine,
+test URLs, validation gates, and rollback.
 
 Activation fails closed unless `LOTTO_DEPLOYMENT_ENVIRONMENT=beta`, the remote
 URL is HTTPS, and its hostname exactly matches the expected host. Deploy and

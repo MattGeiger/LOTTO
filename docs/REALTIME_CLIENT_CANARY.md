@@ -228,9 +228,12 @@ safe substitute for per-device fault injection.
 - Neon-backed `/api/state` exposes its authoritative positive revision in a
   response header from the same query as the state payload. Local file storage
   intentionally omits the header and uses checksum-only comparison.
-- No pushed state is rendered, and polling is never stopped. This slice cannot
-  reduce Neon compute or Vercel requests; it exists to establish correctness
-  before Phase 5 changes either behavior.
+- This `?realtime=observe` slice still never renders pushed state or stops
+  polling. Phase 5 now has a separate independently gated
+  `?realtime=source` implementation; see
+  [`REALTIME_SOURCE_CANARY.md`](./REALTIME_SOURCE_CANARY.md). The observer remains
+  the unchanged dual-read control and is not silently promoted into the source
+  cohort.
 - There is no application heartbeat. Silent half-open behavior, Durable Object
   hibernation evidence, sustained memory/cost measurement, isolated network
   interruption, and physical legacy-device recovery still require

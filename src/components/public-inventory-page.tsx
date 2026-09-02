@@ -362,8 +362,10 @@ function InventoryCategoryTable({ category }: { category: FeedInventoryCategory 
 
 export function PublicInventoryPage({
   realtimeCanary = null,
+  realtimeSourceCanary = null,
 }: {
   realtimeCanary?: RealtimeCanaryClientConfig | null;
+  realtimeSourceCanary?: RealtimeCanaryClientConfig | null;
 }) {
   const { language, t, translateInventory } = useLanguage();
   const inventoryUrl = useBrand().inventory.url;
@@ -514,7 +516,11 @@ export function PublicInventoryPage({
         </ScrollArea>
       </div>
       <BottomTabBar />
-      <TicketCalledCelebration poll realtimeCanary={realtimeCanary} />
+      <TicketCalledCelebration
+        poll
+        realtimeCanary={realtimeCanary}
+        realtimeSourceCanary={realtimeSourceCanary}
+      />
     </main>
     </ScrambleOnLanguageChange>
   );

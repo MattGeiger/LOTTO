@@ -44,8 +44,10 @@ const hasActiveTicketRange = (state: RaffleState | null): boolean =>
 
 export function PersonalizedHomePage({
   realtimeCanary = null,
+  realtimeSourceCanary = null,
 }: {
   realtimeCanary?: RealtimeCanaryClientConfig | null;
+  realtimeSourceCanary?: RealtimeCanaryClientConfig | null;
 }) {
   const {
     setLanguage,
@@ -215,6 +217,7 @@ export function PersonalizedHomePage({
         showQrCode={false}
         showHeaderLogo={false}
         realtimeCanary={realtimeCanary}
+        realtimeSourceCanary={realtimeSourceCanary}
       />
       <Dialog
         open={isOnboardingModalOpen}

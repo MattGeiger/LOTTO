@@ -7,6 +7,7 @@ import { agencyIdSchema } from "./public-state-protocol";
 
 const DEFAULT_BETA_HUB_HOST = "lotto-realtime-beta.et2-geiger.workers.dev";
 export const REALTIME_CANARY_QUERY_VALUE = "observe";
+export const REALTIME_SOURCE_CANARY_QUERY_VALUE = "source";
 
 type Environment = Readonly<Record<string, string | undefined>>;
 
@@ -71,5 +72,22 @@ export const resolveRealtimeCanaryClientConfig = (
   return { agencyId, eventsUrl: eventsUrl.toString() };
 };
 
+export const resolveRealtimeSourceClientConfig = (
+  environment: Environment = process.env,
+): RealtimeCanaryClientConfig | null => {
+  const flag = environment.LOTTO_REALTIME_SOURCE_CANARY?.trim().toLowerCase();
+  if (!flag || flag === "false") return null;
+  if (flag !== "true") {
+    throw new Error("LOTTO_REALTIME_SOURCE_CANARY must be either true or false.");
+  }
+  return resolveRealtimeCanaryClientConfig({
+    ...environment,
+    LOTTO_REALTIME_CLIENT_CANARY: "true",
+  });
+};
+
 export const isRealtimeCanaryCohort = (search: string): boolean =>
   new URLSearchParams(search).get("realtime") === REALTIME_CANARY_QUERY_VALUE;
+
+export const isRealtimeSourceCanaryCohort = (search: string): boolean =>
+  new URLSearchParams(search).get("realtime") === REALTIME_SOURCE_CANARY_QUERY_VALUE;

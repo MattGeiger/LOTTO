@@ -3,7 +3,9 @@
 
 import {
   isRealtimeCanaryCohort,
+  isRealtimeSourceCanaryCohort,
   resolveRealtimeCanaryClientConfig,
+  resolveRealtimeSourceClientConfig,
 } from "@/lib/realtime/client-canary-config";
 import { resolveRealtimeCanaryConnectHost } from "../next.config";
 import {
@@ -70,6 +72,30 @@ describe("realtime client canary configuration", () => {
     expect(isRealtimeCanaryCohort("?realtime=apply")).toBe(false);
     expect(isRealtimeCanaryCohort("?other=observe")).toBe(false);
     expect(isRealtimeCanaryCohort("")).toBe(false);
+    expect(isRealtimeSourceCanaryCohort("?realtime=source")).toBe(true);
+    expect(isRealtimeSourceCanaryCohort("?realtime=observe")).toBe(false);
+  });
+
+  it("keeps the realtime source behind its own beta-only flag", () => {
+    expect(resolveRealtimeSourceClientConfig(betaEnvironment)).toBeNull();
+    expect(resolveRealtimeSourceClientConfig({
+      ...betaEnvironment,
+      LOTTO_REALTIME_CLIENT_CANARY: "false",
+      LOTTO_REALTIME_SOURCE_CANARY: "true",
+    })).toEqual({
+      agencyId: "william-temple-house",
+      eventsUrl:
+        "wss://lotto-realtime-beta.et2-geiger.workers.dev/v1/agencies/william-temple-house/events",
+    });
+    expect(resolveRealtimeCanaryConnectHost({
+      ...betaEnvironment,
+      LOTTO_REALTIME_CLIENT_CANARY: "false",
+      LOTTO_REALTIME_SOURCE_CANARY: "true",
+    })).toBe("wss://lotto-realtime-beta.et2-geiger.workers.dev");
+    expect(() => resolveRealtimeSourceClientConfig({
+      ...betaEnvironment,
+      LOTTO_REALTIME_SOURCE_CANARY: "yes",
+    })).toThrow("must be either true or false");
   });
 
   it("accepts only positive safe integer state-revision headers", () => {

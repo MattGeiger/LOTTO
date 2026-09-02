@@ -15,9 +15,15 @@ type Environment = Readonly<Record<string, string | undefined>>;
 export const resolveRealtimeCanaryConnectHost = (
   environment: Environment = process.env,
 ) => {
-  const flag = environment.LOTTO_REALTIME_CLIENT_CANARY?.trim().toLowerCase();
-  if (!flag || flag === "false") return null;
-  if (flag !== "true" || !isBetaDeployment(environment)) {
+  const observerFlag = environment.LOTTO_REALTIME_CLIENT_CANARY?.trim().toLowerCase();
+  const sourceFlag = environment.LOTTO_REALTIME_SOURCE_CANARY?.trim().toLowerCase();
+  for (const flag of [observerFlag, sourceFlag]) {
+    if (flag && flag !== "true" && flag !== "false") {
+      throw new Error("Realtime client CSP flags must be either true or false.");
+    }
+  }
+  if (observerFlag !== "true" && sourceFlag !== "true") return null;
+  if (!isBetaDeployment(environment)) {
     throw new Error("The realtime client CSP may be enabled only in the beta deployment.");
   }
   const rawHubUrl = environment.LOTTO_REALTIME_HUB_URL?.trim();
