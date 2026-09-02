@@ -198,6 +198,28 @@ describe("RealtimeSourceCanary", () => {
     expect(socket.readyState).toBe(FakeWebSocket.CLOSED);
   });
 
+  it("attempts its initial connection when navigator.onLine is stale and follows network events", () => {
+    vi.spyOn(window.navigator, "onLine", "get").mockReturnValue(false);
+    const onAuthorityChange = vi.fn();
+    render(
+      <RealtimeSourceCanary
+        config={config}
+        polledState={null}
+        polledRevision={null}
+        onState={vi.fn()}
+        onAuthorityChange={onAuthorityChange}
+      />,
+    );
+
+    expect(FakeWebSocket.instances).toHaveLength(1);
+    act(() => window.dispatchEvent(new Event("offline")));
+    expect(onAuthorityChange).toHaveBeenLastCalledWith(false, "offline");
+    expect(FakeWebSocket.instances[0].readyState).toBe(FakeWebSocket.CLOSED);
+
+    act(() => window.dispatchEvent(new Event("online")));
+    expect(FakeWebSocket.instances).toHaveLength(2);
+  });
+
   it("falls back on handshake timeout and reconnects with bounded jittered backoff", async () => {
     vi.useFakeTimers();
     vi.spyOn(Math, "random").mockReturnValue(0.5);
