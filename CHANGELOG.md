@@ -169,6 +169,19 @@
 
 ### Changed
 
+- **Planned the `v2.0.0-rc.1` beta-default realtime validation and production
+  cutover.** The architecture plan now makes the realtime/fallback controller
+  the intended default for ordinary Home, Display, Inventory, and Arcade beta
+  URLs while preserving a polling-only control, automatic fallback, and a
+  deployment kill switch. It records the exact production-resource isolation,
+  generated-hostname verification, apex-domain cutover, rollback, and lean
+  launch-monitoring sequence. The accompanying Vercel usage review finds that
+  healthy direct-to-Cloudflare WebSockets should reduce Vercel Edge Requests,
+  Function invocations, Function resource use, and origin transfer rather than
+  move the former Neon polling load into Vercel; it also records Vercel Pro or
+  written provider approval as a prerequisite for production use under the
+  current Hobby fair-use terms. This is planning only: ordinary beta URLs still
+  poll unless explicitly placed in the source cohort.
 - **Added explicit beta-environment safety cues.** Deployments marked with
   `LOTTO_DEPLOYMENT_ENVIRONMENT=beta` now send a site-wide
   `X-Robots-Tag: noindex, nofollow, noarchive, nosnippet` header, disallow all
