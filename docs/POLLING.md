@@ -2,11 +2,12 @@
 
 > **v2.0 provisional direction (2026-08-31):** LOTTO will test a
 > Neon-authoritative Cloudflare Durable Object hub that pushes versioned public
-> state over hibernatable WebSockets. This is not implemented or approved for
-> production. The strategy below remains the current production behavior and is
-> also the required automatic fallback if a realtime connection is unavailable,
-> incompatible, stale, or unhealthy. Polling must not be deleted during the
-> proof program. See `docs/V2.0_REALTIME_ARCHITECTURE_PLAN.md`.
+> state over hibernatable WebSockets. RC.2 enables that controller by default
+> on the isolated beta; it is not yet approved for production. The strategy
+> below remains the current production behavior, the beta `?realtime=poll`
+> control, and the required automatic fallback if a realtime connection is
+> unavailable, incompatible, stale, or unhealthy. Polling must not be deleted.
+> See `docs/V2.0_REALTIME_ARCHITECTURE_PLAN.md`.
 
 ## Current Implementation (as of today)
 - Client polling lives in `src/components/readonly-display.tsx` and uses

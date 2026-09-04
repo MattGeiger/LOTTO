@@ -35,8 +35,9 @@ https://beta.williamtemple.app/inventory?realtime=observe
 https://beta.williamtemple.app/arcade?realtime=observe
 ```
 
-Removing the query parameter returns that browser to the ordinary polling-only
-control path even while the beta deployment flag is enabled.
+In RC.2, removing the query parameter returns that browser to the ordinary
+default realtime source. Use `?realtime=poll` for a polling-only control with
+no realtime socket.
 
 ## Observer state machine
 
@@ -239,9 +240,9 @@ safe substitute for per-device fault injection.
   interruption, and physical legacy-device recovery still require
   production-shaped measurement. The iOS 15.4 simulator is useful compatibility
   evidence but does not replace the physical iPad mini 4 gate.
-- The kill switch is deployment configuration. The observer is also removable
-  per browser immediately by dropping `?realtime=observe`; runtime capability
-  negotiation remains a later hardening decision.
+- The kill switch is deployment configuration. Replace `?realtime=observe`
+  with `?realtime=poll` to disable realtime for one browser; dropping the query
+  returns to the RC.2 default source.
 
 ## Rollback
 

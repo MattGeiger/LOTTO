@@ -32,15 +32,17 @@ The board can greet everyone in their own language:
 
 ## Beta Realtime Testing
 
-The separate beta site may show a small **Realtime observer** badge when a
-tester opens `/display?realtime=observe`. This is diagnostic-only: the board
-still refreshes from its normal database-backed source, while the badge compares
-that result with the experimental live feed. **Neon match** means the two public
-copies agree. If the badge reconnects or reports a mismatch, the normal board
-continues operating; report the result to the test lead rather than using the
-badge as a queue instruction.
+On the separate beta site, the ordinary `/display` page receives queue changes
+through the realtime feed after confirming it matches the database. If that
+feed becomes unavailable or cannot be trusted, the board checks the database
+immediately and continues with its normal automatic refresh schedule.
 
-The live production board does not enable this experiment.
+Authorized testers can use `/display?realtime=poll` for the polling-only
+control or `/display?realtime=observe` for the diagnostic comparison badge.
+**Neon match** means the two public copies agree. Report a persistent mismatch
+to the test lead rather than using the badge as a queue instruction.
+
+The live production board does not yet enable realtime.
 
 ## What To Read Next
 

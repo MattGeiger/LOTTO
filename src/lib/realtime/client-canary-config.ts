@@ -8,6 +8,7 @@ import { agencyIdSchema } from "./public-state-protocol";
 const DEFAULT_BETA_HUB_HOST = "lotto-realtime-beta.et2-geiger.workers.dev";
 export const REALTIME_CANARY_QUERY_VALUE = "observe";
 export const REALTIME_SOURCE_CANARY_QUERY_VALUE = "source";
+export const REALTIME_POLL_QUERY_VALUE = "poll";
 
 type Environment = Readonly<Record<string, string | undefined>>;
 
@@ -107,3 +108,6 @@ export const isRealtimeCanaryCohort = (search: string): boolean =>
 
 export const isRealtimeSourceCanaryCohort = (search: string): boolean =>
   new URLSearchParams(search).get("realtime") === REALTIME_SOURCE_CANARY_QUERY_VALUE;
+
+export const isRealtimePollingOnlyCohort = (search: string): boolean =>
+  new URLSearchParams(search).get("realtime") === REALTIME_POLL_QUERY_VALUE;

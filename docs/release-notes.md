@@ -1,8 +1,22 @@
 
 ## Unreleased
 
-Realtime recovery is being hardened before default activation. A new
-server-side gate can keep newly loaded pages on adaptive polling, while a
+## Version 2.0.0-rc.2 — September 3, 2026
+
+The isolated beta now uses realtime automatically on its ordinary Home,
+Display, Inventory, and Arcade pages. Each page still begins by checking the
+authoritative database and trusts the live feed only after the revision and
+public state agree exactly. A healthy connection suppresses scheduled state
+checks; any connection or data-integrity problem causes an immediate database
+reconciliation and restores the complete adaptive refresh schedule.
+
+Testers can append `?realtime=poll` for a polling-only control,
+`?realtime=observe` for the comparison diagnostic, or `?realtime=source` as a
+compatibility alias. The Vercel application gate and authenticated Cloudflare
+drain provide separate controls for newly loaded and already-open pages.
+
+Realtime recovery now includes a server-side gate that can keep newly loaded
+pages on adaptive polling, while a
 separately authenticated Cloudflare control can drain already-connected
 realtime clients without interrupting staff changes or state publication.
 Fallback now preserves the same post-change, operating-hours, long-idle,
@@ -14,6 +28,9 @@ cutover window begins after the pantry closes on Thursday, September 3, 2026 at
 2:30 PM Pacific. The current production deployment and beta Hobby
 account/project will remain available for comparison and rollback until the
 new deployment is accepted.
+
+This release remains confined to `beta.williamtemple.app`; production, `main`,
+and the apex domain have not changed.
 
 ## Version 2.0.0-rc.1 — September 2, 2026
 

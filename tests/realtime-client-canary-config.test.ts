@@ -4,6 +4,7 @@
 import {
   isRealtimeApplicationEnabled,
   isRealtimeCanaryCohort,
+  isRealtimePollingOnlyCohort,
   isRealtimeSourceCanaryCohort,
   resolveRealtimeCanaryClientConfig,
   resolveRealtimeSourceClientConfig,
@@ -75,6 +76,8 @@ describe("realtime client canary configuration", () => {
     expect(isRealtimeCanaryCohort("")).toBe(false);
     expect(isRealtimeSourceCanaryCohort("?realtime=source")).toBe(true);
     expect(isRealtimeSourceCanaryCohort("?realtime=observe")).toBe(false);
+    expect(isRealtimePollingOnlyCohort("?realtime=poll")).toBe(true);
+    expect(isRealtimePollingOnlyCohort("?realtime=source")).toBe(false);
   });
 
   it("keeps the realtime source behind its own beta-only flag", () => {

@@ -47,28 +47,47 @@ describe("RealtimeCanaryMount", () => {
     });
   });
 
-  it("does not load for the control URL or when server configuration is absent", () => {
-    const { rerender } = render(
+  it("loads the source by default on an ordinary URL", async () => {
+    const callbacks = {
+      onSourceState: vi.fn(),
+      onSourceAuthorityChange: vi.fn(),
+    };
+    render(
       <RealtimeCanaryMount
         config={config}
+        sourceConfig={config}
         polledState={structuredClone(defaultState)}
         polledRevision={16}
+        {...callbacks}
       />,
     );
-    expect(screen.queryByTestId("mounted-realtime-observer")).not.toBeInTheDocument();
-
-    window.history.replaceState({}, "", "/?realtime=observe");
-    rerender(
-      <RealtimeCanaryMount
-        config={null}
-        polledState={structuredClone(defaultState)}
-        polledRevision={16}
-      />,
-    );
-    expect(screen.queryByTestId("mounted-realtime-observer")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("mounted-realtime-source")).toHaveAttribute(
+        "data-revision",
+        "16",
+      );
+    });
   });
 
-  it("loads the source only for its exact URL plus independent server configuration", async () => {
+  it("keeps the explicit polling control free of realtime sockets", async () => {
+    window.history.replaceState({}, "", "/?realtime=poll");
+    render(
+      <RealtimeCanaryMount
+        config={config}
+        sourceConfig={config}
+        polledState={structuredClone(defaultState)}
+        polledRevision={16}
+        onSourceState={vi.fn()}
+        onSourceAuthorityChange={vi.fn()}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.queryByTestId("mounted-realtime-source")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("mounted-realtime-observer")).not.toBeInTheDocument();
+    });
+  });
+
+  it("retains the explicit source alias plus independent server configuration", async () => {
     window.history.replaceState({}, "", "/display?realtime=source");
     const callbacks = {
       onSourceState: vi.fn(),
@@ -102,6 +121,36 @@ describe("RealtimeCanaryMount", () => {
     );
     await waitFor(() => {
       expect(screen.queryByTestId("mounted-realtime-source")).not.toBeInTheDocument();
+    });
+  });
+
+  it("does not load an unavailable mode or an unknown realtime query value", async () => {
+    window.history.replaceState({}, "", "/?realtime=unexpected");
+    const { rerender } = render(
+      <RealtimeCanaryMount
+        config={config}
+        sourceConfig={config}
+        polledState={structuredClone(defaultState)}
+        polledRevision={16}
+        onSourceState={vi.fn()}
+        onSourceAuthorityChange={vi.fn()}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.queryByTestId("mounted-realtime-source")).not.toBeInTheDocument();
+    });
+
+    window.history.replaceState({}, "", "/?realtime=observe");
+    rerender(
+      <RealtimeCanaryMount
+        config={null}
+        sourceConfig={null}
+        polledState={structuredClone(defaultState)}
+        polledRevision={16}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.queryByTestId("mounted-realtime-observer")).not.toBeInTheDocument();
     });
   });
 });
