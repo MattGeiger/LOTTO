@@ -1,6 +1,6 @@
 # LOTTO Usage Costs and Public-Read Architecture
 
-Last reviewed: September 2, 2026
+Last reviewed: September 3, 2026
 
 ## Purpose
 
@@ -39,6 +39,12 @@ redeployment. A separately authenticated Cloudflare drain closes current
 sockets and refuses new ones while continuing to accept publications. Affected
 clients make one immediate Neon reconciliation and then use the unchanged
 adaptive polling schedule, including long-idle and closed-hours backoff.
+
+RC.2 makes this controller the ordinary default on all four isolated-beta
+public surfaces. A healthy page therefore replaces scheduled Vercel Function
+and Neon reads with one hibernatable WebSocket; `?realtime=poll` remains the
+socket-free comparison path. This changes the beta measurement model only and
+does not yet change production usage.
 
 ## Executive conclusion
 

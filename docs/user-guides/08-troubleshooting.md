@@ -14,7 +14,8 @@ note what you saw and when, and contact your administrator.
 ## The Display Board Looks Stuck
 
 1. The board refreshes itself — give it a few seconds after calling a number.
-2. If it still looks stale, reload the `/display` page in the browser.
+2. On beta, realtime falls back to automatic database checks if its connection
+   is interrupted. If the board still looks stale, reload `/display`.
 3. Make sure the computer has a working internet connection.
 
 ## The Board Navigation Disappeared

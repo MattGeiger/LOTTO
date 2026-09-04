@@ -1,5 +1,20 @@
 # Unreleased
 
+# LOTTO v2.0.0-rc.2
+
+**Release Date:** September 3, 2026 (beta release candidate — not promoted)
+
+RC.2 makes the realtime/fallback controller the default for ordinary Home,
+Display, Inventory, and Arcade URLs on the isolated beta. The exact initial
+Neon/hub handshake remains mandatory, healthy realtime suppresses scheduled
+state polling, and every authority failure performs immediate reconciliation
+before resuming the existing adaptive poller.
+
+The release adds `?realtime=poll` as a socket-free control, retains
+`?realtime=observe` and `?realtime=source` for diagnostics and compatibility,
+and introduces the Vercel application gate plus authenticated Cloudflare
+drain/resume control. Production, `main`, and `williamtemple.app` are unchanged.
+
 Realtime operational hardening now includes two independent emergency
 controls: a server-only Vercel application gate for new page loads and a
 Cloudflare Durable Object drain/resume control for existing sockets. Draining

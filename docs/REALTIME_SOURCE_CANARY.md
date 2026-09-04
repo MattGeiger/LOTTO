@@ -2,19 +2,20 @@
 
 ## Status
 
-Phase 5 is an isolated-beta experiment. It allows an explicitly selected
-browser to render the Cloudflare Durable Object public projection while the
-existing `/api/state` poller remains installed as the automatic safety path.
-It does not change staff writes, Neon authority, production, or the ordinary
-beta control cohort.
+Phase 6 promotes the proven source controller to the default on ordinary URLs
+in the isolated beta. The Cloudflare Durable Object public projection renders
+only after an exact Neon/hub handshake, while the existing `/api/state` poller
+remains installed as the automatic safety path. This does not change staff
+writes, Neon authority, production, or `main`.
 
 ## Independent gates
 
-Both gates are required:
+All deployment gates are required:
 
 1. `LOTTO_REALTIME_SOURCE_CANARY=true` in a deployment explicitly marked
    `LOTTO_DEPLOYMENT_ENVIRONMENT=beta`.
-2. The exact browser query `?realtime=source`.
+2. `LOTTO_REALTIME_APPLICATION_ENABLED=true`.
+3. A valid exact Worker origin and agency configuration.
 
 The server-only master gate `LOTTO_REALTIME_APPLICATION_ENABLED=false`
 overrides the source flag for newly loaded pages. It is backward-compatible
@@ -22,10 +23,17 @@ with the already-deployed beta when absent, but production-scoped v2
 deployments must set it explicitly. Changing the Vercel value requires a
 redeployment; it is not a client-visible runtime variable.
 
-The existing `?realtime=observe` cohort remains observational and continues to
-render polled state. A URL without either exact value remains polling-only.
-The source flag is independent from shadow publication and the Phase 4 observer
-flag, so rollback does not require changing either system.
+An ordinary URL now selects the source controller automatically. The explicit
+query modes are:
+
+- `?realtime=poll` — polling only; no observer or source socket is opened;
+- `?realtime=observe` — the Phase 4 diagnostic observer while rendered state
+  remains poll-authoritative; and
+- `?realtime=source` — a compatibility alias for the new ordinary default.
+
+An unknown `realtime` value fails closed to polling. The source flag is
+independent from shadow publication and the Phase 4 observer flag, so rollback
+does not require changing either system.
 
 ## Authority state machine
 
@@ -84,7 +92,8 @@ shape preserves the previously polled value when present.
 
 Deterministic coverage must prove:
 
-- exact beta flag and URL cohort boundaries;
+- exact beta flag, ordinary-default, polling override, observer, and source
+  alias boundaries;
 - no recurring `/api/state` requests while authority is healthy;
 - immediate state application for the next valid revision;
 - immediate polling fallback on close, timeout, invalid payload, checksum
@@ -92,7 +101,7 @@ Deterministic coverage must prove:
 - bounded reconnects without overlapping sockets;
 - polling remains paused while hidden;
 - all four consumers render source updates; and
-- the polling-only and Phase 4 observer paths are unchanged.
+- the polling-only and Phase 4 observer paths remain available.
 
 Before a live beta run, run the focused tests, complete suite, production build,
 legacy bundle scan, production hydration smoke, and iOS 15.4 simulator check.
@@ -100,14 +109,17 @@ The real iPad mini 4 remains a release gate.
 
 ## Live validation and exit gate
 
-The source cohort URLs are:
+The default-source beta URLs are:
 
 ```text
-https://beta.williamtemple.app/?realtime=source
-https://beta.williamtemple.app/display?realtime=source
-https://beta.williamtemple.app/inventory?realtime=source
-https://beta.williamtemple.app/arcade?realtime=source
+https://beta.williamtemple.app/
+https://beta.williamtemple.app/display
+https://beta.williamtemple.app/inventory
+https://beta.williamtemple.app/arcade
 ```
+
+Append `?realtime=poll` for the side-by-side polling control. The older
+`?realtime=source` test URLs remain valid during RC.2.
 
 Live validation must record source delivery latency, request counts during a
 healthy window, recovery time for each deliberate failure, revision/checksum
@@ -157,7 +169,7 @@ production test; see the scaled validation decision in the architecture plan.
 
 ## Rollback
 
-For one browser, remove `?realtime=source`. For all newly loaded pages, set
+For one browser, append `?realtime=poll`. For all newly loaded pages, set
 `LOTTO_REALTIME_APPLICATION_ENABLED=false` (or the legacy source flag to
 `false`) and redeploy. To move already-connected pages immediately, invoke the
 separately authenticated Cloudflare `{ "mode": "drain" }` control with

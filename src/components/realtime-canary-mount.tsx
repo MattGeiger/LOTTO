@@ -7,6 +7,7 @@ import * as React from "react";
 
 import {
   isRealtimeCanaryCohort,
+  isRealtimePollingOnlyCohort,
   isRealtimeSourceCanaryCohort,
   type RealtimeCanaryClientConfig,
 } from "@/lib/realtime/client-canary-config";
@@ -39,11 +40,24 @@ export default function RealtimeCanaryMount({
   const [selected, setSelected] = React.useState<"observe" | "source" | null>(null);
 
   React.useEffect(() => {
-    if (sourceConfig && isRealtimeSourceCanaryCohort(window.location.search)) {
+    const search = window.location.search;
+    if (isRealtimePollingOnlyCohort(search)) {
+      setSelected(null);
+      return;
+    }
+    if (config && isRealtimeCanaryCohort(search)) {
+      setSelected("observe");
+      return;
+    }
+    const realtimeMode = new URLSearchParams(search).get("realtime");
+    if (
+      sourceConfig
+      && (realtimeMode === null || isRealtimeSourceCanaryCohort(search))
+    ) {
       setSelected("source");
       return;
     }
-    setSelected(config && isRealtimeCanaryCohort(window.location.search) ? "observe" : null);
+    setSelected(null);
   }, [config, sourceConfig]);
 
   if (selected === "source" && sourceConfig && onSourceState && onSourceAuthorityChange) {

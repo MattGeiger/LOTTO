@@ -26,12 +26,15 @@ queue-only; use the ticket, display, and games pages normally.
 
 ## Beta Realtime Testing
 
-This is not part of the normal Inventory workflow. On the isolated LOTTO beta,
-authorized architecture testers may open `/inventory?realtime=observe`. A small
-**Realtime observer** badge compares the queue state already fetched for ticket
-call celebrations with the experimental Cloudflare delivery. Inventory and
-ticket-call rendering continue to use the existing authoritative poll. Remove
-the query parameter to return immediately to the ordinary control path.
+On the isolated LOTTO beta, the ordinary `/inventory` page uses realtime for
+ticket-call celebrations after confirming the feed matches the database. The
+inventory catalog itself remains read-only and independent from queue-state
+delivery. If realtime becomes unavailable, ticket calls return automatically
+to the existing database refresh schedule.
+
+Authorized testers can use `/inventory?realtime=poll` for polling only or
+`/inventory?realtime=observe` for the diagnostic comparison badge. Production
+does not yet enable realtime.
 
 ## What To Read Next
 

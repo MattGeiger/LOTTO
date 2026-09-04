@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [2.0.0-rc.2] - 2026-09-03
+
+This beta release candidate activates the proven realtime/fallback controller
+on the four ordinary beta public URLs. Production, `main`, and
+`williamtemple.app` remain unchanged.
+
 ### Added
 
 - **Added complementary realtime emergency controls.** A server-only
@@ -19,6 +25,13 @@
 
 ### Changed
 
+- **Made realtime the ordinary beta default.** Home, Display, Inventory, and
+  Arcade now select the source controller without requiring a query parameter
+  when the beta deployment gates are enabled. `?realtime=poll` opens no
+  realtime socket and retains the existing adaptive polling path;
+  `?realtime=observe` remains the non-rendering diagnostic, and
+  `?realtime=source` remains a compatibility alias. Unknown realtime values
+  fail closed to polling.
 - **Preserved the full adaptive schedule across realtime fallback.** Home,
   Display, Inventory, and Arcade now feed polled and pushed state through one
   activity clock. A later fallback retains the post-change burst when
@@ -28,9 +41,9 @@
   new project in the consulting business's existing Vercel Pro account will be
   validated before Cloudflare routes `williamtemple.app` to it. The earliest
   preferred attended cutover window is September 3, 2026 after 2:30 PM Pacific.
-  The Hobby beta account/project and prior production deployment remain intact through the
-  cutover and rollback checkpoint and are retired only after explicit
-  acceptance.
+  The Hobby beta account/project and prior production deployment remain intact
+  through the cutover and rollback checkpoint and are retired only after
+  explicit acceptance.
 
 ## [2.0.0-rc.1] - 2026-09-02
 

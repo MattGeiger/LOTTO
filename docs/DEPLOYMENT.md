@@ -152,10 +152,10 @@ accepted v2.0 architecture or a production promotion:
 | Neon | Separate Free resource `neon-copper-queen` in Portland (US West), connected to beta Production only |
 | Schema | The original 15 expected `public` tables plus the additive Phase 3 `raffle_state.revision` and `raffle_public_state_publications` schema are applied. Metadata verification found the revision column, outbox table, four expected outbox indexes, and zero initial outbox rows. |
 | Runtime config | Distinct beta `AUTH_SECRET` and `ENCRYPTION_MASTER_KEY`; production-safe auth bypass/domain/from-address settings plus `LOTTO_DEPLOYMENT_ENVIRONMENT=beta` applied |
-| Public smoke | `/` renders and `/api/state` returns `200` from the isolated Neon database; polling behavior is unchanged |
+| Public smoke | `/` renders and `/api/state` returns `200` from the isolated Neon database; RC.2 ordinary URLs use realtime after the exact handshake and retain adaptive polling fallback |
 | Authentication | A sending-only `LOTTO Beta` Resend key, restricted to the already verified `williamtemple.app` domain, is stored only in the beta Vercel Production environment. `AUTH_URL` and Auth.js provider callbacks use `https://beta.williamtemple.app`. Deployment `HqLiGzzahAf2QxHe5MPHqQKND5Ua` is ready; Resend delivered the custom-origin Magic Link, the link established an authenticated `/admin` session, and the page reached Persistence confirmed. A session created on the generated Vercel hostname did not cross to the custom hostname. The key remains in the existing Resend workspace for this proof; domain/account migration is explicitly deferred. |
 | Blob | Separate public store `lotto-beta-blob` is provisioned in Portland (`PDX1`) and connected only to the beta project; its read-write token/store ID/webhook key are generated for beta Production and Preview |
-| Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret. The remote protocol verifier passes, a bounded 1/10/100/200-client run delivered all 311 target updates, and beta-only Neon shadow publication is enabled and repair-proven. The explicit Home/Display/Inventory/Arcade `?realtime=observe` cohort remains a polling-authoritative control. The separate exact `?realtime=source` cohort is now enabled only on beta: all four surfaces handshook at revision `83` and rendered revision `84` directly; a 40-second healthy Display window made zero network requests, a tab-local outage made one immediate fallback read and one recovery read, and the iOS 15.4 simulator reached `live · r84`, survived background/foreground, and received revision `85`. Ordinary beta URLs and production remain polling-only. The owner has deferred the ten-day, provider-wide, and physical-iPad exercises until the stable-release decision. |
+| Realtime | `lotto-realtime-beta` is deployed at `https://lotto-realtime-beta.et2-geiger.workers.dev` with its SQLite-backed Durable Object migration and beta-only publish secret. The remote protocol verifier passes, a bounded 1/10/100/200-client run delivered all 311 target updates, and beta-only Neon shadow publication is enabled and repair-proven. RC.2 makes the source controller the ordinary Home/Display/Inventory/Arcade beta default; `?realtime=poll` is the socket-free control, `?realtime=observe` remains polling-authoritative, and `?realtime=source` remains an alias. The Phase 5 proof handshook all four surfaces at revision `83`, rendered revision `84`, made zero requests during a healthy 40-second Display window, recovered from a tab-local outage, and passed iOS 15.4 simulator background/foreground plus revision `85`. Production remains polling-only. The owner has deferred the ten-day, provider-wide, and physical-iPad exercises until the stable-release decision. |
 | DNS | Cloudflare serves a DNS-only `beta` CNAME to Vercel plus the Vercel ownership-verification TXT value alongside the existing apex/`www` verification values. The apex, `www`, and `feed` records were not changed. The Worker already allowlists the stable beta origin. |
 | Safety UX | Beta-only `X-Robots-Tag`, blocking `robots.txt`, and visible sign-in/admin warning banner are implemented; production behavior remains unchanged because the feature requires the explicit beta environment value |
 
@@ -203,22 +203,23 @@ LOTTO_REALTIME_APPLICATION_ENABLED=true
 LOTTO_REALTIME_SOURCE_CANARY=true
 ```
 
-The exact `?realtime=source` URL cohort must also be present. Source clients
-perform an initial `/api/state` handshake, stop only scheduled polling after
-exact revision/checksum agreement, and immediately return to adaptive polling
-if source authority is lost. The flag is independent from the Phase 4 observer
-and shadow-publish switches. The source flag is currently `true` only for the
-isolated beta Production environment; ordinary URLs do not join the cohort.
+Ordinary beta URLs select the source controller. Source clients perform an
+initial `/api/state` handshake, stop only scheduled polling after exact
+revision/checksum agreement, and immediately return to adaptive polling if
+source authority is lost. `?realtime=poll` forces polling without opening a
+socket; `?realtime=observe` retains the Phase 4 diagnostic; and
+`?realtime=source` remains a compatibility alias. The flag is independent from
+the Phase 4 observer and shadow-publish switches and remains `true` only for the
+isolated beta Production environment.
 See
 [`REALTIME_SOURCE_CANARY.md`](./REALTIME_SOURCE_CANARY.md) for the state machine,
 test URLs, validation gates, and rollback.
 
-`LOTTO_REALTIME_APPLICATION_ENABLED` is the master rendered-source gate. An
-explicit `false` overrides the source flag for new page loads; change it in
-Vercel and redeploy the same known-good commit. The variable is server-only.
-The current beta predates the master gate, so an absent value retains the
-existing canary behavior; every production-scoped v2 deployment must set it
-explicitly.
+`LOTTO_REALTIME_APPLICATION_ENABLED` is the master rendered-connection gate.
+An explicit `false` overrides both source and observer configuration for new
+page loads; change it in Vercel and redeploy the same known-good commit. The
+variable is server-only and must be set explicitly in beta and every
+production-scoped v2 deployment.
 
 Activation fails closed unless `LOTTO_DEPLOYMENT_ENVIRONMENT=beta`, the remote
 URL is HTTPS, and its hostname exactly matches the expected host. Deploy and

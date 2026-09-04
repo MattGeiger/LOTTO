@@ -57,12 +57,14 @@ to be added to the leaderboard.
 
 ## Beta Realtime Testing
 
-This is not part of normal gameplay. On the isolated LOTTO beta, authorized
-architecture testers may open `/arcade?realtime=observe`. A small **Realtime
-observer** badge compares the queue state already fetched for the Now Serving
-banner with the experimental Cloudflare delivery. The banner and games continue
-to use the existing authoritative poll. Remove the query parameter to return
-immediately to the ordinary control path.
+On the isolated LOTTO beta, the ordinary `/arcade` page receives Now Serving
+and saved-ticket call changes through realtime after confirming the feed
+matches the database. A connection problem immediately returns those queue
+features to the existing database refresh schedule; gameplay remains local.
+
+Authorized testers can use `/arcade?realtime=poll` for polling only or
+`/arcade?realtime=observe` for the diagnostic comparison badge. Production
+does not yet enable realtime.
 
 ## What To Read Next
 
