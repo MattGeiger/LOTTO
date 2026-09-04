@@ -78,8 +78,28 @@ Intro paragraph.          (becomes the card description + first text)
 [Link to another guide](02-staff-controls.md)   (rewritten to /help/staff-controls)
 ```
 
-Optional screenshots: put images under `public/help-screenshots/`; a
-`name-dark.png` sibling is auto-swapped in dark mode.
+Screenshots belong under `public/help-screenshots/`. Prefer WebP for its smaller
+static-transfer footprint. Every light image must have a matching `-dark`
+sibling with the same extension because the renderer swaps them automatically
+with the active theme. Use descriptive alt text that explains the workflow or
+state, not generic text such as "screenshot."
+
+Use images when they replace spatial explanation: identifying controls on a
+screen, showing a multi-part card, distinguishing visual states, or orienting a
+reader before a procedure. Keep essential instructions, warnings, and control
+names in text so Help remains searchable and accessible. Do not add screenshots
+to syntax/reference sections when a live text example is clearer.
+
+`npm run screenshots` regenerates both README and Help assets from the running
+app. Set `SCREENSHOT_NAMES` to a comma-separated list for a bounded refresh,
+for example:
+
+```bash
+SCREENSHOT_NAMES=staff-dashboard,staff-dashboard-dark npm run screenshots
+```
+
+The asset-integrity test fails when a guide references a missing PNG/WebP Help
+image or when its dark-mode partner is absent.
 
 ### Search
 

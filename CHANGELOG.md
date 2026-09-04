@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Reframed the GitHub project page around the complete v2.0 workflow.** The
+  README now pairs the personalized client experience with the Staff Dashboard,
+  retains the large-format Display, groups administrative and optional
+  surfaces more efficiently, and identifies the Neon-authoritative Cloudflare
+  realtime candidate without claiming that production cutover has occurred.
+- **Added screenshot-led Help across 11 of 12 staff guides.** New deterministic
+  light/dark WebP image pairs cover staff controls, Display, personalized tickets,
+  Inventory, RTL language behavior, Arcade, Verification Code sign-in,
+  Announcements, Translation, and Appearance. Redundant visual description was
+  shortened while searchable procedures, warnings, and accessibility context
+  remain in text. The Markdown syntax reference intentionally stays text-first.
+- **Expanded screenshot automation and integrity checks.** `npm run screenshots`
+  now produces README assets plus theme-aware Help assets, supports bounded
+  `SCREENSHOT_NAMES` runs, and the test suite verifies that every referenced
+  Help image and required dark-mode sibling exists.
+
 ## [2.0.0-rc.2] - 2026-09-03
 
 This beta release candidate activates the proven realtime/fallback controller
