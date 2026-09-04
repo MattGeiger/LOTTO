@@ -31,4 +31,24 @@ describe("Help screenshot assets", () => {
 
     expect(missing).toEqual([]);
   });
+
+  it("keeps the production Help catalog free of beta-only workflow copy", () => {
+    const matches: string[] = [];
+
+    for (const filename of readdirSync(guidesDir).filter((name) => name.endsWith(".md"))) {
+      const guide = readFileSync(join(guidesDir, filename), "utf8");
+      if (/beta|realtime=(?:poll|observe)|admin\/realtime/i.test(guide)) {
+        matches.push(filename);
+      }
+    }
+
+    expect(matches).toEqual([]);
+  });
+
+  it("keeps announcement instructions and formatting in one guide", () => {
+    expect(existsSync(join(guidesDir, "09-markdown-formatting.md"))).toBe(false);
+    expect(readFileSync(join(guidesDir, "10-announcements.md"), "utf8")).toContain(
+      "# Announcements & Formatting",
+    );
+  });
 });

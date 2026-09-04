@@ -54,7 +54,7 @@ export default async function HelpGuideDetailPage({ params }: { params: Promise<
           </Link>
         </Button>
         <span className="text-xs text-muted-foreground">
-          Guide {guide.order} of {guides.length}
+          Guide {index + 1} of {guides.length}
         </span>
       </div>
 

@@ -37,6 +37,8 @@ Staff can make the board greet everyone in turn:
 
 ## Themes
 
+![The client home screen and theme control in the currently selected visual mode](/help-screenshots/themes.webp)
+
 LOTTO offers light, dark, and a flat **high-visibility** accessibility theme
 that maximizes contrast for visually impaired guests. The theme switcher is a
 single button: each tap advances **Light → Dark → Hi-viz → Light**. Its icon and

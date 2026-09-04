@@ -90,6 +90,12 @@ reader before a procedure. Keep essential instructions, warnings, and control
 names in text so Help remains searchable and accessible. Do not add screenshots
 to syntax/reference sections when a live text example is clearer.
 
+Client and Arcade screenshots use a 375 × 812 CSS-pixel, 3× device-scale mobile
+viewport matching an iPhone XS portrait screen. This produces a repeatable
+1125 × 2436 image without browser chrome while exercising LOTTO's real mobile
+layout. Administrative and large-format screenshots retain their task-appropriate
+desktop proportions.
+
 `npm run screenshots` regenerates both README and Help assets from the running
 app. Set `SCREENSHOT_NAMES` to a comma-separated list for a bounded refresh,
 for example:
@@ -100,6 +106,10 @@ SCREENSHOT_NAMES=staff-dashboard,staff-dashboard-dark npm run screenshots
 
 The asset-integrity test fails when a guide references a missing PNG/WebP Help
 image or when its dark-mode partner is absent.
+
+The Help catalog intentionally combines announcement workflow and Markdown
+formatting in one **Announcements & Formatting** guide so staff can move from
+writing to formatting without switching pages.
 
 ### Search
 
@@ -131,3 +141,6 @@ query terms in the article and scrolls to the section.
   de-duplication, section search entries, markdown link rewriting.
 - `tests/help-search.test.tsx` — ranking, deep-link hrefs, highlighting, the
   2-character minimum, empty state, and clear.
+- `tests/help-screenshot-assets.test.ts` — referenced screenshot and dark-mode
+  partner integrity, production-only wording, and the combined announcement /
+  formatting guide boundary.

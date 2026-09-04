@@ -33,16 +33,6 @@ can still browse [what's in stock](05-inventory.md) and the [arcade](07-arcade.m
 - Use **"Enter a new ticket number"** to switch to a different number.
 - A saved ticket is remembered for the day and then cleared automatically.
 
-## Beta Realtime Testing
-
-On the separate beta site, the ordinary home page receives called-number
-changes through the realtime feed after confirming it matches the database.
-If realtime is interrupted, the page immediately checks the database and
-continues its normal automatic refresh schedule. Authorized testers can append
-`?realtime=poll` to use polling only or `?realtime=observe` to compare both
-sources without rendering the realtime copy. Production does not yet enable
-this behavior.
-
 ## What To Read Next
 
 - See available items: [What's In Stock](05-inventory.md).

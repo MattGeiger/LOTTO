@@ -35,8 +35,8 @@ const REQUESTED_NAMES = new Set(
     .filter(Boolean),
 );
 
-/** @typedef {"appearance"|"home-ticket"|"admin-advanced"|"announcement"|"translation"|"appearance-help"|"appearance-wizard"|"login-code"} Preparation */
-/** @typedef {{name:string,route:string,width:number,height:number,theme?:"light"|"dark",lang?:string,prepare?:Preparation,outDir?:string,target?:string,format?:"png"|"webp"}} Shot */
+/** @typedef {"appearance"|"home-ticket"|"themes"|"admin-advanced"|"admin-status-lists"|"admin-status-revert"|"feed-history"|"feed-setup"|"announcement"|"announcement-code"|"translation"|"translation-ai-config"|"translation-management"|"appearance-help"|"appearance-wizard"|"appearance-step-identity"|"appearance-step-logos"|"appearance-step-colors"|"appearance-step-staff"|"appearance-step-inventory"|"appearance-step-review"|"arcade-game"|"login-code"} Preparation */
+/** @typedef {{name:string,route:string,width:number,height:number,theme?:"light"|"dark",lang?:string,prepare?:Preparation,outDir?:string,target?:string,format?:"png"|"webp",deviceScaleFactor?:number,isMobile?:boolean,hasTouch?:boolean}} Shot */
 
 /** @type {Shot[]} */
 const SHOTS = [
@@ -62,11 +62,46 @@ const SHOTS = [
 const HELP_SHOT_BASES = [
   { name: "staff-dashboard", route: "/admin", width: 1280, height: 800 },
   { name: "display-board", route: "/display", width: 1280, height: 720 },
-  { name: "client-ticket", route: "/", width: 1280, height: 800, prepare: "home-ticket" },
+  { name: "client-ticket", route: "/", width: 375, height: 812, deviceScaleFactor: 3, isMobile: true, hasTouch: true, prepare: "home-ticket" },
   { name: "inventory", route: "/inventory", width: 1280, height: 820 },
   { name: "languages", route: "/display", width: 1280, height: 720, lang: "ar" },
-  { name: "arcade", route: "/arcade", width: 1280, height: 820 },
+  { name: "themes", route: "/", width: 375, height: 812, deviceScaleFactor: 3, isMobile: true, hasTouch: true, prepare: "themes" },
+  { name: "arcade", route: "/arcade", width: 375, height: 812, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+  { name: "arcade-game", route: "/arcade/snake", width: 375, height: 812, deviceScaleFactor: 3, isMobile: true, hasTouch: true, prepare: "arcade-game" },
   { name: "sign-in-code", route: "/login", width: 1100, height: 760, prepare: "login-code" },
+  {
+    name: "ticket-status-lists",
+    route: "/admin",
+    width: 1280,
+    height: 900,
+    prepare: "admin-status-lists",
+    target: "[data-screenshot-target='status-lists']",
+  },
+  {
+    name: "ticket-status-revert",
+    route: "/admin",
+    width: 1280,
+    height: 900,
+    prepare: "admin-status-revert",
+    target: "[role='alertdialog']",
+  },
+  {
+    name: "feed-history",
+    route: "/admin",
+    width: 1280,
+    height: 900,
+    prepare: "feed-history",
+    target: "[data-screenshot-target='feed-history']",
+  },
+  {
+    name: "feed-setup",
+    route: "/admin",
+    width: 1280,
+    height: 900,
+    prepare: "feed-setup",
+    target: "[role='dialog']",
+  },
+  { name: "advanced-section", route: "/admin", width: 1280, height: 900, prepare: "admin-advanced" },
   {
     name: "announcement-editor",
     route: "/admin",
@@ -76,11 +111,36 @@ const HELP_SHOT_BASES = [
     target: "[data-screenshot-target='announcement']",
   },
   {
+    name: "announcement-formatting",
+    route: "/admin",
+    width: 1280,
+    height: 900,
+    prepare: "announcement-code",
+    target: "[data-screenshot-target='announcement']",
+  },
+  {
     name: "translation",
     route: "/admin",
     width: 1280,
     height: 900,
     prepare: "translation",
+    target: "[data-screenshot-target='translation']",
+  },
+  {
+    name: "ai-configuration",
+    route: "/admin",
+    width: 1280,
+    height: 900,
+    prepare: "translation-ai-config",
+    target: "[data-screenshot-target='translation']",
+  },
+  {
+    name: "translation-management",
+    route: "/admin",
+    width: 1280,
+    height: 900,
+    deviceScaleFactor: 2,
+    prepare: "translation-management",
     target: "[data-screenshot-target='translation']",
   },
   {
@@ -98,6 +158,12 @@ const HELP_SHOT_BASES = [
     prepare: "appearance-wizard",
     target: "[role='dialog']",
   },
+  { name: "appearance-identity", route: "/admin", width: 1280, height: 900, prepare: "appearance-step-identity", target: "[role='dialog']" },
+  { name: "appearance-logos", route: "/admin", width: 1280, height: 900, prepare: "appearance-step-logos", target: "[role='dialog']" },
+  { name: "appearance-colors", route: "/admin", width: 1280, height: 900, prepare: "appearance-step-colors", target: "[role='dialog']" },
+  { name: "appearance-staff", route: "/admin", width: 1280, height: 900, prepare: "appearance-step-staff", target: "[role='dialog']" },
+  { name: "appearance-inventory", route: "/admin", width: 1280, height: 900, prepare: "appearance-step-inventory", target: "[role='dialog']" },
+  { name: "appearance-review", route: "/admin", width: 1280, height: 900, prepare: "appearance-step-review", target: "[role='dialog']" },
 ];
 
 for (const base of HELP_SHOT_BASES) {
@@ -108,6 +174,16 @@ for (const base of HELP_SHOT_BASES) {
 }
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const APPEARANCE_STEP_INDEX = {
+  "appearance-wizard": 0,
+  "appearance-step-identity": 1,
+  "appearance-step-logos": 2,
+  "appearance-step-colors": 3,
+  "appearance-step-staff": 4,
+  "appearance-step-inventory": 5,
+  "appearance-step-review": 6,
+};
 
 async function run() {
   mkdirSync(OUT_DIR, { recursive: true });
@@ -124,10 +200,19 @@ async function run() {
       const theme = shot.theme ?? "light";
       const lang = shot.lang ?? "en";
       const page = await browser.newPage();
-      await page.setViewport({ width: shot.width, height: shot.height, deviceScaleFactor: 1 });
+      await page.setViewport({
+        width: shot.width,
+        height: shot.height,
+        deviceScaleFactor: shot.deviceScaleFactor ?? 1,
+        isMobile: shot.isMobile ?? false,
+        hasTouch: shot.hasTouch ?? false,
+      });
       await page.emulateMediaFeatures([{ name: "prefers-color-scheme", value: theme }]);
 
-      if (["appearance", "appearance-help", "appearance-wizard"].includes(shot.prepare ?? "")) {
+      if (
+        ["appearance", "appearance-help"].includes(shot.prepare ?? "") ||
+        Object.hasOwn(APPEARANCE_STEP_INDEX, shot.prepare ?? "")
+      ) {
         await page.setRequestInterception(true);
         page.on("request", (request) => {
           if (new URL(request.url()).pathname === "/api/brand-config") {
@@ -150,7 +235,7 @@ async function run() {
           localStorage.setItem("theme", t);
           localStorage.setItem("display-language", l);
           sessionStorage.setItem("display-language-session", l);
-          if (preparation === "home-ticket") {
+          if (preparation === "home-ticket" || preparation === "themes") {
             const now = Date.now();
             localStorage.setItem("homepage-ticket-selection-v1", JSON.stringify({
               ticketNumber: 25,
@@ -197,6 +282,52 @@ async function run() {
         await wait(500);
       };
 
+      const clickButton = async (label, scope = "body") => {
+        const buttons = await page.$$(`${scope} button`);
+        for (const button of buttons) {
+          const text = await button.evaluate((element) => element.textContent ?? "");
+          if (text.includes(label)) {
+            await button.click();
+            return;
+          }
+        }
+        throw new Error(`Button not found: ${label} in ${scope}`);
+      };
+
+      const stabilizeActiveTabPane = async (textMarker) => {
+        await page.evaluate((marker) => {
+          const style = document.createElement("style");
+          style.textContent =
+            "[data-screenshot-target='translation'], [data-screenshot-target='translation'] * { filter: none !important; }";
+          document.head.append(style);
+          const content = Array.from(document.querySelectorAll("p")).find((element) =>
+            element.textContent?.includes(marker),
+          );
+          const activeContent = content?.closest("[data-slot='tabs-content']");
+          if (activeContent instanceof HTMLElement) {
+            activeContent.style.filter = "none";
+            activeContent.style.opacity = "1";
+            activeContent.style.transform = "none";
+            activeContent.style.transition = "none";
+          }
+          let pane = content;
+          while (
+            pane &&
+            !(pane.classList.contains("w-full") && pane.classList.contains("shrink-0"))
+          ) {
+            pane = pane.parentElement;
+          }
+          const rail = pane?.parentElement;
+          if (!(pane instanceof HTMLElement) || !(rail instanceof HTMLElement)) return;
+          for (const sibling of rail.children) {
+            if (sibling instanceof HTMLElement && sibling !== pane) sibling.style.display = "none";
+          }
+          rail.style.transform = "none";
+          rail.style.marginInline = "0";
+          pane.style.paddingInline = "0";
+        }, textMarker);
+      };
+
       const markCard = async (label, targetName) => {
         await page.evaluate((text, name) => {
           const card = Array.from(document.querySelectorAll("[data-slot='card']"))
@@ -214,20 +345,99 @@ async function run() {
         await wait(500);
       }
 
-      if (shot.prepare === "admin-advanced") {
-        await openAdvanced();
-      }
-
-      if (shot.prepare === "announcement") {
-        await openAdvanced();
-        await markCard("Announcement", "announcement");
-        await page.waitForSelector('[aria-label="Announcement message"]');
+      if (shot.prepare === "home-ticket") {
+        await page.evaluate(() => {
+          const label = Array.from(document.querySelectorAll("p")).find(
+            (element) => element.textContent?.trim() === "YOUR TICKET NUMBER",
+          );
+          const panel = label?.parentElement?.parentElement?.parentElement;
+          if (panel instanceof HTMLElement) {
+            panel.dataset.screenshotTarget = "client-ticket";
+            panel.scrollIntoView({ block: "start", inline: "nearest" });
+          }
+        });
+        await page.waitForSelector("[data-screenshot-target='client-ticket']", { visible: true });
         await wait(500);
       }
 
-      if (shot.prepare === "translation") {
+      if (shot.prepare === "admin-advanced") {
+        await openAdvanced();
+        await page.evaluate(() => {
+          const advanced = Array.from(document.querySelectorAll("button")).find((button) =>
+            button.textContent?.trim().startsWith("Advanced"),
+          );
+          advanced?.scrollIntoView({ block: "start", inline: "nearest" });
+        });
+        await wait(500);
+      }
+
+      if (shot.prepare === "admin-status-lists" || shot.prepare === "admin-status-revert") {
+        await markCard("Live State", "status-lists");
+        await page.$eval("[data-screenshot-target='status-lists']", (element) =>
+          element.scrollIntoView({ block: "center", inline: "nearest" }),
+        );
+        await wait(500);
+        if (shot.prepare === "admin-status-revert") {
+          const trigger = await page.$("button[title^='Revert unclaimed ticket']");
+          if (!trigger) throw new Error("No unclaimed ticket is available for the revert screenshot.");
+          await trigger.click();
+          await page.waitForSelector("[role='alertdialog']", { visible: true });
+          await wait(500);
+        }
+      }
+
+      if (shot.prepare === "feed-history" || shot.prepare === "feed-setup") {
+        await markCard("History", "feed-history");
+        await page.$eval("[data-screenshot-target='feed-history']", (element) =>
+          element.scrollIntoView({ block: "center", inline: "nearest" }),
+        );
+        await wait(500);
+        if (shot.prepare === "feed-setup") {
+          await clickButton("Setup", "[data-screenshot-target='feed-history']");
+          await page.waitForSelector("[role='dialog']", { visible: true });
+          await wait(500);
+        }
+      }
+
+      if (shot.prepare === "announcement" || shot.prepare === "announcement-code") {
+        await openAdvanced();
+        await markCard("Announcement", "announcement");
+        await page.waitForSelector('[aria-label="Announcement message"]');
+        if (shot.prepare === "announcement-code") {
+          await clickButton("Edit code", "[data-screenshot-target='announcement']");
+          await page.waitForSelector('textarea[aria-label="Announcement message"]', { visible: true });
+          await page.$eval('textarea[aria-label="Announcement message"]', (textarea) => {
+            const setter = Object.getOwnPropertyDescriptor(
+              HTMLTextAreaElement.prototype,
+              "value",
+            )?.set;
+            setter?.call(
+              textarea,
+              "## Pantry update\n\nFresh produce is available **while supplies last**.\n\n- Check today's inventory\n- Keep your ticket nearby",
+            );
+            textarea.dispatchEvent(new Event("input", { bubbles: true }));
+          });
+        }
+        await wait(500);
+      }
+
+      if (
+        shot.prepare === "translation" ||
+        shot.prepare === "translation-ai-config" ||
+        shot.prepare === "translation-management"
+      ) {
         await openAdvanced();
         await markCard("Translation", "translation");
+        if (shot.prepare === "translation-ai-config") {
+          await clickButton("AI Configuration", "[data-screenshot-target='translation']");
+          await wait(800);
+          await stabilizeActiveTabPane("Configure AI providers");
+        }
+        if (shot.prepare === "translation-management") {
+          await clickButton("Translation Management", "[data-screenshot-target='translation']");
+          await wait(800);
+          await stabilizeActiveTabPane("Review, correct, retry");
+        }
       }
 
       if (shot.prepare === "appearance" || shot.prepare === "appearance-help") {
@@ -247,7 +457,7 @@ async function run() {
         await wait(800);
       }
 
-      if (shot.prepare === "appearance-wizard") {
+      if (Object.hasOwn(APPEARANCE_STEP_INDEX, shot.prepare ?? "")) {
         await openAdvanced();
         await page.waitForSelector("[data-appearance-manager]", { visible: true });
         await page.evaluate(() => {
@@ -257,7 +467,21 @@ async function run() {
           setupButton?.click();
         });
         await page.waitForSelector("[role='dialog']", { visible: true });
+        const targetStep = APPEARANCE_STEP_INDEX[shot.prepare];
+        if (targetStep > 0) {
+          await clickButton("Start from scratch", "[role='dialog']");
+          await page.type("#appearance-config-id", "sample-organization");
+          for (let step = 0; step < targetStep; step += 1) {
+            await clickButton("Next", "[role='dialog']");
+            await wait(500);
+          }
+        }
         await wait(800);
+      }
+
+      if (shot.prepare === "arcade-game") {
+        await page.click("button[aria-label='Start game']");
+        await wait(700);
       }
 
       const format = shot.format ?? "png";

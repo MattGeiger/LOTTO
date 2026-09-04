@@ -14,45 +14,67 @@ logo, queue colors, primary action, card surface, and universal status colors
 in the current Light, Dark, or Hi-viz mode. Choose **Set up appearance** or
 **New appearance** to begin.
 
-![The first step of the guided Appearance setup](/help-screenshots/appearance-wizard.webp)
-
 ## The Steps
 
-1. **Starting point.** Begin from the William Temple House template or a neutral
-   blank slate, then give the configuration a short name. Saving that name
-   again updates the same configuration.
-2. **Organization identity.** Your organization's name, the app name shown in
-   browser tabs, the service heading shown above the date on the board
-   (any queue works: "Clinic Hours For", "Equipment Checkout For" — blank
-   keeps "Food Pantry Service For"), installed-icon label, tagline, website,
-   and public address. **Use suggested wording** drafts page descriptions from
-   the organization name; edit them freely.
-3. **Logos & icons.** Upload a light-mode and a dark-mode logo as SVG, PNG,
-   JPEG, or WebP, up to 4 MB. Prefer a plain, self-contained SVG for crisp
-   scaling; scripts, links, and embedded images are refused. LOTTO verifies the
-   actual file, previews it at its real app size, warns about undersized raster
-   art, and can place light artwork on a **Dark plate** that also appears in
-   staff sign-in emails. Upload an approximately square mark to generate the
-   browser, Apple, and install icons; wide or tall marks are refused.
-4. **Your color story.** The rows have fixed jobs in this order: **Main
-   color**, **Accent**, **Background tint**, **Dark anchor**, and **Light
-   anchor**. **Add color** reveals each optional job without silently changing
-   earlier roles. Choose or search an exact Tailwind stop such as
-   `emerald-600`, or use **Extract from light logo** and adjust the suggested
-   matches. The four-mode preview checks readability and warns when a choice is
-   too close to the reserved Returned-red or Unclaimed-gold meanings.
-5. **Staff sign-in.** The heading and guidance text staff see on the login
-   screen.
-6. **What's in stock.** If your organization runs FEED, paste your public
-   inventory address to enable the inventory tab; leave it off for a
-   queue-only app.
-7. **Review & save.** Check the summary and four-mode preview. **Preview in
-   app** applies the draft only to your current browser session so you can
-   close the wizard and explore it; **Stop preview** restores the live look.
-   Use **Save draft** to keep working later, or **Save & activate** to make it
-   live after LOTTO prepares any changed service heading for every enabled
-   visitor language. If translation fails, the draft is saved but the current
-   live appearance stays in place.
+### 1. Starting point
+
+Begin from the William Temple House template or a neutral blank slate, then
+give the configuration a short name. Saving that name again updates the same
+configuration.
+
+![The Starting Point step with template choices and the configuration name](/help-screenshots/appearance-wizard.webp)
+
+### 2. Organization identity
+
+Set the organization and app names, the service heading shown above the board's
+date, installed-icon label, tagline, website, public address, and page
+descriptions. **Use suggested wording** drafts the descriptions from the
+organization name; edit them freely.
+
+![The Organization Identity step with names, service label, links, and descriptions](/help-screenshots/appearance-identity.webp)
+
+### 3. Logos & icons
+
+Upload light- and dark-mode logos as SVG, PNG, JPEG, or WebP, up to 4 MB.
+LOTTO verifies the file, previews it at its real app size, warns about
+undersized raster art, and can place light artwork on a **Dark plate**. A
+roughly square mark generates the browser, Apple, and install icons.
+
+![The Logos and Icons step with light and dark previews and upload controls](/help-screenshots/appearance-logos.webp)
+
+### 4. Your color story
+
+Choose the **Main color**, then optionally add **Accent**, **Background tint**,
+**Dark anchor**, and **Light anchor** in that order. Select an exact Tailwind
+stop such as `emerald-600`, or use **Extract from light logo** and adjust the
+suggestions. The four-mode preview checks readability and protects the
+universal Returned-red and Unclaimed-gold meanings.
+
+![The Color Story step with palette roles and a live four-mode preview](/help-screenshots/appearance-colors.webp)
+
+### 5. Staff sign-in
+
+Set the heading, guidance, and field placeholder staff see on the login screen.
+
+![The Staff Sign-in step with its three editable text fields](/help-screenshots/appearance-staff.webp)
+
+### 6. What's in stock
+
+If your organization runs FEED, enable inventory and paste its public inventory
+address. Leave this off for a queue-only app.
+
+![The What's in Stock step for enabling an organization's FEED inventory](/help-screenshots/appearance-inventory.webp)
+
+### 7. Review & save
+
+Check the summary and four-mode preview. **Preview in app** applies the draft
+only to your current browser; **Stop preview** restores the live look. Use
+**Save draft** to keep working later, or **Save & activate** to make it live
+after LOTTO prepares any changed service heading for every enabled visitor
+language. If translation fails, the draft is saved but the current live
+appearance stays in place.
+
+![The Review and Save step with the configuration summary, theme preview, and save actions](/help-screenshots/appearance-review.webp)
 
 ## Good to Know
 

@@ -29,20 +29,6 @@ The board can greet everyone in their own language:
 - The bottom navigation on the board hides itself after a quiet period and
   reappears as soon as anyone interacts, keeping the screen clean.
 
-## Beta Realtime Testing
-
-On the separate beta site, the ordinary `/display` page receives queue changes
-through the realtime feed after confirming it matches the database. If that
-feed becomes unavailable or cannot be trusted, the board checks the database
-immediately and continues with its normal automatic refresh schedule.
-
-Authorized testers can use `/display?realtime=poll` for the polling-only
-control or `/display?realtime=observe` for the diagnostic comparison badge.
-**Neon match** means the two public copies agree. Report a persistent mismatch
-to the test lead rather than using the badge as a queue instruction.
-
-The live production board does not yet enable realtime.
-
 ## What To Read Next
 
 - Turning on rotation: [Languages & Themes](06-languages-themes.md).
