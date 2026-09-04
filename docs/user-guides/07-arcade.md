@@ -19,6 +19,8 @@ the game menu.
 
 ## Playing A Game
 
+![Snake running in a phone-sized portrait game screen](/help-screenshots/arcade-game.webp)
+
 1. Open the Arcade from the staff home page (**Play Games**) or the bottom nav.
 2. Pick a game from the arcade index.
 3. Follow the on-screen instructions; use **Back** to return to the index.
@@ -52,17 +54,6 @@ so nobody misses their turn. See [Tickets & the Queue](04-tickets-queue.md).
 
 Games track top scores. When you earn a top-10 result you can enter your initials
 to be added to the leaderboard.
-
-## Beta Realtime Testing
-
-On the isolated LOTTO beta, the ordinary `/arcade` page receives Now Serving
-and saved-ticket call changes through realtime after confirming the feed
-matches the database. A connection problem immediately returns those queue
-features to the existing database refresh schedule; gameplay remains local.
-
-Authorized testers can use `/arcade?realtime=poll` for polling only or
-`/arcade?realtime=observe` for the diagnostic comparison badge. Production
-does not yet enable realtime.
 
 ## What To Read Next
 

@@ -4,6 +4,14 @@
 
 ### Changed
 
+- **Completed the production-facing Help screenshot pass.** Getting Started now
+  illustrates all three primary surfaces; Staff Controls adds ticket-status
+  reversion, FEED pairing, and Advanced-section references; client and Arcade
+  captures use an iPhone-sized portrait viewport; language themes, active
+  gameplay, AI configuration, translation management, and every Appearance
+  wizard step now have visual references. Announcement workflow and Markdown
+  formatting are consolidated into one guide, and architecture-test language
+  has been removed from public Help ahead of the v2.0 production release.
 - **Reframed the GitHub project page around the complete v2.0 workflow.** The
   README now pairs the personalized client experience with the Staff Dashboard,
   retains the large-format Display, groups administrative and optional

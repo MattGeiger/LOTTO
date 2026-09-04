@@ -23,6 +23,8 @@ names. Sign-in and Admin Appearance copy is staff-facing and is not localized.
 
 Before translations can run, connect at least one AI provider:
 
+![The AI Configuration tab for adding, testing, editing, and prioritizing translation providers](/help-screenshots/ai-configuration.webp)
+
 1. Open the **AI Configuration** tab and add a configuration — OpenAI,
    Anthropic, or Google.
 2. Pick a model from the dropdown (cost and token limits fill in
@@ -41,6 +43,8 @@ needlessly large or expensive.
 
 Once a provider is configured, the **Translation Management** tab handles the
 actual translating:
+
+![Translation Management controls and the per-string translation status table](/help-screenshots/translation-management.webp)
 
 - **Find Missing** scans client-facing app text, the active custom public
   service label, announcements, and inventory names for anything not yet

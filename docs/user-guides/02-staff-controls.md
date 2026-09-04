@@ -11,33 +11,6 @@ page. That final confirmation prevents email security scanners from consuming
 the link. Either method opens `/admin`; already signed-in staff can go there
 directly.
 
-## Recognizing the Beta Test Environment
-
-The experimental beta site shows a gold **Beta test environment** banner on
-staff sign-in, sign-in confirmation, and Staff Dashboard screens. Data and
-actions on a page carrying this banner stay in the isolated beta environment
-and do not affect the production LOTTO app. Use synthetic test queues there;
-do not treat beta as the live service-day dashboard.
-
-The production app does not show this banner. If you intended to test beta but
-cannot see it, stop before changing queue state and confirm the address with the
-person coordinating the test.
-
-### Realtime Beta Diagnostics
-
-During the v2.0 architecture proof, authorized beta testers can open
-`/admin/realtime` to inspect the newest shadow-publication record. This
-diagnostic page exists only when LOTTO is explicitly marked as beta; production
-returns Not Found. It loads once when opened and refreshes only when you select
-**Refresh status**, so leaving the page open does not create another polling
-loop.
-
-**Retry newest publication** retries only the newest pending or failed copy of
-public queue state. It does not alter, undo, or replace the authoritative Neon
-raffle state. If no repair is needed, LOTTO says so without issuing repeated
-requests. This is an engineering validation surface, not part of the normal
-service-day workflow.
-
 ## Setting Today's Ticket Range
 
 Before calling anyone, tell LOTTO which ticket numbers are in play.
@@ -55,7 +28,7 @@ A drawing can be **random** (numbers are shuffled into a fair order) or
 
 When you're ready for the next person:
 
-1. Use the **call next / now serving** control on the dashboard.
+1. Use the **Now Serving / Draw Position** control on the dashboard.
 2. The number you call becomes "Now Serving" on the [display board](03-display-board.md)
    and on that client's phone — with a celebration when it's their turn.
 3. Repeat as each client is served.
@@ -82,6 +55,10 @@ stays gold, regardless of agency branding.
 tap any ticket number and confirm **Revert** to clear its status — the ticket
 returns to normal without changing who's currently being served.
 
+![The Unclaimed and Returned ticket lists, where tapping a number starts a revert](/help-screenshots/ticket-status-lists.webp)
+
+![The confirmation required before LOTTO reverts a ticket's status](/help-screenshots/ticket-status-revert.webp)
+
 ## Operating Hours & the Display URL
 
 - **Operating hours** tell the board when the pantry is open, before-open, or
@@ -103,6 +80,8 @@ it there; Reset does not add another question to the end-of-shift workflow.
 
 ## Connect Queue History To FEED
 
+![The History card with undo, snapshot restoration, and FEED synchronization controls](/help-screenshots/feed-history.webp)
+
 An authorized administrator can open the **History** card, find **Sync With
 FEED**, and select **Setup**. A status tag shows whether LOTTO has an active
 token, and the line beneath the button shows when that token was generated.
@@ -116,7 +95,11 @@ daily synchronization and review happen in FEED; LOTTO's Reset workflow does
 not change. The **Configured** tag confirms that LOTTO has a token; a successful
 FEED synchronization confirms that both applications hold the matching pair.
 
+![The FEED setup window with the LOTTO URL, pairing instructions, and token action](/help-screenshots/feed-setup.webp)
+
 ## The Advanced Section
+
+![The expanded Advanced section with configuration cards for less-frequent setup work](/help-screenshots/advanced-section.webp)
 
 Expand **Advanced** on the dashboard for less-frequent setup tasks: operating
 hours, display-language rotation, writing an

@@ -25,18 +25,6 @@ Open **Dietary filters** and select one or more needs, such as gluten-free,
 vegan, halal, or kosher. Filters combine with search; choose **Clear filters**
 to reset them.
 
-## Beta Realtime Testing
-
-On the isolated LOTTO beta, the ordinary `/inventory` page uses realtime for
-ticket-call celebrations after confirming the feed matches the database. The
-inventory catalog itself remains read-only and independent from queue-state
-delivery. If realtime becomes unavailable, ticket calls return automatically
-to the existing database refresh schedule.
-
-Authorized testers can use `/inventory?realtime=poll` for polling only or
-`/inventory?realtime=observe` for the diagnostic comparison badge. Production
-does not yet enable realtime.
-
 ## What To Read Next
 
 - Back to your ticket status: [Tickets & the Queue](04-tickets-queue.md).
