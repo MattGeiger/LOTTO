@@ -128,6 +128,33 @@ after at least ten representative service days, all fault drills recover, no
 staff write depends on Cloudflare, and healthy source clients generate no
 scheduled `/api/state` polling.
 
+## RC.2 default-source beta validation
+
+On September 3, 2026, Vercel deployment
+`48MNHWZZ2Qg9yjdCBesNASrp3nPx` served commit `df180f0` at the stable beta
+origin with the application gate enabled.
+
+- Ordinary Home, Display, Inventory, and Arcade URLs connected without a
+  query parameter and reported `Realtime source · live · r91`.
+- `?realtime=poll` opened no source controller, while
+  `?realtime=observe` connected at hub/poll revision `91` and reported an exact
+  Neon match. `?realtime=source` remained a working alias.
+- Cloudflare Worker version `5f9eb992-c0b3-43bb-a9a3-30db66dc1741` drained the
+  William Temple House beta object and refused a fresh Display connection. The
+  client showed `Polling fallback · connection closed` and continued the
+  adaptive poll path. Resuming the object returned the same page automatically
+  to `Realtime source · live · r91`.
+- The parameter-free Display route hydrated and reached the same live revision
+  in Safari on the iOS 15.4 iPad mini 4 simulator.
+
+The separately deployed Vercel application gate is covered by configuration,
+mount, full-suite, and production-build tests. It was not live-toggled during
+this run because doing so requires a disable deployment and a second restore
+deployment; the Cloudflare transport drain provided the live hosted failure
+exercise. The physical iPad, provider-wide cost observation, and extended
+service-day run remain deliberately deferred and are not represented by this
+checkpoint.
+
 ## First live Phase 5 beta observation
 
 The first production-shaped source observation ran on the isolated beta stack

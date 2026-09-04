@@ -32,6 +32,13 @@ new deployment is accepted.
 This release remains confined to `beta.williamtemple.app`; production, `main`,
 and the apex domain have not changed.
 
+Deployed beta validation passed on all four ordinary public routes at revision
+`91`. The polling control and observer comparison passed, a live Cloudflare
+drain forced a fresh Display load into adaptive polling fallback, resume
+restored realtime automatically, and the parameter-free Display connected on
+the iOS 15.4 simulator. The Vercel application gate is deployed and
+code/build-tested but was not live-toggled during this checkpoint.
+
 ## Version 2.0.0-rc.1 — September 2, 2026
 
 This beta release candidate marks the completed realtime-source proof and the
