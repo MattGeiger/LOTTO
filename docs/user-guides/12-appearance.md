@@ -6,69 +6,41 @@ required.
 
 ## Opening the Setup
 
-1. Open the [Staff Dashboard](02-staff-controls.md) (`/admin`) and expand
-   **Advanced**.
-2. Find the **Appearance** card. It shows which look is currently live: the
-   built-in William Temple House appearance or one of your saved appearances.
-   The **Appearance preview** card beside it shows the live logo, queue colors,
-   primary button, ordinary card surface, and the universal Unclaimed and
-   Returned treatments. It follows the current Light, Dark, or Hi-viz mode, so
-   you can check the active result without opening the setup window.
-3. Choose **Set up appearance** (or **New appearance** if you already have
-   saved ones). A step-by-step window walks you through everything.
+![The Appearance manager and live preview on the Staff Dashboard](/help-screenshots/appearance.webp)
+
+Open the [Staff Dashboard](02-staff-controls.md), expand **Advanced**, and find
+**Appearance**. The manager names the live configuration; the preview shows its
+logo, queue colors, primary action, card surface, and universal status colors
+in the current Light, Dark, or Hi-viz mode. Choose **Set up appearance** or
+**New appearance** to begin.
+
+![The first step of the guided Appearance setup](/help-screenshots/appearance-wizard.webp)
 
 ## The Steps
 
-1. **Starting point.** Begin from the William Temple House template or from a neutral blank
-   slate with placeholder graphics. Either way, every choice can be changed in
-   the following steps. Give the configuration a short name — saving with the
-   same name later updates it.
+1. **Starting point.** Begin from the William Temple House template or a neutral
+   blank slate, then give the configuration a short name. Saving that name
+   again updates the same configuration.
 2. **Organization identity.** Your organization's name, the app name shown in
    browser tabs, the service heading shown above the date on the board
    (any queue works: "Clinic Hours For", "Equipment Checkout For" — blank
-   keeps the standard "Food Pantry Service For"), the label phones show under the installed icon (check the
-   exact spelling your organization uses!), a tagline, your website, and the
-   app's public address. **Use suggested wording** fills in the page
-   descriptions from your organization name; edit them freely.
+   keeps "Food Pantry Service For"), installed-icon label, tagline, website,
+   and public address. **Use suggested wording** drafts page descriptions from
+   the organization name; edit them freely.
 3. **Logos & icons.** Upload a light-mode and a dark-mode logo as SVG, PNG,
-   JPEG, or WebP, up to 4 MB — SVG is best, because it stays a true vector and renders crisply
-   at every size and on hi-DPI screens (export a plain, self-contained SVG:
-   no scripts, links, or embedded images — the uploader will tell you if
-   yours isn't). Internal SVG class styles are supported. LOTTO inspects the
-   actual image instead of relying on the file label supplied by the browser.
-   If an upload cannot be used, the message identifies whether the file is
-   empty, too large, unreadable, unsafe, or whether hosted storage needs an
-   administrator's attention—and tells you what to do next. Sizes are measured automatically, and the preview shows
-   each logo at the exact height the app uses, on your own colors. LOTTO keeps
-   the uploaded filename and format, warns when a raster is too small for a
-   crisp high-density display, and automatically suggests the dark-plate
-   treatment when it measures light artwork on a transparent ground. If your
-   light logo needs a dark plate behind it (common for white-lettered
-   logos), pick the **Dark plate** treatment; LOTTO also carries that surface
-   into staff sign-in emails. Upload one square mark and
-   every browser, Apple, and install icon size is generated for you. A wide or
-   tall mark is refused before anything is stored; use an approximately square
-   source.
+   JPEG, or WebP, up to 4 MB. Prefer a plain, self-contained SVG for crisp
+   scaling; scripts, links, and embedded images are refused. LOTTO verifies the
+   actual file, previews it at its real app size, warns about undersized raster
+   art, and can place light artwork on a **Dark plate** that also appears in
+   staff sign-in emails. Upload an approximately square mark to generate the
+   browser, Apple, and install icons; wide or tall marks are refused.
 4. **Your color story.** The rows have fixed jobs in this order: **Main
    color**, **Accent**, **Background tint**, **Dark anchor**, and **Light
-   anchor**. A new blank appearance starts with Main color; **Add color**
-   reveals the next job, and only the final optional row can be cleared, so no
-   existing color silently changes jobs. Open a row to choose from the closest
-   Tailwind families, search by a name such as `emerald-600`, or choose a family
-   and then one of its 11 weights. The exact named stop shown is what LOTTO
-   saves. If you've uploaded a logo, choose **Extract from light logo** to fill
-   the story, then review the nearby Tailwind matches and adjust anything you
-   dislike. If a logo color sits in the range reserved for ticket status
-   (Returned red, Unclaimed gold), the recommendation works around it and a
-   note explains how; you can still override manually. Prefer to choose
-   yourself? Pick the fixed roles directly.
-   The wizard tells you in plain language what each fixed role will do. Light
-   mode, dark mode, and both
-   high-visibility modes are derived from the story with a live preview,
-   and readability is checked as you go — if a combination would be hard
-   to read, the wizard says exactly what to change, and it warns you if a
-   color sits too close to the reserved Returned-red or Unclaimed-gold
-   status colors.
+   anchor**. **Add color** reveals each optional job without silently changing
+   earlier roles. Choose or search an exact Tailwind stop such as
+   `emerald-600`, or use **Extract from light logo** and adjust the suggested
+   matches. The four-mode preview checks readability and warns when a choice is
+   too close to the reserved Returned-red or Unclaimed-gold meanings.
 5. **Staff sign-in.** The heading and guidance text staff see on the login
    screen.
 6. **What's in stock.** If your organization runs FEED, paste your public

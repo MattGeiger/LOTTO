@@ -24,11 +24,11 @@ type MarkdownGuideProps = {
 };
 
 function getDarkScreenshotSrc(src?: string) {
-  if (!src?.startsWith("/help-screenshots/") || !src.endsWith(".png")) {
+  if (!src?.startsWith("/help-screenshots/") || !/\.(?:png|webp)$/.test(src)) {
     return undefined;
   }
 
-  return src.replace(/\.png$/, "-dark.png");
+  return src.replace(/(\.(?:png|webp))$/, "-dark$1");
 }
 
 export function MarkdownGuideContent({ content }: MarkdownGuideProps) {

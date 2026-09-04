@@ -9,6 +9,8 @@ Eight core languages are built in: English, Spanish, Chinese, Russian,
 Ukrainian, Vietnamese, Persian (Farsi), and Arabic. Persian and Arabic display
 right-to-left, with numbers kept in their natural order.
 
+![The Display Board translated into Arabic with its right-to-left layout and naturally ordered ticket numbers](/help-screenshots/languages.webp)
+
 Staff can enable many more languages, auto-translated with AI — see
 [AI-Powered Translation](11-ai-translation.md).
 
@@ -19,11 +21,9 @@ Staff can enable many more languages, auto-translated with AI — see
   screen won't keep re-asking once you've chosen.
 - On the [display board](03-display-board.md) a language switcher is always
   available.
-- On the Arcade page, the language menu includes every activated language whose
-  translations are ready, not only the eight built-in choices. Opening the menu
-  refreshes its ready list, so it can discover languages enabled after the page
-  session began without polling in the background. A blurred lower edge means
-  more languages are available below; swipe the list upward to see them.
+- The Arcade menu includes every activated language whose translations are
+  ready. Opening it refreshes that list; a blurred lower edge means more choices
+  are available by swiping upward.
 
 ## Automatic Language Rotation (Display Board)
 

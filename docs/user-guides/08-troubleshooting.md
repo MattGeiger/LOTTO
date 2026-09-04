@@ -36,6 +36,8 @@ Update it there; the board picks up the change on its next refresh.
 
 ## A Staff Sign-In Link Does Not Work
 
+![The Verification Code alternative on the staff sign-in page](/help-screenshots/sign-in-code.webp)
+
 1. Open the newest LOTTO sign-in email; links expire after ten minutes and are
    single-use.
 2. The link should open a **Confirm sign in** page. Select **Sign in** there.

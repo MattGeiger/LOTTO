@@ -16,6 +16,8 @@ entertained.
 
 LOTTO has three main areas:
 
+![The Staff Dashboard used to prepare and run a ticket queue](/help-screenshots/staff-dashboard.webp)
+
 - **Staff Dashboard** (`/admin`) — where staff set the ticket range, call
   numbers, and manage the day. Staff sign in first at `/login` with the default
   Magic Link or a 6-digit Verification Code; an unauthenticated visit to
