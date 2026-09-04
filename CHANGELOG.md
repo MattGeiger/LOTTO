@@ -8,6 +8,11 @@ This beta release candidate activates the proven realtime/fallback controller
 on the four ordinary beta public URLs. Production, `main`, and
 `williamtemple.app` remain unchanged.
 
+The deployed beta validation connected all four ordinary public surfaces at
+revision `91`, passed the polling-only and observer controls, forced a live
+Cloudflare drain into adaptive polling fallback, automatically recovered after
+resume, and connected the parameter-free Display on the iOS 15.4 simulator.
+
 ### Added
 
 - **Added complementary realtime emergency controls.** A server-only

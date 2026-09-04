@@ -22,6 +22,13 @@ does not stop publication, remove the latest public state, or affect Neon staff
 transactions. Realtime and polling also share one activity clock, preserving
 the existing quiet-time and off-hours cadence after fallback.
 
+The isolated beta deployment connected all four ordinary public routes at
+revision `91`. A live Worker drain forced a fresh Display load into adaptive
+polling fallback, resume restored realtime automatically, and the ordinary
+Display route connected on the iOS 15.4 simulator. The Vercel master gate is
+deployed and code/build-tested; unlike the Worker control, it has not been
+live-toggled because that exercise requires disable and restore deployments.
+
 The William Temple House production migration is planned for a new project in
 the consulting business's existing Vercel Pro account, with an attended change
 window no earlier than September 3, 2026 after 2:30 PM Pacific. The old
