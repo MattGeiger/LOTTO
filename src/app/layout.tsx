@@ -66,8 +66,12 @@ export default async function RootLayout({
   const enableTweakcnPreview = process.env.VERCEL !== "1";
   // Match FEED's production-bundle boundary: load the calibration subtree only
   // in local development instead of merely hiding an imported production UI.
+  // Off by default even there -- the floating trigger overlaps the app's own
+  // chrome on every local page -- so it is opt-in per developer session with
+  // LOTTO_PALETTE_CALIBRATION=true.
   const PaletteDevTools =
-    process.env.NODE_ENV === "development"
+    process.env.NODE_ENV === "development" &&
+    process.env.LOTTO_PALETTE_CALIBRATION === "true"
       ? (await import("@/components/dev/palette-dev-tools")).default
       : null;
   const { brand, themeCss } = await getResolvedRuntimeBrand();

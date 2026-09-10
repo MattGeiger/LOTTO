@@ -4,6 +4,15 @@
 
 ### Changed
 
+- **Made the development palette calibration tool opt-in.** The floating
+  `Palette` trigger sat over the top-right corner of every localhost page,
+  covering the app's own chrome during ordinary local work even though
+  calibration is an occasional task. It now renders only when
+  `LOTTO_PALETTE_CALIBRATION=true` is set alongside `NODE_ENV=development`, so a
+  normal `npm run dev` session shows the app exactly as a visitor sees it. The
+  production-bundle boundary is unchanged: the subtree is still behind the
+  dynamic import, so nothing about it reaches a production build either way.
+
 - **Hid the realtime status badge from ordinary visitors.** The
   `Realtime source · live · rN` indicator rendered in the corner of every public
   surface — Home, Display, Inventory, and Arcade — where guests could read
