@@ -10,12 +10,14 @@
 // validate every result before writing it to the translation store.
 
 import { providerParameters } from "./provider-parameters";
-import { providerFetch } from "./provider-failure";
+import { providerFetch, ProviderFailureError } from "./provider-failure";
 import type { AiServiceType } from "./types";
 import { estimateTranslationBatchOutputTokens, normalizeTranslationOutputBudget } from "./output-budget";
 import * as systemPromptStore from "./system-prompt-store";
 
 export type TranslateParams = {
+  /** Internal invocation deadline, shared by the initial batch and its split. */
+  requestDeadline?: number;
   serviceType: AiServiceType;
   apiKey: string;
   model: string;
@@ -25,6 +27,12 @@ export type TranslateParams = {
   inputCost?: number | null;
   outputCost?: number | null;
   unitPrice?: "per_1m" | "per_1k" | null;
+};
+
+const generationFetch = (p: TranslateParams, url: string, init: RequestInit): Promise<Response> => {
+  const remaining = (p.requestDeadline ?? Date.now() + 30_000) - Date.now();
+  if (remaining <= 0) throw new ProviderFailureError("unavailable");
+  return providerFetch(url, init, Math.min(30_000, remaining));
 };
 
 export type TranslateResult = {
@@ -214,7 +222,7 @@ const translateOpenAI = async (
     ],
   };
   Object.assign(body, providerParameters(p, p.maxTokens ?? 2048));
-  const res = await providerFetch("https://api.openai.com/v1/chat/completions", {
+  const res = await generationFetch(p, "https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${p.apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -239,7 +247,7 @@ const translateAnthropic = async (
   targetLanguage: string,
 ): Promise<TranslateResult> => {
   const systemPrompt = await buildCustomSystemPrompt(targetLanguage);
-  const res = await providerFetch("https://api.anthropic.com/v1/messages", {
+  const res = await generationFetch(p, "https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "x-api-key": p.apiKey,
@@ -258,6 +266,7 @@ const translateAnthropic = async (
     content?: { type: string; text?: string }[];
     usage?: { input_tokens?: number; output_tokens?: number };
   };
+  if (data.stop_reason === "refusal") throw new Error("Anthropic declined this translation. Review the source text.");
   if (data.stop_reason === "max_tokens") throw new Error("Anthropic output reached the translation budget. Try a smaller batch.");
   const out = data.content?.find((c) => c.type === "text")?.text?.trim();
   if (!out) throw new Error("Anthropic returned an empty translation.");
@@ -277,7 +286,7 @@ const translateGoogle = async (
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
     p.model,
   )}:generateContent`;
-  const res = await providerFetch(url, {
+  const res = await generationFetch(p, url, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": p.apiKey },
     body: JSON.stringify({
@@ -316,7 +325,7 @@ const translateBatchOpenAI = async (
     response_format: { type: "json_object" },
   };
   Object.assign(body, providerParameters(p, maxOutputTokens));
-  const res = await providerFetch("https://api.openai.com/v1/chat/completions", {
+  const res = await generationFetch(p, "https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${p.apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -344,7 +353,7 @@ const translateBatchAnthropic = async (
   maxOutputTokens: number,
 ): Promise<TranslateBatchResult> => {
   const systemPrompt = await buildCustomSystemPrompt(targetLanguage, BATCH_OUTPUT_INSTRUCTION);
-  const res = await providerFetch("https://api.anthropic.com/v1/messages", {
+  const res = await generationFetch(p, "https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "x-api-key": p.apiKey,
@@ -363,6 +372,7 @@ const translateBatchAnthropic = async (
     content?: { type: string; text?: string }[];
     usage?: { input_tokens?: number; output_tokens?: number };
   };
+  if (data.stop_reason === "refusal") throw new Error("Anthropic declined this translation. Review the source text.");
   if (data.stop_reason === "max_tokens") throw new BatchResponseValidationError("Anthropic output reached the translation budget.");
   const raw = data.content?.find((content) => content.type === "text")?.text;
   if (!raw) throw new BatchResponseValidationError("Anthropic returned an empty batch translation.");
@@ -384,7 +394,7 @@ const translateBatchGoogle = async (
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
     p.model,
   )}:generateContent`;
-  const res = await providerFetch(url, {
+  const res = await generationFetch(p, url, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": p.apiKey },
     body: JSON.stringify({

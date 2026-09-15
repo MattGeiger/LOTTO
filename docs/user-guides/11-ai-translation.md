@@ -91,6 +91,9 @@ If a provider returns malformed structured output, LOTTO splits that batch once
 to isolate the problem. Authentication, quota, network, and provider failures
 are not repeatedly retried in the background; affected rows remain visible so
 staff can correct the configuration or retry them deliberately.
+If a provider declines the content, review the source text before retrying.
+Long-running work also pauses at a request time limit; remaining rows stay
+available for a deliberate retry.
 Staged work stops when a provider reports an access, quota, or availability
 failure. Follow the message, then use Translation Management to retry the
 affected rows and run **Find Missing** again for work that has not completed.

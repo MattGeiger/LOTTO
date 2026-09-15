@@ -135,6 +135,7 @@ describe("translation engine batching", () => {
       providerRequests: 3,
     });
     expect(mocks.translateTextBatch).toHaveBeenCalledTimes(3);
+    expect(new Set(mocks.translateTextBatch.mock.calls.map(call => call[0].requestDeadline)).size).toBe(1);
     expect(mocks.bulkUpdate).toHaveBeenCalledTimes(2);
 
     vi.clearAllMocks();
@@ -161,5 +162,25 @@ describe("translation engine batching", () => {
     });
     expect(mocks.translateTextBatch).toHaveBeenCalledTimes(1);
     expect(mocks.bulkUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves later rows pending when a preceding group consumes the invocation deadline", async () => {
+    const now = vi.spyOn(Date, "now").mockReturnValue(1000);
+    try {
+      const pending = [row(1, "brand_string"), row(2)];
+      mocks.get.mockImplementation(async (id) => pending.find(r => r.id === id));
+      mocks.list.mockResolvedValue([pending[1]]);
+      mocks.translateTextBatch.mockImplementation(async (_params, items) => {
+        now.mockReturnValue(41_001);
+        return { translations: items.map((item: { id: string }) => ({ id: item.id, text: "Translated" })),
+          promptTokens: 10, completionTokens: 5, maxOutputTokens: 2048 };
+      });
+      const { translateRowsByIds } = await import("@/lib/translation/engine");
+      const result = await translateRowsByIds([1, 2]);
+      expect(result).toMatchObject({ translated: 1, failed: 0, remaining: 1, providerRequests: 1 });
+      expect(result.stopped).toContain("time limit");
+      expect(mocks.translateTextBatch).toHaveBeenCalledTimes(1);
+      expect(mocks.bulkUpdate).toHaveBeenCalledTimes(1);
+    } finally { now.mockRestore(); }
   });
 });

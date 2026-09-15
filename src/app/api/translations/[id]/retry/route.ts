@@ -11,6 +11,7 @@ import { NoActiveConfigError, translateRowsByIds } from "@/lib/translation/engin
 import * as store from "@/lib/translation/translations-store";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: rawId } = await params;

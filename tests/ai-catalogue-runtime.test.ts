@@ -86,4 +86,23 @@ describe("single and batch serialized REST contracts", () => {
     await expect(translateTextBatch({ serviceType: "Google", model: DEFAULT_MODEL_ID, apiKey: "key" }, [{ id: "1", text: "Hello" }], "Spanish"))
       .rejects.toBeInstanceOf(BatchResponseValidationError);
   });
+
+  it("reports Anthropic refusal without treating it as splittable malformed output", async () => {
+    const fetchMock = vi.fn(async () => Response.json({ stop_reason: "refusal", content: [] }));
+    vi.stubGlobal("fetch", fetchMock);
+    const params = { serviceType: "Anthropic" as const, model: "claude-opus-5", apiKey: "key" };
+    const error = await translateTextBatch(params, [{ id: "1", text: "Hello" }], "Japanese").catch(e => e);
+    expect(error.message).toContain("declined");
+    expect(error).not.toBeInstanceOf(BatchResponseValidationError);
+    await expect(translateText(params, "Hello", "Japanese")).rejects.toThrow("declined");
+  });
+
+  it("does not send another generation after the shared invocation deadline", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(translateTextBatch({ serviceType: "Google", model: DEFAULT_MODEL_ID,
+      apiKey: "key", requestDeadline: Date.now() - 1 }, [{ id: "1", text: "Hello" }], "Spanish"))
+      .rejects.toThrow("could not complete");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

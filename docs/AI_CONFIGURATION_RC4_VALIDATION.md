@@ -22,7 +22,7 @@ production credential, or production model configuration was changed.
 | Check | Result |
 | --- | --- |
 | `npm audit --omit=dev` | 31 existing advisories: 25 moderate, 5 high, 1 critical; no dependency changes or automatic fixes. |
-| Full Vitest suite | 135 files passed; 960 tests passed, 1 skipped. |
+| Full Vitest suite | Final follow-up: 135 files passed; 963 tests passed, 1 skipped. |
 | `npx tsc --noEmit` | Passed. |
 | `npm run lint` | Passed; existing stale Browserslist-data warning. |
 | `npm run build` | Passed with local file storage and dummy local auth-service settings. |
@@ -68,8 +68,37 @@ request bodies/headers, never URL parameters, source files, or this report.
 
 The [sanitized responses](validation/ai-config-rc4/model-access.json) explicitly
 say that generation access and available credit were not tested. Metadata
-visibility does not establish either. The separately requested one-time test
-budget remains pending; billed generation checks have not started.
+visibility does not establish either. The user subsequently approved a $5 total
+budget and chose WTH production for hosted validation instead of the beta.
+
+## Live generation
+
+The bounded harness called LOTTO's actual single/batch REST implementation with
+synthetic content and the supplied temporary keys. Only the custom-prompt store
+was replaced with an empty fixture; no translation or configuration store was
+written. [Sanitized request outcomes and usage](validation/ai-config-rc4/live-generation.json)
+include failed responses and full reservations for timed-out calls.
+
+- **11/12 offered models** completed five-row structured translations. Fixtures
+  covered Spanish, Japanese, Arabic, Icelandic, stable IDs, placeholders,
+  Markdown links/emphasis, and the unchanged William Temple House name.
+- **100-row batches passed for all three providers:** Gemini 3.5 Flash Lite,
+  GPT-5.6 Luna, and Claude Sonnet 5. Each made one provider request. Separate
+  single-text Icelandic checks passed on the same representative models.
+- **Claude Opus 5 remains unverified for successful generation with this key.**
+  It returned HTTP 200 with `stop_reason: refusal`, no content, and billed input
+  usage, including for a minimal food-name fixture. The catalog remains intact;
+  no account-specific refusal silently removes or replaces a saved model.
+- Live testing exposed two corrections: explicit Anthropic refusals now report
+  a declined translation without a validation split; Sonnet's 100-row response
+  took 15.8 seconds, beyond the former 15-second timeout. Generation now allows
+  30 seconds per call, while initial batches, splits, and later groups share a
+  40-second invocation deadline with persistence headroom inside 60-second
+  routes. Metadata checks retain their 10-second timeout.
+
+The test-only conservative charge bound is **$1.53315 across 23 calls**, including
+full timeout reservations, and remains below $5. Provider portals determine actual charges. This does not add
+spending tracking to LOTTO.
 
 ## Official-source recheck
 
@@ -118,24 +147,18 @@ These are reference-price checks, not account-specific billing verification.
 
 ## Remaining release gates
 
-The currently authenticated Vercel CLI lists only Matthew Geiger's personal
-projects (`wthlotto`, `stjohns-food-share`, `nettie-spinner`). The documented
-isolated `wth_apps/lotto-beta` scope is not accessible. Access to the staging
-account/project has been requested; a production-connected preview is not an
-acceptable substitute for isolated tests.
+The user explicitly replaced beta/preview testing with WTH production testing.
+The CLI and Safari both confirm the target project is `wthlotto`. Its existing
+deployment `dpl_BW9YQMBw2WywY5yKUEUw8EJFqFVS` is the rollback target.
+St. Johns shares the Git repository, so deployment must be scoped directly to
+WTH instead of triggering both projects through `main`.
 
-1. Agree the one-time live-test budget and run a minimal structured generation
-   for each offered model, representative 100-row batches per provider, and
-   Latin/CJK/RTL, placeholder, Markdown, Icelandic and coverage fixtures.
-2. Complete configuration persistence/recovery acceptance against isolated
-   Neon, authenticated preview Admin, device layouts/themes, and real iPadOS 15
-   sign-in. No production auth bypass is permitted.
-3. Review the refreshed Help pair with the final candidate and complete any
-   remaining wizard/device captures.
-4. Finish release documentation; build and validate the exact release
-   commit on an isolated preview through `dev`.
-5. Preserve rollback artifacts, publish the annotated rc.4 tag and GitHub
-   prerelease, then promote and verify production only after these gates pass.
+1. Verify the final corrections with tests, build, legacy scan and smoke.
+2. Deploy the candidate to WTH and exercise authenticated configuration CRUD,
+   existing-model recovery and selected-model checks without replacing active
+   production credentials. Verify public pages and the legacy Simulator.
+3. Record exact deployment/commit identity, complete release documentation,
+   publish the rc.4 tag and GitHub prerelease after hosted validation.
 
 The stable-v2 realtime acceptance program remains separate. Temporary test
 keys must never replace production credentials during this work.

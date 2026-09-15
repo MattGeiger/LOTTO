@@ -58,6 +58,13 @@
 
 ### Fixed
 
+- **Handled live-provider refusal and latency correctly.** Anthropic's explicit
+  refusal is no longer mistaken for malformed output or split into more calls.
+  Generation allows 30 seconds per call within a shared 40-second invocation
+  deadline; later groups and split retries cannot reset that deadline.
+  This accommodates the validated 100-row Sonnet response while retaining
+  serverless bounds and recovery for unfinished rows.
+
 - **Made realtime recover from an exhausted reconnect ladder.** After five
   failed attempts (~31 seconds) the client gave up permanently: it scheduled no
   further retry, and the only things that revived it were a visibility change,

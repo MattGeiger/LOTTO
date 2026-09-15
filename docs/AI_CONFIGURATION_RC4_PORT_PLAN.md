@@ -7,6 +7,16 @@
 file/Neon stores. The user's confirmed design intent governs which FEED
 features belong in LOTTO.
 
+**Release direction updated September 14:** The user approved a **$5 total live
+provider-test budget** and explicitly chose WTH production for hosted testing,
+superseding the isolated beta/preview steps below. Deploy only the `wthlotto`
+project serving `williamtemple.app`; do not trigger St. Johns through a shared
+`main` push. Preserve the previous deployment for rollback, existing production
+AI settings, and operational data. Use inactive disposable configurations for
+hosted CRUD checks. No schema migration or production credential replacement is
+required. Physical-device acceptance for stable v2 remains separate; this port
+changes no dependencies and uses the requested iOS 15.4 Simulator checks.
+
 ## 1. Scope and design intent
 
 Refresh LOTTO's model catalogue from FEED 1.8.0 and port the supporting model
@@ -323,5 +333,6 @@ open; it is excluded by the user's confirmed design intent.
 The approved visible choices are **Model Pricing** wording and the
 **Gemini 3.5 Flash Lite** default for new configurations. **Test key and model**
 performs a free selected-model visibility check with explicit limitations.
-Temporary keys have been supplied; agreement on a one-time billed test budget
-is pending. No production release is implied by local implementation passing.
+Temporary keys and the $5 test budget are approved. The production-testing
+direction above replaces the earlier staging prerequisites. Release evidence
+and any model/account limitations are recorded in the validation report.

@@ -12,6 +12,7 @@ import { NoActiveConfigError, translateRowsByIds } from "@/lib/translation/engin
 import * as store from "@/lib/translation/translations-store";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const schema = z.object({ ids: z.array(z.number().int().positive()).min(1).max(500) });
 

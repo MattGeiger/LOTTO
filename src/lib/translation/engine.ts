@@ -144,6 +144,10 @@ const translateRecordBatch = async (
   allowValidationSplit = true,
 ): Promise<BatchProcessResult> => {
   if (records.length === 0) return { translated: 0, failed: 0, providerRequests: 0 };
+  if (params.requestDeadline != null && Date.now() >= params.requestDeadline) {
+    return { translated: 0, failed: 0, providerRequests: 0,
+      stopped: "Translation paused at the request time limit. Retry the remaining rows." };
+  }
   try {
     const result = await translateTextBatch(
       params,
@@ -238,6 +242,9 @@ export const translateRowsByIds = async (ids: number[]): Promise<ProcessResult> 
     return { translated: 0, failed: 0, remaining: 0, providerRequests: 0 };
   }
   const params = await resolveParams();
+  // Leave headroom inside the 60-second route for persistence and response.
+  // Split retries and later groups share this deadline rather than resetting it.
+  params.requestDeadline = Date.now() + 40_000;
   const records: TranslationRecord[] = [];
   for (const id of ids) {
     const record = await store.get(id);
@@ -269,6 +276,7 @@ export const translatePending = async (limit = TRANSLATION_BATCH_SIZE): Promise<
     .filter((record) => record.type === first.type && record.language === first.language)
     .slice(0, Math.min(limit, TRANSLATION_BATCH_SIZE));
   const params = await resolveParams();
+  params.requestDeadline = Date.now() + 40_000;
   const result = await translateRecordBatch(batch, params);
-  return { ...result, remaining: Math.max(0, allPending.length - batch.length) };
+  return { ...result, remaining: Math.max(0, allPending.length - result.translated - result.failed) };
 };
