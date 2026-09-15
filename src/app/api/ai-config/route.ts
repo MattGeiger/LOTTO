@@ -12,13 +12,14 @@ import { createConfig, listConfigs } from "@/lib/ai/ai-config-service";
 import { isEncryptionConfigured } from "@/lib/ai/encryption";
 import { AI_SERVICE_TYPES, UNIT_PRICES } from "@/lib/ai/types";
 import { MAX_TRANSLATION_MAX_OUTPUT_TOKENS } from "@/lib/ai/output-budget";
+import { findCatalogueEntry } from "@/lib/ai/catalogue";
 
 export const runtime = "nodejs";
 
 export const aiConfigInputSchema = z.object({
   name: z.string().min(1).max(100),
   serviceType: z.enum(AI_SERVICE_TYPES),
-  model: z.string().min(1).max(120),
+  model: z.string().trim().min(1).max(120),
   apiKey: z.string().min(1).max(512).optional(),
   inputCost: z.number().min(0).optional(),
   outputCost: z.number().min(0).optional(),
@@ -30,7 +31,10 @@ export const aiConfigInputSchema = z.object({
   inputTokenLimit: z.number().int().min(1).nullable().optional(),
   outputTokenLimit: z.number().int().min(1).nullable().optional(),
   isActive: z.boolean().optional(),
-});
+}).refine((input) => {
+  const entry = findCatalogueEntry(input.model);
+  return input.isActive === false || !entry || entry.provider === input.serviceType;
+}, { message: "The model belongs to a different provider.", path: ["model"] });
 
 export async function GET() {
   try {

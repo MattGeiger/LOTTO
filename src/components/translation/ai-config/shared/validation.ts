@@ -13,7 +13,7 @@ export type ApiKeyValidationResult = { error?: string; warning?: string };
 
 export const validateApiKey = (key: string): ApiKeyValidationResult => {
   if (!key.trim()) return { error: "API key is required" };
-  if (!key.startsWith("sk-") && !key.startsWith("ak-") && !key.startsWith("gsk_") && !key.startsWith("AIza")) {
+  if (!key.startsWith("sk-") && !key.startsWith("ak-") && !key.startsWith("gsk_") && !key.startsWith("AIza") && !key.startsWith("AQ.")) {
     return {
       warning:
         "Unusual API key detected. AI features will not work without a valid API key. Please double-check your input.",
@@ -31,8 +31,8 @@ export function validateApiKeyForService(
 
   const patterns: Partial<Record<AiServiceType, RegExp>> = {
     OpenAI: /^sk(?:-proj)?-[A-Za-z0-9_-]{20,}$/,
-    Anthropic: /^sk-ant-[A-Za-z0-9-]{20,}$/i,
-    Google: /^AIza[0-9A-Za-z_-]{30,60}$/,
+    Anthropic: /^sk-ant-[A-Za-z0-9_-]{20,}$/i,
+    Google: /^(?:AIza[0-9A-Za-z_-]{30,60}|AQ\.[0-9A-Za-z_-]{30,})$/,
   };
 
   const pattern = serviceType ? patterns[serviceType] : undefined;

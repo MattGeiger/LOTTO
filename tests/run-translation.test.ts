@@ -60,6 +60,13 @@ describe("runStagedTranslation", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it("does not advance after a provider failure even when failed rows shrink the queue", async () => {
+    const fetchMock = vi.fn(async () => Response.json({ details: { count: 101 }, processed: { remaining: 1, failed: 100, stopped: "Check provider credits." } }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(runStagedTranslation()).rejects.toThrow("Check provider credits");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it("caps follow-up requests when a queue is larger than the safety budget", async () => {
     let processCalls = 0;
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {

@@ -50,6 +50,8 @@ import {
 } from "@/components/translation/ai-config/system-prompt-dialog";
 import { toPromptConfiguration, type SystemPrompt, type SystemPromptInput } from "@/lib/ai/system-prompt-types";
 import type { AiConfigInput, AiConfigPublic } from "@/lib/ai/types";
+import { findCatalogueEntry } from "@/lib/ai/catalogue";
+import { lifecycleNotice } from "./ai-config/model-notices";
 import { cn } from "@/lib/utils";
 
 type AiModelRow = AiConfigPublic & { configType: "apikey"; originalId: number };
@@ -290,7 +292,13 @@ export function AiConfigTab() {
         accessorKey: "name",
         size: 220,
         header: ({ column }) => <SortableHeader column={column} label="Name" />,
-        cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+        cell: ({ row }) => {
+          const notice = row.original.configType === "apikey" ? lifecycleNotice(findCatalogueEntry(row.original.model)) : null;
+          return <div className="space-y-1">
+            <span className="font-medium">{row.original.name}</span>
+            {notice ? <div><ResponsiveTruncatedText text={notice.detail} title={notice.label} className="text-xs text-muted-foreground" /></div> : null}
+          </div>;
+        },
       },
       {
         accessorKey: "serviceType",
@@ -350,7 +358,7 @@ export function AiConfigTab() {
               triggerLabel={`Open actions for ${row.original.name}`}
               actions={[
                 {
-                  label: "Test key",
+                  label: "Test key and model",
                   icon: ClipboardCheckIcon,
                   onClick: () => void validateExisting(row.original.originalId),
                   disabled: row.original.configType === "prompt" || !row.original.hasApiKey,
@@ -457,7 +465,7 @@ export function AiConfigTab() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <CardDescription className="text-center">
-                    Configure API key, provider model, costs, and usage limits.
+                    Configure an API key, provider model, reference prices, and translation settings.
                   </CardDescription>
                 </CardContent>
               </Card>

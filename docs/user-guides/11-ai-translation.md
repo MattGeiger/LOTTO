@@ -27,10 +27,40 @@ Before translations can run, connect at least one AI provider:
 
 1. Open the **AI Configuration** tab and add a configuration — OpenAI,
    Anthropic, or Google.
-2. Pick a model from the dropdown (cost and token limits fill in
+2. Pick a model from the dropdown (reference prices and token limits fill in
    automatically) or choose Custom for any model ID, then paste an API key.
    Keys are encrypted and never shown again after saving.
-3. Use **Test** to confirm the key works before relying on it.
+3. Complete the six setup steps: Service Configuration, API Credentials,
+   Model Pricing, Token Limits, AI Parameters, and Configuration Details.
+   New configurations start with Google / Gemini 3.5 Flash Lite; you can select
+   another provider or model. Existing configurations keep their saved model.
+4. Use the configuration's Actions menu → **Test key and model**. This free
+   check confirms that the provider accepts the key and can see the selected
+   model. It does not generate a translation or confirm available credit.
+   Saving or activating a configuration does not run a billed test.
+
+### Model pricing and parameters
+
+**Model Pricing** shows reference input/output token rates, which you can edit.
+LOTTO does not track spending or enforce a spending budget. Check actual usage,
+charges, and credits in your provider's API portal. Rates can change, and your
+account's pricing may differ from the catalog.
+
+**AI Parameters** offers controls supported by the selected model. A fixed
+temperature is shown but cannot be changed. Models that reject temperature and
+top-p show an explanation instead of sliders. Some Anthropic models accept only
+one of these settings; LOTTO uses temperature. Reasoning settings are handled
+automatically for translation and do not add another setup step.
+
+### Editing older configurations
+
+Older saved models remain visible, with a notice when a model is legacy,
+deprecated, retired, or in preview. Open **Edit** to review the notice and
+intentionally choose a replacement; LOTTO never switches an active model for
+you. A Custom model ID remains editable. Leave **New API key (optional)** blank
+to keep the encrypted key already saved. Changing models fills in that model's
+reference prices and token limits, so review any previous overrides before
+saving. A failed access check does not prevent deactivation or deletion.
 
 The model's **Output Token Limit** is its advertised technical capability. The
 separate **Translation Output Budget Per Request** controls how much LOTTO may
@@ -61,6 +91,9 @@ If a provider returns malformed structured output, LOTTO splits that batch once
 to isolate the problem. Authentication, quota, network, and provider failures
 are not repeatedly retried in the background; affected rows remain visible so
 staff can correct the configuration or retry them deliberately.
+Staged work stops when a provider reports an access, quota, or availability
+failure. Follow the message, then use Translation Management to retry the
+affected rows and run **Find Missing** again for work that has not completed.
 
 ## What To Read Next
 

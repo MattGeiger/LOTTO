@@ -27,7 +27,7 @@ export const createApiKeySteps = (mode: "add" | "edit"): StepDefinition<ApiKeyCo
   {
     id: "apikey",
     title: "API Credentials",
-    description: mode === "add" ? "Enter API credentials and endpoint" : "API credentials (already configured)",
+    description: mode === "add" ? "Enter API credentials" : "API credentials (already configured)",
     component: ApiKeyStep,
     validate: (data) => {
       if (mode === "edit") return true;
@@ -37,8 +37,8 @@ export const createApiKeySteps = (mode: "add" | "edit"): StepDefinition<ApiKeyCo
   },
   {
     id: "cost",
-    title: "Cost Tracking",
-    description: mode === "add" ? "Set cost tracking parameters" : "Update cost tracking parameters",
+    title: "Model Pricing",
+    description: "Review reference input and output prices",
     component: CostStep,
     isOptional: true,
   },

@@ -8,6 +8,8 @@
 "use client";
 
 import { BotIcon } from "@/components/animate-ui/icons/bot";
+import { findCatalogueEntry } from "@/lib/ai/catalogue";
+import { lifecycleNotice } from "../model-notices";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -49,6 +51,10 @@ const applyModelSpecs = (
 };
 
 export function ServiceStep({ mode, data, onChange, isLoading = false }: BaseStepProps<ApiKeyConfigData>) {
+  const names = getModelNames(data.serviceType);
+  // An existing withdrawn preset must remain named in the controlled select.
+  if (mode === "edit" && data.modelName !== CUSTOM_MODEL && !names.includes(data.modelName)) names.unshift(data.modelName);
+  const notice = lifecycleNotice(findCatalogueEntry(data.modelName === CUSTOM_MODEL ? data.customModel : data.model));
   const handleServiceTypeChange = (serviceType: AiServiceType) => {
     const first = getModelSpecsForService(serviceType)[0];
     onChange({
@@ -100,7 +106,7 @@ export function ServiceStep({ mode, data, onChange, isLoading = false }: BaseSte
             <SelectValue placeholder="Select model name" />
           </SelectTrigger>
           <SelectContent>
-            {getModelNames(data.serviceType).map((name) => (
+            {names.map((name) => (
               <SelectItem key={name} value={name}>
                 {name}
               </SelectItem>
@@ -132,11 +138,12 @@ export function ServiceStep({ mode, data, onChange, isLoading = false }: BaseSte
           <>
             <Input id="model" value={data.model} disabled className="bg-muted" />
             <p className="text-xs text-muted-foreground">
-              Cost and token limits are pre-filled from this model&apos;s template.
+              Reference prices and token limits are pre-filled from this model&apos;s template.
             </p>
           </>
         )}
       </div>
+      {notice ? <p role="note" className="text-sm text-muted-foreground">{notice.detail}</p> : null}
     </StepWrapper>
   );
 }

@@ -47,12 +47,13 @@ export async function runStagedTranslation(
     ...(brandStrings ? { brandStrings } : {}),
   });
   const details = start.details as { count?: number } | undefined;
-  const processed = start.processed as { remaining?: number; failed?: number } | undefined;
+  const processed = start.processed as { remaining?: number; failed?: number; stopped?: string } | undefined;
   const total = details?.count ?? 0;
   let remaining = processed?.remaining ?? 0;
   let failed = processed?.failed ?? 0;
   const emit = () => onProgress?.({ total, done: Math.max(0, total - remaining), remaining, failed });
   emit();
+  if (processed?.stopped) throw new Error(processed.stopped);
 
   // Advance the bounded process endpoint until the queue drains. This is an
   // authenticated, finite job progression after a staff action, not polling:
@@ -66,6 +67,7 @@ export async function runStagedTranslation(
     remaining = (step.remaining as number) ?? 0;
     failed += (step.failed as number) ?? 0;
     emit();
+    if (typeof step.stopped === "string") throw new Error(step.stopped);
     if (remaining >= previousRemaining) {
       throw new Error(
         "Translation preparation paused because the queue did not advance. " +

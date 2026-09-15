@@ -2,12 +2,19 @@
 
 ## Purpose
 
-The Translation card's AI surfaces are intended to match the mature production
-workflow in FEED as closely as LOTTO's app boundaries allow. Staff who use both
-apps should encounter the same setup model, wizard structure, table behavior,
-row actions, and animated icon language.
+The Translation card's AI surfaces reuse FEED's component structure and
+interaction patterns within LOTTO's deliberately simpler product scope. Staff
+who use both apps should recognize the setup, controls, and animated icon
+language. Parity does not require every FEED feature or wizard step; the
+approved LOTTO differences below govern what is included.
 
 ## Source Of Truth
+
+**Approved rc.4 port:** [AI Configuration rc.4 port plan](AI_CONFIGURATION_RC4_PORT_PLAN.md)
+pins FEED `v1.8.0` (`b53e2e5`) as the catalogue and provider-compatibility source
+for the next LOTTO candidate. The local implementation preserves LOTTO's
+simplified experience and excludes usage/cost tracking. Release validation is
+recorded in [rc.4 validation](AI_CONFIGURATION_RC4_VALIDATION.md).
 
 Use FEED as the canonical implementation for these LOTTO surfaces:
 
@@ -32,7 +39,8 @@ Relevant FEED frontend paths:
 
 ## Required Porting Approach
 
-1. Copy FEED's component structure first.
+1. Reuse FEED's component structure first within the approved LOTTO scope;
+   port relevant changes into existing LOTTO components.
 2. Port missing FEED animate-ui icons/utilities before choosing substitutes.
 3. Adapt only at app boundaries: FEED services become LOTTO `fetch` calls to
    Next.js route handlers; FEED backend models map to LOTTO stores/API types.
@@ -44,6 +52,28 @@ Relevant FEED frontend paths:
 
 ## Current Approved LOTTO Deviations
 
+- **Simplified AI Configuration (design intent reaffirmed 2026-09-14):**
+  LOTTO keeps its existing six-step model wizard and configuration list/actions.
+  FEED's additional Thinking Level, Cost Limits, Provider Allowances, and more
+  extensive management controls are not missing LOTTO requirements. Catalogue
+  refreshes should preserve this simplified experience.
+- **Reference pricing, no usage/cost tracking:** LOTTO's limited localization
+  and inventory-display use does not warrant FEED's accounting system. Staff
+  check actual usage and charges in their provider's API portal. Input/output
+  token prices may be shown in AI Configuration; no usage ledger, spending
+  dashboard, billed-failure accounting, or budget enforcement is planned.
+  Existing translation-row metadata stays intact but is not total account
+  spending. Dormant schema fields do not imply planned tracking features.
+  The pricing step is labelled **Model Pricing**, with provider-portal guidance.
+- **Internal reasoning defaults:** LOTTO omits FEED's Thinking Level control.
+  Requests use the copied capability profile's translation default. Old hidden
+  `thinkingLevel: high` values remain stored but are not activated. Unsupported
+  sampling is omitted, fixed temperature is shown disabled, and Claude models
+  that permit only one sampling parameter use temperature.
+- **Free explicit access check:** **Test key and model** looks up the selected
+  model's metadata. Success confirms credentials and visibility only; it does
+  not test generation access or credits. Save and activation do not generate
+  billed responses. Provider failures stop staged work with recovery guidance.
 - LOTTO omits FEED's `classification` system-prompt category because LOTTO has
   no document auto-format/classification workflow.
 - LOTTO uses three app-specific System Prompt categories:
@@ -71,6 +101,13 @@ Relevant FEED frontend paths:
 
 ## Current LOTTO Implementation Map
 
+- FEED catalogue and pure helpers -> `src/lib/ai/catalogue.ts`; old consumer
+  interfaces are retained by `src/lib/ai/model-specs.ts`.
+- FEED provider decisions -> `src/lib/ai/provider-parameters.ts`, shared by
+  single and structured-batch REST requests in `src/lib/ai/translate.ts`.
+- FEED failure classifier -> `src/lib/ai/provider-failure.ts`; model-specific
+  access lookup -> `src/lib/ai/validate.ts`.
+- FEED lifecycle notices -> `src/components/translation/ai-config/model-notices.ts`.
 - FEED `BaseAIConfigDialog` -> `src/components/translation/ai-config/shared/BaseAIConfigDialog.tsx`
 - FEED `StepWrapper` -> `src/components/translation/ai-config/shared/StepWrapper.tsx`
 - FEED `stepDefinitions` -> `src/components/translation/ai-config/shared/stepDefinitions.ts`
@@ -88,7 +125,10 @@ Relevant FEED frontend paths:
 
 Before merging Translation AI UI changes:
 
-- Does the LOTTO component retain the FEED component boundary and step model?
+- Does the LOTTO component retain FEED's component patterns within LOTTO's
+  approved simpler scope, including its six-step model wizard?
+- Are reference prices clearly distinguished from provider usage/billing,
+  without adding FEED-only tracking or management features?
 - Are substitutions documented as approved LOTTO deviations?
 - Are animated icons copied from FEED where FEED has a specific icon?
 - Do action menus, tables, dialogs, and scroll areas preserve FEED behavior?

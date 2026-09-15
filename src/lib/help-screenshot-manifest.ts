@@ -20,7 +20,7 @@ export type HelpScreenshotSize = {
 
 export const HELP_SCREENSHOT_SIZES: Record<string, HelpScreenshotSize> = {
   "advanced-section": { pixelWidth: 1280, pixelHeight: 900, deviceScaleFactor: 1 },
-  "ai-configuration": { pixelWidth: 1104, pixelHeight: 639, deviceScaleFactor: 1 },
+  "ai-configuration": { pixelWidth: 1104, pixelHeight: 663, deviceScaleFactor: 1 },
   "announcement-editor": { pixelWidth: 1104, pixelHeight: 688, deviceScaleFactor: 1 },
   "announcement-formatting": { pixelWidth: 1104, pixelHeight: 678, deviceScaleFactor: 1 },
   "appearance": { pixelWidth: 1280, pixelHeight: 900, deviceScaleFactor: 1 },

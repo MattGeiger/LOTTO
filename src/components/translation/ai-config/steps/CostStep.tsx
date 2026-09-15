@@ -25,7 +25,10 @@ const num = (value: string): number | null => {
 
 export function CostStep({ data, onChange, isLoading = false }: BaseStepProps<ApiKeyConfigData>) {
   return (
-    <StepWrapper icon={SettingsIcon} title="Cost Tracking" description="Set pricing information for cost calculations">
+    <StepWrapper icon={SettingsIcon} title="Model Pricing" description="Reference input and output token prices">
+      <p className="text-sm text-muted-foreground">
+        These rates are reference information. Check actual usage and billing in your provider&apos;s API portal; LOTTO does not track spending.
+      </p>
       <div className="space-y-2">
         <Label htmlFor="unitPrice">Unit Price</Label>
         <Select value={data.unitPrice || "per_1m"} onValueChange={(value) => onChange({ unitPrice: value as "per_1m" | "per_1k" })}>

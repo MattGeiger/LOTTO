@@ -14,10 +14,10 @@ import { validateApiKey } from "@/lib/ai/validate";
 
 export const runtime = "nodejs";
 
-// Validate either a freshly-entered key ({ serviceType, apiKey }) or an existing
+// Validate a fresh key and model ({ serviceType, apiKey, model }) or an existing
 // stored config ({ id }), which is decrypted server-side before the check.
 const schema = z.union([
-  z.object({ serviceType: z.enum(AI_SERVICE_TYPES), apiKey: z.string().min(1).max(512) }),
+  z.object({ serviceType: z.enum(AI_SERVICE_TYPES), apiKey: z.string().min(1).max(512), model: z.string().trim().min(1).max(120) }),
   z.object({ id: z.number().int().positive() }),
 ]);
 
@@ -47,11 +47,11 @@ export async function POST(request: Request) {
           { status: 200 },
         );
       }
-      const result = await validateApiKey(config.serviceType, apiKey);
+      const result = await validateApiKey(config.serviceType, apiKey, config.model);
       return NextResponse.json({ result }, { status: 200 });
     }
 
-    const result = await validateApiKey(parsed.data.serviceType, parsed.data.apiKey);
+    const result = await validateApiKey(parsed.data.serviceType, parsed.data.apiKey, parsed.data.model);
     return NextResponse.json({ result }, { status: 200 });
   } catch (error) {
     console.error("[AIConfig] validate failed:", error);

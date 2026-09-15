@@ -2,7 +2,38 @@
 
 ## [Unreleased]
 
+### Documentation
+
+- **Planned the FEED 1.8.0 AI Configuration port for v2.0.0-rc.4.**
+  `docs/AI_CONFIGURATION_RC4_PORT_PLAN.md` maps the released FEED catalogue and
+  necessary provider compatibility changes into LOTTO's existing six-step
+  wizard and REST adapters. The revised plan and parity/roadmap documents
+  explicitly preserve LOTTO's simpler design: reference input/output prices,
+  provider-portal usage checking, and no built-in cost tracking, budgets, or
+  additional FEED wizard steps. It includes legacy-configuration compatibility,
+  device/live-provider validation, and conditional release/rollback gates.
+  The reduced scope was approved September 14; implementation and validation
+  evidence are tracked alongside the plan. Release gates remain open.
+
 ### Changed
+
+- **Ported FEED 1.8.0's AI catalog into the existing six-step configuration.**
+  One shared catalog supplies 12 current presets and resolves 27 current and
+  historical IDs, including every prior LOTTO preset. New configurations use
+  Gemini 3.5 Flash Lite. Saved models and price overrides remain intact; older
+  models display lifecycle/replacement guidance. **Model Pricing** clarifies
+  reference rates and provider-portal billing without adding cost tracking.
+- **Applied model capabilities to single and batch REST requests.** Supported
+  temperature/top-p settings now reach providers, while unsupported settings
+  are omitted and fixed values are reflected in the UI. Reasoning defaults stay
+  internal; old hidden high settings are not activated. **Test key and model**
+  checks the selected model's visibility without generating a billed response.
+  Provider errors are sanitized, terminal failures stop staged work, and
+  truncated batch output cannot be accepted. Existing batch/write boundaries
+  and the 16,384-token application ceiling remain in force.
+- **Kept the AI wizard visible on short landscape screens.** Its content still
+  uses the normal 480px height, with a viewport cap so the title and footer stay
+  reachable on smaller displays.
 
 - **Made the development palette calibration tool opt-in.** The floating
   `Palette` trigger sat over the top-right corner of every localhost page,

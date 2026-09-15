@@ -146,7 +146,7 @@ export function BaseAIConfigDialog<T extends ConfigData>({
           <DialogDescription>{currentStep.description}</DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="h-[480px]">
+        <ScrollArea className="h-[480px] max-h-[calc(100vh-12rem)]">
           <StepComponent
             mode={mode}
             data={data}

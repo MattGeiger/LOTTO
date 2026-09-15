@@ -130,10 +130,12 @@ describe("/api/ai-config", () => {
 
   it("validate checks a fresh key", async () => {
     const { POST } = await import("@/app/api/ai-config/validate/route");
-    const res = await POST(json({ serviceType: "Anthropic", apiKey: "sk-test" }));
+    const res = await POST(json({ serviceType: "Anthropic", apiKey: "sk-test", model: "claude-sonnet-5" }));
     expect(res.status).toBe(200);
     const body = (await res.json()) as { result: { ok: boolean } };
     expect(body.result.ok).toBe(true);
+    const { validateApiKey } = await import("@/lib/ai/validate");
+    expect(validateApiKey).toHaveBeenCalledWith("Anthropic", "sk-test", "claude-sonnet-5");
   });
 
   it("validate checks a stored config by id", async () => {
@@ -142,5 +144,15 @@ describe("/api/ai-config", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { result: { ok: boolean } };
     expect(body.result.ok).toBe(true);
+    const { validateApiKey } = await import("@/lib/ai/validate");
+    expect(validateApiKey).toHaveBeenCalledWith("Anthropic", "sk-stored", publicConfig.model);
+  });
+
+  it("does not call a provider on Save and rejects active provider mismatches", async () => {
+    const { POST } = await import("@/app/api/ai-config/route");
+    const { validateApiKey } = await import("@/lib/ai/validate");
+    expect((await POST(json(validInput))).status).toBe(201);
+    expect(validateApiKey).not.toHaveBeenCalled();
+    expect((await POST(json({ ...validInput, model: "gpt-5.6-luna" }))).status).toBe(400);
   });
 });

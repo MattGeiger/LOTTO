@@ -9,8 +9,10 @@
 // (no SDK dependency). Batch responses preserve stable row ids so LOTTO can
 // validate every result before writing it to the translation store.
 
+import { providerParameters } from "./provider-parameters";
+import { providerFetch } from "./provider-failure";
 import type { AiServiceType } from "./types";
-import { estimateTranslationBatchOutputTokens } from "./output-budget";
+import { estimateTranslationBatchOutputTokens, normalizeTranslationOutputBudget } from "./output-budget";
 import * as systemPromptStore from "./system-prompt-store";
 
 export type TranslateParams = {
@@ -19,6 +21,7 @@ export type TranslateParams = {
   model: string;
   maxTokens?: number | null;
   temperature?: number | null;
+  topP?: number | null;
   inputCost?: number | null;
   outputCost?: number | null;
   unitPrice?: "per_1m" | "per_1k" | null;
@@ -197,8 +200,6 @@ export const parseBatchTranslations = (
   return expectedItems.map((item) => byId.get(item.id)!);
 };
 
-const isGpt5Family = (model: string): boolean => /(^|[^a-z])gpt-5/i.test(model);
-
 const translateOpenAI = async (
   p: TranslateParams,
   text: string,
@@ -212,23 +213,17 @@ const translateOpenAI = async (
       { role: "user", content: text },
     ],
   };
-  // GPT-5 models require max_completion_tokens and reject custom temperature.
-  if (isGpt5Family(p.model)) {
-    body.max_completion_tokens = p.maxTokens ?? 2048;
-  } else {
-    body.max_tokens = p.maxTokens ?? 2048;
-    if (p.temperature != null) body.temperature = p.temperature;
-  }
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  Object.assign(body, providerParameters(p, p.maxTokens ?? 2048));
+  const res = await providerFetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${p.apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`OpenAI translation failed (HTTP ${res.status}).`);
   const data = (await res.json()) as {
-    choices?: { message?: { content?: string } }[];
+    choices?: { finish_reason?: string; message?: { content?: string; refusal?: string } }[];
     usage?: { prompt_tokens?: number; completion_tokens?: number };
   };
+  if (data.choices?.[0]?.finish_reason === "length") throw new Error("OpenAI output reached the translation budget. Try a smaller batch.");
   const out = data.choices?.[0]?.message?.content?.trim();
   if (!out) throw new Error("OpenAI returned an empty translation.");
   return {
@@ -244,7 +239,7 @@ const translateAnthropic = async (
   targetLanguage: string,
 ): Promise<TranslateResult> => {
   const systemPrompt = await buildCustomSystemPrompt(targetLanguage);
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await providerFetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "x-api-key": p.apiKey,
@@ -253,16 +248,17 @@ const translateAnthropic = async (
     },
     body: JSON.stringify({
       model: p.model,
-      max_tokens: p.maxTokens ?? 2048,
+      ...providerParameters(p, p.maxTokens ?? 2048),
       system: systemPrompt,
       messages: [{ role: "user", content: text }],
     }),
   });
-  if (!res.ok) throw new Error(`Anthropic translation failed (HTTP ${res.status}).`);
   const data = (await res.json()) as {
+    stop_reason?: string;
     content?: { type: string; text?: string }[];
     usage?: { input_tokens?: number; output_tokens?: number };
   };
+  if (data.stop_reason === "max_tokens") throw new Error("Anthropic output reached the translation budget. Try a smaller batch.");
   const out = data.content?.find((c) => c.type === "text")?.text?.trim();
   if (!out) throw new Error("Anthropic returned an empty translation.");
   return {
@@ -280,22 +276,22 @@ const translateGoogle = async (
   const systemPrompt = await buildCustomSystemPrompt(targetLanguage);
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
     p.model,
-  )}:generateContent?key=${encodeURIComponent(p.apiKey)}`;
-  const res = await fetch(url, {
+  )}:generateContent`;
+  const res = await providerFetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-goog-api-key": p.apiKey },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: [{ role: "user", parts: [{ text }] }],
-      generationConfig: { maxOutputTokens: p.maxTokens ?? 2048 },
+      generationConfig: providerParameters(p, p.maxTokens ?? 2048),
     }),
   });
-  if (!res.ok) throw new Error(`Google translation failed (HTTP ${res.status}).`);
   const data = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    candidates?: { finishReason?: string; content?: { parts?: { text?: string; thought?: boolean }[] } }[];
     usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
   };
-  const out = data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("").trim();
+  if (data.candidates?.[0]?.finishReason === "MAX_TOKENS") throw new Error("Google output reached the translation budget. Try a smaller batch.");
+  const out = data.candidates?.[0]?.content?.parts?.filter((part) => !part.thought).map((part) => part.text ?? "").join("").trim();
   if (!out) throw new Error("Google returned an empty translation.");
   return {
     text: out,
@@ -319,22 +315,18 @@ const translateBatchOpenAI = async (
     ],
     response_format: { type: "json_object" },
   };
-  if (isGpt5Family(p.model)) {
-    body.max_completion_tokens = maxOutputTokens;
-  } else {
-    body.max_tokens = maxOutputTokens;
-    if (p.temperature != null) body.temperature = p.temperature;
-  }
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  Object.assign(body, providerParameters(p, maxOutputTokens));
+  const res = await providerFetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${p.apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`OpenAI batch translation failed (HTTP ${res.status}).`);
   const data = (await res.json()) as {
-    choices?: { message?: { content?: string } }[];
+    choices?: { finish_reason?: string; message?: { content?: string; refusal?: string } }[];
     usage?: { prompt_tokens?: number; completion_tokens?: number };
   };
+  if (data.choices?.[0]?.finish_reason === "length") throw new BatchResponseValidationError("OpenAI output reached the translation budget.");
+  if (data.choices?.[0]?.message?.refusal) throw new Error("OpenAI declined this translation. Review the source text.");
   const raw = data.choices?.[0]?.message?.content;
   if (!raw) throw new BatchResponseValidationError("OpenAI returned an empty batch translation.");
   return {
@@ -352,7 +344,7 @@ const translateBatchAnthropic = async (
   maxOutputTokens: number,
 ): Promise<TranslateBatchResult> => {
   const systemPrompt = await buildCustomSystemPrompt(targetLanguage, BATCH_OUTPUT_INSTRUCTION);
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await providerFetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "x-api-key": p.apiKey,
@@ -361,16 +353,17 @@ const translateBatchAnthropic = async (
     },
     body: JSON.stringify({
       model: p.model,
-      max_tokens: maxOutputTokens,
+      ...providerParameters(p, maxOutputTokens),
       system: systemPrompt,
       messages: [{ role: "user", content: batchUserContent(items) }],
     }),
   });
-  if (!res.ok) throw new Error(`Anthropic batch translation failed (HTTP ${res.status}).`);
   const data = (await res.json()) as {
+    stop_reason?: string;
     content?: { type: string; text?: string }[];
     usage?: { input_tokens?: number; output_tokens?: number };
   };
+  if (data.stop_reason === "max_tokens") throw new BatchResponseValidationError("Anthropic output reached the translation budget.");
   const raw = data.content?.find((content) => content.type === "text")?.text;
   if (!raw) throw new BatchResponseValidationError("Anthropic returned an empty batch translation.");
   return {
@@ -390,27 +383,27 @@ const translateBatchGoogle = async (
   const systemPrompt = await buildCustomSystemPrompt(targetLanguage, BATCH_OUTPUT_INSTRUCTION);
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
     p.model,
-  )}:generateContent?key=${encodeURIComponent(p.apiKey)}`;
-  const res = await fetch(url, {
+  )}:generateContent`;
+  const res = await providerFetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-goog-api-key": p.apiKey },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: [{ role: "user", parts: [{ text: batchUserContent(items) }] }],
       generationConfig: {
-        maxOutputTokens,
+        ...providerParameters(p, maxOutputTokens),
         responseMimeType: "application/json",
         responseSchema: batchResponseSchema,
       },
     }),
   });
-  if (!res.ok) throw new Error(`Google batch translation failed (HTTP ${res.status}).`);
   const data = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    candidates?: { finishReason?: string; content?: { parts?: { text?: string; thought?: boolean }[] } }[];
     usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
   };
+  if (data.candidates?.[0]?.finishReason === "MAX_TOKENS") throw new BatchResponseValidationError("Google output reached the translation budget.");
   const raw = data.candidates?.[0]?.content?.parts
-    ?.map((part) => part.text ?? "")
+    ?.filter((part) => !part.thought).map((part) => part.text ?? "")
     .join("")
     .trim();
   if (!raw) throw new BatchResponseValidationError("Google returned an empty batch translation.");
@@ -447,7 +440,7 @@ export const translateTextBatch = async (
   if (items.length === 0) {
     return { translations: [], promptTokens: 0, completionTokens: 0, maxOutputTokens: 0 };
   }
-  const configuredMaxTokens = params.maxTokens ?? 8_192;
+  const configuredMaxTokens = normalizeTranslationOutputBudget(params.maxTokens);
   const maxOutputTokens = estimateTranslationBatchOutputTokens(
     items.map((item) => item.text),
     configuredMaxTokens,

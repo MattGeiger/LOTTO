@@ -9,7 +9,7 @@
 
 import * as React from "react";
 
-import { getModelSpecByModel, getServiceEndpoint, GOOGLE_MODEL_SPECS } from "@/lib/ai/model-specs";
+import { DEFAULT_MODEL_SPEC, getModelSpecByModel, getServiceEndpoint } from "@/lib/ai/model-specs";
 import {
   normalizeTranslationOutputBudget,
   recommendedTranslationOutputBudget,
@@ -22,13 +22,13 @@ import type { ApiKeyConfigData } from "./shared/types";
 
 export type AiConfigDialogMode = "add" | "edit";
 
-const defaultGoogleSpec = GOOGLE_MODEL_SPECS.find((spec) => spec.name === "gemini-2.5-flash-lite") ?? GOOGLE_MODEL_SPECS[0];
+const defaultGoogleSpec = DEFAULT_MODEL_SPEC;
 
 const initialData = (): ApiKeyConfigData => ({
   type: "apikey",
   serviceType: "Google",
-  model: defaultGoogleSpec?.model ?? "gemini-2.5-flash-lite",
-  modelName: defaultGoogleSpec?.name ?? "gemini-2.5-flash-lite",
+  model: defaultGoogleSpec.model,
+  modelName: defaultGoogleSpec.name,
   customModel: "",
   customModelName: "",
   apiKey: "",
@@ -44,7 +44,7 @@ const initialData = (): ApiKeyConfigData => ({
   value: "",
   temperature: 0.7,
   topP: 1,
-  thinkingLevel: "high",
+  thinkingLevel: null,
   isActive: true,
 });
 
@@ -67,7 +67,7 @@ const fromConfig = (config: AiConfigPublic): Partial<ApiKeyConfigData> => {
     maxTokens: normalizeTranslationOutputBudget(config.maxTokens, config.outputTokenLimit),
     temperature: config.temperature ?? 0.7,
     topP: config.topP ?? 1,
-    thinkingLevel: (config.thinkingLevel as ApiKeyConfigData["thinkingLevel"]) ?? "high",
+    thinkingLevel: (config.thinkingLevel as ApiKeyConfigData["thinkingLevel"]) ?? null,
     isActive: config.isActive,
   };
 };

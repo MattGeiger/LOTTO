@@ -13,6 +13,7 @@ import { randomUUID } from "node:crypto";
 import { decryptApiKey } from "@/lib/ai/encryption";
 import { getActiveConfig } from "@/lib/ai/ai-config-service";
 import { normalizeTranslationOutputBudget } from "@/lib/ai/output-budget";
+import { ProviderFailureError } from "@/lib/ai/provider-failure";
 import {
   BatchResponseValidationError,
   translateTextBatch,
@@ -40,6 +41,7 @@ const resolveParams = async (): Promise<TranslateParams> => {
     model: config.model,
     maxTokens: normalizeTranslationOutputBudget(config.maxTokens, config.outputTokenLimit),
     temperature: config.temperature,
+    topP: config.topP,
     inputCost: config.inputCost,
     outputCost: config.outputCost,
     unitPrice: config.unitPrice,
@@ -51,6 +53,7 @@ export type ProcessResult = {
   failed: number;
   remaining: number;
   providerRequests: number;
+  stopped?: string;
 };
 
 // Process content in stages (spec): deployment-authored visitor copy is small
@@ -192,15 +195,23 @@ const translateRecordBatch = async (
     ) {
       const middle = Math.ceil(records.length / 2);
       const left = await translateRecordBatch(records.slice(0, middle), params, false);
+      if (left.stopped) {
+        await store.bulkUpdate(failedPatches(records.slice(middle), params, new Error(left.stopped)));
+        return { ...left, failed: left.failed + records.length - middle, providerRequests: 1 + left.providerRequests };
+      }
       const right = await translateRecordBatch(records.slice(middle), params, false);
       return {
         translated: left.translated + right.translated,
         failed: left.failed + right.failed,
         providerRequests: 1 + left.providerRequests + right.providerRequests,
+        ...(right.stopped ? { stopped: right.stopped } : {}),
       };
     }
     await store.bulkUpdate(failedPatches(records, params, error));
-    return { translated: 0, failed: records.length, providerRequests: 1 };
+    return {
+      translated: 0, failed: records.length, providerRequests: 1,
+      ...(error instanceof ProviderFailureError ? { stopped: error.message } : {}),
+    };
   }
 };
 
@@ -235,14 +246,16 @@ export const translateRowsByIds = async (ids: number[]): Promise<ProcessResult> 
   let translated = 0;
   let failed = 0;
   let providerRequests = 0;
+  let stopped: string | undefined;
   for (const batch of groupsOf(records)) {
     const result = await translateRecordBatch(batch, params);
     translated += result.translated;
     failed += result.failed;
     providerRequests += result.providerRequests;
+    if (result.stopped) { stopped = result.stopped; break; }
   }
   const remaining = (await store.list({ status: "pending" })).length;
-  return { translated, failed, remaining, providerRequests };
+  return { translated, failed, remaining, providerRequests, ...(stopped ? { stopped } : {}) };
 };
 
 // Translate one highest-priority same-language/content batch; reports how many

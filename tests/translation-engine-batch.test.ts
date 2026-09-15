@@ -54,6 +54,8 @@ describe("translation engine batching", () => {
       inputTokenLimit: 1_048_576,
       outputTokenLimit: 65_536,
       temperature: 0.7,
+      topP: 0,
+      thinkingLevel: "high",
       inputCost: 0.1,
       outputCost: 0.4,
       unitPrice: "per_1m",
@@ -88,6 +90,8 @@ describe("translation engine batching", () => {
     expect(mocks.translateTextBatch).toHaveBeenCalledTimes(1);
     expect(mocks.translateTextBatch.mock.calls[0][1]).toHaveLength(100);
     expect(mocks.translateTextBatch.mock.calls[0][0].maxTokens).toBe(8_192);
+    expect(mocks.translateTextBatch.mock.calls[0][0].topP).toBe(0);
+    expect(mocks.translateTextBatch.mock.calls[0][0]).not.toHaveProperty("thinkingLevel");
     expect(mocks.bulkUpdate).toHaveBeenCalledTimes(1);
     const patches = mocks.bulkUpdate.mock.calls[0][0] as Array<{
       promptTokens: number;
@@ -98,6 +102,18 @@ describe("translation engine batching", () => {
     expect(patches.reduce((sum, patch) => sum + patch.promptTokens, 0)).toBe(1_000);
     expect(patches.reduce((sum, patch) => sum + patch.completionTokens, 0)).toBe(500);
     expect(patches.every((patch) => patch.metadata.batchSize === 100)).toBe(true);
+  });
+
+  it("stops the job after a provider refusal and preserves previous row metadata", async () => {
+    const { ProviderFailureError } = await import("@/lib/ai/provider-failure");
+    const { translatePending } = await import("@/lib/translation/engine");
+    mocks.list.mockResolvedValue(Array.from({ length: 101 }, (_, i) => ({ ...row(i + 1), totalCost: 0.12 })));
+    mocks.translateTextBatch.mockRejectedValue(new ProviderFailureError("exhausted", 429));
+    const result = await translatePending();
+    expect(result).toMatchObject({ providerRequests: 1, failed: 100, remaining: 1 });
+    expect(result.stopped).toContain("API portal");
+    expect(mocks.translateTextBatch).toHaveBeenCalledTimes(1);
+    expect(mocks.bulkUpdate.mock.calls[0][0][0].totalCost).toBe(0.12);
   });
 
   it("splits an invalid structured response once without retrying HTTP failures", async () => {
