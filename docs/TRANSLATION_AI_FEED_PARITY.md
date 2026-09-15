@@ -12,7 +12,7 @@ approved LOTTO differences below govern what is included.
 
 **Approved rc.4 port:** [AI Configuration rc.4 port plan](AI_CONFIGURATION_RC4_PORT_PLAN.md)
 pins FEED `v1.8.0` (`b53e2e5`) as the catalogue and provider-compatibility source
-for the next LOTTO candidate. The local implementation preserves LOTTO's
+for LOTTO rc.4. The production implementation preserves LOTTO's
 simplified experience and excludes usage/cost tracking. Release validation is
 recorded in [rc.4 validation](AI_CONFIGURATION_RC4_VALIDATION.md).
 

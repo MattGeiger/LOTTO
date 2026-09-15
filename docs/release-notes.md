@@ -1,7 +1,7 @@
 
-## Unreleased
+## Version 2.0.0-rc.4 — September 14, 2026
 
-The approved rc.4 AI Configuration port is live on WTH for acceptance testing. It
+RC.4 refreshes AI Configuration on William Temple House's production app. It
 brings FEED 1.8.0's current model catalog into LOTTO's familiar six-step setup,
 adds lifecycle guidance for older saved models, and makes existing parameter
 controls follow each model's capabilities. The pricing step is now **Model
@@ -9,7 +9,8 @@ Pricing**; LOTTO continues to leave actual usage and billing to provider portals
 **Test key and model** checks credentials and selected-model visibility for
 free, with clear limits on what that confirms. See
 [the validation record](AI_CONFIGURATION_RC4_VALIDATION.md) for hosted evidence
-and the remaining acceptance steps before the GitHub prerelease is published.
+and model/device limitations. Existing keys, selected models and price overrides
+are preserved; switching to a newer model is a deliberate staff action.
 
 ## Version 2.0.0-rc.2 — September 3, 2026
 

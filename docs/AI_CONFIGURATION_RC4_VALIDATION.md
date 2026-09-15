@@ -1,9 +1,10 @@
 # AI Configuration rc.4 validation
 
-**Checkpoint:** September 14, 2026. Candidate `9483871` is deployed to WTH
-production for the user-approved live acceptance test. It is on
-`codex/ai-configuration-rc4`, based on `6134c0a`. No rc.4 tag or GitHub prerelease
-has been published yet; authenticated hosted wizard acceptance is still open.
+**Checkpoint:** September 14, 2026. Authenticated WTH production acceptance
+passed on candidate `9483871`. The rc.4 release is on
+`codex/ai-configuration-rc4`, based on `6134c0a`. The GitHub prerelease's
+verification attachment records the final tagged commit and Vercel deployment;
+the remaining commits after acceptance contain documentation and evidence only.
 
 ## Scope and provenance
 
@@ -14,8 +15,9 @@ provider decisions derive from FEED `v1.8.0` at
 `b53e2e5c587a1df3a5bf6a20dd4f4f37f860d507`.
 
 LOTTO adaptations retain Next.js routes, REST requests, existing file/Neon
-stores, and internal translation defaults. No dependency, database schema,
-production credential, or production model configuration was changed.
+stores, and internal translation defaults. No dependency or database schema
+changed. Existing production credentials and model configurations were preserved;
+one disposable inactive configuration exercised the hosted persistence path.
 
 ## Automated checks
 
@@ -35,14 +37,15 @@ hidden-high isolation, selected-model metadata lookup, sanitized failures,
 no billed Save, truncated responses, terminal queue stop, and preserved row
 metadata. Dialog coverage traverses all six steps with a legacy model, custom
 reference prices, blank replacement key, and zero parameters.
-Storage coverage exercises a real temporary file round trip and the Neon
-adapter's mocked SQL boundary; it does not claim a live Neon transaction.
+Automated storage coverage exercises a real temporary file round trip and the
+Neon adapter's mocked SQL boundary. The authenticated production acceptance
+below separately verifies the hosted Neon create/edit/delete path.
 
 The smoke script reported resource 404s and no `<main>` during initial Home
 onboarding. A separate Computer-driven built-page check advanced Language →
 Announcement → ticket entry → **I'm just looking**, displayed Home correctly,
-and showed no captured browser errors. These observations are not a substitute
-for authenticated preview checks with the deployed services.
+and showed no captured browser errors. Hosted service acceptance is recorded
+separately below, on production as explicitly requested by the user.
 
 ## Live free model access
 
@@ -145,7 +148,7 @@ These are reference-price checks, not account-specific billing verification.
   host-menu actions and device keyboard input work. Full touch/wizard acceptance,
   portrait/landscape, and physical iPad testing remain incomplete.
 
-## Remaining release gates
+## Hosted production acceptance
 
 ### WTH production deployment and smoke
 
@@ -158,19 +161,32 @@ These are reference-price checks, not account-specific billing verification.
   Login displays rc.4; robots still allows crawling. An unauthenticated AI
   configuration POST returned 401. The deployed hydration smoke passed.
 - Public state and both existing AI configuration responses remained identical
-  to pre-deployment snapshots. Saved Google 2.5 Flash Lite (inactive) and GPT-5
-  Mini (active) were not changed; no test configurations have been inserted.
+  to pre-deployment snapshots after acceptance. Saved Google 2.5 Flash Lite
+  (inactive) and GPT-5 Mini (active) were not changed.
 - Safari's existing staff session loads rc.4 Admin and **Persistence confirmed**.
   The iOS 15.4 iPad Simulator loads the production rc.4 login and responds to
   sign-in tab selection and email input; see the
   [production-device capture](validation/ai-config-rc4/ipad-ios15-production-login.png).
   Full authenticated legacy wizard and
   touch acceptance remain unverified.
-- Native Computer pointer operations report `noWindowsAvailable`; native AX
-  actions cannot reliably activate the AI tab. An in-app browser completes the
-  real OTP request, but its staff session still awaits the emailed code. No
-  authentication bypass is used. Hosted CRUD and the release tag remain pending
-  that acceptance step.
+- The authenticated in-app browser completed all six steps and created an
+  inactive Google 3.5 Flash Lite configuration using the supplied temporary key.
+  The saved record retained `topP: 0`, the 8,192-token application budget, and
+  the selected catalog limits and prices. Editing its input price to 0.31 with
+  the replacement key blank preserved access and the zero-valued parameter.
+- **Test key and model** passed for the selected Google model. Changing only
+  the disposable record to an unavailable custom model made the same action
+  fail with the expected key/model recovery guidance. That record remained
+  editable. Four metadata checks made no generation requests.
+- The disposable record (id 4) was deleted through the confirmation dialog and
+  disappeared from the public list. Neon uses a soft delete. The original two
+  records and public state exactly matched their pre-test snapshots afterward.
+- The active legacy OpenAI configuration reopened with its exact saved model
+  selected, lifecycle/replacement guidance, and current OpenAI choices. Its
+  edit was cancelled. A new unsaved Anthropic configuration showed all four
+  current choices and was also cancelled. Captured browser warnings/errors
+  were empty. See the [acceptance results](validation/ai-config-rc4/production-acceptance.json)
+  and [final configuration screen](validation/ai-config-rc4/production-ai-config.png).
 
 The user explicitly replaced beta/preview testing with WTH production testing.
 The CLI and Safari both confirm the target project is `wthlotto`. Its existing
@@ -178,12 +194,11 @@ deployment `dpl_BW9YQMBw2WywY5yKUEUw8EJFqFVS` is the rollback target.
 St. Johns shares the Git repository, so deployment must be scoped directly to
 WTH instead of triggering both projects through `main`.
 
-1. Verify the final corrections with tests, build, legacy scan and smoke.
-2. Deploy the candidate to WTH and exercise authenticated configuration CRUD,
-   existing-model recovery and selected-model checks without replacing active
-   production credentials. Verify public pages and the legacy Simulator.
-3. Record exact deployment/commit identity, complete release documentation,
-   publish the rc.4 tag and GitHub prerelease after hosted validation.
+The implementation checks and hosted acceptance are complete. The release
+publishes `v2.0.0-rc.4` as a GitHub prerelease and deploys its clean tracked source
+directly to WTH. Its verification attachment records the exact final identities
+and post-deployment checks without requiring a self-referential commit hash in
+this document.
 
 The stable-v2 realtime acceptance program remains separate. Temporary test
 keys must never replace production credentials during this work.

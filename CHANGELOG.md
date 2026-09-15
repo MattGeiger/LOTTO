@@ -2,15 +2,19 @@
 
 ## [Unreleased]
 
+## [2.0.0-rc.4] - 2026-09-14
+
 ### Documentation
 
 - **Recorded the approved $5 live-test budget and WTH production test.**
   Candidate `9483871` is deployed directly to `wthlotto`, preserving the other
   agency's deployment. Generation passed on 11 models and 100-row batches on
   all three providers; Opus returned explicit refusals. The conservative test
-  charge bound is $1.53315. Hosted public smoke and unchanged production-state
-  checks passed; authenticated wizard acceptance and the GitHub prerelease are
-  still pending. See `docs/AI_CONFIGURATION_RC4_VALIDATION.md`.
+  charge bound is $1.53315. Hosted public smoke, authenticated six-step CRUD,
+  blank-key preservation, selected-model failure/recovery, and unchanged
+  production-state checks passed. The disposable inactive record was removed.
+  See `docs/AI_CONFIGURATION_RC4_VALIDATION.md` for evidence and the remaining
+  Opus/physical-device limitations.
 
 - **Planned the FEED 1.8.0 AI Configuration port for v2.0.0-rc.4.**
   `docs/AI_CONFIGURATION_RC4_PORT_PLAN.md` maps the released FEED catalogue and
@@ -21,7 +25,8 @@
   additional FEED wizard steps. It includes legacy-configuration compatibility,
   device/live-provider validation, and conditional release/rollback gates.
   The reduced scope was approved September 14; implementation and validation
-  evidence are tracked alongside the plan. Release gates remain open.
+  evidence are tracked alongside the plan. Staff Help and screenshots describe
+  the shipped workflow; the stable-v2 acceptance program remains separate.
 
 ### Changed
 

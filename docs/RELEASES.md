@@ -1,16 +1,35 @@
-# Unreleased
+# LOTTO v2.0.0-rc.4
 
-## rc.4 AI Configuration checkpoint
+**Release Date:** September 14, 2026 (WTH production release candidate)
 
-The approved FEED 1.8.0 catalog port is deployed to WTH for live acceptance with LOTTO's six-step
-wizard, reference pricing, selected-model visibility check, and provider-aware
-REST parameters. No built-in usage or spending tracker is included. See the
-[implementation plan](AI_CONFIGURATION_RC4_PORT_PLAN.md) and
-[validation record](AI_CONFIGURATION_RC4_VALIDATION.md). The user approved a $5
-test budget and production testing instead of beta/preview. Candidate `9483871`
-is live at `williamtemple.app`; hosted authenticated wizard acceptance and the
-rc.4 GitHub tag/prerelease remain pending. Production configuration and queue
-snapshots are unchanged. The previous WTH deployment remains available for rollback.
+RC.4 ports FEED 1.8.0's model catalog and provider compatibility into LOTTO's
+existing six-step configuration. It offers 12 presets, preserves all older
+saved model IDs, explains lifecycle/replacement choices, and makes supported
+parameters reach the selected provider. Model Pricing contains reference rates;
+LOTTO does not add spending tracking. Test key and model checks visibility for
+free and explains that generation and available credit remain untested.
+
+The user approved production acceptance instead of beta/preview. The real Neon
+workflow passed create-inactive, edit, blank-key preservation, zero-valued top-p,
+reference-rate overrides, selected-model success/failure, recovery and cleanup.
+Existing production credentials, active model, and queue state were preserved.
+The full suite passed 963 tests; build, 48-chunk legacy scan, hosted hydration
+smoke, and iOS 15.4 login interactivity passed. Generation succeeded on 11 models
+and 100-row batches on all three providers. Opus returned explicit refusals
+with the test key; successful Opus generation remains unverified. Physical iPad
+and full legacy touch/wizard acceptance remain part of the documented device
+limitations, not a claim made by the modern-browser tests.
+
+Release only the WTH Vercel project from the rc.4 tag. `main` still represents
+the shared pre-port deployment baseline for the other agency: reconcile this
+release branch before any future `main`-based WTH deployment. Roll back WTH to
+`dpl_BW9YQMBw2WywY5yKUEUw8EJFqFVS` if necessary; no schema migration needs
+reverting. The GitHub prerelease's verification attachment records its exact
+commit and final Vercel deployment identity.
+
+See the [implementation plan](AI_CONFIGURATION_RC4_PORT_PLAN.md) and
+[validation record](AI_CONFIGURATION_RC4_VALIDATION.md). Stable-v2 realtime
+acceptance and the future Pro-account migration remain separate.
 
 # LOTTO v2.0.0-rc.3
 

@@ -1,0 +1,25 @@
+{
+  "testedAt": "2026-09-15T05:37:47.535Z",
+  "candidate": "94838713096029b157e7b258e759a59931dbcb04",
+  "productionStateUnchanged": true,
+  "originalConfigurationsUnchanged": true,
+  "remainingConfigurationIds": [
+    2,
+    3
+  ],
+  "temporaryConfigId": 4,
+  "temporaryConfigRemoved": true,
+  "generationRequestsThisAcceptancePass": 0,
+  "checks": [
+    "six-step create inactive",
+    "selected Google model access",
+    "top-p zero persistence",
+    "blank key edit retains working key",
+    "reference rate override persists",
+    "unavailable custom model fails selected-model check",
+    "custom model remains editable",
+    "temporary record removed",
+    "existing active legacy model and replacements visible",
+    "12 offered presets visible across provider selectors"
+  ]
+}
