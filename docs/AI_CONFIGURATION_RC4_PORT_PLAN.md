@@ -1,8 +1,8 @@
 # AI Configuration: FEED catalogue port for LOTTO v2.0.0-rc.4
 
-**Status:** Approved September 14, 2026; implemented locally, release validation in progress.
+**Status:** Approved September 14, 2026; implemented and deployed to WTH for live acceptance.
 **Reviewed/revised:** September 14, 2026.
-**Candidate version:** `2.0.0-rc.4`; not released. Production remains rc.3.
+**Candidate version:** `2.0.0-rc.4`; live production test, GitHub prerelease pending.
 **Approach:** WITHIN LOTTO's simplified FEED-derived UI, REST adapters, and
 file/Neon stores. The user's confirmed design intent governs which FEED
 features belong in LOTTO.

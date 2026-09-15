@@ -1,9 +1,9 @@
 # AI Configuration rc.4 validation
 
-**Checkpoint:** September 14, 2026. Implementation is local on
-`codex/ai-configuration-rc4`, based on `6134c0a`. Release validation is incomplete;
-no rc.4 tag, GitHub release, or production promotion has occurred. Local
-package/lock metadata is rc.4; production remains rc.3.
+**Checkpoint:** September 14, 2026. Candidate `9483871` is deployed to WTH
+production for the user-approved live acceptance test. It is on
+`codex/ai-configuration-rc4`, based on `6134c0a`. No rc.4 tag or GitHub prerelease
+has been published yet; authenticated hosted wizard acceptance is still open.
 
 ## Scope and provenance
 
@@ -146,6 +146,31 @@ These are reference-price checks, not account-specific billing verification.
   portrait/landscape, and physical iPad testing remain incomplete.
 
 ## Remaining release gates
+
+### WTH production deployment and smoke
+
+- Deployment: `dpl_ZxgFK75y9VY95hM9x56FGeB8pA6v`, Ready, serving
+  `https://williamtemple.app` from candidate `9483871`.
+- The CLI uploaded a clean `git archive` of tracked candidate source. Local env
+  files, test keys, local data and build outputs were not included. Vercel used
+  the existing WTH production environment; no environment settings changed.
+- Home, login, Display, Inventory, Arcade, Help and robots returned HTTP 200.
+  Login displays rc.4; robots still allows crawling. An unauthenticated AI
+  configuration POST returned 401. The deployed hydration smoke passed.
+- Public state and both existing AI configuration responses remained identical
+  to pre-deployment snapshots. Saved Google 2.5 Flash Lite (inactive) and GPT-5
+  Mini (active) were not changed; no test configurations have been inserted.
+- Safari's existing staff session loads rc.4 Admin and **Persistence confirmed**.
+  The iOS 15.4 iPad Simulator loads the production rc.4 login and responds to
+  sign-in tab selection and email input; see the
+  [production-device capture](validation/ai-config-rc4/ipad-ios15-production-login.png).
+  Full authenticated legacy wizard and
+  touch acceptance remain unverified.
+- Native Computer pointer operations report `noWindowsAvailable`; native AX
+  actions cannot reliably activate the AI tab. An in-app browser completes the
+  real OTP request, but its staff session still awaits the emailed code. No
+  authentication bypass is used. Hosted CRUD and the release tag remain pending
+  that acceptance step.
 
 The user explicitly replaced beta/preview testing with WTH production testing.
 The CLI and Safari both confirm the target project is `wthlotto`. Its existing

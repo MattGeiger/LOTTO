@@ -2,13 +2,15 @@
 
 ## rc.4 AI Configuration checkpoint
 
-The approved FEED 1.8.0 catalog port is implemented locally with LOTTO's six-step
+The approved FEED 1.8.0 catalog port is deployed to WTH for live acceptance with LOTTO's six-step
 wizard, reference pricing, selected-model visibility check, and provider-aware
 REST parameters. No built-in usage or spending tracker is included. See the
 [implementation plan](AI_CONFIGURATION_RC4_PORT_PLAN.md) and
-[validation record](AI_CONFIGURATION_RC4_VALIDATION.md). The current release
-remains rc.3 until live generation, preview/device validation, final metadata,
-and conditional release gates are complete.
+[validation record](AI_CONFIGURATION_RC4_VALIDATION.md). The user approved a $5
+test budget and production testing instead of beta/preview. Candidate `9483871`
+is live at `williamtemple.app`; hosted authenticated wizard acceptance and the
+rc.4 GitHub tag/prerelease remain pending. Production configuration and queue
+snapshots are unchanged. The previous WTH deployment remains available for rollback.
 
 # LOTTO v2.0.0-rc.3
 

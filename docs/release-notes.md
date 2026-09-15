@@ -1,14 +1,15 @@
 
 ## Unreleased
 
-The approved rc.4 AI Configuration port is undergoing local validation. It
+The approved rc.4 AI Configuration port is live on WTH for acceptance testing. It
 brings FEED 1.8.0's current model catalog into LOTTO's familiar six-step setup,
 adds lifecycle guidance for older saved models, and makes existing parameter
 controls follow each model's capabilities. The pricing step is now **Model
 Pricing**; LOTTO continues to leave actual usage and billing to provider portals.
 **Test key and model** checks credentials and selected-model visibility for
 free, with clear limits on what that confirms. See
-[the validation record](AI_CONFIGURATION_RC4_VALIDATION.md) for release gates.
+[the validation record](AI_CONFIGURATION_RC4_VALIDATION.md) for hosted evidence
+and the remaining acceptance steps before the GitHub prerelease is published.
 
 ## Version 2.0.0-rc.2 — September 3, 2026
 
