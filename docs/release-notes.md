@@ -8,7 +8,7 @@ controls follow each model's capabilities. The pricing step is now **Model
 Pricing**; LOTTO continues to leave actual usage and billing to provider portals.
 **Test key and model** checks credentials and selected-model visibility for
 free, with clear limits on what that confirms. See
-[the validation record](AI_CONFIGURATION_RC4_VALIDATION.md) for hosted evidence
+[the validation record](https://github.com/MattGeiger/LOTTO/blob/v2.0.0-rc.4/docs/AI_CONFIGURATION_RC4_VALIDATION.md) for hosted evidence
 and model/device limitations. Existing keys, selected models and price overrides
 are preserved; switching to a newer model is a deliberate staff action.
 
