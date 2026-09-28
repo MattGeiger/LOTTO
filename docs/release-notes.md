@@ -1,3 +1,23 @@
+## Version 2.0.0-rc.5 — September 28, 2026
+
+- **Idle displays avoid unnecessary database wake-ups.** Public screens using
+  realtime now load and recover their queue from Cloudflare snapshots. A lost
+  connection no longer sends those screens back to repeated Neon database reads,
+  including outside service hours.
+- **Brief interruptions get time to recover.** Displays keep the last valid
+  queue visible and allow two minutes for the live connection to return. If it
+  remains unavailable, they check Cloudflare snapshots at a controlled pace and
+  resume live updates automatically when the connection recovers.
+- **Silent connection failures are detected.** Lightweight heartbeats check
+  the live connection without reading the queue database. If both the live feed
+  and snapshots stay unavailable, the screen shows a loading error while keeping
+  the last valid queue visible.
+- **Saved staff changes get automatic publication recovery.** A bounded
+  background retry can deliver a delayed queue update without another staff edit.
+
+WTH production testing confirmed the two-minute fallback, automatic reconnection,
+and prompt staff updates with no display requests to the database state API
+during the controlled test. Overnight compute savings are still being observed.
 
 ## Version 2.0.0-rc.4 — September 14, 2026
 

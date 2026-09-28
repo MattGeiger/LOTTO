@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.0.0-rc.5] - 2026-09-28
+
 ### Fixed
 
 - **Keep idle public displays off Neon during realtime recovery.** Configured
@@ -21,6 +23,7 @@
 
 ### Documentation
 
+- Added in-app RC.5 release notes and bumped package metadata to `2.0.0-rc.5`.
 - Added `docs/REALTIME_IDLE_RECOVERY_PLAN.md` and updated source recovery,
   publication, Worker, and staff Help guidance. Recorded the owner-authorized
   WTH production test: two-minute Cloudflare fallback, zero display `/api/state`
