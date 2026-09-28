@@ -27,5 +27,10 @@ to reset them.
 
 ## What To Read Next
 
+Ticket-call notifications reconnect automatically after interruptions. If you
+see **Error loading state**, confirm your queue status with staff; inventory
+availability and queue updates use separate connections. See
+[connection recovery](03-display-board.md#connection-recovery).
+
 - Back to your ticket status: [Tickets & the Queue](04-tickets-queue.md).
 - Change the language: [Languages & Themes](06-languages-themes.md).

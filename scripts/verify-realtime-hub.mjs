@@ -130,6 +130,7 @@ eventsUrl.protocol = eventsUrl.protocol === "https:" ? "wss:" : "ws:";
 const socket = new WebSocket(eventsUrl);
 const messages = [];
 socket.addEventListener("message", (event) => {
+  if (String(event.data) === "lotto:pong:v1") return;
   messages.push(JSON.parse(String(event.data)));
 });
 await new Promise((resolve, reject) => {
@@ -146,6 +147,18 @@ await new Promise((resolve, reject) => {
     { once: true },
   );
   socket.addEventListener("error", reject, { once: true });
+});
+
+await new Promise((resolve, reject) => {
+  const timeout = setTimeout(() => reject(new Error("Automatic heartbeat reply timeout")), 5_000);
+  const received = (event) => {
+    if (String(event.data) !== "lotto:pong:v1") return;
+    clearTimeout(timeout);
+    socket.removeEventListener("message", received);
+    resolve();
+  };
+  socket.addEventListener("message", received);
+  socket.send("lotto:ping:v1");
 });
 
 const first = envelope(initialRevision);
@@ -284,6 +297,7 @@ console.log(
     authentication: "ok",
     snapshot: "ok",
     websocket: "ok",
+    heartbeat: "ok",
     idempotency: "ok",
     monotonicity: "ok",
     cors: "ok",

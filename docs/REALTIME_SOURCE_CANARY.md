@@ -2,18 +2,18 @@
 
 ## Status
 
-Phase 6 promotes the proven source controller to the default on ordinary URLs
-in the isolated beta. The Cloudflare Durable Object public projection renders
-only after an exact Neon/hub handshake, while the existing `/api/state` poller
-remains installed as the automatic safety path. This does not change staff
-writes, Neon authority, production, or `main`.
+The current source implementation uses Cloudflare for bootstrap, WebSocket
+updates, and snapshot recovery. Source mode never automatically requests
+`/api/state`. Neon remains authoritative for staff writes. See
+[Idle recovery implementation](REALTIME_IDLE_RECOVERY_PLAN.md) for release gates.
+Historical dated observations below describe earlier releases.
 
 ## Independent gates
 
 All deployment gates are required:
 
 1. `LOTTO_REALTIME_SOURCE_CANARY=true` in a deployment explicitly marked
-   `LOTTO_DEPLOYMENT_ENVIRONMENT=beta`.
+   `LOTTO_DEPLOYMENT_ENVIRONMENT=beta` or `production`.
 2. `LOTTO_REALTIME_APPLICATION_ENABLED=true`.
 3. A valid exact Worker origin and agency configuration.
 
@@ -37,45 +37,31 @@ does not require changing either system.
 
 ## Authority state machine
 
-The source controller uses one native WebSocket and starts in fallback mode.
-The existing poller performs its ordinary initial `/api/state` read. A valid
-hub envelope is eligible to become authoritative only when its agency,
-protocol, checksum, revision, and public projection exactly match that polled
-result. Only then does the page clear its scheduled poll timer and render later
-valid hub revisions.
+One transport controller owns the socket, HTTP snapshot requests, and timers.
+It immediately reads the Cloudflare snapshot and opens the socket. Valid agency,
+protocol, and checksum are required; full newer snapshots may bridge revision
+gaps. Equal-revision checksum conflicts and stale responses cannot replace state.
 
-While realtime is authoritative:
+On failure, retain state and reconnect with exponential backoff and jitter.
+After 120 seconds of continuous failure, start Cloudflare HTTP fallback. A
+socket opening alone does not reset the grace period; a valid snapshot handshake
+does. HTTP reads run at 15 seconds during service/pre-open, backing off toward
+300 seconds when closed or failing. Positive jitter spreads requests. The
+rolling hourly caps are 240 snapshot starts and 120 socket starts per controller.
+Requests time out after 10 seconds, with at most one HTTP request in flight.
 
-- a duplicate revision with the same checksum is ignored;
-- exactly the next revision is applied immediately;
-- a skipped revision, conflicting duplicate, invalid envelope, socket close,
-  connection/handshake timeout, or exhausted reconnect budget revokes realtime
-  authority;
-- revocation triggers one immediate visible-document `/api/state` read and
-  restores the existing adaptive polling schedule;
-- reconnect attempts use bounded exponential backoff with jitter and can regain
-  authority only through another exact polled handshake; and
-- hiding the document closes the socket and clears polling timers. Returning
-  visible performs an immediate authoritative poll and begins a fresh handshake.
+Every 25 seconds a live socket sends an application heartbeat; no reply within
+10 seconds starts recovery. The Worker replies automatically without waking a
+hibernating object. A heartbeat is transport evidence, not publication evidence.
+After two minutes, unavailable HTTP and socket delivery show the translated
+`errorLoadingState` notice while retaining the last queue. The age of an unchanged
+queue revision is not an outage signal. Debug telemetry records last contact,
+failure start, HTTP requests, close code, persistent failure, and revision.
 
-Polled and pushed state update one shared last-observed-state activity clock.
-Therefore, a fallback shortly after a pushed change retains the responsive
-30-second burst, while a fallback after a long unchanged period proceeds to
-the normal open/pre-open clamp or closed-hours backoff. The immediate
-reconciliation read does not manufacture a new burst when its state timestamp
-matches the last pushed state. WebSocket reconnect attempts use their own
-bounded clock and cannot reset polling history.
-
-There is no application heartbeat. This preserves Durable Object hibernation
-behavior; browser transport close/error, visibility, online/offline events, and
-the handshake timeout are the failure signals. Staff transactions never wait
-for or depend on the hub.
-
-The controller does not use the initial value of `navigator.onLine` as a
-connection gate. iOS 15.4 demonstrated that WebKit can retain a stale `false`
-hint while HTTPS and WebSocket traffic are both available. A real `offline`
-event still closes the socket and selects polling fallback; the matching
-`online` event starts a fresh bounded connection attempt.
+Hidden and offline documents pause network work. Foreground/online resumes with
+a Cloudflare snapshot and socket. Startup intentionally ignores stale
+`navigator.onLine` hints on iOS 15; actual offline events still pause transport.
+Callbacks can change with language without restarting the controller.
 
 ## Consumer boundary
 
@@ -90,18 +76,12 @@ shape preserves the previously polled value when present.
 
 ## Test gates
 
-Deterministic coverage must prove:
-
-- exact beta flag, ordinary-default, polling override, observer, and source
-  alias boundaries;
-- no recurring `/api/state` requests while authority is healthy;
-- immediate state application for the next valid revision;
-- immediate polling fallback on close, timeout, invalid payload, checksum
-  failure, revision gap, conflicting duplicate, offline, and foregrounding;
-- bounded reconnects without overlapping sockets;
-- polling remains paused while hidden;
-- all four consumers render source updates; and
-- the polling-only and Phase 4 observer paths remain available.
+Deterministic coverage must prove zero automatic `/api/state` requests through
+bootstrap, disconnect, language changes, foregrounding, missed heartbeat,
+invalid state, long outages, and recovery. It must also cover full revision gaps,
+conflicts, late-response races, request budgets, timer cleanup, all consumers,
+and retained explicit polling/observer controls. A failed publication must
+recover without another staff edit; see the publication outbox contract.
 
 Before a live beta run, run the focused tests, complete suite, production build,
 legacy bundle scan, production hydration smoke, and iOS 15.4 simulator check.
@@ -201,9 +181,9 @@ For one browser, append `?realtime=poll`. For all newly loaded pages, set
 `false`) and redeploy. To move already-connected pages immediately, invoke the
 separately authenticated Cloudflare `{ "mode": "drain" }` control with
 `npm run realtime:control`. The Durable Object closes current sockets and
-rejects new ones while continuing to accept publications. Each page performs
-one authoritative reconciliation and resumes its existing adaptive polling
-path. No schema, stored state, staff workflow, or publication setting is
+rejects new ones while continuing to accept publications. New source clients switch to Cloudflare HTTP fallback after the grace
+period; draining alone does not re-enable database polling. To restore database
+polling, reload with the explicit polling override or the disabled-source deployment. No schema, stored state, staff workflow, or publication setting is
 reversed.
 
 ### Deployment environments eligible for realtime

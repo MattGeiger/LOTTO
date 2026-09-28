@@ -54,6 +54,11 @@ The Arcade watches the queue. If a player's saved ticket number is called while
 they're playing, the game pauses and shows the same celebration used elsewhere,
 so nobody misses their turn. See [Tickets & the Queue](04-tickets-queue.md).
 
+If **Error loading state** appears, the queue connection is unavailable and a
+call notification may be delayed. Confirm your status with staff. Queue updates
+reconnect automatically, with snapshot checks after a two-minute interruption;
+see [connection recovery](03-display-board.md#connection-recovery).
+
 ## High Scores
 
 Games track top scores. When you earn a top-10 result you can enter your initials

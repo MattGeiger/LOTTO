@@ -14,9 +14,14 @@ note what you saw and when, and contact your administrator.
 ## The Display Board Looks Stuck
 
 1. The board refreshes itself — give it a few seconds after calling a number.
-2. Realtime falls back to automatic database checks if its connection is
-   interrupted. If the board still looks stale, reload `/display`.
-3. Make sure the computer has a working internet connection.
+2. After an interruption, the board keeps its last queue and tries to reconnect
+   for up to two minutes. It then checks the public snapshot automatically while
+   continuing to reconnect. These checks run about every 15 seconds during service.
+3. If **Error loading state** appears, the displayed queue may be out of date.
+   Confirm calls with staff and check the computer's internet connection.
+4. If updates remain missing after connectivity returns, contact an administrator
+   to check publication status under Admin realtime diagnostics. Reloading the
+   board cannot repair a staff update that has not reached the public snapshot.
 
 ## The Board Navigation Disappeared
 

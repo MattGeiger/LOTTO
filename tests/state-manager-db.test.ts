@@ -973,6 +973,41 @@ describe("createDbStateManager", () => {
       );
     });
 
+    it("registers recovery after commit and before publishing, without blocking a committed write on enqueue failure", async () => {
+      const { createDbStateManager } = await import("@/lib/state-manager-db");
+      const fetchImpl = vi.fn().mockResolvedValue(new Response(null, { status: 503 }));
+      const enqueuePublicationRepair = vi.fn(async () => {
+        expect(mockTransactionFn).toHaveBeenCalledTimes(1);
+        expect(fetchImpl).not.toHaveBeenCalled();
+        throw new Error("queue unavailable");
+      });
+      const realtimeManager = createDbStateManager("postgresql://test:test@localhost:5432/test", {
+        environment: enabledEnvironment, fetchImpl, enqueuePublicationRepair,
+      });
+      queueStateRow(defaultState);
+      await expect(realtimeManager.setDisplayUrl("https://beta.williamtemple.app")).resolves.toMatchObject({
+        displayUrl: "https://beta.williamtemple.app",
+      });
+      expect(enqueuePublicationRepair).toHaveBeenCalledWith(expect.objectContaining({
+        agencyId: "william-temple-house", revision: 1, publicationId: expect.any(String),
+      }));
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      expect(mockDirectSql.at(-1)).toContain("set last_error = concat");
+    });
+
+    it("makes a queued watchdog a no-op once its exact publication is accepted or superseded", async () => {
+      const { createDbStateManager } = await import("@/lib/state-manager-db");
+      const fetchImpl = vi.fn();
+      const realtimeManager = createDbStateManager("postgresql://test:test@localhost:5432/test", {
+        environment: enabledEnvironment, fetchImpl,
+      });
+      await expect(realtimeManager.retryLatestRealtimePublication("965104d8-44a2-41b7-b7d0-d82d9c9d3a50"))
+        .resolves.toMatchObject({ attempted: false });
+      expect(mockDirectSql[0]).toContain("publication_id = ?::text");
+      expect(mockSql).toHaveBeenCalledTimes(1);
+      expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
     it.each(mutationCases)(
       "publishes every persisted mutation: $name",
       async ({ run }) => {

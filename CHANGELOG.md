@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Keep idle public displays off Neon during realtime recovery.** Configured
+  source clients bootstrap and recover through Cloudflare snapshots. Socket
+  failures receive a two-minute reconnect grace period before adaptive HTTP
+  fallback; no source-mode lifecycle path automatically requests `/api/state`.
+  Shared transport validation accepts complete revision gaps, rejects conflicts,
+  bounds requests, pauses hidden/offline work, and preserves the last valid queue.
+- **Detect silent socket failure with compatible heartbeats.** The Worker
+  automatically answers application ping messages using Cloudflare hibernation
+  support. Ordinary public screens show a translated loading error only when
+  both transports remain unavailable; detailed diagnostics stay opt-in.
+- **Retry failed public-state publication durably.** A private Vercel queue
+  watchdog follows each staff commit, with eight-delivery and one-hour limits.
+  Accepted/superseded work ends without publishing. Enqueue failures preserve
+  staff writes and remain visible in publication diagnostics. No idle cron.
+
+### Documentation
+
+- Added `docs/REALTIME_IDLE_RECOVERY_PLAN.md` and updated source recovery,
+  publication, Worker, and staff Help guidance. Hosted queue delivery, physical
+  iPad validation, and overnight production observation remain release gates.
+
 ## [2.0.0-rc.4] - 2026-09-14
 
 ### Documentation

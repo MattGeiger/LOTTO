@@ -8,6 +8,8 @@ import {
   isRealtimeSourceCanaryCohort,
   resolveRealtimeCanaryClientConfig,
   resolveRealtimeSourceClientConfig,
+  isRealtimeSourceSelected,
+  resolveSnapshotUrl,
 } from "@/lib/realtime/client-canary-config";
 import { resolveRealtimeCanaryConnectHost } from "../next.config";
 import {
@@ -34,6 +36,7 @@ describe("realtime client canary configuration", () => {
   it("builds only the allowlisted beta WebSocket endpoint", () => {
     expect(resolveRealtimeCanaryClientConfig(betaEnvironment)).toEqual({
       agencyId: "william-temple-house",
+      snapshotUrl: "https://lotto-realtime-beta.et2-geiger.workers.dev/v1/agencies/william-temple-house/state",
       eventsUrl:
         "wss://lotto-realtime-beta.et2-geiger.workers.dev/v1/agencies/william-temple-house/events",
     });
@@ -105,6 +108,7 @@ describe("realtime client canary configuration", () => {
       LOTTO_REALTIME_SOURCE_CANARY: "true",
     })).toEqual({
       agencyId: "william-temple-house",
+      snapshotUrl: "https://lotto-realtime-beta.et2-geiger.workers.dev/v1/agencies/william-temple-house/state",
       eventsUrl:
         "wss://lotto-realtime-beta.et2-geiger.workers.dev/v1/agencies/william-temple-house/events",
     });
@@ -153,5 +157,14 @@ describe("realtime client canary configuration", () => {
         [POLLED_STATE_REVISION_HEADER]: value,
       }))).toBeNull();
     }
+  });
+
+  it("uses one agency origin for snapshots and disables legacy polling only in source mode", () => {
+    const config = resolveRealtimeCanaryClientConfig(betaEnvironment)!;
+    expect(resolveSnapshotUrl(config)).toBe(config.snapshotUrl);
+    expect(() => resolveSnapshotUrl({ ...config, snapshotUrl: "https://other.example/state" })).toThrow();
+    for (const search of ["", "?realtime=source"]) expect(isRealtimeSourceSelected(config, search)).toBe(true);
+    for (const search of ["?realtime=poll", "?realtime=observe", "?realtime=unknown"]) expect(isRealtimeSourceSelected(config, search)).toBe(false);
+    expect(isRealtimeSourceSelected(null, "")).toBe(false);
   });
 });

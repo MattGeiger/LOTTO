@@ -61,6 +61,7 @@ const MAX_TICKET_NUMBER = 999_999;
 type DbStateManagerOptions = {
   environment?: Readonly<Record<string, string | undefined>>;
   fetchImpl?: typeof fetch;
+  enqueuePublicationRepair?: (job: { agencyId: string; publicationId: string; revision: number }) => Promise<void>;
 };
 
 export const createDbStateManager = (
@@ -75,6 +76,7 @@ export const createDbStateManager = (
   const environment = options.environment ?? process.env;
   const shadowPublication = resolveShadowPublicationConfig(environment);
   const fetchImpl = options.fetchImpl ?? fetch;
+  const enqueueRepair = options.enqueuePublicationRepair;
   const withTimeout = async <T>(promise: Promise<T>) => {
     const timeoutMs = Number(environment.DATABASE_TIMEOUT_MS ?? "5000");
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -340,7 +342,33 @@ export const createDbStateManager = (
         state: publicState,
       };
 
+      // Register a durable watchdog before the direct attempt. It wakes only
+      // after a staff commit and becomes a no-op if publication already won.
+      // Keep staff writes usable if the queue is unavailable; retain outbox
+      // evidence and expose the enqueue failure in Admin diagnostics.
+      let recoveryError: string | null = null;
+      if ((environment.VERCEL === "1" || enqueueRepair)
+        && environment.LOTTO_REALTIME_REPAIR_QUEUE_ENABLED !== "false") {
+        try {
+          const enqueue = enqueueRepair
+            ?? (await import("./realtime/publication-queue")).enqueuePublicationRepair;
+          await enqueue({ agencyId: shadowPublication.agencyId, publicationId, revision });
+        } catch {
+          recoveryError = "Automatic publication recovery could not be queued. Use Admin realtime repair.";
+          console.error(`[Realtime] ${recoveryError}`);
+        }
+      }
       await attemptShadowPublication(intent);
+      if (recoveryError) {
+        // Only annotate still-pending work; never demote an accepted publish.
+        try {
+          await withTimeout(sql`
+            update raffle_public_state_publications
+            set last_error = concat(last_error, ' ', ${recoveryError}), updated_at = now()
+            where publication_id = ${publicationId} and status in ('pending', 'failed');
+          `);
+        } catch { console.error("[Realtime] Could not record publication recovery failure."); }
+      }
     }
 
     return { state: timestamped, revision };
@@ -855,7 +883,7 @@ export const createDbStateManager = (
     return rows.length;
   };
 
-  const retryLatestRealtimePublication = async () => {
+  const retryLatestRealtimePublication = async (expectedPublicationId: string | null = null) => {
     if (!shadowPublication.enabled) {
       return { enabled: false as const, attempted: false as const };
     }
@@ -864,6 +892,7 @@ export const createDbStateManager = (
       select publication_id, revision, checksum, payload, committed_at
       from raffle_public_state_publications
       where status in ('pending', 'failed')
+        and (${expectedPublicationId}::text is null or publication_id = ${expectedPublicationId}::text)
       order by revision desc
       limit 1;
     `)) as Array<{

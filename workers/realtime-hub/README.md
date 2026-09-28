@@ -5,8 +5,15 @@ architecture. It uses one SQLite-backed Durable Object per agency to retain the
 latest allowlisted public state and push revisioned updates to subscribed
 browsers through the WebSocket Hibernation API.
 
-It is not yet the production read path. Neon remains authoritative and the
-existing `/api/state` polling path remains unchanged.
+Neon remains authoritative for staff writes. Configured source clients use the
+stored public projection for bootstrap, live updates, and HTTP recovery. See
+`docs/REALTIME_IDLE_RECOVERY_PLAN.md` for the current recovery contract and gates.
+
+The constructor installs the automatic response pair `lotto:ping:v1` /
+`lotto:pong:v1`. The runtime replies without waking a hibernating object; other
+client messages remain forbidden. Deploy this compatible Worker change before
+the new client. `realtime:verify` checks the actual ping/pong exchange as well
+as publication, snapshot, revision, CORS, and drain/resume behavior.
 
 ## Local development
 

@@ -6,6 +6,7 @@
 // is not covered by this license; see TRADEMARKS.md.
 
 import { DurableObject } from "cloudflare:workers";
+import { REALTIME_PING, REALTIME_PONG } from "../../../src/lib/realtime/heartbeat";
 
 import {
   agencyIdSchema,
@@ -105,6 +106,11 @@ const parseRoute = (pathname: string) => {
 };
 
 export class PublicStateHub extends DurableObject<Env> {
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(REALTIME_PING, REALTIME_PONG));
+  }
+
   async fetch(request: Request): Promise<Response> {
     const action = new URL(request.url).pathname.slice(1);
     if (action === "state" && request.method === "GET") {

@@ -17,7 +17,7 @@ import {
   getPollingIntervalMs,
   recordPollingStateObservation,
 } from "@/lib/polling-strategy";
-import type { RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
+import { isRealtimeSourceSelected, type RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
 import { readPolledStateRevision } from "@/lib/realtime/polled-state-revision";
 import { toRenderableRaffleState, type PublicRaffleState } from "@/lib/realtime/public-state-protocol";
 import type { RealtimeSourceReason } from "@/hooks/use-realtime-source-canary";
@@ -88,7 +88,7 @@ export function TicketCalledCelebration({
   realtimeSourceCanary = null,
 }: TicketCalledCelebrationProps) {
   const { t } = useLanguage();
-  const polled = useSelfPolledState(poll);
+  const polled = useSelfPolledState(poll, realtimeSourceCanary);
   const state = poll ? polled.state : stateProp ?? null;
   const realtimeObserver = poll ? (
     <RealtimeCanaryMount
@@ -232,7 +232,7 @@ export function TicketCalledCelebration({
  * burst) so the inventory page reacts to a call about as fast as the board does.
  * Returns `null` and stays idle when `enabled` is false.
  */
-function useSelfPolledState(enabled: boolean): {
+function useSelfPolledState(enabled: boolean, sourceConfig: RealtimeCanaryClientConfig | null): {
   state: RaffleState | null;
   verificationState: RaffleState | null;
   verificationRevision: number | null;
@@ -285,6 +285,10 @@ function useSelfPolledState(enabled: boolean): {
   );
 
   const pollState = React.useCallback(async () => {
+    if (isRealtimeSourceSelected(sourceConfig, window.location.search)) {
+      clearPollTimeout();
+      return;
+    }
     if (document.visibilityState === "hidden") {
       clearPollTimeout();
       return;
@@ -317,7 +321,7 @@ function useSelfPolledState(enabled: boolean): {
     } finally {
       pollInFlightRef.current = false;
     }
-  }, [clearPollTimeout, recordStateActivity, scheduleNextPoll]);
+  }, [clearPollTimeout, recordStateActivity, scheduleNextPoll, sourceConfig]);
 
   const onSourceState = React.useCallback((publicState: PublicRaffleState) => {
     const payload = toRenderableRaffleState(publicState, stateRef.current);

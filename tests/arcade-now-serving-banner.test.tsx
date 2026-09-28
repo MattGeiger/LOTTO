@@ -13,10 +13,11 @@ import { NowServingBanner } from "@/arcade/components/now-serving-banner";
 import { HapticsProvider } from "@/components/haptics-provider";
 import { LanguageProvider } from "@/contexts/language-context";
 import { HOMEPAGE_TICKET_STORAGE_KEY } from "@/lib/home-ticket-storage";
-import type { OperatingHours, TicketStatus } from "@/lib/state-types";
+import { defaultState, type RaffleState, type OperatingHours, type TicketStatus } from "@/lib/state-types";
 
 const confettiFireMock = vi.fn();
 const rawTriggerMock = vi.fn();
+let sourceCallbacks: { onSourceState?: (state: RaffleState, revision: number) => void; onSourceAuthorityChange?: (live: boolean, reason: "close") => void };
 
 vi.mock("web-haptics/react", () => ({
   useWebHaptics: () => ({
@@ -41,15 +42,16 @@ vi.mock("@/components/realtime-canary-mount", () => ({
   default: ({
     config,
     polledRevision,
+    ...callbacks
   }: {
     config: unknown;
     polledRevision: number | null;
-  }) => config ? (
+  } & typeof sourceCallbacks) => { sourceCallbacks = callbacks; return config ? (
     <div
       data-testid="arcade-realtime-canary"
       data-polled-revision={polledRevision ?? undefined}
     />
-  ) : null,
+  ) : null; },
 }));
 
 const realtimeCanary = {
@@ -81,6 +83,18 @@ function renderBanner(config: typeof realtimeCanary | null = null) {
 }
 
 describe("NowServingBanner", () => {
+  it("uses source updates without database reads during bootstrap or recovery", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      render(<HapticsProvider><LanguageProvider><NowServingBanner realtimeSourceCanary={realtimeCanary} /></LanguageProvider></HapticsProvider>);
+      act(() => sourceCallbacks.onSourceState?.({ ...defaultState, ...payload }, 25));
+      expect(screen.getByText("#14")).toBeInTheDocument();
+      act(() => sourceCallbacks.onSourceAuthorityChange?.(false, "close"));
+      act(() => document.dispatchEvent(new Event("visibilitychange")));
+      await act(async () => vi.advanceTimersByTimeAsync(300_000));
+      expect(fetch).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
+  });
   let payload: BannerPayload;
 
   beforeEach(() => {

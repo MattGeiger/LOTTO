@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import RealtimeSourceCanary from "@/components/realtime-source-canary";
 import { buildPublicStateEnvelope } from "@/lib/realtime/public-state-protocol";
 import { defaultState, type RaffleState } from "@/lib/state-types";
+vi.mock("@/contexts/language-context", () => ({ useLanguage: () => ({ t: () => "Error loading state" }) }));
 
 const config = {
   agencyId: "william-temple-house",
@@ -25,7 +26,8 @@ class FakeWebSocket {
   onopen: (() => void) | null = null;
   onmessage: ((event: MessageEvent<string>) => void) | null = null;
   onerror: (() => void) | null = null;
-  onclose: (() => void) | null = null;
+  onclose: ((event: { code: number }) => void) | null = null;
+  send = vi.fn();
   closeCode: number | undefined;
 
   constructor(readonly url: string | URL) {
@@ -48,7 +50,7 @@ class FakeWebSocket {
 
   emitClose() {
     this.readyState = FakeWebSocket.CLOSED;
-    this.onclose?.();
+    this.onclose?.({ code: this.closeCode ?? 1006 });
   }
 }
 
@@ -77,6 +79,7 @@ describe("RealtimeSourceCanary", () => {
   beforeEach(() => {
     FakeWebSocket.instances = [];
     vi.stubGlobal("WebSocket", FakeWebSocket);
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Snapshot unavailable")));
     vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
     vi.spyOn(window.navigator, "onLine", "get").mockReturnValue(true);
   });
@@ -95,7 +98,7 @@ describe("RealtimeSourceCanary", () => {
     window.history.replaceState({}, "", "/display?realtime=source");
   });
 
-  it("requires an exact polled handshake, applies the next revision, and falls back on close", async () => {
+  it("accepts a hub handshake without a database poll and applies subsequent state", async () => {
     const state1 = stateAt(1, Date.parse("2026-09-01T18:00:00.000Z"));
     const state2 = stateAt(2, Date.parse("2026-09-01T18:00:01.000Z"));
     const onState = vi.fn();
@@ -104,8 +107,8 @@ describe("RealtimeSourceCanary", () => {
       render(
         <RealtimeSourceCanary
           config={config}
-          polledState={state1}
-          polledRevision={1}
+          polledState={null}
+          polledRevision={null}
           onState={onState}
           onAuthorityChange={onAuthorityChange}
         />,
@@ -123,7 +126,7 @@ describe("RealtimeSourceCanary", () => {
       expect(screen.getByTestId("realtime-source-status")).toHaveAttribute("data-authority", "live");
     });
     expect(onAuthorityChange).toHaveBeenLastCalledWith(true, "handshake");
-    expect(onState).not.toHaveBeenCalled();
+    expect(onState).toHaveBeenCalledWith(initial.state, 1);
 
     const update = await envelopeFor(state2, 2);
     await act(async () => {
@@ -134,7 +137,7 @@ describe("RealtimeSourceCanary", () => {
     expect(window.__LOTTO_REALTIME_SOURCE_CANARY__).toMatchObject({
       authority: "live",
       revision: 2,
-      appliedCount: 1,
+      appliedCount: 2,
     });
 
     act(() => socket.emitClose());
@@ -142,7 +145,7 @@ describe("RealtimeSourceCanary", () => {
     expect(screen.getByTestId("realtime-source-status")).toHaveAttribute("data-authority", "fallback");
   });
 
-  it("rejects tampering and revokes authority on a revision gap", async () => {
+  it("accepts full snapshots across revision gaps but rejects tampering", async () => {
     const state1 = stateAt(1, Date.parse("2026-09-01T18:00:00.000Z"));
     const onAuthorityChange = vi.fn();
     await act(async () => {
@@ -168,14 +171,15 @@ describe("RealtimeSourceCanary", () => {
       socket.message(JSON.stringify(gap));
       await flush();
     });
-    expect(onAuthorityChange).toHaveBeenLastCalledWith(false, "revision-gap");
+    expect(onAuthorityChange).toHaveBeenLastCalledWith(true, "handshake");
+    expect(window.__LOTTO_REALTIME_SOURCE_CANARY__?.revision).toBe(3);
 
     const tampered = { ...gap, state: { ...gap.state, currentlyServing: 2 } };
     await act(async () => {
       socket.message(JSON.stringify(tampered));
       await flush();
     });
-    expect(socket.closeCode).toBe(1008);
+    expect(socket.readyState).toBe(FakeWebSocket.CLOSED);
     expect(onAuthorityChange).toHaveBeenLastCalledWith(false, "invalid");
   });
 
@@ -229,7 +233,7 @@ describe("RealtimeSourceCanary", () => {
 
   it("falls back on handshake timeout and reconnects with bounded jittered backoff", async () => {
     vi.useFakeTimers();
-    vi.spyOn(Math, "random").mockReturnValue(0.5);
+    vi.spyOn(Math, "random").mockReturnValue(0);
     const onAuthorityChange = vi.fn();
     render(
       <RealtimeSourceCanary
@@ -317,76 +321,35 @@ describe("RealtimeSourceCanary", () => {
     expect(screen.getByTestId("realtime-source-status")).toBeInTheDocument();
   });
 
-  it("retries the socket on the next poll after the backoff ladder is exhausted", async () => {
-    // A wall-mounted kiosk stays visible and online all day, so it never fires
-    // visibilitychange or online. Before this, five failures downgraded that
-    // screen to polling permanently. Now each poll re-attempts the socket.
+  it("continues recovery without a poll and shows a public outage notice", async () => {
     vi.useFakeTimers();
-    try {
-      const state1 = stateAt(1, Date.parse("2026-09-01T18:00:00.000Z"));
-      const onAuthorityChange = vi.fn();
-      const { rerender } = render(
-        <RealtimeSourceCanary
-          config={config}
-          polledState={state1}
-          polledRevision={1}
-          onState={vi.fn()}
-          onAuthorityChange={onAuthorityChange}
-        />,
-      );
+    window.history.replaceState({}, "", "/display");
+    const { unmount } = render(<RealtimeSourceCanary config={config} polledState={null}
+      polledRevision={null} onState={vi.fn()} onAuthorityChange={vi.fn()} />);
+    expect(screen.queryByTestId("realtime-source-status")).toBeNull();
+    await act(async () => vi.advanceTimersByTimeAsync(120_000));
+    expect(screen.getByRole("status")).toHaveTextContent("Error loading state");
+    const attempts = FakeWebSocket.instances.length;
+    await act(async () => vi.advanceTimersByTimeAsync(300_000));
+    expect(FakeWebSocket.instances.length).toBeGreaterThan(attempts);
+    expect(vi.mocked(fetch).mock.calls.every(call => String(call[0]).startsWith("https://lotto-realtime-beta"))).toBe(true);
+    unmount();
+    expect(window.__LOTTO_REALTIME_SOURCE_CANARY__).toBeUndefined();
+  });
 
-      // Burn the whole ladder: every attempt fails to open.
-      for (let attempt = 0; attempt <= 5; attempt += 1) {
-        const socket = FakeWebSocket.instances.at(-1)!;
-        act(() => socket.emitClose());
-        act(() => {
-          vi.advanceTimersByTime(40_000);
-        });
-      }
-
-      const socketsAfterLadder = FakeWebSocket.instances.length;
-      expect(onAuthorityChange).toHaveBeenLastCalledWith(false, "exhausted");
-
-      // No timer revives it — the ladder is genuinely finished.
-      act(() => {
-        vi.advanceTimersByTime(300_000);
-      });
-      expect(FakeWebSocket.instances.length).toBe(socketsAfterLadder);
-
-      // A poll arrives: exactly one fresh attempt.
-      const state2 = stateAt(2, Date.parse("2026-09-01T18:05:00.000Z"));
-      rerender(
-        <RealtimeSourceCanary
-          config={config}
-          polledState={state2}
-          polledRevision={2}
-          onState={vi.fn()}
-          onAuthorityChange={onAuthorityChange}
-        />,
-      );
-      expect(FakeWebSocket.instances.length).toBe(socketsAfterLadder + 1);
-
-      // That attempt fails too; still no self-driven retry.
-      act(() => FakeWebSocket.instances.at(-1)!.emitClose());
-      act(() => {
-        vi.advanceTimersByTime(300_000);
-      });
-      expect(FakeWebSocket.instances.length).toBe(socketsAfterLadder + 1);
-
-      // The following poll tries again — recovery is unbounded in time.
-      const state3 = stateAt(3, Date.parse("2026-09-01T18:10:00.000Z"));
-      rerender(
-        <RealtimeSourceCanary
-          config={config}
-          polledState={state3}
-          polledRevision={3}
-          onState={vi.fn()}
-          onAuthorityChange={onAuthorityChange}
-        />,
-      );
-      expect(FakeWebSocket.instances.length).toBe(socketsAfterLadder + 2);
-    } finally {
-      vi.useRealTimers();
-    }
+  it("keeps one transport when language-driven callbacks and polled props change", async () => {
+    const initial = await envelopeFor(stateAt(1, Date.now()), 1);
+    const first = vi.fn();
+    const next = vi.fn();
+    const view = render(<RealtimeSourceCanary config={config} polledState={null}
+      polledRevision={null} onState={first} onAuthorityChange={vi.fn()} />);
+    await act(async () => { FakeWebSocket.instances[0].message(JSON.stringify(initial)); await flush(); });
+    view.rerender(<RealtimeSourceCanary config={{ ...config }} polledState={stateAt(2, Date.now())}
+      polledRevision={7} onState={next} onAuthorityChange={vi.fn()} />);
+    const newer = await envelopeFor(stateAt(2, Date.now()), 2);
+    await act(async () => { FakeWebSocket.instances[0].message(JSON.stringify(newer)); await flush(); });
+    expect(FakeWebSocket.instances).toHaveLength(1);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(next).toHaveBeenCalledWith(newer.state, 2);
   });
 });

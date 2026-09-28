@@ -18,7 +18,7 @@ import {
   getPollingIntervalMs,
   recordPollingStateObservation,
 } from "@/lib/polling-strategy";
-import type { RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
+import { isRealtimeSourceSelected, type RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
 import { readPolledStateRevision } from "@/lib/realtime/polled-state-revision";
 import { toRenderableRaffleState, type PublicRaffleState } from "@/lib/realtime/public-state-protocol";
 import type { OperatingHours, RaffleState, TicketStatus } from "@/lib/state-types";
@@ -262,6 +262,10 @@ export function NowServingBanner({
   );
 
   const pollState = React.useCallback(async () => {
+    if (isRealtimeSourceSelected(realtimeSourceCanary, window.location.search)) {
+      clearPollTimeout();
+      return;
+    }
     if (document.visibilityState === "hidden") {
       clearPollTimeout();
       return;
@@ -304,7 +308,7 @@ export function NowServingBanner({
     } finally {
       pollInFlightRef.current = false;
     }
-  }, [clearPollTimeout, recordStateActivity, scheduleNextPoll]);
+  }, [clearPollTimeout, recordStateActivity, scheduleNextPoll, realtimeSourceCanary]);
 
   const applySourceState = React.useCallback((publicState: PublicRaffleState) => {
     const payload = toRenderableRaffleState(publicState, stateRef.current);

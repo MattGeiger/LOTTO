@@ -15,6 +15,7 @@ type Environment = Readonly<Record<string, string | undefined>>;
 export type RealtimeCanaryClientConfig = {
   agencyId: string;
   eventsUrl: string;
+  snapshotUrl?: string;
 };
 
 const required = (environment: Environment, name: string) => {
@@ -86,7 +87,11 @@ export const resolveRealtimeCanaryClientConfig = (
   );
   eventsUrl.protocol = "wss:";
 
-  return { agencyId, eventsUrl: eventsUrl.toString() };
+  return {
+    agencyId,
+    eventsUrl: eventsUrl.toString(),
+    snapshotUrl: new URL(`/v1/agencies/${encodeURIComponent(agencyId)}/state`, hubUrl.origin).toString(),
+  };
 };
 
 export const resolveRealtimeSourceClientConfig = (
@@ -111,3 +116,25 @@ export const isRealtimeSourceCanaryCohort = (search: string): boolean =>
 
 export const isRealtimePollingOnlyCohort = (search: string): boolean =>
   new URLSearchParams(search).get("realtime") === REALTIME_POLL_QUERY_VALUE;
+
+/** Used by every legacy poll entry point, before any fetch can run. */
+export const isRealtimeSourceSelected = (
+  config: RealtimeCanaryClientConfig | null | undefined,
+  search: string,
+): boolean => {
+  const mode = new URLSearchParams(search).get("realtime");
+  return Boolean(config && (mode === null || mode === REALTIME_SOURCE_CANARY_QUERY_VALUE));
+};
+
+export const resolveSnapshotUrl = (config: RealtimeCanaryClientConfig): string => {
+  const url = new URL(config.eventsUrl);
+  url.protocol = "https:";
+  url.pathname = `/v1/agencies/${encodeURIComponent(config.agencyId)}/state`;
+  url.search = "";
+  url.hash = "";
+  // Keep the HTTP trust boundary identical to the validated socket origin.
+  if (config.snapshotUrl && config.snapshotUrl !== url.toString()) {
+    throw new Error("Snapshot URL must match the configured agency hub.");
+  }
+  return url.toString();
+};

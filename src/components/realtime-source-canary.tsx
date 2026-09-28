@@ -4,6 +4,7 @@
 "use client";
 
 import * as React from "react";
+import { useLanguage } from "@/contexts/language-context";
 
 import { useRealtimeSourceCanary, type RealtimeSourceReason } from "@/hooks/use-realtime-source-canary";
 import {
@@ -25,6 +26,8 @@ const FALLBACK_LABELS: Record<RealtimeSourceReason, string> = {
   offline: "offline",
   foreground: "resyncing",
   exhausted: "retries exhausted",
+  heartbeat: "heartbeat missed",
+  snapshot: "Cloudflare snapshot",
 };
 
 export default function RealtimeSourceCanary({
@@ -40,6 +43,7 @@ export default function RealtimeSourceCanary({
   onState: (state: PublicRaffleState, revision: number) => void;
   onAuthorityChange: (authoritative: boolean, reason: RealtimeSourceReason) => void;
 }) {
+  const { t } = useLanguage();
   const telemetry = useRealtimeSourceCanary({
     config,
     polledState,
@@ -66,7 +70,9 @@ export default function RealtimeSourceCanary({
     setShowBadge(isRealtimeSourceCanaryCohort(search) || isRealtimeCanaryCohort(search));
   }, []);
 
-  if (!showBadge) return null;
+  const updatesUnavailable = telemetry.authority !== "paused"
+    && telemetry.persistentFailure && !telemetry.snapshotAvailable;
+  if (!showBadge && !updatesUnavailable) return null;
 
   return (
     <output
@@ -75,13 +81,17 @@ export default function RealtimeSourceCanary({
       data-connection={telemetry.connection}
       data-reason={telemetry.reason}
       data-revision={telemetry.revision ?? undefined}
+      data-persistent-failure={telemetry.persistentFailure}
+      role="status"
       className="fixed bottom-3 right-3 z-[100] rounded-full border border-border bg-background/95 px-3 py-1 text-xs text-muted-foreground shadow-sm"
     >
-      {live
+      {!showBadge
+        ? t("errorLoadingState")
+        : live
         ? `Realtime source · live${telemetry.revision ? ` · r${telemetry.revision}` : ""}`
         : telemetry.authority === "paused"
           ? "Realtime source · paused while hidden"
-          : `Polling fallback · ${FALLBACK_LABELS[telemetry.reason]}`}
+          : `${telemetry.snapshotAvailable ? "Cloudflare snapshots" : "Reconnecting"} · ${FALLBACK_LABELS[telemetry.reason]}${telemetry.persistentFailure ? " · persistent socket failure" : ""}`}
     </output>
   );
 }

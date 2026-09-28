@@ -80,6 +80,7 @@ const connectSrcHosts = [
   speedInsightsScriptHost,
   feedPublicInventoryHost,
   realtimeCanaryConnectHost,
+  realtimeCanaryConnectHost?.replace(/^wss:/, "https:"),
   ...(enableTweakcnPreview ? ["https://tweakcn.com", "https://*.tweakcn.com"] : []),
 ].filter(Boolean);
 const connectSrc = `connect-src ${connectSrcHosts.join(" ")}`;

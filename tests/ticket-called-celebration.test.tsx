@@ -5,7 +5,7 @@
 // licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
 // is not covered by this license; see TRADEMARKS.md.
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactElement } from "react";
 
@@ -17,6 +17,7 @@ import type { RaffleState } from "@/lib/state-types";
 const renderCelebration = (ui: ReactElement) => render(<LanguageProvider>{ui}</LanguageProvider>);
 
 const confettiFireMock = vi.fn();
+let sourceCallbacks: { onSourceState?: (state: RaffleState, revision: number) => void; onSourceAuthorityChange?: (live: boolean, reason: "close") => void };
 
 vi.mock("react-canvas-confetti", () => ({
   default: ({ onInit }: { onInit?: ({ confetti }: { confetti: (...args: unknown[]) => void }) => void }) => {
@@ -29,15 +30,16 @@ vi.mock("@/components/realtime-canary-mount", () => ({
   default: ({
     config,
     polledRevision,
+    ...callbacks
   }: {
     config: unknown;
     polledRevision: number | null;
-  }) => config ? (
+  } & typeof sourceCallbacks) => { sourceCallbacks = callbacks; return config ? (
     <div
       data-testid="inventory-realtime-canary"
       data-polled-revision={polledRevision ?? undefined}
     />
-  ) : null,
+  ) : null; },
 }));
 
 const realtimeCanary = {
@@ -146,5 +148,19 @@ describe("TicketCalledCelebration", () => {
       "data-polled-revision",
       "23",
     );
+  });
+
+  it("renders source updates and never polls on initial load, disconnect or foreground", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      vi.stubGlobal("fetch", vi.fn());
+      renderCelebration(<TicketCalledCelebration poll ticketNumber={24} realtimeSourceCanary={realtimeCanary} />);
+      act(() => sourceCallbacks.onSourceState?.(calledState, 25));
+      expect(screen.getByText("Ticket Called!")).toBeInTheDocument();
+      act(() => sourceCallbacks.onSourceAuthorityChange?.(false, "close"));
+      act(() => document.dispatchEvent(new Event("visibilitychange")));
+      await act(async () => vi.advanceTimersByTimeAsync(300_000));
+      expect(fetch).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
   });
 });

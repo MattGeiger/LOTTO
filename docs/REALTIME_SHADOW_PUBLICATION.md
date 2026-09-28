@@ -1,6 +1,33 @@
 # Realtime shadow-publication contract
 
-## Status
+## Current recovery addition (September 28, 2026)
+
+The original Phase 3 observations below are historical. Configured public source
+clients now depend on Cloudflare for recovery as well as live delivery.
+Each enabled Vercel staff commit registers a private queue watchdog before its
+bounded direct publication attempt. The watchdog waits 30 seconds, then reads
+only its exact pending/failed publication. Accepted and superseded records need
+no publish. Failure retries use 15-to-300-second backoff, at most eight deliveries,
+and one-hour retention. There is no recurring idle job or visitor repair request.
+
+`@vercel/queue` is server-only. `vercel.json` declares the private consumer and
+OIDC supplies deployed producer credentials. `LOTTO_REALTIME_REPAIR_QUEUE_ENABLED=false`
+disables enqueue/consumption for controlled rollback. Test real hosted delivery
+and private-route behavior on beta before release; unit mocks do not prove it.
+
+Cost: one queue send and delayed database lookup per enabled staff commit, plus
+bounded attempts only for pending work. The three-second enqueue deadline and
+existing publication deadline may add staff response latency. Queue failure
+cannot reject a committed write. Pending/failed rows retain failure evidence in
+Admin, and manual newest-publication repair remains available after the budget.
+
+The Neon commit and queue send are not atomic. A process crash between them, or
+an enqueue failure followed by a failed direct publish, can leave pending work
+requiring manual repair. This implementation does not claim exactly-once or
+guaranteed automatic delivery across that boundary. Queue duplication is safe:
+the outbox status and hub revision/checksum rules make repeat publication idempotent.
+
+## Historical Phase 3 status
 
 This document defines the first Phase 3 implementation slice for LOTTO's
 provisional v2.0 realtime architecture. It is additive, beta-only, and

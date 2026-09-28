@@ -235,7 +235,8 @@ safe substitute for per-device fault injection.
   [`REALTIME_SOURCE_CANARY.md`](./REALTIME_SOURCE_CANARY.md). The observer remains
   the unchanged dual-read control and is not silently promoted into the source
   cohort.
-- There is no application heartbeat. Silent half-open behavior, Durable Object
+- This observer has no application heartbeat (the current rendered source uses
+  automatic heartbeat replies; see `REALTIME_IDLE_RECOVERY_PLAN.md`). Silent half-open behavior, Durable Object
   hibernation evidence, sustained memory/cost measurement, isolated network
   interruption, and physical legacy-device recovery still require
   production-shaped measurement. The iOS 15.4 simulator is useful compatibility

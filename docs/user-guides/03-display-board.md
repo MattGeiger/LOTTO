@@ -19,6 +19,20 @@ the pantry timezone, regardless of the screen or hosting server timezone.
 3. Leave it running — the board refreshes itself automatically as you call
    numbers from the [Staff Dashboard](02-staff-controls.md).
 
+## Connection Recovery
+
+The board keeps the last received queue visible during a connection interruption.
+It reconnects automatically. If the live connection is still unavailable after
+two minutes, it checks the public queue snapshot while continuing to reconnect.
+During service these checks run about every 15 seconds; outside service hours
+they slow down. Normal live updates resume automatically when the connection
+recovers. No manual refresh is needed for a brief interruption.
+
+If neither connection works, **Error loading state** appears in the selected
+language. The displayed queue may be out of date: confirm calls with staff and
+check the screen's internet connection. A fresh page with no received state
+must not be treated as confirmation that the drawing has not started.
+
 ## Languages On The Board
 
 The board can greet everyone in their own language:

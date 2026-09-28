@@ -13,7 +13,7 @@ import * as React from "react";
 
 import { ReadOnlyDisplay } from "@/components/readonly-display";
 import { BrandProvider } from "@/contexts/brand-context";
-import { LanguageProvider } from "@/contexts/language-context";
+import { LanguageProvider, useLanguage } from "@/contexts/language-context";
 import { resolvedBrandFromProfile } from "@/lib/brand-config/types";
 import type { RaffleState } from "@/lib/state-types";
 
@@ -159,6 +159,11 @@ function renderPublicDisplay(props?: Partial<ComponentProps<typeof ReadOnlyDispl
   );
 }
 
+function ChangeTestLanguage() {
+  const { setLanguage } = useLanguage();
+  return <button onClick={() => setLanguage("es")}>Change test language</button>;
+}
+
 // --- Tests ----------------------------------------------------------------
 
 describe("ReadOnlyDisplay (public variant)", () => {
@@ -198,7 +203,7 @@ describe("ReadOnlyDisplay (public variant)", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
-  it("suppresses scheduled polling while the source is healthy and fetches immediately on fallback", async () => {
+  it("never polls the database during source bootstrap, updates, fallback or foregrounding", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     renderPublicDisplay({
@@ -209,15 +214,17 @@ describe("ReadOnlyDisplay (public variant)", () => {
       },
     });
 
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    expect(fetch).not.toHaveBeenCalled();
     await act(async () => vi.advanceTimersByTimeAsync(5 * 60_000));
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole("button", { name: "Apply source update" }));
     expect(screen.getAllByText("12").length).toBeGreaterThan(0);
-    expect(screen.getByTestId("source-verification-revision")).toHaveTextContent("25");
+    expect(screen.getByTestId("source-verification-revision")).toHaveTextContent("none");
     await user.click(screen.getByRole("button", { name: "Trigger source fallback" }));
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    act(() => document.dispatchEvent(new Event("visibilitychange")));
+    await act(async () => vi.advanceTimersByTimeAsync(5 * 60_000));
+    expect(fetch).not.toHaveBeenCalled();
     vi.useRealTimers();
   });
 
@@ -227,6 +234,15 @@ describe("ReadOnlyDisplay (public variant)", () => {
     const displayContent = screen.getByTestId("readonly-display-content");
 
     expect(displayContent.parentElement).toHaveClass("pt-20", "sm:pt-14");
+  });
+
+  it("does not revive database polling when the display language changes", async () => {
+    render(<LanguageProvider><ChangeTestLanguage /><ReadOnlyDisplay realtimeSourceCanary={{
+      agencyId: "william-temple-house",
+      eventsUrl: "wss://lotto-realtime-beta.et2-geiger.workers.dev/v1/agencies/william-temple-house/events",
+    }} /></LanguageProvider>);
+    await userEvent.setup().click(screen.getByText("Change test language"));
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url) === "/api/state")).toHaveLength(0);
   });
 
   it("shows Drawing Order card heading for public variant", async () => {

@@ -34,7 +34,7 @@ import {
   type OperatingHours,
   type RaffleState,
 } from "@/lib/state-types";
-import type { RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
+import { isRealtimeSourceSelected, type RealtimeCanaryClientConfig } from "@/lib/realtime/client-canary-config";
 import { readPolledStateRevision } from "@/lib/realtime/polled-state-revision";
 import { toRenderableRaffleState, type PublicRaffleState } from "@/lib/realtime/public-state-protocol";
 import { formatWaitTime } from "@/lib/time-format";
@@ -221,6 +221,10 @@ export const ReadOnlyDisplay = ({
   );
 
   const pollState = React.useCallback(async () => {
+    if (isRealtimeSourceSelected(realtimeSourceCanary, window.location.search)) {
+      clearPollTimeout();
+      return;
+    }
     if (document.visibilityState === "hidden") {
       clearPollTimeout();
       return;
@@ -262,17 +266,17 @@ export const ReadOnlyDisplay = ({
     } finally {
       pollInFlightRef.current = false;
     }
-  }, [clearPollTimeout, language, onStateChange, recordStateActivity, scheduleNextPoll, t]);
+  }, [clearPollTimeout, language, onStateChange, recordStateActivity, scheduleNextPoll, t, realtimeSourceCanary]);
 
-  const handleSourceState = React.useCallback((publicState: PublicRaffleState, revision: number) => {
+  const handleSourceState = React.useCallback((publicState: PublicRaffleState) => {
     const payload = toRenderableRaffleState(publicState, stateRef.current);
     recordStateActivity(payload.timestamp);
     stateRef.current = payload;
     setState(payload);
     onStateChange?.(payload);
     setHasError(false);
-    setStatus(`Realtime source · r${revision}`);
-  }, [onStateChange, recordStateActivity]);
+    setStatus(`${t("lastChecked")}: ${formatTime(new Date(), language)}`);
+  }, [language, onStateChange, recordStateActivity, t]);
 
   const handleSourceAuthorityChange = React.useCallback((authoritative: boolean) => {
     sourceAuthoritativeRef.current = authoritative;
@@ -310,8 +314,10 @@ export const ReadOnlyDisplay = ({
   }, [clearPollTimeout, pollState]);
 
   React.useEffect(() => {
-    setStatus(t("pollingState"));
-  }, [t]);
+    if (isRealtimeSourceSelected(realtimeSourceCanary, window.location.search)) {
+      setStatus(stateRef.current ? "" : t("refreshing"));
+    } else setStatus(t("pollingState"));
+  }, [realtimeSourceCanary, t]);
 
   React.useEffect(() => {
     const updateClock = () => setDeviceNowMs(Date.now());
@@ -681,7 +687,7 @@ export const ReadOnlyDisplay = ({
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!hasTickets && (
+            {state && !hasTickets && (
               <div
                 className={cn(
                   "flex flex-col items-center gap-4 rounded-xl bg-muted/20 px-3",
