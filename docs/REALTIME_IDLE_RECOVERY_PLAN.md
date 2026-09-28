@@ -76,9 +76,8 @@ idle display traffic reaching Neon, not zero database use by the whole product.
 
 ## Validation record — September 28, 2026
 
-- Full Vitest run: 137 files passed; 984 tests passed, one skipped. Five further
-  lifecycle/budget/language regression cases were then added; the affected
-  three-file run passed all 40 tests. TypeScript and ESLint pass. ESLint excludes
+- Full Vitest run after all lifecycle/budget/language regression additions:
+  137 files passed; 989 tests passed, one skipped. TypeScript and ESLint pass. ESLint excludes
   generated Wrangler output; Browserslist reports an existing stale-data notice.
 - Production builds pass. The source-enabled build uses matching build/runtime
   flags so CSP includes both the HTTPS snapshot and WSS event origin. The first
@@ -90,7 +89,8 @@ idle display traffic reaching Neon, not zero database use by the whole product.
 - Local Worker verifier passes authentication, snapshot, WebSocket, automatic
   heartbeat, idempotency, monotonic revision, CORS, drain and resume checks.
 - Beta Worker `lotto-realtime-beta` deployed as version
-  `e0da6625-2d77-4d87-97fa-7710cb8f36c0`. The production Worker was not changed.
+  `e0da6625-2d77-4d87-97fa-7710cb8f36c0`. The subsequent owner-authorized
+  production Worker and application test is recorded below.
 - Real Chrome Guest window on this Mac loaded the built localhost Display from
   the beta hub at revision 111, with one bootstrap snapshot and zero `/api/state`
   requests. A page-local WebSocket constructor fault prevented reconnection
@@ -124,13 +124,16 @@ agency and its Vercel project remain outside this test.
 
 The authenticated Vercel CLI account `mattgeiger` lists only `wthlotto`,
 `stjohns-food-share`, and `nettie-spinner`; it cannot access the documented
-`wth_apps/lotto-beta` target. Do not substitute another project. Correct beta
-access is required for the app preview, real queue redelivery/private-route
-checks, and safe publication-failure drill.
+`wth_apps/lotto-beta` target. The owner authorized WTH production as the test
+destination. Hosted queue delivery and the private-route check have now passed;
+deliberately failed publication/redelivery remains covered by automated tests,
+not a live failure drill.
 
 The installed iOS 15.4 simulator runtime is unavailable on this Mac's current
 macOS (reported unsupported after macOS 26.99.99). A supported host or physical
 iPad is needed; newer simulators cannot stand in for that engine. Physical iPad
-validation, multi-hour live soak, production rollout, and overnight Neon/request
-comparison remain outstanding. Implementation changes remain on local `dev`;
-no application deployment or Git push has been made for this candidate.
+validation, multi-hour live soak, and overnight Neon/request comparison remain
+outstanding. WTH production now runs implementation commit `c623b90`, deployed
+through the CLI without a Git push. See
+[production validation](REALTIME_IDLE_RECOVERY_PRODUCTION_VALIDATION.md) for
+deployment identities, measured browser behavior, and remaining limits.

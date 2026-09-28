@@ -22,8 +22,11 @@
 ### Documentation
 
 - Added `docs/REALTIME_IDLE_RECOVERY_PLAN.md` and updated source recovery,
-  publication, Worker, and staff Help guidance. Hosted queue delivery, physical
-  iPad validation, and overnight production observation remain release gates.
+  publication, Worker, and staff Help guidance. Recorded the owner-authorized
+  WTH production test: two-minute Cloudflare fallback, zero display `/api/state`
+  requests, automatic socket recovery, prompt staff publication, and hosted
+  queue delivery. Physical iPad validation and overnight observation remain
+  outstanding. See `docs/REALTIME_IDLE_RECOVERY_PRODUCTION_VALIDATION.md`.
 
 ## [2.0.0-rc.4] - 2026-09-14
 
