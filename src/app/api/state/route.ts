@@ -12,6 +12,9 @@ import { stateManager, type Mode } from "@/lib/state-manager";
 import { isCatalogCode, LANGUAGE_CATALOG, LANGUAGE_OPTIONS } from "@/lib/languages";
 import { POLLED_STATE_REVISION_HEADER } from "@/lib/realtime/polled-state-revision";
 import { isUserInputError } from "@/lib/user-input-error";
+import { readPublicStateSnapshot, resolvePublicStateSnapshotConfig } from "@/lib/realtime/server-snapshot";
+import { toRenderableRaffleState } from "@/lib/realtime/public-state-protocol";
+import { invalidatePublicConfigurationAfter } from "@/lib/public-read-cache";
 
 export const runtime = "nodejs";
 
@@ -203,21 +206,48 @@ const isRateLimited = () => {
 
 // --- Handlers ---
 
-export async function GET() {
+export async function GET(request?: Request) {
+  const headers = { "cache-control": "private, no-store", vary: "Cookie" };
+  let snapshotEnabled = false;
   try {
+    // Treat a malformed enabled deployment as unavailable, never as consent to
+    // restore public SQL polling. Validate the gate before selecting a backend.
+    const flag = process.env.LOTTO_PUBLIC_STATE_SNAPSHOT_ENABLED?.trim().toLowerCase();
+    snapshotEnabled = Boolean(flag && flag !== "false");
+    const config = resolvePublicStateSnapshotConfig();
+    let authenticated = false;
+    if (config && request?.headers.get("cookie")) {
+      const { auth } = await import("@/lib/auth");
+      const session = await auth();
+      authenticated = Boolean(session?.user);
+    }
+    if (config && !authenticated) {
+      const envelope = await readPublicStateSnapshot(config);
+      return NextResponse.json(toRenderableRaffleState(envelope.state, null), {
+        headers: {
+          ...headers,
+          [POLLED_STATE_REVISION_HEADER]: String(envelope.revision),
+          "x-lotto-state-source": "cloudflare",
+        },
+      });
+    }
     const { state, revision } = await stateManager.loadStateWithRevision();
     return NextResponse.json(state, {
       status: 200,
-      headers:
-        revision === null
-          ? undefined
-          : { [POLLED_STATE_REVISION_HEADER]: String(revision) },
+      headers: {
+        ...headers,
+        "x-lotto-state-source": "database",
+        ...(revision === null ? {} : { [POLLED_STATE_REVISION_HEADER]: String(revision) }),
+      },
     });
   } catch (error) {
     console.error("[State] GET failed:", error);
     return NextResponse.json(
       { error: "Unable to load state. Please try again shortly." },
-      { status: 500 },
+      {
+        status: snapshotEnabled ? 503 : 500,
+        headers: { ...headers, ...(snapshotEnabled ? { "retry-after": "120" } : {}) },
+      },
     );
   }
 }
@@ -288,11 +318,11 @@ export async function POST(request: Request) {
       case "listSnapshots":
         return NextResponse.json(await stateManager.listSnapshots());
       case "restoreSnapshot":
-        return NextResponse.json(await stateManager.restoreSnapshot(payload.id));
+        return NextResponse.json(await invalidatePublicConfigurationAfter(stateManager.restoreSnapshot)(payload.id));
       case "undo":
-        return NextResponse.json(await stateManager.undo());
+        return NextResponse.json(await invalidatePublicConfigurationAfter(stateManager.undo)());
       case "redo":
-        return NextResponse.json(await stateManager.redo());
+        return NextResponse.json(await invalidatePublicConfigurationAfter(stateManager.redo)());
       case "setDisplayUrl":
         return NextResponse.json(await stateManager.setDisplayUrl(payload.url));
       case "getDisplayUrl": {
@@ -307,7 +337,7 @@ export async function POST(request: Request) {
         );
       case "setAnnouncement":
         return NextResponse.json(
-          await stateManager.setAnnouncement(payload.announcement),
+          await invalidatePublicConfigurationAfter(stateManager.setAnnouncement)(payload.announcement),
         );
       default:
         return NextResponse.json({ error: "Unsupported action" }, { status: 400 });

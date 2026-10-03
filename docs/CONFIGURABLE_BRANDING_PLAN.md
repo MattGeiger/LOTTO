@@ -293,9 +293,14 @@ configuration. Pages rendering brand identity read it through one shared
 server-side resolver (`getResolvedBrand()`), which implements the resolution
 order above and is the only place fallback logic lives.
 
-A saved configuration change must invalidate cached pages (route-level
-`revalidateTag`/`revalidatePath` on the brand tag) so edits appear without a
-redeploy.
+As of RC.6, successful active-configuration reads use Next's shared Data Cache
+without periodic expiry. Rendering remains dynamic; React cache also avoids
+duplicate reads within a request. Keys include datastore, environment, agency
+and release identity. Successful save, activation, deactivation and deletion
+invalidate the shared configuration tag with `revalidateTag(tag, { expire: 0 })`,
+so the next request sees the committed value without a redeploy. Failed storage
+reads do not cache the compiled fallback. Local/file development bypasses this
+cache. Cold or evicted entries still require a database read.
 
 ## Wizard UX
 

@@ -20,6 +20,7 @@ import {
 } from "@/lib/languages";
 import { stateManager } from "@/lib/state-manager";
 import { UI_STRINGS_EN } from "@/lib/ui-strings";
+import { cachePublicConfiguration } from "@/lib/public-read-cache";
 import { listEnabledLanguages } from "./languages-store";
 import * as store from "./translations-store";
 
@@ -65,7 +66,7 @@ const activeBrandSources = async (): Promise<Set<string>> => {
   return sources;
 };
 
-export const buildLanguagePack = async (code: string): Promise<LanguagePack | null> => {
+const buildLanguagePackUncached = async (code: string): Promise<LanguagePack | null> => {
   const entry = getCatalogEntryByCode(code);
   if (!entry) return null;
 
@@ -121,6 +122,11 @@ export const buildLanguagePack = async (code: string): Promise<LanguagePack | nu
   };
 };
 
+const cachedLanguagePack = cachePublicConfiguration("language-pack", buildLanguagePackUncached);
+export const buildLanguagePack = (code: string): Promise<LanguagePack | null> =>
+  // Bound cache keys to the catalog; unknown caller input needs no datastore.
+  getCatalogEntryByCode(code) ? cachedLanguagePack(code) : Promise.resolve(null);
+
 // A non-core language is client-ready when every distinct UI source and active
 // visitor-facing brand string has a completed translation row.
 export const isLanguageReady = async (name: string): Promise<boolean> => {
@@ -150,7 +156,7 @@ export const isLanguageReady = async (name: string): Promise<boolean> => {
 // Readiness for all enabled languages is computed from a SINGLE query of
 // completed rows (grouped by language and type in memory) rather than one query
 // per language — the per-language version made the homepage language list slow.
-export const listClientLanguages = async (): Promise<ClientLanguageOption[]> => {
+const listClientLanguagesUncached = async (): Promise<ClientLanguageOption[]> => {
   const options: ClientLanguageOption[] = LANGUAGE_OPTIONS.map((option) => {
     const entry = getCatalogEntryByCode(option.code);
     return { code: option.code, label: option.label, name: entry?.name ?? option.label, ready: true };
@@ -199,3 +205,5 @@ export const listClientLanguages = async (): Promise<ClientLanguageOption[]> => 
   }
   return options;
 };
+
+export const listClientLanguages = cachePublicConfiguration("client-languages", listClientLanguagesUncached);

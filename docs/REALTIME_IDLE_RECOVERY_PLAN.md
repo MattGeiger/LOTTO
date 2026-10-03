@@ -1,7 +1,8 @@
 # Public display idle recovery
 
-Approved September 28, 2026. Implementation in progress on `dev`, fast-forwarded
-from the existing WTH rc.4 baseline; production remains gated on validation.
+Approved September 28, 2026 and deployed to WTH in RC.5. The October 2 RC.6
+addition is documented in [public-read isolation](PUBLIC_READ_NEON_ISOLATION_PLAN.md)
+and its [validation record](PUBLIC_READ_NEON_ISOLATION_VALIDATION.md).
 
 ## Contract
 
@@ -10,7 +11,11 @@ Arcade's Now Serving banner obtain public state only from the agency Cloudflare
 hub. They must never automatically call `/api/state`, including initial mount,
 language changes, foregrounding, invalid messages, missed revisions or outages.
 The explicit polling/observer modes and deployments without source configuration
-retain the existing poller as an operator-controlled rollback.
+retain the existing browser poller as an operator-controlled comparison. When
+`LOTTO_PUBLIC_STATE_SNAPSHOT_ENABLED=true`, anonymous server-side `/api/state`
+reads also use Cloudflare, including requests from old clients. Disabling the
+browser application gate alone therefore does not restore public Neon reads;
+the independent server gate controls that boundary.
 
 Cloudflare full snapshots are validated for agency, schema, protocol, checksum
 and monotonic revision. A complete newer snapshot can bridge revision gaps.

@@ -10,6 +10,7 @@
 
 import * as dbStore from "./translations-store-db";
 import * as fileStore from "./translations-store-file";
+import { invalidatePublicConfigurationAfter } from "@/lib/public-read-cache";
 
 const storageMode = process.env.STATE_STORAGE?.toLowerCase();
 const useDatabase = storageMode === "db" || (!storageMode && Boolean(process.env.DATABASE_URL));
@@ -18,8 +19,8 @@ const backend = useDatabase ? dbStore : fileStore;
 
 export const list = backend.list;
 export const get = backend.get;
-export const upsert = backend.upsert;
-export const update = backend.update;
-export const bulkUpdate = backend.bulkUpdate;
-export const remove = backend.remove;
-export const bulkRemove = backend.bulkRemove;
+export const upsert = invalidatePublicConfigurationAfter(backend.upsert);
+export const update = invalidatePublicConfigurationAfter(backend.update);
+export const bulkUpdate = invalidatePublicConfigurationAfter(backend.bulkUpdate);
+export const remove = invalidatePublicConfigurationAfter(backend.remove);
+export const bulkRemove = invalidatePublicConfigurationAfter(backend.bulkRemove);

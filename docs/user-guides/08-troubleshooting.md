@@ -23,6 +23,10 @@ note what you saw and when, and contact your administrator.
    to check publication status under Admin realtime diagnostics. Reloading the
    board cannot repair a staff update that has not reached the public snapshot.
 
+Saved appearance and language changes refresh the server's shared configuration
+cache immediately. Reload the affected page to obtain the saved configuration.
+If it still shows old content, report the page URL and time to an administrator.
+
 ## The Board Navigation Disappeared
 
 That's expected — on `/display` the bottom navigation hides after a quiet period

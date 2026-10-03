@@ -33,6 +33,11 @@ language. The displayed queue may be out of date: confirm calls with staff and
 check the screen's internet connection. A fresh page with no received state
 must not be treated as confirmation that the drawing has not started.
 
+Older public pages can still request periodic updates. On the configured WTH
+deployment, those requests receive the same public snapshot. If publication is
+delayed, an administrator must check publication diagnostics; reopening an old
+page does not bypass that recovery process.
+
 ## Languages On The Board
 
 The board can greet everyone in their own language:

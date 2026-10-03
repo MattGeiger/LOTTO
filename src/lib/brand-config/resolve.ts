@@ -19,6 +19,7 @@ import "server-only";
 
 import { cache } from "react";
 import { unstable_noStore as noStore } from "next/cache";
+import { cachePublicConfiguration } from "@/lib/public-read-cache";
 
 import { parseBrandConfig } from "@/lib/brand-theme/config-schema";
 import { deriveConfiguredBrandTheme } from "@/lib/brand-theme/configured-theme";
@@ -85,9 +86,12 @@ export const seedBrandTemplates = (): Promise<void> => {
   return templateSeeding;
 };
 
+// Cache the successful store read, not the fail-closed fallback. A transient
+// storage failure must remain recoverable on the next request.
+const getCachedActiveConfiguration = cachePublicConfiguration("active-brand", getActiveConfiguration);
+
 const resolveUncached = async (): Promise<ResolvedRuntimeBrand> => {
-  // Opt out of static prerendering: brand changes must appear without a
-  // rebuild, so every page render re-reads the active configuration.
+  // Keep runtime rendering while reusing the shared configuration read.
   noStore();
 
   const fallback = (configError: string | null): ResolvedRuntimeBrand => ({
@@ -101,7 +105,7 @@ const resolveUncached = async (): Promise<ResolvedRuntimeBrand> => {
   try {
     // Pure read path: template seeding happens in the Admin configuration API
     // (where templates are listed), never during page rendering.
-    row = await getActiveConfiguration();
+    row = await getCachedActiveConfiguration();
   } catch (error) {
     console.error("[Brand] Failed to read active configuration:", error);
     return fallback("Brand configuration storage is unreachable; using the built-in brand.");
@@ -136,7 +140,8 @@ const resolveUncached = async (): Promise<ResolvedRuntimeBrand> => {
 
 /**
  * Resolve the runtime brand. Cached per request (React cache), so layout,
- * metadata, manifest, and pages share one store read.
+ * metadata, manifest, and pages share one resolution. Successful configuration
+ * reads also persist in the shared Data Cache until a staff configuration save.
  */
 export const getResolvedRuntimeBrand = cache(resolveUncached);
 

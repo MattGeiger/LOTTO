@@ -1,3 +1,18 @@
+## Version 2.0.0-rc.6 — October 2, 2026
+
+- **Older public pages also avoid unnecessary database wake-ups.** Their queue
+  requests now receive the public snapshot through the server. An old browser
+  left open can keep requesting updates without repeatedly reading Neon.
+- **Public configuration is reused between visits.** Appearance and language
+  data refresh after staff save changes, rather than being re-read from the
+  database on every visitor request.
+- **Staff controls keep authoritative state.** Queue changes, announcements,
+  undo, redo and saved snapshots retain their normal workflows. Public screens
+  continue to allow two minutes for live connection recovery.
+
+This release addresses additional public database reads found after RC.5.
+Monthly compute savings require a separate observation of actual usage.
+
 ## Version 2.0.0-rc.5 — September 28, 2026
 
 - **Idle displays avoid unnecessary database wake-ups.** Public screens using

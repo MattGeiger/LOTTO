@@ -1,6 +1,6 @@
 # LOTTO Usage Costs and Public-Read Architecture
 
-Last reviewed: September 3, 2026
+Last reviewed: October 2, 2026
 
 ## Purpose
 
@@ -12,7 +12,85 @@ Postgres on every poll.
 Prices and product limits change. The figures below are a planning model, not a
 quote. Recheck the linked provider pages before making a purchasing decision.
 
-## v2.0 provisional direction
+## Current implementation — RC.6
+
+RC.5 moved fresh public displays to Cloudflare bootstrap, WebSockets and
+snapshot recovery, with a 120-second reconnect grace period. October 2 runtime
+logs still showed three legacy `/api/state` requests approximately every 30
+minutes. Their requests reached the current deployment and coincided with
+Neon starts. Their browser metadata does not establish which physical devices
+sent them. Fresh ordinary `/display` testing produced zero `/api/state` traffic.
+
+RC.6 closes the server boundary: `LOTTO_PUBLIC_STATE_SNAPSHOT_ENABLED=true`
+makes anonymous `/api/state` reads return the validated Cloudflare public
+projection, preserving response compatibility and excluding `queueSession`.
+Authenticated staff reads retain full Neon state. Invalid or unavailable
+snapshots return 503 with no queue-state SQL fallback. Existing staff publication
+retries remain bounded and action-driven.
+
+Brand resolution, visitor language catalogs and translation packs now use Next's
+shared Data Cache with no periodic expiry. Keys include the datastore,
+environment, agency and release; successful staff saves invalidate configuration
+tags immediately. Announcements, undo/redo and restored snapshots also invalidate
+packs. Cold/evicted entries still read Neon. Other routes, authenticated staff
+activity and external database clients remain possible compute sources.
+
+WTH's compute is fixed at 0.25 CU with five-minute autosuspension enabled.
+Small queries can therefore be cheap in CPU work and expensive in active time.
+A read replica would add another metered compute rather than remove those reads.
+This release leaves the operating schedule and all stored agency state unchanged.
+
+### Historical usage discrepancy
+
+The annual Vercel chart suggests a June-to-July step, but the invoice-aligned
+Neon v2 consumption API reports the following CU-hours for WTH:
+
+| Month, 2026 | CU-hours |
+| --- | ---: |
+| February | 61.42 |
+| March | 57.02 |
+| April | 55.18 |
+| May | 59.86 |
+| June | 80.04 |
+| July | 68.05 |
+| August | 82.47 |
+| September | 85.75 |
+
+Main-branch totals also contradict Vercel's June value of about 12. The cause of
+that reporting discrepancy is unresolved. No verified late-June code change or
+metering policy explains it. Production history shows language rotation on
+June 4, localization on June 12, unready-language polling on June 13 (removed
+August 24), a documentation/version-only June 30 release, and per-render branding
+reads on July 20. Historical browser settings and traffic cannot be reconstructed
+from the current one-hour Vercel runtime-log retention window.
+
+During October 1 22:00–October 2 06:00 Pacific, Neon recorded 0.7628 CU-hours,
+equivalent to roughly 3.05 active hours at 0.25 CU. Legacy half-hour groups explain
+some observed starts; other overnight starts remain unattributed. The acceptance
+test must correlate post-release requests, compute starts/suspends and hourly
+consumption after diagnostic activity stops. Zero public queue SQL does not
+prove zero total Neon usage or monthly savings.
+
+The complete [SQL inventory](docs/NEON_READ_AUDIT.md) also found anonymously
+reachable Admin management GETs. They have no ordinary display consumer and
+their access rules remain unchanged, as directed by the owner. Public inventory
+requests go directly to the separate FEED server and do not use LOTTO's Neon.
+LOTTO's existing daily-summary integration is a different endpoint; its behavior
+also remains unchanged. Staff sign-in and commands remain database-backed.
+Arcade uses a separate store.
+
+See [implementation plan](docs/PUBLIC_READ_NEON_ISOLATION_PLAN.md) and
+[validation](docs/PUBLIC_READ_NEON_ISOLATION_VALIDATION.md). No provider support
+message has been sent.
+
+## September 3 planning baseline (historical)
+
+The remaining comparison, pricing assumptions and proposed phases below preserve
+the earlier design decision. Their references to immediate Neon fallback and
+uncached public configuration describe that baseline, not RC.6. Recheck provider
+prices before a purchasing decision.
+
+### v2.0 provisional direction
 
 On August 31, 2026, the project selected a Neon-authoritative Cloudflare Durable
 Object realtime hub as the direction to prove for v2.0. The selection is not a
@@ -82,7 +160,7 @@ Tagged CDN delivery and Vercel Blob remain credible fallback designs if the
 Durable Object proof fails. A Blob `current.json` would be a mutable
 materialized view rather than literal WORM storage.
 
-## Current LOTTO behavior
+## September 3 LOTTO behavior (historical)
 
 ### Public queue reads
 

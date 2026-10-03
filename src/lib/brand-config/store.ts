@@ -12,6 +12,7 @@
 
 import * as dbStore from "./store-db";
 import * as fileStore from "./store-file";
+import { invalidatePublicConfigurationAfter } from "@/lib/public-read-cache";
 
 const storageMode = process.env.STATE_STORAGE?.toLowerCase();
 const useDatabase =
@@ -22,9 +23,9 @@ const backend = useDatabase ? dbStore : fileStore;
 export const listConfigurations = backend.listConfigurations;
 export const getConfiguration = backend.getConfiguration;
 export const getActiveConfiguration = backend.getActiveConfiguration;
-export const saveConfiguration = backend.saveConfiguration;
+export const saveConfiguration = invalidatePublicConfigurationAfter(backend.saveConfiguration);
 export const seedTemplate = backend.seedTemplate;
 export const deleteTemplate = backend.deleteTemplate;
-export const activateConfiguration = backend.activateConfiguration;
-export const deactivateAll = backend.deactivateAll;
-export const deleteConfiguration = backend.deleteConfiguration;
+export const activateConfiguration = invalidatePublicConfigurationAfter(backend.activateConfiguration);
+export const deactivateAll = invalidatePublicConfigurationAfter(backend.deactivateAll);
+export const deleteConfiguration = invalidatePublicConfigurationAfter(backend.deleteConfiguration);

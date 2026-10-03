@@ -12,6 +12,7 @@
 
 import * as dbStore from "./languages-store-db";
 import * as fileStore from "./languages-store-file";
+import { invalidatePublicConfigurationAfter } from "@/lib/public-read-cache";
 
 export type { LanguageRow } from "./languages-store-db";
 
@@ -23,4 +24,4 @@ const backend = useDatabase ? dbStore : fileStore;
 export const seedLanguagesIfEmpty = backend.seedLanguagesIfEmpty;
 export const listLanguages = backend.listLanguages;
 export const listEnabledLanguages = backend.listEnabledLanguages;
-export const bulkSetEnabled = backend.bulkSetEnabled;
+export const bulkSetEnabled = invalidatePublicConfigurationAfter(backend.bulkSetEnabled);

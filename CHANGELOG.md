@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+## [2.0.0-rc.6] - 2026-10-02
+
+### Fixed
+
+- **Protect Neon from older public clients.** With the independent public-state
+  snapshot gate enabled, anonymous `/api/state` reads use the validated Cloudflare
+  snapshot and preserve the existing response shape. Authenticated staff retain
+  authoritative state. Snapshot failures return a bounded 503 without database
+  fallback; private operational evidence is excluded from public responses.
+- **Cache public configuration across requests.** Branding, visitor language
+  catalogs and translation packs use shared, release-scoped configuration
+  caches. Successful staff saves invalidate them immediately, including bulk
+  translations, announcements, undo/redo and snapshot restoration. No periodic
+  expiry recreates the half-hour idle database wakeups. Cold/evicted entries and
+  staff activity can still read Neon.
+
+### Documentation
+
+- Added the public-read isolation implementation plan and validation record;
+  updated cost analysis, branding, realtime recovery and searchable staff Help.
+  Added `docs/NEON_READ_AUDIT.md`, covering every application SQL owner, public
+  exceptions, remaining cache-miss reads, authentication and external sync limits.
+  Bumped package and in-app release metadata together to `2.0.0-rc.6`.
+- Recorded the unresolved historical metering discrepancy: Neon reports
+  80.04 CU-hours in June and 68.05 in July, contradicting the Vercel chart's
+  apparent July jump. Device identity and overnight savings remain unproven.
+
 ## [2.0.0-rc.5] - 2026-09-28
 
 ### Fixed
