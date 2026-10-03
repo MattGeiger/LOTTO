@@ -75,8 +75,13 @@ touches that object during its idle window.
 
 ## Deployment safety
 
-Deploy only to the isolated Cloudflare beta Worker named
-`lotto-realtime-beta`. Set `PUBLISH_TOKEN` and the distinct `CONTROL_TOKEN` with
+Select the explicitly authorized Worker environment: the default deploys
+`lotto-realtime-beta`, `--env production` deploys WTH's
+`lotto-realtime-production`, and `--env stjohns-production` deploys
+`lotto-realtime-stjohns-production`. Each has a separate Durable Object
+namespace and browser-origin policy. St. Johns allows only
+`https://stjohnsfoodshare.app`; do not copy WTH's tokens or agency id.
+Set `PUBLISH_TOKEN` and the distinct `CONTROL_TOKEN` with
 `wrangler secret put`; never add either to `wrangler.jsonc`, Git, screenshots,
 logs, or documentation. Keep `CONTROL_TOKEN` out of Vercel entirely.
 
@@ -89,8 +94,12 @@ incident, then set `LOTTO_REALTIME_APPLICATION_ENABLED=false` in Vercel and
 redeploy so newly loaded pages also remain on adaptive polling. Resume the hub
 before re-enabling the Vercel application gate.
 
-Production publication and client feature flags must remain disabled until the
-beta exit gates in `docs/V2.0_REALTIME_ARCHITECTURE_PLAN.md` pass.
+Production publication and client feature flags remain disabled until the
+owner authorizes a cutover and publication is verified. The owner approved
+direct production acceptance for WTH and, on October 3, St. Johns; those release
+candidates do not close the stable-v2 gates in
+`docs/V2.0_REALTIME_ARCHITECTURE_PLAN.md`. See
+`docs/STJOHNS_RC6_CUTOVER.md` for the St. Johns sequence and rollback targets.
 
 The verification, load, and A/B benchmark scripts write only to their dedicated
 synthetic objects. Remote beta verification additionally

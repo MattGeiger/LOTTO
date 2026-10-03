@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Documentation
+
+- Completed the owner-approved St. Johns RC.6 production cutover and a separate
+  `stjohns-production` Worker environment with its own namespace and browser
+  origin. Verified additive schema migration, staff persistence, publication,
+  hosted recovery delivery and 120-second Cloudflare fallback. Saved settings
+  were preserved; WTH's deployment and credentials remain unchanged.
+
 ## [2.0.0-rc.6] - 2026-10-02
 
 ### Fixed

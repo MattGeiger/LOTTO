@@ -35,6 +35,25 @@
   // installed per environment with `wrangler secret put --env production`, and
   // must be freshly generated rather than copied from beta.
   "env": {
+    "stjohns-production": {
+      "name": "lotto-realtime-stjohns-production",
+      "preview_urls": false,
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "PUBLIC_STATE_HUB",
+            "class_name": "PublicStateHub",
+          },
+        ],
+      },
+      "vars": {
+        "ALLOWED_ORIGINS": "https://stjohnsfoodshare.app",
+        "ENVIRONMENT": "production",
+      },
+      "observability": {
+        "enabled": true,
+      },
+    },
     "production": {
       "name": "lotto-realtime-production",
       "preview_urls": false,

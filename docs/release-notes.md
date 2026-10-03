@@ -13,6 +13,11 @@
 This release addresses additional public database reads found after RC.5.
 Monthly compute savings require a separate observation of actual usage.
 
+The October 3 St. Johns Food Share rollout uses this same RC.6 release. Its live
+queue connection and recovery snapshots use separate agency infrastructure;
+staff keep the existing sign-in and queue controls. Saved agency settings and
+branding are preserved.
+
 ## Version 2.0.0-rc.5 — September 28, 2026
 
 - **Idle displays avoid unnecessary database wake-ups.** Public screens using

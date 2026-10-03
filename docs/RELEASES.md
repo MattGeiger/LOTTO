@@ -1,3 +1,25 @@
+# LOTTO v2.0.0-rc.6
+
+**Production rollout:** October 2, 2026 (WTH); October 3, 2026 (St. Johns).
+
+Both live agencies now serve RC.6. St. Johns received the existing release in
+three stages: polling baseline, staff publication, then public realtime source
+and snapshots. Its own Cloudflare Worker, Durable Object namespace and fresh
+secrets keep its state separate from WTH. Its missing additive revision/outbox
+schema was applied before deployment; saved settings and branding were preserved.
+
+St. Johns production verification covered staff persistence, snapshot checksums,
+WebSocket updates, Spanish display translations, release notes, compatible
+anonymous state reads, hosted publication watchdog delivery and the 120-second
+snapshot recovery grace. The original RC.3 deployment and intermediate RC.6
+deployments remain available for rollback. Physical iPad and service-day
+acceptance remain unverified for this cutover, and compute savings are unmeasured.
+
+See [St. Johns cutover evidence](STJOHNS_RC6_CUTOVER.md) and
+[WTH public-read validation](PUBLIC_READ_NEON_ISOLATION_VALIDATION.md).
+Shared `main` still trails these direct deployments; reconcile it before a future
+Git-driven production release.
+
 # LOTTO v2.0.0-rc.4
 
 **Release Date:** September 14, 2026 (WTH production release candidate)

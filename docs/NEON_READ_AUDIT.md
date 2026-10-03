@@ -15,6 +15,12 @@ starts/evictions can still query Neon. Thus RC.6 does not claim every possible
 anonymous request is database-free. A durable Cloudflare configuration projection
 would require a separately planned protocol/publication extension.
 
+The October 3 St. Johns RC.6 cutover applies the same opt-in boundaries to a
+separate agency Worker and database. The application version alone does not
+enable snapshot isolation: the agency's publication, source and snapshot flags
+must be configured and a valid projection published first. See
+[the St. Johns cutover](STJOHNS_RC6_CUTOVER.md) for its configuration and evidence.
+
 ## Complete application read inventory
 
 | SQL owner | Entry points and reads | RC.6 boundary |
