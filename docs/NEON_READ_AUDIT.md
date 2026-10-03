@@ -56,17 +56,31 @@ Configurable database-backed branding first appears in release commit
 `1f093a3b422049fec18c3ee9fcd617882d8c65a8`, July 20, 2026 at 00:33:48 PDT.
 The Vercel user-event API records deployment of that commit from `main` to
 WTH production at 00:33:58 PDT (07:33:58.156 UTC). This event is not proof of the
-exact build-ready time. July 18's v1.19.0 used compiled brand profiles. Branding
-therefore cannot explain a late-June increase, although it introduced an
-additional public SQL source from July 20 onward.
+exact build-ready time. July 18's v1.19.0 used compiled brand profiles. The
+July 20 change is consistent with an elevated July monthly total: a monthly
+bucket does not establish that the increase began July 1. Branding is a strong
+candidate for added late-July usage. Its share of the increase has not been
+measured, and the June reporting discrepancy still needs reconciliation.
+
+The July 20 resolver deliberately called `noStore()` and read the active brand
+row on every server render, even when the resulting selection was the compiled
+default. React `cache()` shared that work only within a request, not between
+visits. This establishes a database-wake mechanism independent of queue-state
+polling; it does not establish how often unattended displays rendered a page.
 
 Observed half-hour `/api/state` groups correlated with compute starts before
 the release. Branding SELECTs were confirmed on fresh page/prefetch requests.
 That proves two independent public sources, not that branding caused the entire
 invoice. The current Neon endpoint remains 0.25 CU with five-minute suspension.
 
-Verify the live server source header, warm configuration cache behavior and
-staff access. Then stop SQL-console/diagnostic reads and compare compute start/
+RC.6's controlled warm-request verification subsequently added zero active-brand,
+language, translation or queue SELECTs across 80 public requests. A staff-read
+positive control increased the queue counter, confirming that it was updating.
+See [production validation](PUBLIC_READ_NEON_ISOLATION_VALIDATION.md). Cold cache
+misses remain SQL reads; an unattended comparison is still required.
+
+The live source header, warm configuration counters and staff access passed
+controlled verification. Next compare compute start/
 suspend operations and hourly consumption against arriving HTTP paths. Keep
 Hobby runtime-log retention (one hour) in mind. Remaining wakes must be attributed
 to cold configuration reads, authenticated clients, FEED sync, direct clients,

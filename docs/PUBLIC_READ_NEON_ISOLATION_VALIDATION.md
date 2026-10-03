@@ -43,15 +43,60 @@ included. See [plan](PUBLIC_READ_NEON_ISOLATION_PLAN.md) and
 - Previous RC.5 commit: `8548ec29c5f6359f97f966034cee84e350ae588e`.
 - Previous deployment: `dpl_FVMCS1X2NFZmonTofg8CwRveCqCq`.
 - Added only `LOTTO_PUBLIC_STATE_SNAPSHOT_ENABLED=true` to this project's
-  Production environment. The existing deployment ignores the new flag.
+  Production environment before deploying RC.6. The preceding RC.5 deployment
+  ignored the new flag.
   Expected hub is `lotto-realtime-production.et2-geiger.workers.dev`, agency
   `william-temple-house`; browser application and source flags were already true.
 - Read-only staff baseline before release: authoritative revision 991, complete
   state SHA-256 `fb03d851316ae0c57d8dff5a4680ea85d77f671f589a11ddd5be64945b51baf9`,
   timezone `America/Los_Angeles`. The saved schedule already had every day marked
   closed at baseline. This release must preserve that state exactly.
-- Candidate production deployment and post-release measurements are pending at
-  this checkpoint. They must be recorded before claiming live success.
+- RC.6 implementation commit: `7ea12d346fb4c7a8e10f9fcf81ece40731e04178`.
+- WTH production deployment: `dpl_Hn4BnjvZSA1V2HBtxVpDCZoF66bp`, created
+  October 2 at 18:44:47 PDT and ready at 18:45:54 PDT. Its deployment hostname
+  is `wthlotto-mh1ioix43-matthew-geigers-projects-73851078.vercel.app`; aliases
+  include `williamtemple.app` and `www.williamtemple.app`.
+- Deployed through the linked WTH Vercel project without a Git push. No other
+  agency deployment was requested or made.
+
+## Controlled production verification
+
+- At 18:50 PDT, 50 anonymous `/api/state?realtime=poll` requests all returned
+  HTTP 200, `x-lotto-state-source: cloudflare`, revision 991 and
+  `queueSession: null`. Responses remained private/no-store.
+- Thirty public requests across Home, Display, manifest, client language
+  catalog and the Spanish translation pack all returned HTTP 200. The first
+  catalog request took about 4.9 seconds; subsequent requests were faster.
+  Latency alone does not prove a cache hit or absence of SQL.
+- Neon Query performance exposed live SQL counters even though a direct SQL
+  attempt to read `pg_stat_statements` reported that relation missing. No
+  extension was installed and no monitoring configuration was changed.
+- A separate warm-request test completed at 18:55:10 PDT: six rounds of those
+  five public configuration/page paths (30 requests), followed by 50 anonymous
+  queue requests. All 80 responses succeeded. Query counters before and after
+  the test were unchanged:
+
+  | Query | Before | After |
+  | --- | ---: | ---: |
+  | Active `brand_configurations` SELECT | 10 | 10 |
+  | `raffle_state` SELECT | 42 | 42 |
+  | Filtered `translations` SELECT | 2 | 2 |
+  | `languages` SELECT | 1 | 1 |
+  | Language seed INSERT | 60 | 60 |
+
+- Positive control: opening the authenticated Admin page and deliberately
+  fetching staff state increased the state SELECT counter from 42 to 44.
+  Branding remained 10. This shows the counter refreshed; unchanged public
+  counts were not inferred from HTTP headers alone. Counters describe this
+  controlled interval, not historical July traffic.
+- The staff read at 18:55:36 PDT returned HTTP 200, source `database`, revision
+  991 and the exact pre-release complete-state SHA-256 shown above. Admin
+  hydrated to *Persistence confirmed*. No state-writing action was performed.
+- The live version control and release-notes dialog displayed
+  `2.0.0-rc.6`, including the additional public database-read fixes.
+- Closed the test Admin and Neon query-monitoring tabs by 18:56:12 PDT to end
+  deliberate diagnostic database traffic. This timestamp is an observation
+  baseline, not a completed unattended observation.
 
 ## Observation boundary
 

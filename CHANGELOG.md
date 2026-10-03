@@ -26,8 +26,15 @@
   exceptions, remaining cache-miss reads, authentication and external sync limits.
   Bumped package and in-app release metadata together to `2.0.0-rc.6`.
 - Recorded the unresolved historical metering discrepancy: Neon reports
-  80.04 CU-hours in June and 68.05 in July, contradicting the Vercel chart's
-  apparent July jump. Device identity and overnight savings remain unproven.
+  80.04 CU-hours in June versus approximately 12 on Vercel's chart. The July 20
+  configurable-branding deployment is consistent with July's elevated monthly
+  total; monthly buckets do not establish the day the increase began.
+  Device identity and overnight savings remain unproven.
+- Recorded the WTH RC.6 production deployment and controlled SQL-counter test:
+  80 warm public requests added no branding, language, translation or queue
+  SELECTs. A staff-read positive control advanced the queue counter. Live staff
+  state matched the complete pre-release hash; version and in-app notes were
+  verified. This is bounded evidence, not a monthly savings claim.
 
 ## [2.0.0-rc.5] - 2026-09-28
 
