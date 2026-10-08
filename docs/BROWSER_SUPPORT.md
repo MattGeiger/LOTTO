@@ -21,6 +21,13 @@ This floor is declared in [`package.json`](../package.json) under `browserslist`
 Next.js / SWC uses it to **downlevel syntax** and core-js uses it to **polyfill
 runtime APIs** down to this baseline.
 
+For repeatable Xcode launch and legacy simulator setup steps, see
+[`LEGACY_IPAD_SIMULATOR_SETUP.md`](./LEGACY_IPAD_SIMULATOR_SETUP.md). The October 7,
+2026 attempt verified a direct Xcode 26.6 launch on macOS 27.0.1, but the existing
+iPad mini 4 / iOS 15.4 device failed to boot with CoreSimulator error 401 because
+that runtime rejects hosts newer than macOS 26.99.99. Launching Xcode or a modern
+simulator does not establish iOS 15 compatibility.
+
 ## Installed home-screen mode
 
 iOS and Android home-screen installations remove ordinary browser refresh

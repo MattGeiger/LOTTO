@@ -36,6 +36,23 @@ consistent with existing patterns and workflows.
 - User-facing notifications should use `sonner` toasts unless an existing
   pattern dictates otherwise.
 
+## Scope, Authorization, and Operational Context
+
+- Keep an explicit record of the current scope and authorization across turns.
+  A read-only investigation stays read-only until the owner authorizes changes;
+  later authorization to implement or deploy carries forward with its stated
+  project boundaries. Apply a correction to the affected work and continue the
+  remaining approved plan. Do not undo approved work or roll back a deployment
+  without authorization; preserve unrelated changes.
+- Pantry closure, an unknown reopening date, or a generous testing window is
+  planning context. It does not authorize changes to saved operating hours,
+  announcements, UI, workflow, or a reopening date. A quiet service day also
+  does not authorize an outage, DNS change, or disabling a deployment.
+- WTH production testing authorization applies only to the named WTH resources.
+  Keep other agency projects and shared-account resources outside that scope.
+  Reproduce browser behavior in a controlled local/test tab when possible;
+  distinguish that evidence from observations on the agency's physical devices.
+
 ## White-label Color Guardrails
 - Agency brand selectors may override identity/presentation tokens, but must
   not override LOTTO's universal operational status vocabulary.
@@ -116,6 +133,68 @@ consistent with existing patterns and workflows.
   may advance a queued job through bounded chunks after an explicit staff
   action. Even then, enforce a hard request budget, stop if the queue does not
   shrink, surface recovery guidance, and cover both limits with tests.
+
+## Neon Cost Investigation and Public Read Boundaries
+
+- Investigate every database read path, not just `/api/state` or WebSockets.
+  Trace SQL owners through public pages, layouts, metadata, manifest, RSC and
+  prefetch requests, branding, language catalogs, translation packs, auth,
+  integrations, background jobs and direct clients. Check which datastore and
+  branch each path uses. Use `docs/NEON_READ_AUDIT.md` as the inventory and keep
+  it current when read boundaries change.
+- Public FEED inventory is served by a separate FEED HTTP server and does not
+  use LOTTO's Neon connection. Preserve its public access. LOTTO's existing
+  pairing and bearer-protected daily-summary API is a separate integration
+  that can read LOTTO's database. Do not add staff-login requirements, change
+  bearer-token rules, or block public APIs as an incidental cost fix.
+- On snapshot-enabled deployments, public queue bootstrap and recovery use
+  Cloudflare snapshots. Preserve the 120-second WebSocket reconnect grace and
+  the absence of queue SQL fallback.
+  Elapsed snapshot age alone does not prove a missing state change.
+  With `LOTTO_PUBLIC_CONFIGURATION_SNAPSHOT_ENABLED=true`, branding and public
+  language/pack inputs use the agency's validated Cloudflare configuration
+  document, including cold renders and compatible legacy requests. Never add
+  SQL fallback. Seed and verify the release before enabling the gate; release
+  activation is explicit, never automatic from an old deployment. Publication
+  after committed staff writes preserves their success on failure and queues
+  only bounded recovery. Other deployments retain Next's shared Data Cache:
+  React `cache()` shares work only within one render, and shared-cache misses
+  can read Neon. Catalog reads must remain pure; staff initialization alone
+  seeds missing language rows. See `docs/PUBLIC_CONFIGURATION_PUBLICATION.md`.
+- Account for already-open and unknown public clients. Refreshing known displays
+  does not retire older tabs elsewhere. Verify the server behavior of compatible
+  legacy requests, including failure/retry paths, without relying on every client
+  refreshing. An old RC label identifies the loaded UI; check the request's
+  hostname, deployment routing and authentication before inferring its backend.
+  Valid staff state reads remain authoritative database reads.
+- On October 2, 2026, the owner identified WTH displays as Raspberry Pi devices
+  running Chromium. A ChromeOS/Chrome user-agent classification, referrer or
+  request cadence does not identify a physical device or prove an extra/stale tab.
+  Treat those as hypotheses until traffic or device evidence confirms them.
+- Monthly usage totals do not locate the day an increase began. A change late
+  in July can explain an elevated July bucket. Configurable database branding
+  entered the v1.20.0 release on July 20, 2026; its uncached per-render SELECT
+  was a credible additional wake source, not proof of its share of the bill.
+  Verify introduction and production deployment separately; commit timestamps
+  do not prove deployment readiness. Preserve conflicting provider/chart totals
+  as unresolved evidence rather than choosing one without reconciliation.
+- Distinguish CU-hours from wall-clock uptime and inspect compute size,
+  suspension settings, branches, replicas, connection behavior and hosting jobs.
+  A fast query can still wake compute and extend its billable idle window.
+  Match arriving HTTP paths and query counts to compute start/suspend events;
+  lack of queue changes does not establish lack of database reads.
+- Verify request and SQL counts as well as UI state. A successful response,
+  low latency, or source header alone does not prove zero database work.
+  Where counters are available, use a controlled before/after interval and a
+  positive control to confirm they update. Exclude deliberate staff, SQL-editor
+  and diagnostic traffic from subsequent idle measurements.
+- Keep bounded test results separate from savings claims. Zero queue SQL or
+  zero SQL across warm requests does not establish zero Neon usage. Compare
+  full post-deployment daily CU-hour windows and overnight wakeups over 48–72
+  hours, using matching timezones and similar activity. The cumulative monthly
+  total will keep rising; measure its rate. Record remaining authenticated,
+  cold-cache, integration and direct-client reads before claiming the cause
+  eliminated or proposing further changes.
 
 ## Translation Provider Batching
 - A provider's advertised context/output ceiling is a capability, not LOTTO's
@@ -277,6 +356,12 @@ consistent with existing patterns and workflows.
 ## Deploy and Branching
 - Production is the Vercel project for `williamtemple.app`.
 - Use `dev` for staging/testing unless directed otherwise.
+- For an approved behavior release, include the agreed version bump,
+  `package.json` and root lockfile versions, `CHANGELOG.md`, in-app
+  `docs/release-notes.md` and relevant staff guides in the same deliverable.
+  Verify the deployed version and release-notes dialog; the owner should not
+  have to remind the agent after deployment. Documentation-only updates do not
+  require a new application version or production deployment.
 
 ## Agent Workflow (Adapted Commandments)
 1. State whether changes are WITHIN existing patterns or AGAINST them. If

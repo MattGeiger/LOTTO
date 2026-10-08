@@ -4,11 +4,91 @@
 
 ### Documentation
 
+- Reconciled local RC.7/RC.8 release housekeeping into operational guidance,
+  public-configuration implementation and navigation release commits. Preserved
+  deployed application source and the dependency graph; 90 targeted tests in
+  nine files passed. Clarified the later accepted iOS 15.4 simulator checkpoint
+  and verified WTH deployment access without claiming a recovery rehearsal.
+- Recorded the authorized personal-account St. Johns RC.8 activation in
+  `docs/STJOHNS_RC8_CUTOVER.md`: isolated Worker/Vercel targets, validated
+  agency configuration, preserved settings/queue and 80 anonymous requests
+  adding no covered SQL reads, with a staff positive control. Updated the
+  public-read audit and publication runbook; 48–72-hour savings remain pending.
+- Recorded RC.7's user-assisted iOS 15.4 simulator acceptance, WTH-only Worker
+  and Vercel activation, validated public configuration publication, and live
+  SQL-counter verification: 80 public requests added no covered reads, while
+  an authenticated staff positive control increased the queue-read counter.
+  Retained new sign-in, physical-device and long-term cost observation limits.
+- Added `docs/LEGACY_IPAD_SIMULATOR_SETUP.md` with the verified Finder executable
+  launch for Xcode 26.6 on macOS 27, repeatable device/runtime diagnostics and
+  the failed existing iPad mini 4 / iOS 15.4 boot (CoreSimulator error 401).
+  Linked it from the browser-support guide and separated successful Xcode
+  launch from unverified legacy Safari/application acceptance.
+  Recorded the authorized UTM escalation, verified Apple installers, isolated
+  VM settings and completed macOS 26 installation and guest desktop setup.
+  Recorded the guest-control automation blocker, a working encoded text-input
+  workaround, verified macOS 26.6.2 guest version and automatic read-only
+  installer share. Xcode was unpacked, signature-verified, installed and launched
+  inside the guest; license acceptance and the iOS 15.4 boot remain pending.
+  Recorded the owner's handoff to ChatGPT inside the VM, observed iOS 15.4
+  download progress, and delivered the technical handoff through its read-only
+  share and guest conversation. Final installation and boot remain unverified.
+
+- Recorded the approved WTH infrastructure handoff in
+  `docs/DEPLOYMENT_MIGRATION.md`: production Vercel ownership, manually restored
+  WTH Neon databases, verified data and staff/FEED/Arcade continuity, reversible
+  legacy compute shutdown and revoked temporary keys. Added a responsibility
+  checklist, recovery boundaries and remaining dependencies. Source ownership
+  remains with Matt Geiger; this is not an application behavior release.
+  Updated the record for the owner's immediate-retirement scope: hosted beta
+  removed, beta Workers/namespaces removed, exactly two WTH email keys prepared,
+  unchanged production deployment staged and the email-domain release blocker
+  recorded with pending irreversible cleanup confirmations.
+  Recorded the owner's sender-domain release, WTH's pending verification,
+  preserved enforced TLS, updated signing record and the required sender DNS
+  replacement before activating the prepared application configurations.
+  Recorded the approved DNS replacements, promoted WTH production configuration,
+  healthy FEED credential cutover, unchanged operational settings, verified
+  realtime publication/WebSocket/recovery queue, and retirement of the personal
+  WTH Worker. Provider DNS verification subsequently completed; both production
+  OTP requests succeeded and WTH Resend delivery receipts were verified. On
+  October 7, the owner confirmed fresh-browser logins for both LOTTO and FEED.
+  Recorded the owner's decision to retain FEED's Admin backup-download workflow
+  without adding backup infrastructure; obsolete-key cleanup remains pending.
+  Recorded the owner's October 7 Vercel access revision: removed the backup
+  Owner and temporary personal Member, kept Technology as sole Owner, disabled
+  automatic paid-seat enrollment and verified the upcoming invoice fell to $20.
+  Rechecked the retired beta Neon resource: no Vercel project connections and
+  its compute suspended; prepared its specific permanent-deletion review without
+  submitting deletion.
+  Recorded the owner's subsequent beta-database deletion and distinguished
+  remaining FEED image/Pi access and release-recovery dependencies from obsolete
+  resource cleanup and intentionally retained personal source ownership.
+  Added the approved Technology-owned Docker Hub account and named WTH Pi
+  Connect devices to the handoff checklist; recorded prepared signup forms,
+  required human account-creation steps and the remote-access recovery gate.
+  Recorded the owner's completed Docker signup as `williamtempletech` and
+  verified Technology email ownership; image migration and both Pi relinks
+  remain pending their operational access steps.
+  Recorded successful Docker device-login retry and full OCI image copies into
+  WTH's registry, including identical ARM64/attestation manifests and anonymous
+  retrieval. Distinguished registry parity from pending Pi pulls/startup and
+  recorded the temporary session's server-revocation verification limit.
+  Recorded the Pi handoff checkpoint: an unused temporary linking key requires
+  replacement after appearing in tool output, automatic approval review paused
+  key changes, and Safari remote-shell rendering blocked further preflight.
+  Both existing device logins and FEED production image references are intact.
+
 - Completed the owner-approved St. Johns RC.6 production cutover and a separate
   `stjohns-production` Worker environment with its own namespace and browser
   origin. Verified additive schema migration, staff persistence, publication,
   hosted recovery delivery and 120-second Cloudflare fallback. Saved settings
   were preserved; WTH's deployment and credentials remain unchanged.
+
+- Preserved the October 2 investigation corrections in `AGENTS.md`: operational
+  context and authorization boundaries, public FEED access, complete Neon-read
+  audits, legacy-client/device attribution, monthly usage interpretation,
+  controlled SQL verification, post-release observation and release completion.
 
 ## [2.0.0-rc.6] - 2026-10-02
 
