@@ -8,6 +8,7 @@
 import { NextResponse } from "next/server";
 
 import { buildLanguagePack } from "@/lib/translation/pack";
+import { isPublicConfigurationSnapshotEnabled, publicConfigurationFailureStatus } from "@/lib/realtime/public-configuration";
 
 export const runtime = "nodejs";
 
@@ -25,9 +26,14 @@ export async function GET(request: Request) {
     if (!pack) {
       return NextResponse.json({ error: "Unknown language code." }, { status: 404 });
     }
-    return NextResponse.json({ pack }, { status: 200 });
+    return NextResponse.json({ pack }, { status: 200, headers: {
+      "cache-control": "no-store",
+      "x-lotto-configuration-source": isPublicConfigurationSnapshotEnabled() ? "cloudflare" : "shared-cache",
+    } });
   } catch (error) {
     console.error("[Translations] pack failed:", error);
-    return NextResponse.json({ error: "Unable to load the language pack." }, { status: 500 });
+    return NextResponse.json({ error: "Unable to load the language pack." }, {
+      status: publicConfigurationFailureStatus(),
+    });
   }
 }

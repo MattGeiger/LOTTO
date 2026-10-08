@@ -14,7 +14,7 @@ import {
   collectFeedInventoryNames,
   fetchFeedPublicInventory,
 } from "@/lib/feed-public-inventory";
-import { getResolvedBrand } from "@/lib/brand-config/resolve";
+import { getAuthoritativeResolvedBrand } from "@/lib/brand-config/resolve";
 import { stateManager } from "@/lib/state-manager";
 import { UI_STRINGS_EN } from "@/lib/ui-strings";
 import type { TranslationType } from "./types";
@@ -54,7 +54,7 @@ export const getAnnouncementSource = async (): Promise<string | null> => {
 };
 
 export const getBrandStringSources = async (): Promise<string[]> => {
-  const brand = await getResolvedBrand();
+  const brand = await getAuthoritativeResolvedBrand();
   const serviceLabel = brand.serviceLabel?.trim();
   return serviceLabel ? [serviceLabel] : [];
 };
@@ -66,7 +66,7 @@ export const getBrandStringSources = async (): Promise<string[]> => {
 export const getInventorySource = async (): Promise<InventorySourceResult> => {
   // Inventory enablement and URL come from the resolved runtime brand (saved
   // configuration or compiled profile) — never from a cross-agency fallback.
-  const { inventory: integration } = await getResolvedBrand();
+  const { inventory: integration } = await getAuthoritativeResolvedBrand();
   const url = integration.url;
   if (!integration.enabled || !url) {
     return { names: [], ok: true, error: null, url: "" };
@@ -87,7 +87,7 @@ export const getInventorySource = async (): Promise<InventorySourceResult> => {
 const fromInjectedInventoryNames = async (
   names: string[],
 ): Promise<InventorySourceResult> => {
-  const { inventory: integration } = await getResolvedBrand();
+  const { inventory: integration } = await getAuthoritativeResolvedBrand();
   if (!integration.enabled) {
     return { names: [], ok: true, error: null, url: "" };
   }

@@ -18,9 +18,10 @@ const mockSql = vi.fn(async (strings: TemplateStringsArray, ...values: unknown[]
   const text = strings.join(" ");
   calls.push({ text, values });
   if (/INSERT INTO languages/i.test(text)) {
-    const [name, isEnabled, sortOrder] = values as [string, boolean, number];
-    if (!seeded.some((row) => row.name === name)) {
-      seeded.push({ name, is_enabled: isEnabled, sort_order: sortOrder });
+    for (const { name, isEnabled, sortOrder } of JSON.parse(values[0] as string)) {
+      if (!seeded.some((row) => row.name === name)) {
+        seeded.push({ name, is_enabled: isEnabled, sort_order: sortOrder });
+      }
     }
     return [];
   }
@@ -53,7 +54,7 @@ describe("languages store", () => {
     vi.clearAllMocks();
   });
 
-  it("seeds the full 59-language catalog on first read", async () => {
+  it("returns compiled catalog defaults without initializing storage on a read", async () => {
     const { listLanguages } = await import("@/lib/translation/languages-store");
     const rows = await listLanguages();
     expect(rows).toHaveLength(LANGUAGE_CATALOG.length);
@@ -61,6 +62,9 @@ describe("languages store", () => {
     // English seeds enabled (a base language); Bosnian seeds disabled.
     expect(rows.find((r) => r.name === "English")?.isEnabled).toBe(true);
     expect(rows.find((r) => r.name === "Bosnian")?.isEnabled).toBe(false);
+    expect(seeded).toHaveLength(0);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].text).toMatch(/SELECT/);
   });
 
   it("listEnabledLanguages returns only the eight base languages by default", async () => {
@@ -74,6 +78,17 @@ describe("languages store", () => {
     const { bulkSetEnabled } = await import("@/lib/translation/languages-store");
     const rows = await bulkSetEnabled([{ name: "Bosnian", isEnabled: true }]);
     expect(rows.find((r) => r.name === "Bosnian")?.isEnabled).toBe(true);
+    expect(calls.filter(call => /INSERT/i.test(call.text))).toHaveLength(1);
+  });
+
+  it("keeps saved choices on repeated explicit initialization and pure reads", async () => {
+    const { bulkSetEnabled, listEnabledLanguages, seedLanguagesIfEmpty } = await import("@/lib/translation/languages-store");
+    await bulkSetEnabled([{ name: "Bosnian", isEnabled: true }]);
+    await seedLanguagesIfEmpty();
+    calls = [];
+    expect((await listEnabledLanguages()).find(row => row.name === "Bosnian")?.isEnabled).toBe(true);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].text).toMatch(/SELECT/);
   });
 
   it("bulkSetEnabled cannot disable a base language", async () => {

@@ -25,6 +25,15 @@ Staff can enable many more languages, auto-translated with AI — see
   ready. Opening it refreshes that list; a blurred lower edge means more choices
   are available by swiping upward.
 
+## Updates To Language Choices
+
+On deployments with public publication enabled, language choices and packs use
+the published copy. Staff saves refresh that copy; a brief publication failure
+can leave the previous choices visible while automatic recovery runs. The eight
+built-in languages remain available. If saved changes stay missing, ask the
+application maintainer to check publication rather than repeatedly enabling the
+language again.
+
 ## Automatic Language Rotation (Display Board)
 
 Staff can make the board greet everyone in turn:

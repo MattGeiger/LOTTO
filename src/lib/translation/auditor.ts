@@ -11,6 +11,7 @@
 
 import { ALWAYS_ON_LANGUAGE_NAMES } from "@/lib/languages";
 import { listEnabledLanguages } from "@/lib/translation/languages-store";
+import { withPublicConfigurationPublicationBatch } from "@/lib/public-read-cache";
 import { getContentItems } from "./content";
 import { translatePending, type ProcessResult } from "./engine";
 import * as store from "./translations-store";
@@ -127,7 +128,7 @@ export const findMissing = async (
   types?: TranslationType[],
   inventoryNames?: string[],
   brandStrings?: string[],
-): Promise<{ details: MissingDetails; processed?: ProcessResult }> => {
+): Promise<{ details: MissingDetails; processed?: ProcessResult }> => withPublicConfigurationPublicationBatch(async () => {
   const { missing, details } = await auditMissing(inventoryNames, types, brandStrings);
   if (!process || missing.length === 0) return { details };
 
@@ -140,4 +141,4 @@ export const findMissing = async (
   }
   const processed = await translatePending();
   return { details, processed };
-};
+});

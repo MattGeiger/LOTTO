@@ -45,7 +45,7 @@ const withTimeout = async <T>(promise: Promise<T>): Promise<T> => {
 
 const ALWAYS_ON = new Set<string>(ALWAYS_ON_LANGUAGE_NAMES);
 
-// Insert the 59-language catalog on first use. Idempotent: ON CONFLICT keeps any
+// Explicit staff/setup initialization. Idempotent: ON CONFLICT keeps any
 // existing rows (and their is_enabled choices) untouched. Base languages seed as
 // enabled; everything else seeds disabled.
 export const seedLanguagesIfEmpty = async (sql: SqlClient = getSql()): Promise<void> => {
@@ -54,15 +54,13 @@ export const seedLanguagesIfEmpty = async (sql: SqlClient = getSql()): Promise<v
     isEnabled: ALWAYS_ON.has(entry.name),
     sortOrder: index,
   }));
-  for (const row of rows) {
-    await withTimeout(
-      sql`
-        INSERT INTO languages (name, is_enabled, sort_order)
-        VALUES (${row.name}, ${row.isEnabled}, ${row.sortOrder})
-        ON CONFLICT (name) DO NOTHING
-      ` as unknown as Promise<unknown>,
-    );
-  }
+  await withTimeout(sql`
+    INSERT INTO languages (name, is_enabled, sort_order)
+    SELECT name, "isEnabled", "sortOrder"
+    FROM jsonb_to_recordset(${JSON.stringify(rows)}::jsonb)
+      AS catalog(name text, "isEnabled" boolean, "sortOrder" integer)
+    ON CONFLICT (name) DO NOTHING
+  ` as unknown as Promise<unknown>);
 };
 
 const mapRow = (row: Record<string, unknown>): LanguageRow => ({
@@ -72,13 +70,17 @@ const mapRow = (row: Record<string, unknown>): LanguageRow => ({
 });
 
 export const listLanguages = async (sql: SqlClient = getSql()): Promise<LanguageRow[]> => {
-  await seedLanguagesIfEmpty(sql);
   const result = (await withTimeout(
     sql`SELECT name, is_enabled, sort_order FROM languages ORDER BY sort_order ASC` as unknown as Promise<
       Record<string, unknown>[]
     >,
   )) as Record<string, unknown>[];
-  return result.map(mapRow);
+  const saved = new Map(result.map(mapRow).map(row => [row.name, row]));
+  // Missing catalog entries get compiled defaults in memory, never read-side
+  // INSERTs. Existing enablement choices and order remain authoritative.
+  return LANGUAGE_CATALOG.map((entry, index) => saved.get(entry.name) ?? {
+    name: entry.name, isEnabled: ALWAYS_ON.has(entry.name), sortOrder: index,
+  }).sort((left, right) => left.sortOrder - right.sortOrder);
 };
 
 export const listEnabledLanguages = async (

@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 
 import { deleteConfig, updateConfig } from "@/lib/ai/ai-config-service";
 import { isEncryptionConfigured } from "@/lib/ai/encryption";
-import { aiConfigInputSchema } from "../route";
+import { aiConfigInputSchema } from "@/lib/ai/input-schema";
 
 export const runtime = "nodejs";
 

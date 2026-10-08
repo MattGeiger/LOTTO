@@ -71,7 +71,7 @@ describe("API /api/state", () => {
   describe("GET", () => {
     it("returns current state with 200", async () => {
       const { GET } = await import("@/app/api/state/route");
-      const response = await GET();
+      const response = await GET(new Request("http://localhost:3000/api/state"));
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.startNumber).toBe(1);
@@ -86,7 +86,7 @@ describe("API /api/state", () => {
         new Error("DB connection failed"),
       );
       const { GET } = await import("@/app/api/state/route");
-      const response = await GET();
+      const response = await GET(new Request("http://localhost:3000/api/state"));
       expect(response.status).toBe(500);
       const body = await response.json();
       expect(body.error).toBeDefined();

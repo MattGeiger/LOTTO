@@ -21,6 +21,7 @@ import {
 import { stateManager } from "@/lib/state-manager";
 import { UI_STRINGS_EN } from "@/lib/ui-strings";
 import { cachePublicConfiguration } from "@/lib/public-read-cache";
+import { isPublicConfigurationSnapshotEnabled, readPublicConfigurationSnapshot } from "@/lib/realtime/public-configuration";
 import { listEnabledLanguages } from "./languages-store";
 import * as store from "./translations-store";
 
@@ -70,7 +71,10 @@ const buildLanguagePackUncached = async (code: string): Promise<LanguagePack | n
   const entry = getCatalogEntryByCode(code);
   if (!entry) return null;
 
-  const completed = await store.list({ language: entry.name, status: "completed" });
+  const published = isPublicConfigurationSnapshotEnabled() ? await readPublicConfigurationSnapshot() : null;
+  const completed = published
+    ? published.translations.filter(row => row.language === entry.name)
+    : await store.list({ language: entry.name, status: "completed" });
   const byOriginal = new Map(
     completed.filter((row) => row.type === "ui_string").map((row) => [row.originalText, row]),
   );
@@ -81,7 +85,9 @@ const buildLanguagePackUncached = async (code: string): Promise<LanguagePack | n
     if (row?.translatedText) uiStrings[key] = row.translatedText;
   }
 
-  const brandSources = await activeBrandSources();
+  const brandSources = published
+    ? new Set([published.brandConfiguration?.identity.serviceLabel?.trim()].filter((text): text is string => Boolean(text)))
+    : await activeBrandSources();
   const brandStrings: Record<string, string> = {};
   for (const row of completed) {
     if (
@@ -103,7 +109,9 @@ const buildLanguagePackUncached = async (code: string): Promise<LanguagePack | n
   }
 
   let announcement: string | null = null;
-  const state = await stateManager.loadState();
+  const state = published
+    ? { announcement: published.announcement ? { enabled: true, markdown: published.announcement } : null }
+    : await stateManager.loadState();
   const active = state.announcement;
   if (active?.enabled && active.markdown?.trim()) {
     const row = completed.find(
@@ -125,7 +133,9 @@ const buildLanguagePackUncached = async (code: string): Promise<LanguagePack | n
 const cachedLanguagePack = cachePublicConfiguration("language-pack", buildLanguagePackUncached);
 export const buildLanguagePack = (code: string): Promise<LanguagePack | null> =>
   // Bound cache keys to the catalog; unknown caller input needs no datastore.
-  getCatalogEntryByCode(code) ? cachedLanguagePack(code) : Promise.resolve(null);
+  getCatalogEntryByCode(code)
+    ? (isPublicConfigurationSnapshotEnabled() ? buildLanguagePackUncached(code) : cachedLanguagePack(code))
+    : Promise.resolve(null);
 
 // A non-core language is client-ready when every distinct UI source and active
 // visitor-facing brand string has a completed translation row.
@@ -162,16 +172,21 @@ const listClientLanguagesUncached = async (): Promise<ClientLanguageOption[]> =>
     return { code: option.code, label: option.label, name: entry?.name ?? option.label, ready: true };
   });
 
-  const enabled = await listEnabledLanguages();
+  const published = isPublicConfigurationSnapshotEnabled() ? await readPublicConfigurationSnapshot() : null;
+  const enabled = published
+    ? published.enabledLanguageNames.map(name => ({ name }))
+    : await listEnabledLanguages();
   const dynamic = enabled.filter(
     (row) => !CORE_NAMES.has(row.name) && row.name !== "English",
   );
   if (dynamic.length === 0) return options;
 
   const uiSources = distinctUiSources();
-  const brandSources = await activeBrandSources();
+  const brandSources = published
+    ? new Set([published.brandConfiguration?.identity.serviceLabel?.trim()].filter((text): text is string => Boolean(text)))
+    : await activeBrandSources();
   // One query for every completed row across all languages.
-  const completed = await store.list({ status: "completed" });
+  const completed = published ? published.translations : await store.list({ status: "completed" });
   const doneUiByLanguage = new Map<string, Set<string>>();
   const doneBrandByLanguage = new Map<string, Set<string>>();
   for (const row of completed) {
@@ -206,4 +221,6 @@ const listClientLanguagesUncached = async (): Promise<ClientLanguageOption[]> =>
   return options;
 };
 
-export const listClientLanguages = cachePublicConfiguration("client-languages", listClientLanguagesUncached);
+const cachedClientLanguages = cachePublicConfiguration("client-languages", listClientLanguagesUncached);
+export const listClientLanguages = () => isPublicConfigurationSnapshotEnabled()
+  ? listClientLanguagesUncached() : cachedClientLanguages();

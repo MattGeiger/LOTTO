@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getArcadeHighScoreStore, isArcadeHighScoreUnavailable } from "@/arcade/lib/high-score-store";
+import { isRateLimited } from "@/arcade/lib/high-score-rate-limit";
 import {
   ARCADE_DIFFICULTY_KEYS,
   ARCADE_GAME_SLUGS,
@@ -29,30 +30,10 @@ const postSchema = getSchema.extend({
   score: z.number().int().min(1).max(ARCADE_HIGH_SCORE_MAX_SCORE),
 });
 
-type RateBucket = { timestamps: number[] };
-const rateBuckets = new Map<string, RateBucket>();
-
-function isRateLimited(key: string, maxRequests: number, windowMs = 60_000): boolean {
-  const now = Date.now();
-  const bucket = rateBuckets.get(key) ?? { timestamps: [] };
-  bucket.timestamps = bucket.timestamps.filter((timestamp) => timestamp > now - windowMs);
-  if (bucket.timestamps.length >= maxRequests) {
-    rateBuckets.set(key, bucket);
-    return true;
-  }
-  bucket.timestamps.push(now);
-  rateBuckets.set(key, bucket);
-  return false;
-}
-
 function rateLimitKey(request: Request, action: "GET" | "POST"): string {
   const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   const ip = forwarded || request.headers.get("x-real-ip") || "local";
   return `${action}:${ip}`;
-}
-
-export function __resetArcadeHighScoreRateLimitForTests(): void {
-  rateBuckets.clear();
 }
 
 export async function GET(request: Request) {

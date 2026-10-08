@@ -10,6 +10,7 @@ import { z } from "zod";
 
 import { NoActiveConfigError, translateRowsByIds } from "@/lib/translation/engine";
 import * as store from "@/lib/translation/translations-store";
+import { withPublicConfigurationPublicationBatch } from "@/lib/public-read-cache";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -27,10 +28,12 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
 
   try {
-    for (const id of parsed.data.ids) {
-      await store.update(id, { status: "pending", metadata: null });
-    }
-    const result = await translateRowsByIds(parsed.data.ids);
+    const result = await withPublicConfigurationPublicationBatch(async () => {
+      for (const id of parsed.data.ids) {
+        await store.update(id, { status: "pending", metadata: null });
+      }
+      return translateRowsByIds(parsed.data.ids);
+    });
     return NextResponse.json({ ...result }, { status: 200 });
   } catch (error) {
     if (error instanceof NoActiveConfigError) {

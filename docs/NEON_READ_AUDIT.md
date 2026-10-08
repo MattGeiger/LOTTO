@@ -1,4 +1,4 @@
-# Neon read audit — October 2, 2026
+# Neon read audit — updated October 8, 2026
 
 ## Scope and result
 
@@ -9,11 +9,14 @@ traffic. No operating-hours or stored agency-state change is part of the fix.
 The owner directed that FEED/public access remain unchanged. No authentication
 gate changes are included in this release.
 
-Public queue state uses Cloudflare. Public configuration uses Next's shared
-Data Cache, not Cloudflare. Warm configuration reads avoid SQL; cache cold
-starts/evictions can still query Neon. Thus RC.6 does not claim every possible
-anonymous request is database-free. A durable Cloudflare configuration projection
-would require a separately planned protocol/publication extension.
+Public queue state uses Cloudflare when its independent gate is enabled. RC.7
+adds `LOTTO_PUBLIC_CONFIGURATION_SNAPSHOT_ENABLED`: public branding, visitor
+catalogs and packs then use a published Cloudflare document, including active
+announcement selection, without SQL fallback on cold or failed reads. With
+that gate off, RC.6's shared Data Cache behavior remains: misses can query Neon.
+Version alone does not enable the new boundary. See
+[publication operations](PUBLIC_CONFIGURATION_PUBLICATION.md) and
+[the implementation plan](PUBLIC_CONFIGURATION_PUBLICATION_PLAN.md).
 
 The October 3 St. Johns RC.6 cutover applies the same opt-in boundaries to a
 separate agency Worker and database. The application version alone does not
@@ -23,12 +26,12 @@ must be configured and a valid projection published first. See
 
 ## Complete application read inventory
 
-| SQL owner | Entry points and reads | RC.6 boundary |
+| SQL owner | Entry points and reads | RC.7 boundary (configuration gate enabled) |
 | --- | --- | --- |
 | `state-manager-db.ts` | Singleton state/revision; state read-modify-write; snapshots/undo/redo; queue summaries; publication status and retry | Anonymous `/api/state` uses Cloudflare when enabled, with no SQL fallback. Staff state and commands, bearer-authorized FEED summaries, Admin diagnostics and private queue retry remain authoritative SQL. |
-| `brand-config/store-db.ts` | Active configuration; saved rows/templates; configuration CRUD | Public HTML, RSC/prefetch, metadata, manifest, CSP and email branding share cached active configuration. Admin list GET still reads SQL and seeds templates; no display consumer calls it. Writes invalidate the cache. |
-| `translation/languages-store-db.ts` | Catalog/enabled rows; seeding and enablement | Visitor `?client` uses cached readiness catalog. Catalog/`?enabled` management reads still use SQL with existing access rules. Successful enablement invalidates public caches. |
-| `translation/translations-store-db.ts` | Filtered translations, individual rows and mutations | Public packs cache completed translations, active-brand copy and announcement. Management/metrics GET still read SQL with existing access rules. Successful single/bulk edits invalidate public caches. |
+| `brand-config/store-db.ts` | Active configuration; saved rows/templates; configuration CRUD | Public HTML, RSC/prefetch, metadata, manifest, CSP and email branding read published Cloudflare configuration. Admin list GET still reads SQL and seeds templates. Successful writes invalidate the old shared cache and publish. |
+| `translation/languages-store-db.ts` | Catalog/enabled rows; explicit initialization and enablement | Visitor `?client` derives readiness from Cloudflare. Catalog/`?enabled` management reads remain one SQL SELECT with existing access rules and no seeding writes. Explicit staff enablement uses one bulk seed INSERT, preserving saved choices, then publishes. |
+| `translation/translations-store-db.ts` | Filtered translations, individual rows and mutations | Public packs derive completed translations, active-brand copy and active announcement from Cloudflare, with no state SELECT. Management/metrics GET still read SQL. Successful single/bulk edits publish. |
 | `ai/ai-config-store-db.ts` | Configurations and stored provider credentials, CRUD | Admin component GET still reads SQL with existing access rules; staff-driven translation jobs remain authenticated. No ordinary display consumer. |
 | `ai/system-prompt-store-db.ts` | Prompt list/selection, CRUD | Admin component GET still reads SQL with existing access rules; explicit processing remains staff-driven. No ordinary display consumer. |
 | `feed-integration-token/store-db.ts` | LOTTO integration token hash/status; usage metadata | Existing LOTTO pairing and daily-summary API behavior remains unchanged. The daily-summary handler reads token status before authorization; supplied tokens are checked against authoritative credentials. This is separate from FEED's public inventory server. |
@@ -49,9 +52,22 @@ must be configured and a valid projection published first. See
 - Public inventory fetches the configured FEED HTTP origin. It does not use
   LOTTO's Neon connection. LOTTO also exposes a separate bearer-protected
   daily-summary API; external callers/scheduling are not verified by this audit.
-- `vercel.json` contains only the private publication-queue trigger, no cron.
-  That queue has an eight-delivery/one-hour budget and is enqueued by commits.
-  No state change means no newly enqueued repair work.
+- `vercel.json` has two private publication-queue triggers and no cron. Queue
+  state repair retains its existing outbox. Configuration repair is enqueued
+  only after a failed staff-triggered publication; success creates no job.
+  Each has an eight-delivery/one-hour budget. Configuration repair checks the
+  Cloudflare release/progress before authoritative reads and skips already
+  published generations. No public read enqueues either queue.
+- Configuration publication deliberately performs four authoritative reads
+  after a relevant staff save or explicit maintenance action: active brand,
+  enabled catalog, completed translations and current state. It is not a
+  periodic synchronization job. It can still incur compute during staff work
+  and bounded repair; this audit does not claim zero total Neon use.
+- Staff translation discovery reads committed appearance directly rather than
+  a potentially delayed public copy. Translation preparation, processing,
+  recovery and bulk retry group internal saves into one public publication
+  per logical operation, preserving batching rather than adding four reads
+  for every staged row.
 - Importing the state manager constructs the HTTP SQL client but does not read
   the state. Brand template seeding happens in the Admin configuration GET,
   not in public page rendering.
@@ -83,7 +99,27 @@ RC.6's controlled warm-request verification subsequently added zero active-brand
 language, translation or queue SELECTs across 80 public requests. A staff-read
 positive control increased the queue counter, confirming that it was updating.
 See [production validation](PUBLIC_READ_NEON_ISOLATION_VALIDATION.md). Cold cache
-misses remain SQL reads; an unattended comparison is still required.
+misses remain SQL reads with the configuration gate off; an unattended comparison
+after RC.7 activation is still required. RC.7's local regression suite forces
+cold module/shared caches and asserts zero authoritative reads across repeated
+public branding, catalog and pack requests, including failure paths. That is
+code-level evidence, distinct from live SQL counters and measured savings.
+
+RC.7 was activated on WTH's organization-owned production project on October 7.
+Eighty anonymous, cache-busting requests across public pages, manifest,
+catalog/packs and legacy queue GETs added no branding, language, translation or
+queue SELECTs in the measured interval. An authenticated staff positive control
+increased the queue counter from 3 to 4. See the [activation record](PUBLIC_CONFIGURATION_PUBLICATION.md#wth-production-activation--october-7-2026).
+The configuration gate was enabled on this WTH deployment; its October 7
+rollout did not deploy other agencies.
+
+On October 8 the owner authorized the same update for personal-account St.
+Johns Food Share. Its own RC.8 configuration was published and validated before
+enabling its production gate. Eighty anonymous requests added no covered
+branding, language, translation or queue SELECTs; a staff positive control
+increased the queue counter from 5 to 7. Queue data and manifest were unchanged.
+See [St. Johns cutover](STJOHNS_RC8_CUTOVER.md). Future writes/failures and
+48–72-hour consumption remain separate verification boundaries for both agencies.
 
 The live source header, warm configuration counters and staff access passed
 controlled verification. Next compare compute start/

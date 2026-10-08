@@ -56,8 +56,8 @@ const rawPostRequest = (body: BodyInit, ip = "203.0.113.13") =>
 describe("API /api/arcade/high-scores", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
-    const route = await import("@/app/api/arcade/high-scores/route");
-    route.__resetArcadeHighScoreRateLimitForTests();
+    const { resetArcadeHighScoreRateLimitForTests } = await import("@/arcade/lib/high-score-rate-limit");
+    resetArcadeHighScoreRateLimitForTests();
   });
 
   it("returns top scores for a valid scope", async () => {

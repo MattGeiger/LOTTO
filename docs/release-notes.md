@@ -1,3 +1,19 @@
+## Version 2.0.0-rc.7 — October 7, 2026
+
+- **Public appearance and language loading avoid database wake-ups.** On
+  deployments with publication enabled, these reads use the published public
+  copy even when the hosting cache is empty. Compatible older browser tabs
+  receive the same protection through their existing API requests.
+- **Staff saves refresh the public copy.** Appearance, language translations
+  and announcements publish after successful saves. A brief publication failure
+  keeps the previous public copy and triggers bounded recovery; the saved staff
+  change is retained.
+- **Opening a language catalog no longer initializes database rows.** Saved
+  enablement choices remain intact. Initialization belongs to staff changes.
+
+The two-minute live queue recovery period and existing staff and public inventory
+access are preserved. Actual compute savings require several days of observation.
+
 ## Version 2.0.0-rc.6 — October 2, 2026
 
 - **Older public pages also avoid unnecessary database wake-ups.** Their queue

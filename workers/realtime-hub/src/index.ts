@@ -7,6 +7,10 @@
 
 import { DurableObject } from "cloudflare:workers";
 import { REALTIME_PING, REALTIME_PONG } from "../../../src/lib/realtime/heartbeat";
+import {
+  configurationReservationSchema, hashPublicConfiguration, MAX_CONFIGURATION_BYTES,
+  publicConfigurationEnvelopeSchema,
+} from "../../../src/lib/realtime/public-configuration-protocol";
 
 import {
   agencyIdSchema,
@@ -26,6 +30,10 @@ type Env = {
 const MAX_PUBLISH_BYTES = 1_000_000;
 const MAX_CONTROL_BYTES = 1_024;
 const STATE_STORAGE_KEY = "latest-public-state";
+const CONFIGURATION_META_KEY = "public-configuration-meta";
+const CONFIGURATION_RELEASE_KEY = "public-configuration-release";
+const CONFIGURATION_REVISION_KEY = "public-configuration-revision";
+type ConfigurationMeta = { chunkCount: number; revision: number; checksum: string };
 const CONNECTIONS_DRAINED_STORAGE_KEY = "connections-drained";
 const SUBSCRIBER_TAG = "public-state-subscriber";
 const OPERATOR_DRAIN_CLOSE_CODE = 4_001;
@@ -94,14 +102,14 @@ const secureCompare = async (left: string, right: string) => {
 
 const parseRoute = (pathname: string) => {
   const match = pathname.match(
-    /^\/v1\/agencies\/([^/]+)\/(state|events|publish|control)\/?$/,
+    /^\/v1\/agencies\/([^/]+)\/(state|events|publish|control|configuration|configuration-revision|configuration-status)\/?$/,
   );
   if (!match) return null;
   const agencyResult = agencyIdSchema.safeParse(decodeURIComponent(match[1]));
   if (!agencyResult.success) return null;
   return {
     agencyId: agencyResult.data,
-    action: match[2] as "state" | "events" | "publish" | "control",
+    action: match[2],
   };
 };
 
@@ -113,6 +121,73 @@ export class PublicStateHub extends DurableObject<Env> {
 
   async fetch(request: Request): Promise<Response> {
     const action = new URL(request.url).pathname.slice(1);
+    if (action === "configuration-status" && request.method === "GET") {
+      return this.ctx.storage.transaction(async transaction => {
+        const meta = await transaction.get<ConfigurationMeta>(CONFIGURATION_META_KEY);
+        return jsonResponse({
+          release: await transaction.get<string>(CONFIGURATION_RELEASE_KEY) ?? null,
+          reservedRevision: await transaction.get<number>(CONFIGURATION_REVISION_KEY) ?? 0,
+          publishedRevision: meta?.revision ?? 0,
+        });
+      });
+    }
+    if (action === "configuration-revision" && request.method === "POST") {
+      const parsed = configurationReservationSchema.safeParse(await request.json());
+      if (!parsed.success) return jsonResponse({ error: "Invalid configuration reservation." }, 400);
+      return this.ctx.storage.transaction(async transaction => {
+        const release = await transaction.get<string>(CONFIGURATION_RELEASE_KEY);
+        if (release !== parsed.data.release && !parsed.data.activate) {
+          return jsonResponse({ error: "Configuration release requires explicit activation." }, 409);
+        }
+        const revision = (await transaction.get<number>(CONFIGURATION_REVISION_KEY) ?? 0) + 1;
+        await transaction.put(CONFIGURATION_RELEASE_KEY, parsed.data.release);
+        await transaction.put(CONFIGURATION_REVISION_KEY, revision);
+        return jsonResponse({ revision });
+      });
+    }
+    if (action === "configuration" && request.method === "GET") {
+      // Read the manifest and all chunks in one transaction: no mixed document
+      // if a staff publication arrives while this read is in flight.
+      return this.ctx.storage.transaction(async transaction => {
+        const meta = await transaction.get<ConfigurationMeta>(CONFIGURATION_META_KEY);
+        if (!meta) return jsonResponse({ error: "No public configuration has been published." }, 404);
+        const chunks = await Promise.all(Array.from({ length: meta.chunkCount }, (_, index) =>
+          transaction.get<string>(`public-configuration-chunk:${index}`)));
+        if (chunks.some(chunk => typeof chunk !== "string")) return jsonResponse({ error: "Configuration is incomplete." }, 503);
+        return jsonResponse(JSON.parse(chunks.join("")));
+      });
+    }
+    if (action === "configuration" && request.method === "POST") {
+      const parsed = publicConfigurationEnvelopeSchema.safeParse(await request.json());
+      if (!parsed.success) return jsonResponse({ error: "Invalid configuration." }, 400);
+      const envelope = parsed.data;
+      return this.ctx.storage.transaction(async transaction => {
+        const release = await transaction.get<string>(CONFIGURATION_RELEASE_KEY);
+        const reserved = await transaction.get<number>(CONFIGURATION_REVISION_KEY) ?? 0;
+        const previous = await transaction.get<ConfigurationMeta>(CONFIGURATION_META_KEY);
+        if (release !== envelope.release || envelope.revision > reserved) {
+          return jsonResponse({ error: "Configuration reservation does not match." }, 409);
+        }
+        if (envelope.revision < reserved) return jsonResponse({ accepted: true, superseded: true });
+        if (previous?.revision === envelope.revision) {
+          return previous.checksum === envelope.checksum
+            ? jsonResponse({ accepted: true, duplicate: true })
+            : jsonResponse({ error: "Configuration revision conflict." }, 409);
+        }
+        const text = JSON.stringify(envelope);
+        // 8,000 UTF-16 units are at most 32KB UTF-8, below the KV value limit.
+        const chunks: string[] = [];
+        for (let offset = 0; offset < text.length; offset += 8_000) chunks.push(text.slice(offset, offset + 8_000));
+        await Promise.all(chunks.map((chunk, index) => transaction.put(`public-configuration-chunk:${index}`, chunk)));
+        for (let index = chunks.length; index < (previous?.chunkCount ?? 0); index++) {
+          await transaction.delete(`public-configuration-chunk:${index}`);
+        }
+        await transaction.put(CONFIGURATION_META_KEY, {
+          chunkCount: chunks.length, revision: envelope.revision, checksum: envelope.checksum,
+        });
+        return jsonResponse({ accepted: true, revision: envelope.revision }, 202);
+      });
+    }
     if (action === "state" && request.method === "GET") {
       const latest =
         await this.ctx.storage.get<PublicStateEnvelope>(STATE_STORAGE_KEY);
@@ -330,17 +405,18 @@ const worker: ExportedHandler<Env> = {
       return stub.fetch(new Request(internalUrl, request));
     }
 
-    if (route.action === "state") {
+    if (route.action === "state" || (route.action === "configuration" && request.method === "GET")) {
       if (request.method !== "GET") {
         return jsonResponse({ error: "Method not allowed." }, 405);
       }
-      const internalUrl = new URL("/state", request.url);
+      const internalUrl = new URL(`/${route.action}`, request.url);
       const response = await stub.fetch(new Request(internalUrl, request));
       return withCors(response, origin, allowedOrigins);
     }
 
     const isControl = route.action === "control";
-    const methodAllowed = isControl
+    const isConfigurationStatus = route.action === "configuration-status";
+    const methodAllowed = isConfigurationStatus ? request.method === "GET" : isControl
       ? request.method === "GET" || request.method === "POST"
       : request.method === "POST";
     if (!methodAllowed) return jsonResponse({ error: "Method not allowed." }, 405);
@@ -373,12 +449,13 @@ const worker: ExportedHandler<Env> = {
       return jsonResponse({ error: "Control credential is misconfigured." }, 503);
     }
 
-    if (isControl && request.method === "GET") {
-      const internalUrl = new URL("/control", request.url);
+    if ((isControl || isConfigurationStatus) && request.method === "GET") {
+      const internalUrl = new URL(`/${route.action}`, request.url);
       return stub.fetch(new Request(internalUrl, { method: "GET" }));
     }
 
-    const maxBodyBytes = isControl ? MAX_CONTROL_BYTES : MAX_PUBLISH_BYTES;
+    const maxBodyBytes = route.action === "configuration" ? MAX_CONFIGURATION_BYTES
+      : isControl || route.action === "configuration-revision" ? MAX_CONTROL_BYTES : MAX_PUBLISH_BYTES;
     const contentLength = Number(request.headers.get("content-length") ?? 0);
     if (Number.isFinite(contentLength) && contentLength > maxBodyBytes) {
       return jsonResponse({ error: "Request body is too large." }, 413);
@@ -405,6 +482,26 @@ const worker: ExportedHandler<Env> = {
           body: JSON.stringify(json),
         }),
       );
+    }
+
+    if (route.action === "configuration-revision") {
+      const parsed = configurationReservationSchema.safeParse(json);
+      if (!parsed.success) return jsonResponse({ error: "Invalid configuration reservation." }, 400);
+      return stub.fetch(new Request(new URL("/configuration-revision", request.url), {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(parsed.data),
+      }));
+    }
+    if (route.action === "configuration") {
+      const parsed = publicConfigurationEnvelopeSchema.safeParse(json);
+      if (!parsed.success || parsed.data.agencyId !== route.agencyId) {
+        return jsonResponse({ error: "Invalid configuration envelope." }, 400);
+      }
+      if (await hashPublicConfiguration(parsed.data.data) !== parsed.data.checksum) {
+        return jsonResponse({ error: "Configuration checksum mismatch." }, 400);
+      }
+      return stub.fetch(new Request(new URL("/configuration", request.url), {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(parsed.data),
+      }));
     }
 
     const parsed = publicStateEnvelopeSchema.safeParse(json);

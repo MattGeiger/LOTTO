@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { bulkSetEnabled, listEnabledLanguages, listLanguages } from "@/lib/translation/languages-store";
+import { isPublicConfigurationSnapshotEnabled, publicConfigurationFailureStatus } from "@/lib/realtime/public-configuration";
 
 export const runtime = "nodejs";
 
@@ -33,7 +34,10 @@ export async function GET(request: Request) {
     if (url.searchParams.has("client")) {
       const { listClientLanguages } = await import("@/lib/translation/pack");
       const languages = await listClientLanguages();
-      return NextResponse.json({ languages }, { status: 200 });
+      return NextResponse.json({ languages }, { status: 200, headers: {
+        "cache-control": "no-store",
+        "x-lotto-configuration-source": isPublicConfigurationSnapshotEnabled() ? "cloudflare" : "shared-cache",
+      } });
     }
     const enabledOnly = url.searchParams.has("enabled");
     const languages = enabledOnly ? await listEnabledLanguages() : await listLanguages();
@@ -42,7 +46,7 @@ export async function GET(request: Request) {
     console.error("[Languages] GET failed:", error);
     return NextResponse.json(
       { error: "Unable to load languages. Please try again shortly." },
-      { status: 500 },
+      { status: new URL(request.url).searchParams.has("client") ? publicConfigurationFailureStatus() : 500 },
     );
   }
 }

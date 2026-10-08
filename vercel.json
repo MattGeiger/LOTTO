@@ -1,6 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
+    "src/app/api/queues/configuration-publication/route.ts": {
+      "experimentalTriggers": [{ "type": "queue/v2beta", "topic": "lotto-public-configuration-repair" }]
+    },
     "src/app/api/queues/realtime-publication/route.ts": {
       "experimentalTriggers": [{ "type": "queue/v2beta", "topic": "lotto-public-state-repair" }]
     }

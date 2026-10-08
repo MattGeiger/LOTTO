@@ -206,7 +206,7 @@ const isRateLimited = () => {
 
 // --- Handlers ---
 
-export async function GET(request?: Request) {
+export async function GET(request: Request) {
   const headers = { "cache-control": "private, no-store", vary: "Cookie" };
   let snapshotEnabled = false;
   try {

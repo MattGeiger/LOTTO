@@ -13,5 +13,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "../../src/lib/realtime/**/*.ts"]
+  "include": ["src/**/*.ts"]
 }

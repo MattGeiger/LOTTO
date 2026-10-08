@@ -56,6 +56,9 @@
     },
     "production": {
       "name": "lotto-realtime-production",
+      // WTH owns production after the infrastructure migration. Explicit scope
+      // prevents a personal CLI session from recreating the retired Worker.
+      "account_id": "818dcedfd7ee838741c00e480ba36386",
       "preview_urls": false,
       "durable_objects": {
         "bindings": [

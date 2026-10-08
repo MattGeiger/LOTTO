@@ -88,9 +88,14 @@ appearance stays in place.
   controls, text, and Now Serving use the active appearance. Snake pieces,
   pellets, bricks, and other gameplay colors remain stable and recognizable.
 - **Activation is atomic and reversible.** LOTTO prepares changed localized
-  service copy first, then applies the whole appearance for everyone at once.
-  **Use built-in appearance** on the Appearance
-  card reverts just as instantly; your saved configuration stays available.
+  service copy first, then publishes the whole appearance together. Reload a
+  public page to see the new appearance. **Use built-in appearance** on the
+  Appearance card restores the built-in look; your saved configuration stays
+  available.
+- **A saved change can reach public pages a little later.** If publication is
+  briefly unavailable, the saved change is retained and public pages keep the
+  previous copy while recovery runs. If the old appearance persists, ask the
+  application maintainer to check publication before re-entering your changes.
 - **Drafts are safe.** A saved draft changes nothing until you activate it.
 - **Editing.** Choose **Edit** next to a saved appearance to reopen the
   steps with its current values.

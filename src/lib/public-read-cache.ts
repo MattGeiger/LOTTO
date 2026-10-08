@@ -4,6 +4,7 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { revalidateTag, unstable_cache } from "next/cache";
 import { version } from "../../package.json";
 
@@ -18,6 +19,22 @@ const scope = createHash("sha256")
   ]))
   .digest("hex");
 const configurationTag = `lotto-public-configuration-v1:${scope}`;
+const publicationScope = new AsyncLocalStorage<{ changed: boolean }>();
+
+const publishCommittedConfiguration = async () => {
+  const { publishConfigurationAfterCommittedWrite } = await import("@/lib/realtime/configuration-publication");
+  await publishConfigurationAfterCommittedWrite();
+};
+
+// A staff translation job may commit many rows. Publish once after the logical
+// operation, including partial commits if a later step fails. Nested operations
+// share the scope; concurrent requests retain independent publication state.
+export async function withPublicConfigurationPublicationBatch<T>(operation: () => Promise<T>): Promise<T> {
+  if (publicationScope.getStore()) return operation();
+  const batch = { changed: false };
+  try { return await publicationScope.run(batch, operation); }
+  finally { if (batch.changed) await publishCommittedConfiguration(); }
+}
 
 const enabled = () =>
   process.env.NODE_ENV === "production"
@@ -50,5 +67,8 @@ export const invalidatePublicConfigurationAfter = <Args extends unknown[], Resul
 ): ((...args: Args) => Promise<Result>) => async (...args) => {
   const result = await write(...args);
   invalidatePublicConfiguration();
+  const batch = publicationScope.getStore();
+  if (batch) batch.changed = true;
+  else await publishCommittedConfiguration();
   return result;
 };

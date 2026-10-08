@@ -10,11 +10,12 @@
 // flagged in metadata so they aren't retried endlessly.
 
 import { translateRowsByIds, type ProcessResult } from "./engine";
+import { withPublicConfigurationPublicationBatch } from "@/lib/public-read-cache";
 import * as store from "./translations-store";
 
 const STUCK_MS = 60_000;
 
-export const recoverStuck = async (): Promise<{ recovered: number } & ProcessResult> => {
+export const recoverStuck = async (): Promise<{ recovered: number } & ProcessResult> => withPublicConfigurationPublicationBatch(async () => {
   const pending = await store.list({ status: "pending" });
   const now = Date.now();
   const stuck = pending.filter(
@@ -30,4 +31,4 @@ export const recoverStuck = async (): Promise<{ recovered: number } & ProcessRes
     ? await translateRowsByIds(ids)
     : { translated: 0, failed: 0, remaining: 0, providerRequests: 0 };
   return { recovered: stuck.length, ...processed };
-};
+});

@@ -90,6 +90,45 @@
   audits, legacy-client/device attribution, monthly usage interpretation,
   controlled SQL verification, post-release observation and release completion.
 
+## [2.0.0-rc.7] - 2026-10-07
+
+### Fixed
+
+- **Publish public configuration outside Neon.** The independently gated
+  Cloudflare document supplies active branding, visitor language readiness,
+  completed public translation text and the active announcement. Public pages,
+  metadata, manifests and compatible legacy language/pack requests use it even
+  with a cold Vercel cache. Missing, invalid or unavailable documents never
+  fall through to SQL; branding uses its compiled fallback and language APIs
+  report temporary unavailability.
+- **Publish after successful staff saves.** Existing configuration-write
+  boundaries publish a validated, agency-scoped, release-scoped document.
+  Monotonic reservations and atomic chunk storage prevent mixed or superseded
+  documents. Failed publication preserves committed staff success and permits
+  at most eight recovery deliveries within one hour. Successful saves create
+  no recurring recovery work; an authenticated endpoint supports explicit
+  bootstrap and republish.
+- Staff translation discovery remains authoritative during publication
+  delays. Preparation, processing, recovery and bulk retry group internal
+  saves into one publication per logical operation, including partial commits.
+- **Keep language reads pure.** Catalog reads merge compiled defaults with
+  persisted choices using one SELECT and no seeding writes. Explicit staff
+  enablement seeds missing rows in one idempotent bulk INSERT.
+- Moved existing AI and Arcade helpers out of route exports and corrected
+  request handler signatures required by the installed Next build validator;
+  their behavior and access rules are preserved. No dependencies changed.
+
+### Documentation
+
+- Added the implementation plan and operational publication runbook; updated
+  the Neon read inventory, agency rollout guardrails, searchable Appearance
+  and Languages Help, Worker documentation and production setting example.
+  Package, root lockfile and in-app notes agree on `2.0.0-rc.7`.
+- WTH is the intended operational rollout. Other agency flags and deployments
+  remain outside scope. Local verification is recorded separately from live
+  activation and subsequent 48–72-hour compute observations; this release does
+  not claim a measured dollar saving or explain Vercel's selective cache misses.
+
 ## [2.0.0-rc.6] - 2026-10-02
 
 ### Fixed

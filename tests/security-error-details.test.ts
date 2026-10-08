@@ -27,7 +27,7 @@ describe("L1: API error responses must not leak internal details", () => {
     );
 
     const { GET } = await import("@/app/api/state/route");
-    const response = await GET();
+    const response = await GET(new Request("http://localhost:3000/api/state"));
     const body = await response.json();
 
     expect(response.status).toBe(500);

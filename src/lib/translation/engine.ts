@@ -9,6 +9,7 @@
 // calling the active AI configuration's provider in bounded structured batches.
 
 import { randomUUID } from "node:crypto";
+import { withPublicConfigurationPublicationBatch } from "@/lib/public-read-cache";
 
 import { decryptApiKey } from "@/lib/ai/encryption";
 import { getActiveConfig } from "@/lib/ai/ai-config-service";
@@ -237,7 +238,7 @@ const groupsOf = (records: ReadonlyArray<TranslationRecord>): TranslationRecord[
 };
 
 // Translate a specific set of pending/failed rows by id.
-export const translateRowsByIds = async (ids: number[]): Promise<ProcessResult> => {
+export const translateRowsByIds = async (ids: number[]): Promise<ProcessResult> => withPublicConfigurationPublicationBatch(async () => {
   if (ids.length === 0) {
     return { translated: 0, failed: 0, remaining: 0, providerRequests: 0 };
   }
@@ -263,11 +264,11 @@ export const translateRowsByIds = async (ids: number[]): Promise<ProcessResult> 
   }
   const remaining = (await store.list({ status: "pending" })).length;
   return { translated, failed, remaining, providerRequests, ...(stopped ? { stopped } : {}) };
-};
+});
 
 // Translate one highest-priority same-language/content batch; reports how many
 // pending rows remain so the authenticated preparation flow can advance it.
-export const translatePending = async (limit = TRANSLATION_BATCH_SIZE): Promise<ProcessResult> => {
+export const translatePending = async (limit = TRANSLATION_BATCH_SIZE): Promise<ProcessResult> => withPublicConfigurationPublicationBatch(async () => {
   const allPending = await store.list({ status: "pending" });
   const ordered = orderPending(allPending);
   const first = ordered[0];
@@ -279,4 +280,4 @@ export const translatePending = async (limit = TRANSLATION_BATCH_SIZE): Promise<
   params.requestDeadline = Date.now() + 40_000;
   const result = await translateRecordBatch(batch, params);
   return { ...result, remaining: Math.max(0, allPending.length - result.translated - result.failed) };
-};
+});

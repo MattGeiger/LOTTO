@@ -1,7 +1,7 @@
 # LOTTO realtime public-state hub
 
-This Worker is the isolated Phase 1/2 proof for LOTTO's provisional v2.0
-architecture. It uses one SQLite-backed Durable Object per agency to retain the
+This Worker supports LOTTO's isolated agency realtime deployments. It uses one
+SQLite-backed Durable Object per agency to retain the
 latest allowlisted public state and push revisioned updates to subscribed
 browsers through the WebSocket Hibernation API.
 
@@ -16,6 +16,33 @@ the new client. `realtime:verify` checks the actual ping/pong exchange as well
 as publication, snapshot, revision, CORS, and drain/resume behavior.
 
 ## Local development
+
+### RC.7 public configuration
+
+The same agency object also stores an independent, checksummed configuration
+document: active appearance, enabled language names, completed public text and
+the active announcement. It contains no staff records, drafts, provider keys,
+job metadata or costs. This is a Cloudflare-backed public read, not a claim
+that the response is cached by a CDN.
+
+- Public `GET /v1/agencies/<agency>/configuration` returns the latest document.
+- Authenticated `POST .../configuration-revision` reserves a generation;
+  `{ "release": "2.0.0-rc.7", "activate": true }` explicitly selects a release.
+- Authenticated `POST .../configuration` validates agency, checksum and the
+  reservation, then atomically replaces chunked storage.
+- Authenticated `GET .../configuration-status` returns publication progress.
+
+The existing `PUBLISH_TOKEN` protects all three maintenance operations; control
+and WebSocket behavior are unchanged. Test with
+`npx vitest run tests/public-configuration-worker.test.ts` (synthetic local
+runtime only). See `docs/PUBLIC_CONFIGURATION_PUBLICATION.md` for rollout.
+
+WTH infrastructure has migrated to WTH's account. Before any remote deployment,
+verify the account, existing Worker and namespace against the Vercel production
+hub setting. The historical personal WTH and beta Workers below were retired;
+do not recreate them. St. Johns remains separately managed. Its authorized
+October 8 RC.8 configuration activation is recorded in
+`docs/STJOHNS_RC8_CUTOVER.md`; it uses the personal account and its own namespace.
 
 1. Copy `.dev.vars.example` to `.dev.vars` and replace the placeholder token.
 2. Run `npm run realtime:dev` from the repository root.
@@ -43,11 +70,13 @@ with HTTP 503, but publication and snapshot storage continue. Resume allows new
 connections, which immediately receive the newest stored projection. The
 control token is intentionally different from the Vercel-held publish token.
 
-## Remote beta
+## Historical remote beta (retired)
 
-The standalone proof is deployed at
-`https://lotto-realtime-beta.et2-geiger.workers.dev`. It is intentionally not
-connected to Neon or a LOTTO client yet. Hash-based Cloudflare preview URLs are
+The standalone proof was deployed at
+`https://lotto-realtime-beta.et2-geiger.workers.dev`. It was initially not
+connected to Neon or a LOTTO client. That resource is retired; do not deploy to
+or recreate it. The remaining instructions in this section describe the proof.
+Hash-based Cloudflare preview URLs are
 disabled; the account `workers.dev` route is the only deployed hostname.
 
 After rotating `PUBLISH_TOKEN` and the independent `CONTROL_TOKEN`, allow Cloudflare's serving deployment a short
