@@ -2,7 +2,7 @@
 
 **Status:** Shipped; current public navigation source of truth.
 **Scope:** Persistent bottom tab bar across enabled top-level public surfaces.
-**Last updated:** 2026-08-30
+**Last updated:** 2026-10-07
 
 ---
 
@@ -93,15 +93,18 @@ without reordering the other destinations.
 
 ## Layout & Presentation
 
-### Desktop — floating capsule dock
+### Desktop — floating pill dock
 - Centered horizontally, fixed consistently across public routes
   (`sm:bottom-6` in the core and arcade tab bars).
 - Sits *above* page content; always visible regardless of scroll.
-- Full-pill shape, subtle vertical gradient, layered shadow, hairline lit edge.
+- Core RC.8 uses a pill containing a pill-shaped selected-tab backdrop. Both
+  use `rounded-full`, so each end is a semicircle at its own height. Existing
+  padding keeps the selector inset inside the dock. Surface tint, shadow and
+  border retain their existing styling. Arcade keeps its separate presentation.
 - The fixed `<nav>` wrapper spans the full viewport width (`inset-x-0`) so the
-  pill can center, but the pill itself is only `sm:w-auto`. The wrapper is
-  therefore `pointer-events-none` and the `<ul>` pill is `pointer-events-auto`,
-  so the transparent flanks beside the capsule never intercept clicks on
+  dock can center, but the dock itself is only `sm:w-auto`. The wrapper is
+  therefore `pointer-events-none` and the `<ul>` dock is `pointer-events-auto`,
+  so the transparent flanks beside the dock never intercept clicks on
   content sharing the bottom row. (Mobile is `w-full`, so the whole bar stays
   interactive.) Applies to both the core and arcade tab bars.
 
@@ -125,7 +128,7 @@ Directional tokens from the mock (map to LOTTO equivalents, do not hard-code hex
 | Mock value | LOTTO mapping |
 |------------|---------------|
 | `linear-gradient(180deg, #ffffff 0%, #f6f9fd 100%)` | `--card` → slightly lighter top (reuse the FEED card-gradient pattern) |
-| `border-radius: 999px` | full pill |
+| `border-radius: 999px` | `rounded-full` on the core desktop dock and selected-tab backdrop |
 | `1px solid rgba(255,255,255,.85)` | `--border` at reduced opacity for the lit edge |
 | layered `--shadow-lg` (inset highlight + drop) | LOTTO shadow scale (`shadow-lg`) |
 | `padding: 8px`, `gap: 4px` | keep |
@@ -137,15 +140,51 @@ Directional tokens from the mock (map to LOTTO equivalents, do not hard-code hex
 - Bottom padding for the iOS home indicator (~18px / `env(safe-area-inset-bottom)`).
 
 ### Active / inactive tab states
-- **Active:** soft pale pill backdrop behind icon+label
-  (mock: `linear-gradient(180deg, #eaf1fd 0%, #dde9fa 100%)`; map to a tinted
-  `--primary`/`--accent` blend), 14px radius, inset from tab bounds. Icon +
-  label in brand primary, label weight 600.
+- **Active (RC.8):** the pill-shaped backdrop fills the original link bounds
+  behind both icon and label, using `rounded-full` and the legacy-safe
+  `--nav-active-background` token. The link's focus outline follows that pill.
+  The outer desktop dock has fully rounded ends as well. Icon and label remain
+  in brand primary, label weight 600.
 - **Inactive:** no backdrop, icon + label in muted foreground
   (`--muted-foreground`), label weight 500.
 
 The active tab is derived from the current route (see
 [Determining the active tab](#determining-the-active-tab)).
+
+### RC.8 nested pills — live on WTH
+
+On October 7, 2026, the owner reviewed a circular selector and a matching
+rounded-rectangle dock, then supplied the iOS Clock navigation as a reference
+for a pill-shaped selector inside a pill-shaped navigator. RC.8 adopts this
+nested-pill direction while retaining the original link dimensions, labels,
+destinations and spacing. Keyboard focus follows the selector's shape; focus
+visibility, animation rules and the legacy-safe color token retain their
+existing behavior. Arcade retains its separately agreed pixel style.
+WTH production was upgraded to RC.8 on October 7, 2026. Its release-scoped
+public configuration was explicitly republished as revision 2, with unchanged
+public content, before the final gate-enabled deployment was promoted.
+Future version changes require the same explicit publication step.
+
+Local verification of the nested pills: both navigation test files passed
+(five tests), the component passed ESLint, and Chrome confirmed fully rounded
+ends on the 453 × 77px dock and 104 × 59px Dashboard selector. The selector is
+inset 9px from the dock's upper edge and surrounds the icon and label. A 320px
+mobile viewport retained tap areas above 44px without horizontal page overflow.
+These layout checks used the development build. The subsequent webpack
+production build, ESLint and 26 targeted navigation/public-configuration tests
+passed; the legacy scan passed 44 browser chunks. Computer Use verified both
+local built login tabs, editable input, release notes and pill styling. The
+existing local `AUTH_BYPASS` setting was rejected by production auth guards,
+so the local smoke did not validate backend authentication or queue loading.
+On the live WTH app, the existing staff session reached Persistence confirmed,
+the Admin selector had fully rounded ends, and the RC.8 version and release
+notes were verified. No fresh email sign-in was submitted; the iOS 15.4 runtime
+was not rerun for this styling-only release. Dependencies are unchanged from
+the owner-accepted RC.7 simulator build.
+
+Final deployment: `dpl_9WhNMhPkMXF2KYGUzrQJ5aw7QjSu`
+(`wthlotto-ftl9hd98s-wth-apps.vercel.app`). See the
+[activation record](PUBLIC_CONFIGURATION_PUBLICATION.md#rc8-navigation-release--october-7-2026).
 
 ### Directionality
 - The bottom-nav **item order is structural** and stays left-to-right in every

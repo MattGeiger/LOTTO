@@ -1,3 +1,9 @@
+## Version 2.0.0-rc.8 — October 7, 2026
+
+- **A pill-shaped navigation selector.** The selected tab has fully rounded
+  ends inside the desktop navigation pill, surrounding both its icon and label.
+  Labels and tap areas keep their familiar spacing.
+
 ## Version 2.0.0-rc.7 — October 7, 2026
 
 - **Public appearance and language loading avoid database wake-ups.** On

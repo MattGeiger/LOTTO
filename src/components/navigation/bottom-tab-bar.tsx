@@ -118,11 +118,11 @@ export function BottomTabBar({ autoHideAfterSeconds }: BottomTabBarProps = {}) {
       inert={isHidden || undefined}
       data-auto-hidden={isHidden ? "true" : undefined}
       className={cn(
-        // The wrapper spans the full viewport width (inset-x-0) so the pill can
-        // center, but on desktop the pill is only `sm:w-auto` — leaving large
+        // The wrapper spans the full viewport width (inset-x-0) so the dock can
+        // center, but on desktop the dock is only `sm:w-auto` — leaving large
         // transparent flanks that would otherwise intercept clicks on anything
         // sharing this bottom row. `pointer-events-none` makes those flanks
-        // click-through; the `<ul>` pill re-enables events with
+        // click-through; the `<ul>` dock re-enables events with
         // `pointer-events-auto`. See docs/NAVIGATION.md.
         "pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center sm:bottom-6 sm:px-4",
         autoHideEnabled &&
@@ -158,7 +158,7 @@ export function BottomTabBar({ autoHideAfterSeconds }: BottomTabBarProps = {}) {
                 onMouseLeave={stop}
                 onPointerDown={animate}
                 className={cn(
-                  "relative flex flex-1 flex-col items-center justify-start gap-1 rounded-2xl px-3 py-2 outline-none transition-colors",
+                  "relative flex flex-1 flex-col items-center justify-start gap-1 rounded-full px-3 py-2 outline-none transition-colors",
                   "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   "sm:min-w-[5.5rem] sm:px-5",
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground"
@@ -167,7 +167,7 @@ export function BottomTabBar({ autoHideAfterSeconds }: BottomTabBarProps = {}) {
                 {active ? (
                   <span
                     aria-hidden="true"
-                    className="absolute inset-0 rounded-2xl bg-[var(--nav-active-background)]"
+                    className="absolute inset-0 rounded-full bg-[var(--nav-active-background)]"
                   />
                 ) : null}
                 <span

@@ -90,6 +90,25 @@
   audits, legacy-client/device attribution, monthly usage interpretation,
   controlled SQL verification, post-release observation and release completion.
 
+## [2.0.0-rc.8] - 2026-10-07
+
+### Changed
+
+- Rounded the core bottom-navigation selected-tab backdrop into a pill inside
+  the existing desktop pill dock, following the owner's iOS Clock reference.
+  The focus outline follows the selected-tab shape. Labels, link hit areas,
+  route order and icon animation retain their existing behavior. Arcade's
+  separate pixel navigation is unchanged; no dependencies changed.
+
+### Documentation
+
+- Updated the navigation design contract and in-app release notes. Package and
+  root lockfile versions agree on `2.0.0-rc.8`. WTH production was promoted
+  after explicit RC.8 configuration publication, preserving its public content
+  and queue snapshot. Build, lint, 26 targeted tests and the 44-chunk legacy
+  scan passed; live navigation, version, notes and Cloudflare response sources
+  were verified. No dependency changes or new iOS runtime check were made.
+
 ## [2.0.0-rc.7] - 2026-10-07
 
 ### Fixed
