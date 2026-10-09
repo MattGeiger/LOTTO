@@ -30,6 +30,8 @@ type ArcadeHighScoresProps = {
   className?: string;
   /** "overlay" renders the compact, transparent variant for the cabinet screen. */
   variant?: "panel" | "overlay";
+  /** null keeps initials entry untimed for calm games; existing games use 30s. */
+  entryTimeLimitSeconds?: number | null;
 };
 
 type HighScoresResponse = {
@@ -50,6 +52,7 @@ export function ArcadeHighScores({
   status,
   className,
   variant = "panel",
+  entryTimeLimitSeconds = 30,
 }: ArcadeHighScoresProps) {
   const { t } = useLanguage();
   const visible = status === "READY" || status === "GAME_OVER";
@@ -57,7 +60,7 @@ export function ArcadeHighScores({
   const [loading, setLoading] = React.useState(false);
   const [unavailable, setUnavailable] = React.useState(false);
   const [initials, setInitials] = React.useState("");
-  const [secondsLeft, setSecondsLeft] = React.useState(30);
+  const [secondsLeft, setSecondsLeft] = React.useState(entryTimeLimitSeconds ?? 0);
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [savedEntryId, setSavedEntryId] = React.useState<string | null>(null);
@@ -91,24 +94,26 @@ export function ArcadeHighScores({
 
   React.useEffect(() => {
     setInitials("");
-    setSecondsLeft(30);
+    setSecondsLeft(entryTimeLimitSeconds ?? 0);
     setSaving(false);
     setSaved(false);
     setSavedEntryId(null);
     setRejected(false);
     setSubmitError(null);
-  }, [entrySessionKey]);
+  }, [entrySessionKey, entryTimeLimitSeconds]);
 
-  const qualifies = status === "GAME_OVER" && !unavailable && scoreQualifies(score, scores);
-  const entryOpen = qualifies && !saved && !rejected && secondsLeft > 0;
+  const timedEntry = entryTimeLimitSeconds !== null;
+  const expired = timedEntry && secondsLeft <= 0;
+  const qualifies = status === "GAME_OVER" && !loading && !unavailable && scoreQualifies(score, scores, game);
+  const entryOpen = qualifies && !saved && !rejected && !expired;
 
   React.useEffect(() => {
-    if (!entryOpen) return;
+    if (!entryOpen || !timedEntry) return;
     const id = window.setInterval(() => {
       setSecondsLeft((current) => Math.max(0, current - 1));
     }, 1000);
     return () => window.clearInterval(id);
-  }, [entryOpen]);
+  }, [entryOpen, timedEntry]);
 
   if (!visible) {
     return null;
@@ -121,7 +126,7 @@ export function ArcadeHighScores({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const normalizedInitials = normalizeInitials(initials);
-    if (!isValidInitials(normalizedInitials) || secondsLeft <= 0 || saving) return;
+    if (!entryOpen || !isValidInitials(normalizedInitials) || saving) return;
 
     setSaving(true);
     setSubmitError(null);
@@ -200,7 +205,7 @@ export function ArcadeHighScores({
               className="arcade-high-scores-input"
               value={initials}
               onChange={handleInitialsChange}
-              disabled={secondsLeft <= 0 || saving}
+              disabled={expired || saving}
               inputMode="text"
               autoCapitalize="characters"
               autoComplete="off"
@@ -211,16 +216,16 @@ export function ArcadeHighScores({
               type="submit"
               size="sm"
               haptic="uiConfirm"
-              disabled={!isValidInitials(initials) || secondsLeft <= 0 || saving}
+              disabled={!isValidInitials(initials) || expired || saving}
             >
               {saving ? t("refreshing") : t("arcadeHighScoreSubmit")}
             </Button>
           </div>
-          <p className="arcade-high-scores-timer">
+          {timedEntry && <p className="arcade-high-scores-timer">
             {secondsLeft > 0
               ? t("arcadeHighScoreTimer").replace("{seconds}", String(secondsLeft))
               : t("arcadeHighScoreExpired")}
-          </p>
+          </p>}
           {submitError ? <p className="arcade-high-scores-error">{submitError}</p> : null}
         </form>
       ) : null}

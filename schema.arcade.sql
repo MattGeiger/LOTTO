@@ -9,12 +9,18 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS arcade_high_scores (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  game_slug TEXT NOT NULL CHECK (game_slug IN ('snake', 'brick-mayhem', 'zombie-attack')),
+  game_slug TEXT NOT NULL CHECK (game_slug IN ('snake', 'brick-mayhem', 'zombie-attack', 'memory-grid', 'tower-of-hanoi')),
   difficulty TEXT NOT NULL CHECK (difficulty IN ('veryEasy', 'easy', 'normal', 'hard', 'veryHard', 'nightmare')),
   initials TEXT NOT NULL CHECK (char_length(initials) BETWEEN 1 AND 24),
   score BIGINT NOT NULL CHECK (score BETWEEN 1 AND 999999999),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Apply this file in a transaction. CREATE TABLE alone does not update the
+-- allowed games on existing databases; retain all prior games and saved scores.
+ALTER TABLE arcade_high_scores DROP CONSTRAINT IF EXISTS arcade_high_scores_game_slug_check;
+ALTER TABLE arcade_high_scores ADD CONSTRAINT arcade_high_scores_game_slug_check
+  CHECK (game_slug IN ('snake', 'brick-mayhem', 'zombie-attack', 'memory-grid', 'tower-of-hanoi'));
 
 CREATE INDEX IF NOT EXISTS arcade_high_scores_rank_idx
   ON arcade_high_scores(game_slug, difficulty, score DESC, created_at ASC, id ASC);

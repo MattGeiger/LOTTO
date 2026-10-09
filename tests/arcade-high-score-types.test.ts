@@ -52,4 +52,11 @@ describe("arcade high-score validation", () => {
     expect(scoreQualifies(92, topTen)).toBe(true);
     expect(scoreQualifies(0, topTen)).toBe(false);
   });
+  it("accepts an equal cutoff only for Hanoi, including a full perfect-score board", () => {
+    const perfect = Array.from({ length: 10 }, (_, i) => ({ ...entry(2000, i), game: "tower-of-hanoi" as const }));
+    expect(scoreQualifies(2000, perfect, "tower-of-hanoi")).toBe(true);
+    expect(scoreQualifies(1999, perfect, "tower-of-hanoi")).toBe(false);
+    expect(scoreQualifies(2000, perfect, "memory-grid")).toBe(false);
+    expect(scoreQualifies(2000, perfect, "snake")).toBe(false);
+  });
 });

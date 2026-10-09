@@ -9,7 +9,12 @@
 // both the language context (client) and the AI translation engine (server) can
 // import the source set without crossing the client boundary.
 
+import { MEMORY_GRID_STRINGS_EN } from "@/arcade/game/memory-grid/strings";
+import { HANOI_STRINGS_EN } from "@/arcade/game/tower-of-hanoi/strings";
+
 export const UI_STRINGS_EN: Record<string, string> = {
+    ...MEMORY_GRID_STRINGS_EN,
+    ...HANOI_STRINGS_EN,
     nowServing: "Now Serving",
     arcadeEstimatedWaitLabel: "ESTIMATED WAIT",
     arcadeTicketCalledTitle: "TICKET CALLED!",

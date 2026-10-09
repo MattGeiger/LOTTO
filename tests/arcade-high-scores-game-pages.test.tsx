@@ -6,7 +6,7 @@
 // is not covered by this license; see TRADEMARKS.md.
 
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LanguageProvider } from "@/contexts/language-context";
@@ -60,10 +60,16 @@ describe("Arcade game high-score integrations", () => {
     expect(screen.getByText("TOP 10 SCORES")).toBeInTheDocument();
   });
 
-  it("renders Top 10 Scores on Day of the Dead before game start", async () => {
+  it("loads Day of the Dead and scores only after its content warning is accepted", async () => {
     const { default: ZombieAttackPage } = await import("@/app/(arcade)/arcade/zombie-attack/page");
     renderWithProviders(<ZombieAttackPage />);
-
+    expect(screen.getByRole("heading", { name: "CONTENT WARNING" })).toBeInTheDocument();
+    expect(screen.queryByTestId("arcade-high-scores")).not.toBeInTheDocument();
+    expect(fetch).not.toHaveBeenCalled();
+    const { loadAssets } = await import("@/arcade/game/zombie-attack/assets");
+    expect(loadAssets).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "Back to games" })).toHaveAttribute("href", "/arcade");
+    fireEvent.click(screen.getByRole("button", { name: "Continue to game" }));
     expect(await screen.findByTestId("arcade-high-scores")).toBeInTheDocument();
     expect(screen.getByText("TOP 10 SCORES")).toBeInTheDocument();
   });

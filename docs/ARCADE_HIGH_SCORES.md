@@ -2,10 +2,10 @@
 
 ## Status
 - Implemented for v1.15.0 as an Arcade-only feature.
-- Supports Snake, Brick Mayhem, and Day of the Dead.
+- Supports Snake, Brick Mayhem, Day of the Dead, Memory Grid (RC.10) and Tower of Hanoi (RC.11).
 - Rankings are scoped by game and difficulty setting.
-- Day of the Dead remains wired for high scores but is hidden from production
-  Arcade navigation as of v1.15.1.
+- RC.11 restores Day of the Dead behind a localized cartoon-violence warning;
+  its leaderboard does not mount until the player continues.
 - As of v1.15.3 the leaderboard renders as an on-board arcade-cabinet screen
   (attract table + unified game-over screen) rather than a separate panel below
   the board.
@@ -71,9 +71,24 @@ real arcade cabinets ship with preloaded scores.
   and per-IP rate limiting.
 
 Valid games: `snake`, `brick-mayhem`, `zombie-attack`.
+Memory Grid adds `memory-grid`, with only `easy`, `normal` and `hard` scopes.
+Its final score is `1000 + round(1000 * pairs / turns)` and API submissions
+must be integer scores from 1,000 through 2,000.
+Existing databases must first apply the isolated Arcade migration
+`scripts/migrations/2026-10-08-memory-grid-high-scores.sql`; it preserves scores
+and runtime-role permissions.
 
 Valid difficulties: `veryEasy`, `easy`, `normal`, `hard`, `veryHard`,
 `nightmare`.
+
+Hanoi adds `tower-of-hanoi` with Easy/Normal/Hard only and integer completion
+scores from 1,000 through 2,000. Apply
+`scripts/migrations/2026-10-08-tower-of-hanoi-high-scores.sql` to the isolated
+Arcade database first; it expands only the game constraint and preserves rows
+and grants. Its score is `1000 + round(1000 * minimumMoves / countedMoves)`.
+The client and server both accept Hanoi cutoff ties, and its SQL ordering alone
+uses `created_at desc` after score. Other games keep strict-greater cutoff and
+oldest-first equal scores. This is bounded validation, not server-proven gameplay.
 
 ## Initials
 Initials are exactly three user-visible letter graphemes. The client and server
@@ -99,9 +114,13 @@ like a real cabinet rather than a detached status panel.
 - The leaderboard is intentionally prominent: the #1 score renders as a larger
   champion row, and a newly saved score is highlighted after game over.
 - A qualifying final score opens a 30-second initials entry flow.
+  Memory Grid and Hanoi use untimed entry and a panel below their boards, with no timer or
+  speed bonus. Its leaderboard loads on ready/completion/difficulty changes;
+  card selection, pause/resume and idle time do not poll. Saving is explicit,
+  and offline completion preserves the final score and device-local best turns.
 - Restart safety: only the explicit replay button (or the keyboard restart key)
   restarts a run — tapping elsewhere on the board does not — so the initials
   input stays usable. The boards are not `role="img"`, keeping the input
   reachable to assistive tech.
-- Mixed-difficulty runs are allowed; a score is submitted under the difficulty
-  setting active at `GAME OVER`.
+- Existing action games allow mixed-difficulty runs and submit under the setting
+  at `GAME OVER`. Memory Grid and Hanoi reset the run when difficulty changes.

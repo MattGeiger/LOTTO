@@ -5,7 +5,7 @@
 // licensed under AGPL-3.0-or-later; see LICENSE. William Temple House branding
 // is not covered by this license; see TRADEMARKS.md.
 
-export const ARCADE_GAME_SLUGS = ["snake", "brick-mayhem", "zombie-attack"] as const;
+export const ARCADE_GAME_SLUGS = ["snake", "brick-mayhem", "zombie-attack", "memory-grid", "tower-of-hanoi"] as const;
 export const ARCADE_DIFFICULTY_KEYS = [
   "veryEasy",
   "easy",
@@ -35,6 +35,10 @@ export type ArcadeHighScoreScope = {
   game: ArcadeGameSlug;
   difficulty: ArcadeDifficultyKey;
 };
+
+export function isSupportedHighScoreScope(scope: ArcadeHighScoreScope): boolean {
+  return !["memory-grid", "tower-of-hanoi"].includes(scope.game) || ["easy", "normal", "hard"].includes(scope.difficulty);
+}
 
 export type ArcadeHighScoreSubmission = ArcadeHighScoreScope & {
   initials: string;
@@ -91,9 +95,9 @@ export function isValidScore(value: number): boolean {
   );
 }
 
-export function scoreQualifies(score: number, scores: readonly ArcadeHighScoreEntry[]): boolean {
+export function scoreQualifies(score: number, scores: readonly ArcadeHighScoreEntry[], game?: ArcadeGameSlug): boolean {
   if (!isValidScore(score)) return false;
   if (scores.length < ARCADE_HIGH_SCORE_LIMIT) return true;
   const cutoff = scores[ARCADE_HIGH_SCORE_LIMIT - 1];
-  return cutoff ? score > cutoff.score : true;
+  return cutoff ? (game === "tower-of-hanoi" ? score >= cutoff.score : score > cutoff.score) : true;
 }

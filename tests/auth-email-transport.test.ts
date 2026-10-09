@@ -110,6 +110,30 @@ describe("authentication email transport", () => {
       expect(resendSend).toHaveBeenCalledTimes(1);
       expect(createTransport).not.toHaveBeenCalled();
     });
+
+    it.each(["otp", "magic"] as const)("does not fall back to SMTP after a Resend rejection (%s)", async (kind) => {
+      process.env.RESEND_API_KEY = "re_valid_key";
+      resendSend.mockResolvedValueOnce({ error: { message: "Provider rejected delivery" } });
+      const { sendOtpEmail, sendMagicLinkEmail } = await load();
+      const delivery = kind === "otp"
+        ? sendOtpEmail({ email: "staff@example.org", code: "123456" })
+        : sendMagicLinkEmail({ email: "staff@example.org", magicLink: "https://example.org/x", expires: new Date() });
+      await expect(delivery).rejects.toThrow("Resend rejected the authentication email.");
+      expect(createTransport).not.toHaveBeenCalled();
+      expect(sendMail).not.toHaveBeenCalled();
+    });
+
+    it.each(["otp", "magic"] as const)("does not fall back to SMTP after a Resend network failure (%s)", async (kind) => {
+      process.env.RESEND_API_KEY = "re_valid_key";
+      resendSend.mockRejectedValueOnce(new Error("Provider unreachable"));
+      const { sendOtpEmail, sendMagicLinkEmail } = await load();
+      const delivery = kind === "otp"
+        ? sendOtpEmail({ email: "staff@example.org", code: "123456" })
+        : sendMagicLinkEmail({ email: "staff@example.org", magicLink: "https://example.org/x", expires: new Date() });
+      await expect(delivery).rejects.toThrow("Provider unreachable");
+      expect(createTransport).not.toHaveBeenCalled();
+      expect(sendMail).not.toHaveBeenCalled();
+    });
   });
 
   describe("development keeps the local SMTP/MailDev path", () => {

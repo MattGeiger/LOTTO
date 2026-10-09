@@ -20,10 +20,34 @@ export const runtime = "nodejs";
 
 const VALID_TIMEZONES = new Set(Intl.supportedValuesOf("timeZone"));
 
+// Preserve both formats already stored by LOTTO; validate without rewriting
+// saved times. The length check also rejects trailing newline/whitespace.
+const TIME_PATTERN = /^(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?$/;
+const isValidTime = (value: string) =>
+  (value.length === 5 || value.length === 8) && TIME_PATTERN.test(value);
+const timeSchema = z.string().refine(isValidTime, {
+  message: "Use a valid 24-hour time (HH:mm or HH:mm:ss).",
+});
+const timeInSeconds = (value: string) => {
+  const [hours, minutes, seconds = 0] = value.split(":").map(Number);
+  return hours * 3600 + minutes * 60 + seconds;
+};
+
 const dayScheduleSchema = z.object({
   isOpen: z.boolean(),
-  openTime: z.string(),
-  closeTime: z.string(),
+  openTime: timeSchema,
+  closeTime: timeSchema,
+}).superRefine((day, ctx) => {
+  if (
+    day.isOpen && isValidTime(day.openTime) && isValidTime(day.closeTime) &&
+    timeInSeconds(day.closeTime) <= timeInSeconds(day.openTime)
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["closeTime"],
+      message: "Closing time must be later than opening time on an open day.",
+    });
+  }
 });
 
 const operatingHoursSchema = z.object({
@@ -263,8 +287,14 @@ export async function POST(request: Request) {
   try {
     const parsed = actionSchema.safeParse(await request.json());
     if (!parsed.success) {
+      const hoursIssues = parsed.error.issues.filter(
+        (issue) => issue.path[0] === "hours" || issue.path[0] === "timezone",
+      );
+      const error = hoursIssues.length
+        ? hoursIssues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join(" ")
+        : "Invalid request payload";
       return NextResponse.json(
-        { error: "Invalid request payload", details: parsed.error.flatten() },
+        { error, details: parsed.error.flatten() },
         { status: 400 },
       );
     }

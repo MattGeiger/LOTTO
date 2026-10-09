@@ -1,0 +1,84 @@
+{
+  "title": "Free Pixel Food!",
+  "creator": "Henry Software",
+  "source": "https://henrysoftware.itch.io/pixel-food",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "retrieved": "2026-10-08",
+  "archiveSha256": "a8010b2c5b5994ec6b54214152be9e80998dc4521a049b016b392efea84ae0b7",
+  "modifications": "None. Original individual PNGs copied byte-for-byte.",
+  "files": [
+    {
+      "file": "food/Apple.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "d2ee5a8984f9f4d7baa45ecc452f46f965e4fa4eeeaa3b3c34f7858f9bdeffbb"
+    },
+    {
+      "file": "food/Bread.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "b38a229577b32191a5b2d28a80f230ef684c60c5a2ba8d9875a530fb90d66d58"
+    },
+    {
+      "file": "food/Cheese.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "21e13d42d2ae476ce723e4c3900dbcf2afcfabcfa0c8bdeb0ee6268c7e9d6ae1"
+    },
+    {
+      "file": "food/Cherry.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "09cc16275cd37cf7db52ce710b6118bb282aabed705502b9bb4d500d4616179a"
+    },
+    {
+      "file": "food/Eggplant.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "9483b54f9d86410d5bdc7855fd17acdc1394bcbb410503e83e7988225628b983"
+    },
+    {
+      "file": "food/Eggs.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "4af0540cff1fccaac33d4047628210a2aab6303884a383982d48c283805323d8"
+    },
+    {
+      "file": "food/Fish.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "d3d4999604208d0201b9d6f52880c3aa3f9b3c4f08bef10c561f42f2c10af562"
+    },
+    {
+      "file": "food/Lemon.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "ba1cec397ad359af290cab45d67d12c062c2dac4e30a7c243db6aba1ece425e2"
+    },
+    {
+      "file": "food/MelonWater.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "5f43b7c62ffa4edeb03547eecc49012bd05fb52bea6bd42bcc88d8f98f085039"
+    },
+    {
+      "file": "food/Pineapple.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "00795fda3977caf7012c96d89b137d318ddf6ed8bac08feeaea862edfb895574"
+    },
+    {
+      "file": "food/Potato.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "0dc804e828de3563b5a6ef0db2b304cc3c5e14e176068b75c0d290b0a3891174"
+    },
+    {
+      "file": "food/Strawberry.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "3af15b386489dfd0bf66391e52a24468725dd6a101b32f7b12a1aa8426a74dce"
+    }
+  ]
+}

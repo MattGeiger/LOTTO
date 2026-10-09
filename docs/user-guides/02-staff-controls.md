@@ -66,6 +66,13 @@ returns to normal without changing who's currently being served.
 - The **display URL / QR code** can point clients to wherever you like; by
   default the board's QR sends them to the home screen to look up their ticket.
 
+For each open day, set an opening time and a later closing time on the same
+day. LOTTO rejects invalid times and a closing time that is equal to or before
+opening; the error identifies the day and field to correct. Valid saved times
+are preserved, including existing times with seconds. Marking a day closed
+retains its saved times for when you enable it again. Overnight service windows
+are not supported.
+
 ## Ending a Service Day
 
 Choose **Reset for New Day** when the queue is finished. LOTTO first preserves

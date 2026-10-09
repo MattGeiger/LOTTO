@@ -25,6 +25,7 @@ import { loadAssets, type LoadedAssets } from "@/arcade/game/zombie-attack/asset
 import type { DifficultyParams, ShooterInput, World } from "@/arcade/game/zombie-attack/types";
 import { ChevronArrowLeftIcon } from "@/arcade/components/icons/chevron-arrow-left-icon";
 import { ArcadeHighScores } from "@/arcade/components/arcade-high-scores";
+import { CartoonViolenceGate } from "@/arcade/components/cartoon-violence-gate";
 import { Button, Card, CardContent, CardHeader, CardTitle, Slider } from "@/arcade/ui/8bit";
 import { useAppHaptics } from "@/components/haptics-provider";
 import { useLanguage } from "@/contexts/language-context";
@@ -81,6 +82,10 @@ function dpFromPreset(p: ZombieModePreset): DifficultyParams {
 type GameStatus = "READY" | "RUNNING" | "PAUSED" | "GAME_OVER";
 
 export default function ZombieAttackPage() {
+  return <CartoonViolenceGate><ZombieAttackGame /></CartoonViolenceGate>;
+}
+
+function ZombieAttackGame() {
   const { t, language } = useLanguage();
   const isLargeTextLocale = language === "ar" || language === "fa" || language === "zh";
   const { trigger: triggerHaptic } = useAppHaptics();
@@ -515,30 +520,30 @@ export default function ZombieAttackPage() {
 
       <section className="arcade-zombie-control-dock" aria-label="Game controls">
         <div className="arcade-zombie-pad">
-          <Button
-            type="button"
-            variant="default"
-            haptic="uiConfirm"
-            className={cn(
-              "arcade-zombie-center-btn arcade-zombie-noselect arcade-ui",
-              isLargeTextLocale ? "text-[20px] sm:text-[22px]" : "text-[13px]",
-            )}
-            aria-label={centerControlAriaLabel}
-            onClick={handleCenterControl}
-          >
-            {centerControlLabel}
-          </Button>
+          <div className="arcade-zombie-move-track">
+            <Slider
+              min={0}
+              max={100}
+              step={1}
+              value={[sliderValue]}
+              onValueChange={handleSliderChange}
+              aria-label="Move hero"
+            />
+          </div>
           <div className="arcade-zombie-fire-row">
-            <div className="arcade-zombie-move-track">
-              <Slider
-                min={0}
-                max={100}
-                step={1}
-                value={[sliderValue]}
-                onValueChange={handleSliderChange}
-                aria-label="Move hero"
-              />
-            </div>
+            <Button
+              type="button"
+              variant="default"
+              haptic="uiConfirm"
+              className={cn(
+                "arcade-zombie-center-btn arcade-zombie-noselect arcade-ui",
+                isLargeTextLocale ? "text-[20px] sm:text-[22px]" : "text-[13px]",
+              )}
+              aria-label={centerControlAriaLabel}
+              onClick={handleCenterControl}
+            >
+              {centerControlLabel}
+            </Button>
             <Button
               type="button"
               variant="default"

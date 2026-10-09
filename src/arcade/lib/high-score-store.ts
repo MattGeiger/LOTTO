@@ -87,7 +87,14 @@ export function createArcadeHighScoreStore(
   };
 
   const listTopScores = async (scope: ArcadeHighScoreScope): Promise<ArcadeHighScoreEntry[]> => {
-    const rows = await withTimeout(sql`
+    const rows = await withTimeout(scope.game === "tower-of-hanoi" ? sql`
+      select id, game_slug, difficulty, initials, score, created_at
+      from arcade_high_scores
+      where game_slug = ${scope.game}
+        and difficulty = ${scope.difficulty}
+      order by score desc, created_at desc, id asc
+      limit ${ARCADE_HIGH_SCORE_LIMIT};
+    ` : sql`
       select id, game_slug, difficulty, initials, score, created_at
       from arcade_high_scores
       where game_slug = ${scope.game}
@@ -103,7 +110,7 @@ export function createArcadeHighScoreStore(
     submission: ArcadeHighScoreSubmission,
   ): Promise<ArcadeHighScoreSubmitResult> => {
     const scores = await listTopScores(submission);
-    if (!scoreQualifies(submission.score, scores)) {
+    if (!scoreQualifies(submission.score, scores, submission.game)) {
       return { accepted: false, scores };
     }
 

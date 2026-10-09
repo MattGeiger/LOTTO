@@ -1,0 +1,37 @@
+/* Memory Grid only; chrome inherits the existing Arcade theme. */
+.arcade-memory-shell { --arcade-memory-face: oklch(0.966 0.047 88); }
+.arcade-memory-stage { width: 100%; max-width: 480px; margin-inline: auto; direction: ltr; scroll-margin-top: 6rem; }
+.arcade-memory-settings { display: grid; gap: 1rem; color: var(--arcade-dot); padding-block: .25rem .5rem; }
+.arcade-memory-settings p { font-size: 1rem; overflow-wrap: anywhere; }
+.arcade-memory-readout { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; padding: .75rem .5rem; margin-bottom: .75rem; border: 2px solid var(--arcade-wall); background: var(--arcade-readout-background); color: var(--arcade-dot); text-align: center; font-size: .9rem; letter-spacing: .15em; }
+.arcade-memory-readout p { margin: 0; overflow-wrap: anywhere; }
+.arcade-memory-readout strong { display: block; font-size: 1.8rem; font-weight: normal; letter-spacing: .1em; }
+.arcade-memory-board { position: relative; width: 100%; border: 4px solid var(--arcade-wall); background: var(--arcade-board-background); box-shadow: 0 0 0 2px var(--arcade-wall), 0 0 18px var(--arcade-board-shadow); }
+.arcade-memory-board canvas { width: 100%; height: 100%; display: block; }
+.arcade-memory-cards { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 1fr; }
+.arcade-memory-card { min-width: 0; min-height: 44px; margin: 5%; cursor: pointer; border: 0; background: transparent; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.arcade-memory-card:focus-visible { outline: 3px solid var(--arcade-ghost); outline-offset: -7px; }
+.arcade-memory-card[aria-disabled="true"] { cursor: default; }
+.arcade-memory-overlay { gap: 1rem; padding: 1rem; text-align: center; }
+.arcade-memory-result { display: grid; gap: .5rem; font-size: .85rem; overflow-wrap: anywhere; letter-spacing: .06em; }
+.arcade-memory-result p { margin: 0; }
+.arcade-memory-leaderboard { max-width: 480px; margin-inline: auto; }
+.arcade-memory-overlay .arcade-cabinet-title { color: var(--arcade-dot); overflow-wrap: anywhere; font-size: clamp(1.15rem, 4vw, 1.8rem); }
+.arcade-memory-sample { display: flex; justify-content: center; gap: 1.5rem; }
+.arcade-memory-sample img { width: 48px; height: 48px; }
+.arcade-memory-message { min-height: 2.5rem; text-align: center; padding-block: .75rem; font-size: 1rem; letter-spacing: .15em; }
+.arcade-memory-control-dock { position: sticky; bottom: 0; z-index: 20; max-width: 480px; margin: .5rem auto 0; display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; padding: 1rem .5rem max(env(safe-area-inset-bottom), .9rem); background: var(--arcade-control-dock-background); border-top: 2px solid var(--arcade-control-dock-border); direction: ltr; }
+.arcade-memory-control-dock > button { flex: 1 1 0; min-width: 0; min-height: 48px; height: auto; padding: .65rem .4rem; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; font-size: .9rem; letter-spacing: .1em; }
+.arcade-memory-credit { font-size: .9rem; line-height: 1.7; letter-spacing: .1em; }
+.arcade-memory-credit a { text-decoration: underline; text-underline-offset: 3px; }
+.arcade-memory-shell[data-memory-language="ar"] .arcade-memory-copy,
+.arcade-memory-shell[data-memory-language="fa"] .arcade-memory-copy,
+.arcade-memory-shell[data-memory-language="zh"] .arcade-memory-copy { letter-spacing: normal; }
+.arcade-memory-shell[data-memory-language="es"] .arcade-retro,
+.arcade-memory-shell[data-memory-language="ru"] .arcade-retro,
+.arcade-memory-shell[data-memory-language="uk"] .arcade-retro,
+.arcade-memory-shell[data-memory-language="vi"] .arcade-retro { letter-spacing: .24em; overflow-wrap: anywhere; }
+.arcade-memory-shell[data-memory-language="ar"] .arcade-retro,
+.arcade-memory-shell[data-memory-language="fa"] .arcade-retro,
+.arcade-memory-shell[data-memory-language="zh"] .arcade-retro { letter-spacing: normal; overflow-wrap: anywhere; }
+@media (min-width: 640px) { .arcade-memory-control-dock { border: 2px solid var(--arcade-control-dock-border); } }

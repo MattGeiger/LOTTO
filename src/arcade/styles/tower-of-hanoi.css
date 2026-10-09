@@ -1,0 +1,25 @@
+/* Original Hanoi board and controls; shared Arcade chrome stays intact. */
+.arcade-hanoi-shell { --hanoi-disk-1: oklch(0.882046 0.130877 91.287); --hanoi-disk-2: oklch(0.812875 0.095263 158.507); --hanoi-disk-3: oklch(0.767713 0.098243 240.125); --hanoi-disk-4: oklch(0.768569 0.108162 308.121); --hanoi-disk-5: oklch(0.779996 0.095992 33.726); --hanoi-disk-ink: oklch(0.276263 0.035278 242.963); --hanoi-disk-shine: oklch(0.968054 0.040868 90.242); }
+.arcade-hanoi-stage { max-width: 540px; margin-inline: auto; scroll-margin-top: 6rem; }
+.arcade-hanoi-copy, .arcade-hanoi-title { overflow-wrap: anywhere; }
+.arcade-hanoi-settings { display: grid; gap: 1rem; color: var(--arcade-dot); }
+.arcade-hanoi-readout { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .5rem; padding: .75rem .5rem; margin-bottom: .75rem; border: 2px solid var(--arcade-wall); color: var(--arcade-dot); background: var(--arcade-readout-background); text-align: center; font-size: .85rem; letter-spacing: .12em; }
+.arcade-hanoi-readout p { margin: 0; overflow-wrap: anywhere; }
+.arcade-hanoi-readout strong { display: block; font-size: 1.8rem; font-weight: normal; }
+.arcade-hanoi-board { position: relative; width: 100%; aspect-ratio: 3 / 2; border: 4px solid var(--arcade-wall); background: var(--arcade-board-background); box-shadow: 0 0 0 2px var(--arcade-wall), 0 0 18px var(--arcade-board-shadow); direction: ltr; }
+.arcade-hanoi-board canvas { display: block; width: 100%; height: 100%; }
+.arcade-hanoi-pegs { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); }
+.arcade-hanoi-peg { min-width: 44px; min-height: 44px; background: transparent; border: 0; margin: 3px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.arcade-hanoi-peg:focus-visible { outline: 3px solid var(--arcade-ghost); outline-offset: -4px; }
+.arcade-hanoi-peg:disabled { cursor: default; }
+.arcade-hanoi-overlay { gap: 1rem; padding: .75rem; text-align: center; }
+.arcade-hanoi-overlay .arcade-hanoi-title { color: var(--arcade-dot); font-size: clamp(1rem,4vw,1.6rem); }
+.arcade-hanoi-message { min-height: 3.5rem; padding: .75rem .25rem; text-align: center; overflow-wrap: anywhere; font-size: 1rem; }
+.arcade-hanoi-result { display: grid; gap: .35rem; text-align: center; font-size: .9rem; overflow-wrap: anywhere; margin-bottom: 1rem; }
+.arcade-hanoi-leaderboard { max-width: 540px; margin: 1rem auto; }
+.arcade-hanoi-control-dock { position: sticky; bottom: 0; z-index: 20; max-width: 540px; margin: .5rem auto 0; display: flex; flex-wrap: wrap; gap: .65rem; padding: 1rem .5rem max(env(safe-area-inset-bottom), .9rem); border-top: 2px solid var(--arcade-control-dock-border); background: var(--arcade-control-dock-background); }
+.arcade-hanoi-control-dock > button { flex: 1 1 0; min-width: 0; min-height: 48px; height: auto; padding: .65rem .3rem; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; font-size: .9rem; }
+.arcade-hanoi-control-dock > p { width: 100%; text-align: center; font-size: .85rem; margin: 0; }
+.arcade-hanoi-footer { max-width: 540px; margin: 1rem auto; text-align: center; font-size: .9rem; }
+.arcade-hanoi-shell[data-hanoi-language="ar"] .arcade-retro, .arcade-hanoi-shell[data-hanoi-language="fa"] .arcade-retro, .arcade-hanoi-shell[data-hanoi-language="zh"] .arcade-retro { letter-spacing: normal; }
+@media (min-width: 640px) { .arcade-hanoi-control-dock { border: 2px solid var(--arcade-control-dock-border); } }

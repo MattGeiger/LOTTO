@@ -28,7 +28,17 @@ iPad mini 4 / iOS 15.4 device failed to boot with CoreSimulator error 401 becaus
 that runtime rejects hosts newer than macOS 26.99.99. Launching Xcode or a modern
 simulator does not establish iOS 15 compatibility.
 
+### Arcade testing exception — approved October 8, 2026
+
+The owner set **iOS 17** as the testing floor for optional Arcade gameplay.
+The named low/mid/high Simulator tiers run iOS 17.5, 26.3 and 27.0. They exercise
+different WebKit versions and layouts; they do not establish physical-device
+performance. Arcade-only work does not require the legacy iOS 15.4 simulator.
+The core public pages, Admin/operator workflows and shared dependencies retain
+the table's iOS 15 floor. The global browserslist is unchanged.
+
 ## Installed home-screen mode
+
 
 iOS and Android home-screen installations remove ordinary browser refresh
 controls. LOTTO detects standards-based `(display-mode: standalone)` plus
@@ -211,6 +221,22 @@ then downlevels each complete alpha color through the same sRGB baseline and
 OKLCH `@supports` layers described above.
 
 ## Guardrails
+
+### RC.12 dependency acceptance — October 9, 2026
+
+Next.js `16.3.8` and Tiptap `3.31.4` pass the 49-chunk production legacy scan,
+local modern-Chromium hydration smoke and the 1,103-test candidate suite.
+React and the exact NextAuth beta pin are unchanged. Server fixes alone were
+separately proved to leave all 55 browser files byte-identical; that proof
+does not apply to the later framework/editor upgrades.
+
+For this release, the owner explicitly replaced the unavailable WTH preview
+with production validation. After RC.12 was live, the owner reported completion
+of the real iPadOS 15 checklist: fresh Magic Link/OTP sign-in, Admin persistence
+and announcement typing/formatting/mode switching, with no issues reported.
+This is owner-reported physical-device acceptance, not agent-observed iPad
+automation. The standard dependency validation sequence remains applicable
+to future changes. Full receipts are in `DEPENDENCY_SECURITY_REVIEW.md`.
 
 - **Static guard:** `npm run check:legacy-bundles` scans the built chunks for the
   forbidden regex syntax above and fails the build if any reappears (e.g. via a

@@ -9,7 +9,19 @@
 
 <p align="center"><em>A creation of <a href="https://templepdx.com">Temple Consulting, LLC.</a></em></p>
 
-# LOTTO — Line Order Transparency & Ticketing Organizer
+# 🎉 LOTTO 2.0 — A better way to wait
+
+**Realtime queue updates. Five retro games. Refreshed AI model support.
+Your organization's own look and feel.**
+
+LOTTO 2.0 is a major upgrade to Line Order Transparency & Ticketing Organizer:
+updates arrive as staff make changes, public displays use Cloudflare without
+repeatedly reading the database, and guests have more ways to enjoy their wait.
+Polished navigation, multilingual experiences and configurable branding bring
+it all together.
+
+Built for nonprofit budgets, multilingual communities, and the devices people
+already own.
 
 A fun, fair, and simple **queue-management and ticketing** system for chance-based
 or sequential lines — built for [William Temple House](https://www.williamtemple.org/)
@@ -18,7 +30,38 @@ ticketed distributions (food pantries, clinics, giveaways, and similar).
 
 **Production deployment:** https://williamtemple.app
 **License:** [AGPL-3.0-or-later](./LICENSE)
-**Status:** v2.0.0-rc.3 — production release candidate; v1.26.0 remains live until cutover
+**Release:** v2.0.0 — see [release notes](./docs/release-notes.md) and
+[deployment records](./docs/RELEASES.md).
+
+## What's new in 2.0
+
+- **Updates that arrive in realtime.** Staff actions publish queue changes to
+  connected displays and phones over WebSockets. A two-minute reconnect grace
+  and Cloudflare snapshots keep recovery calm when a connection drops.
+- **Less unnecessary database activity.** Enabled deployments serve public
+  queue, branding and language configuration from Cloudflare, including
+  compatible requests from older tabs. Neon remains authoritative for staff
+  operations and explicit score saves. The predictable idle wake pattern has
+  not recurred in the early observation window; longer monitoring continues.
+- **An Arcade worth exploring.** Memory Grid and Tower of Hanoi join Snake,
+  Brick Mayhem and Day of the Dead. The new puzzles reward accuracy and
+  thoughtful play, with untimed scoring and shared Top 10 boards. Day of the
+  Dead has an explicit cartoon-violence warning before play.
+- **A more polished experience.** Nested pill navigation, consistent game
+  control layouts, accessible light/dark/Hi-viz themes, and refreshed searchable
+  Help make LOTTO easier to use across phones, displays and staff tablets.
+- **Updated AI model support.** Translation configuration includes refreshed
+  model choices, lifecycle and replacement guidance, capability-aware settings,
+  reference pricing and a free selected-model access check.
+- **Branding that feels like home.** Organization logos, install icons, colors
+  and localized service copy work across the public experience. Appearance's
+  live previews and legacy-safe themes preserve LOTTO's universal red Returned
+  and gold Unclaimed meanings. This builds on the branding foundation shipped
+  in the 1.x releases.
+
+The major release also includes operating-hours validation, security maintenance
+and complete asset credits. [Detailed RC history](./docs/archive/V2.0_RELEASE_CANDIDATES.md)
+is preserved separately from the condensed release notes.
 
 ---
 
@@ -43,7 +86,8 @@ on their own phone, in their own language.
   [FEED](https://feed.williamtemple.app) public endpoint, localized where FEED
   provides translations.
 - **Built-in arcade** (`/arcade`) — optional retro games (Snake, Brick Mayhem,
-  and more planned) to keep waiting guests entertained; gameplay pauses the instant a
+  Memory Grid, Tower of Hanoi and Day of the Dead behind a cartoon-violence warning)
+  to keep waiting guests entertained; gameplay pauses the instant a
   player's ticket is called.
 - **59-language-ready localization, three themes** — eight languages ship ready
   to use, staff can activate additional AI-translated languages, and Arabic and
@@ -56,8 +100,9 @@ on their own phone, in their own language.
   section (`/help`) with plain-language guides and workflows.
 - **Realtime v2.0 public state** — a Cloudflare Durable Object broadcasts each
   committed public queue revision to connected clients. Neon remains
-  authoritative, and the existing adaptive polling schedule takes over
-  automatically if realtime is unavailable or cannot be trusted.
+  authoritative. On snapshot-enabled deployments, initial loading and
+  recovery use Cloudflare snapshots without a public queue SQL fallback.
+  Published public configuration also serves branding and language inputs.
 
 ## Who LOTTO is for
 
@@ -67,7 +112,7 @@ on their own phone, in their own language.
 - **Multilingual communities** — clients who don't read English can follow the
   board and their own status in their language.
 - **Developers** who want a real-world reference for a Next.js 16 App Router app
-  with live polling, multilingual + RTL UI, theme tokens, magic-link auth, and a
+  with realtime updates, multilingual + RTL UI, theme tokens, magic-link auth, and a
   Postgres-or-file persistence layer.
 
 If LOTTO looks useful, you can fork it, modify it, and deploy your own instance —
@@ -109,6 +154,17 @@ and a QR code back to the personalized experience:
 |---|---|---|
 | ![Public inventory page](./docs/screenshots/inventory.png) | ![In-app help index](./docs/screenshots/help.png) | ![Arcade index](./docs/screenshots/arcade.png) |
 
+Two new pixel cabinets bring a more thoughtful pace to the Arcade:
+
+| Memory Grid | Tower of Hanoi |
+|---|---|
+| ![Memory Grid pixel cabinet in dark mode](./docs/screenshots/memory-grid-dark.png) | ![Tower of Hanoi completed puzzle with Continue](./docs/screenshots/tower-of-hanoi-continue.png) |
+
+Memory Grid rewards accurate matching. Hanoi rewards efficient moves and offers
+Continue from three to four to five disks. Neither uses a timer or speed bonus.
+
+[Light-mode game preview](./docs/screenshots/memory-grid-light.png).
+
 ### Dark mode
 
 Light, dark, and a flat high-visibility theme are all supported. The board and
@@ -136,7 +192,7 @@ layout for Arabic (and Persian), with ticket numbers kept in their natural order
 
 ### Prerequisites
 
-- **Node.js 20+**
+- **Node.js 20.9+** (Node.js 24 recommended, matching production)
 - Optionally **Docker Desktop** for the full local stack (app + Postgres + MailDev)
 
 ### Get it running
@@ -170,15 +226,20 @@ optional standalone read-only board, and persistence details are in
 - **Framework:** Next.js 16 (App Router), React 19, TypeScript
 - **UI:** Tailwind CSS v4 with CSS-variable design tokens, shadcn / Radix UI
   components, `lucide-react` + [animate-ui](https://animate-ui.com/) motion variants
-- **Content:** `react-markdown` + `remark-gfm` for in-app help and release notes
+- **Content:** `react-markdown` with a legacy-safe GFM subset for in-app help
+  and release notes
 - **Data:** Neon Postgres as the authoritative store; Cloudflare Durable Objects
-  distribute an allowlisted public-state projection in v2.0; a file-based
+  distribute allowlisted public queue and configuration projections; a file-based
   `data/state.json` fallback supports local development
 - **Auth & email:** scanner-safe Auth.js Magic Link + Verification Code,
   delivered through runtime-branded HTML/plain-text templates via
   [Resend](https://resend.com/)
 - **Testing:** Vitest + Testing Library
 - **Hosting:** Vercel, with Cloudflare Workers/Durable Objects for realtime
+
+Staff/Admin workflows retain the iOS/iPadOS 15 support floor. Arcade game
+validation starts at iOS 17; newer game testing does not replace the operator
+compatibility requirement. See [browser support](./docs/BROWSER_SUPPORT.md).
 
 ---
 
@@ -215,6 +276,12 @@ Arcade separation guardrails) before opening a non-trivial PR.
 
 **Security issues** — please do **not** open a public issue; see
 [`docs/SECURITY.md`](./docs/SECURITY.md) for the disclosure process.
+
+Keep local credentials, database exports and browser traces out of contributions.
+The [public repository review](./docs/PUBLIC_REPOSITORY_REVIEW.md) records the
+latest privacy cleanup and its limits. Stable-release summaries live in
+[release notes](./docs/release-notes.md); the original v2.0 testing notes remain
+in the [RC archive](./docs/archive/V2.0_RELEASE_CANDIDATES.md).
 
 ---
 
@@ -258,6 +325,19 @@ LOTTO was built with [Claude](https://www.anthropic.com/claude) and
 [Codex](https://openai.com/codex/) — a collaboration between a human author and
 AI agents. The animated icon system uses [Lucide](https://lucide.dev/) with
 motion variants from [animate-ui](https://animate-ui.com/).
+
+Memory Grid uses [Free Pixel Food! by Henry Software](https://henrysoftware.itch.io/pixel-food),
+under [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+These original food sprites retain their CC0 status independently of the
+application's AGPL license. See [asset credits and provenance](./docs/ASSET_CREDITS.md)
+and the [Memory Grid game contract](./docs/MEMORY_GRID.md).
+
+[Seven Fifteen font](https://burpyfresh.itch.io/seven-fifteen-font) by Douglas
+Vautour (Burpy Fresh) is licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Next.js processes it
+for web delivery; the font retains its separate license. The creator's readme
+is preserved, and the credit also appears in About. See
+[asset credits](./docs/ASSET_CREDITS.md).
 
 ---
 

@@ -12,9 +12,14 @@ import Link from "next/link";
 import { ArcadeBottomTabBar } from "@/arcade/components/arcade-bottom-tab-bar";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@/arcade/ui/8bit";
 import { useLanguage } from "@/contexts/language-context";
+import { useMemoryGridStrings } from "@/arcade/hooks/use-memory-grid-strings";
+import { useHanoiStrings } from "@/arcade/hooks/use-hanoi-strings";
+import "@/arcade/styles/content-warning.css";
 
 export default function ArcadeHomePage() {
   const { t } = useLanguage();
+  const memory = useMemoryGridStrings();
+  const hanoi = useHanoiStrings();
 
   const launchGames: Array<{
     id: string;
@@ -22,6 +27,7 @@ export default function ArcadeHomePage() {
     href?: string;
     ctaLabel?: string;
     comingSoon?: boolean;
+    warning?: string;
   }> = [
     {
       id: "snake",
@@ -34,6 +40,25 @@ export default function ArcadeHomePage() {
       title: "BRICK MAYHEM",
       href: "/arcade/brick-mayhem",
       ctaLabel: "PLAY",
+    },
+    {
+      id: "memory-grid",
+      title: memory("memoryGridTitle"),
+      href: "/arcade/memory-grid",
+      ctaLabel: "PLAY",
+    },
+    {
+      id: "tower-of-hanoi",
+      title: hanoi("hanoiTitle"),
+      href: "/arcade/tower-of-hanoi",
+      ctaLabel: "PLAY",
+    },
+    {
+      id: "zombie-attack",
+      title: t("zombieAttackTitle"),
+      href: "/arcade/zombie-attack",
+      ctaLabel: "PLAY",
+      warning: hanoi("cartoonWarningShort"),
     },
     {
       id: "more",
@@ -64,7 +89,7 @@ export default function ArcadeHomePage() {
               return (
                 <article
                   key={game.id}
-                  className={`relative flex h-full w-full flex-col justify-between gap-4 border-2 border-[var(--arcade-wall)] bg-[var(--arcade-menu-card-bg)] p-4 shadow-[0_0_0_2px_var(--arcade-menu-card-shadow)] ${isComingSoon ? "md:col-span-2 md:mx-auto md:max-w-[calc((100%-1.25rem)/2)]" : ""}`}
+                  className="relative flex h-full w-full flex-col justify-between gap-4 border-2 border-[var(--arcade-wall)] bg-[var(--arcade-menu-card-bg)] p-4 shadow-[0_0_0_2px_var(--arcade-menu-card-shadow)]"
                 >
                   {isComingSoon ? (
                     <div className="flex h-full items-center justify-center text-center">
@@ -78,6 +103,7 @@ export default function ArcadeHomePage() {
                         <h2 className="arcade-retro text-center text-xl text-[var(--arcade-dot)] sm:text-2xl">
                           {game.title}
                         </h2>
+                        {game.warning && <p className="arcade-content-warning arcade-ui text-center text-base leading-snug"><span aria-hidden="true">! </span>{game.warning}</p>}
                       </div>
 
                       {!isComingSoon ? (

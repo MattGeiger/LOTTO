@@ -56,7 +56,7 @@ Configure the local Worker token in the gitignored
 `workers/realtime-hub/.dev.vars`, then start the Worker:
 
 ```sh
-cd .
+cd <LOTTO_REPO>
 npm run realtime:dev
 ```
 
@@ -64,7 +64,7 @@ In a second terminal, securely enter the same local token and run the protocol
 verifier followed by the benchmark:
 
 ```sh
-cd .
+cd <LOTTO_REPO>
 read -s "REALTIME_TEST_PUBLISH_TOKEN?Local publish token: "
 export REALTIME_TEST_PUBLISH_TOKEN
 npm run realtime:verify
@@ -83,7 +83,7 @@ Run only during a declared measurement window, using the Cloudflare beta
 publish token through a secure local secret source:
 
 ```sh
-cd .
+cd <LOTTO_REPO>
 export REALTIME_TEST_BASE_URL=https://lotto-realtime-beta.et2-geiger.workers.dev
 export REALTIME_TEST_ALLOW_REMOTE=beta
 export REALTIME_TEST_ORIGIN=https://beta.williamtemple.app

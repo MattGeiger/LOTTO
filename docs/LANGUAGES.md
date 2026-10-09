@@ -82,7 +82,7 @@ Arabic (`ar`) and Farsi (`fa`) are right-to-left languages. For correct display,
 
 ### 1. Language Context Provider
 
-**Create:** `src/contexts/language-context.tsx`
+**Create:** `<LOTTO_REPO>/src/contexts/language-context.tsx`
 
 ```tsx
 "use client"
@@ -324,7 +324,7 @@ const translations: Record<Language, Record<string, string>> = {
 > `availableLanguages`; do not recreate the static `languageNames` object shown
 > below.
 
-**Create:** `src/components/language-switcher.tsx`
+**Create:** `<LOTTO_REPO>/src/components/language-switcher.tsx`
 
 ```tsx
 "use client"
@@ -380,7 +380,7 @@ export function LanguageSwitcher() {
 
 ### 3. Time Formatting Utility
 
-**Create:** `src/lib/time-format.ts`
+**Create:** `<LOTTO_REPO>/src/lib/time-format.ts`
 
 ```tsx
 import type { Language } from "@/contexts/language-context"
@@ -479,7 +479,7 @@ function getUkrainianHourPlural(n: number): string {
 
 ### 4. Date Formatting Utility
 
-**Create:** `src/lib/date-format.ts`
+**Create:** `<LOTTO_REPO>/src/lib/date-format.ts`
 
 ```tsx
 import type { Language } from "@/contexts/language-context"
@@ -534,19 +534,19 @@ function getOrdinalSuffix(day: number): string {
 
 ### Step 1: Add LanguageProvider to Layout
 
-**Update:** `src/app/layout.tsx`
+**Update:** `<LOTTO_REPO>/src/app/layout.tsx`
 
 Wrap with LanguageProvider alongside ThemeProvider.
 
 ### Step 2: Update Display Page
 
-**Update:** `src/app/page.tsx`
+**Update:** `<LOTTO_REPO>/src/app/page.tsx`
 
 Add both LanguageSwitcher and ThemeSwitcher buttons in top-right corner.
 
 ### Step 3: Update ReadOnlyDisplay Component
 
-**Update:** `src/components/readonly-display.tsx`
+**Update:** `<LOTTO_REPO>/src/components/readonly-display.tsx`
 
 - Replace all hard-coded strings with `t(key)` calls
 - Replace `formatDate()` with `formatDate(language)`
@@ -554,7 +554,7 @@ Add both LanguageSwitcher and ThemeSwitcher buttons in top-right corner.
 
 ### Step 4: Update TicketDetailDialog Component
 
-**Update:** `src/components/ticket-detail-dialog.tsx`
+**Update:** `<LOTTO_REPO>/src/components/ticket-detail-dialog.tsx`
 
 - Add language prop
 - Replace hard-coded strings with translations

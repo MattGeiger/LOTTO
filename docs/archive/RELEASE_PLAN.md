@@ -887,7 +887,7 @@ CREATE INDEX IF NOT EXISTS sessions_sessionToken_idx
 ```
 
 **Documentation:**
-- [ ] Save schema as `schema.sql`
+- [ ] Save schema as `<LOTTO_REPO>/schema.sql`
 
 **Git commit:**
 ```

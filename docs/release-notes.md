@@ -1,139 +1,47 @@
-## Version 2.0.0-rc.8 — October 7, 2026
+## Version 2.0.0 — October 9, 2026
 
-- **A pill-shaped navigation selector.** The selected tab has fully rounded
-  ends inside the desktop navigation pill, surrounding both its icon and label.
-  Labels and tap areas keep their familiar spacing.
+**A better way to wait.** LOTTO 2.0 brings realtime updates, less unnecessary
+database activity, five retro games and a more polished multilingual experience.
+This summary covers changes since **v1.26.0**, the last stable point release.
 
-## Version 2.0.0-rc.7 — October 7, 2026
+- **Live queue updates with fewer database wake-ups.** Public queue, appearance
+  and language loading use published Cloudflare copies on enabled deployments,
+  including compatible requests from older tabs. Staff changes remain
+  authoritative and publish after saving.
+- **Calmer connection recovery.** Screens retain the last valid queue while
+  allowing two minutes for reconnection, then recover from Cloudflare snapshots.
+  Lightweight heartbeats and bounded publication retries support recovery
+  without restoring public database polling.
+- **Two new games.** Memory Grid and Tower of Hanoi join Snake, Brick Mayhem
+  and Day of the Dead. Both new games reward accuracy rather than speed, with
+  shared per-difficulty Top 10 scores, three-letter initials and untimed entry.
+  Device-local records and offline play remain available.
+- **More consistent Arcade controls.** Movement controls sit above the bottom
+  Pause row. Hanoi offers Continue to the next disk count through five disks;
+  Day of the Dead presents a prominent red cartoon-violence warning before play.
+  Ticket calls and leaving the tab pause gameplay.
+- **Clearer navigation and Help.** The desktop navigation uses a rounded
+  selector inside its pill. Help keeps Back, search and theme controls within
+  reach, with updated screenshots and instructions.
+- **Updated translation setup.** AI Configuration offers model lifecycle
+  guidance, capability-aware settings, reference pricing and a free selected
+  model access check. Existing saved configurations remain intact.
+- **Your organization's identity throughout.** Public branding is published
+  alongside language configuration, bringing existing Appearance logos,
+  install icons, colors and localized copy to cold renders and compatible older
+  tabs without public database reads. Universal ticket-status colors remain
+  consistent across agencies.
+- **Reliability and credits.** Service dates use the agency timezone consistently,
+  operating-hours saves reject invalid times and reversed open intervals, and
+  About credits Henry Software's food artwork and Douglas Vautour's Seven
+  Fifteen font with their respective licenses.
+- **Security maintenance.** Updated the framework, announcement editor, image
+  processor and supporting libraries while preserving the existing sign-in
+  provider and older-iPad support requirement.
 
-- **Public appearance and language loading avoid database wake-ups.** On
-  deployments with publication enabled, these reads use the published public
-  copy even when the hosting cache is empty. Compatible older browser tabs
-  receive the same protection through their existing API requests.
-- **Staff saves refresh the public copy.** Appearance, language translations
-  and announcements publish after successful saves. A brief publication failure
-  keeps the previous public copy and triggers bounded recovery; the saved staff
-  change is retained.
-- **Opening a language catalog no longer initializes database rows.** Saved
-  enablement choices remain intact. Initialization belongs to staff changes.
-
-The two-minute live queue recovery period and existing staff and public inventory
-access are preserved. Actual compute savings require several days of observation.
-
-## Version 2.0.0-rc.6 — October 2, 2026
-
-- **Older public pages also avoid unnecessary database wake-ups.** Their queue
-  requests now receive the public snapshot through the server. An old browser
-  left open can keep requesting updates without repeatedly reading Neon.
-- **Public configuration is reused between visits.** Appearance and language
-  data refresh after staff save changes, rather than being re-read from the
-  database on every visitor request.
-- **Staff controls keep authoritative state.** Queue changes, announcements,
-  undo, redo and saved snapshots retain their normal workflows. Public screens
-  continue to allow two minutes for live connection recovery.
-
-This release addresses additional public database reads found after RC.5.
-Monthly compute savings require a separate observation of actual usage.
-
-The October 3 St. Johns Food Share rollout uses this same RC.6 release. Its live
-queue connection and recovery snapshots use separate agency infrastructure;
-staff keep the existing sign-in and queue controls. Saved agency settings and
-branding are preserved.
-
-## Version 2.0.0-rc.5 — September 28, 2026
-
-- **Idle displays avoid unnecessary database wake-ups.** Public screens using
-  realtime now load and recover their queue from Cloudflare snapshots. A lost
-  connection no longer sends those screens back to repeated Neon database reads,
-  including outside service hours.
-- **Brief interruptions get time to recover.** Displays keep the last valid
-  queue visible and allow two minutes for the live connection to return. If it
-  remains unavailable, they check Cloudflare snapshots at a controlled pace and
-  resume live updates automatically when the connection recovers.
-- **Silent connection failures are detected.** Lightweight heartbeats check
-  the live connection without reading the queue database. If both the live feed
-  and snapshots stay unavailable, the screen shows a loading error while keeping
-  the last valid queue visible.
-- **Saved staff changes get automatic publication recovery.** A bounded
-  background retry can deliver a delayed queue update without another staff edit.
-
-WTH production testing confirmed the two-minute fallback, automatic reconnection,
-and prompt staff updates with no display requests to the database state API
-during the controlled test. Overnight compute savings are still being observed.
-
-## Version 2.0.0-rc.4 — September 14, 2026
-
-RC.4 refreshes AI Configuration on William Temple House's production app. It
-brings FEED 1.8.0's current model catalog into LOTTO's familiar six-step setup,
-adds lifecycle guidance for older saved models, and makes existing parameter
-controls follow each model's capabilities. The pricing step is now **Model
-Pricing**; LOTTO continues to leave actual usage and billing to provider portals.
-**Test key and model** checks credentials and selected-model visibility for
-free, with clear limits on what that confirms. See
-[the validation record](https://github.com/MattGeiger/LOTTO/blob/v2.0.0-rc.4/docs/AI_CONFIGURATION_RC4_VALIDATION.md) for hosted evidence
-and model/device limitations. Existing keys, selected models and price overrides
-are preserved; switching to a newer model is a deliberate staff action.
-
-## Version 2.0.0-rc.2 — September 3, 2026
-
-The isolated beta now uses realtime automatically on its ordinary Home,
-Display, Inventory, and Arcade pages. Each page still begins by checking the
-authoritative database and trusts the live feed only after the revision and
-public state agree exactly. A healthy connection suppresses scheduled state
-checks; any connection or data-integrity problem causes an immediate database
-reconciliation and restores the complete adaptive refresh schedule.
-
-Testers can append `?realtime=poll` for a polling-only control,
-`?realtime=observe` for the comparison diagnostic, or `?realtime=source` as a
-compatibility alias. The Vercel application gate and authenticated Cloudflare
-drain provide separate controls for newly loaded and already-open pages.
-
-Realtime recovery now includes a server-side gate that can keep newly loaded
-pages on adaptive polling, while a
-separately authenticated Cloudflare control can drain already-connected
-realtime clients without interrupting staff changes or state publication.
-Fallback now preserves the same post-change, operating-hours, long-idle,
-off-hours, visibility, and error backoff used by the existing app.
-
-The planned William Temple House production home is a new project in the
-consulting business's existing Vercel Pro account. The preferred attended
-cutover window begins after the pantry closes on Thursday, September 3, 2026 at
-2:30 PM Pacific. The current production deployment and beta Hobby
-account/project will remain available for comparison and rollback until the
-new deployment is accepted.
-
-This release remains confined to `beta.williamtemple.app`; production, `main`,
-and the apex domain have not changed.
-
-Deployed beta validation passed on all four ordinary public routes at revision
-`91`. The polling control and observer comparison passed, a live Cloudflare
-drain forced a fresh Display load into adaptive polling fallback, resume
-restored realtime automatically, and the parameter-free Display connected on
-the iOS 15.4 simulator. The Vercel application gate is deployed and
-code/build-tested but was not live-toggled during this checkpoint.
-
-## Version 2.0.0-rc.1 — September 2, 2026
-
-This beta release candidate marks the completed realtime-source proof and the
-approved path toward a production test. Home, Display, Inventory, and Arcade
-can all receive an authenticated staff change from the Cloudflare realtime hub,
-stop their scheduled state checks while that source is healthy, and return
-automatically to the existing Neon-backed adaptive polling when the connection
-or data cannot be trusted.
-
-The live beta proof delivered the same revision to all four public areas, made
-no state requests during a healthy 40-second display observation, recovered
-from a simulated network interruption, and passed connection,
-background/foreground, and subsequent-update checks on the iOS 15.4 iPad mini
-simulator. Neon remains authoritative for staff actions, atomic state changes,
-undo, redo, snapshots, and recovery.
-
-This version label does **not** turn realtime on for every visitor yet. Ordinary
-beta URLs continue to use adaptive polling; testers must still use the exact
-`?realtime=source` option. Making realtime the default, adding a polling-only
-control, and completing the production-resource cutover checklist are the next
-implementation phase. The production app, `main` branch, and
-`williamtemple.app` domain are unchanged.
+Database-cost savings remain under observation; staff activity and explicit score saves can
+still incur compute. The original release-candidate notes are preserved in
+the repository's `docs/archive/V2.0_RELEASE_CANDIDATES.md`.
 
 ## Version 1.26.0 — August 30, 2026
 

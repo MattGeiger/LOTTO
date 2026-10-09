@@ -26,7 +26,6 @@ export const config = {
     "/api/brand-config",
     "/api/brand-config/:path*",
     "/api/integrations/feed/token",
-    "/arcade/zombie-attack/:path*",
   ],
 };
 
@@ -44,17 +43,12 @@ const GATED_API_PREFIXES = [
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isZombieAttack = pathname.startsWith("/arcade/zombie-attack");
   const isAdmin = pathname.startsWith("/admin");
   const isGatedApi = GATED_API_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   const isWriteApi =
     isGatedApi && !["GET", "HEAD", "OPTIONS"].includes(request.method.toUpperCase());
   const isLocalDevelopment = process.env.NODE_ENV === "development" && !process.env.VERCEL;
   const authBypass = process.env.AUTH_BYPASS === "true" || isLocalDevelopment;
-
-  if (isZombieAttack && process.env.NODE_ENV === "production") {
-    return NextResponse.redirect(new URL("/arcade", request.url));
-  }
 
   if (process.env.AUTH_BYPASS === "true" && process.env.NODE_ENV === "production") {
     throw new Error(

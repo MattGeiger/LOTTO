@@ -48,11 +48,11 @@ Current deployed FEED version verified during planning:
 
 Relevant FEED source/docs:
 
-- `../williamtemple-feed/docs/PUBLIC_INVENTORY.md`
-- `../williamtemple-feed/packages/backend/src/routes/public-inventory.ts`
-- `../williamtemple-feed/packages/backend/__tests__/routes/public-inventory.test.ts`
-- `../williamtemple-feed/packages/backend/src/server.ts`
-- `../williamtemple-feed/packages/backend/prisma/schema.prisma`
+- `<FEED_REPO>/docs/PUBLIC_INVENTORY.md`
+- `<FEED_REPO>/packages/backend/src/routes/public-inventory.ts`
+- `<FEED_REPO>/packages/backend/__tests__/routes/public-inventory.test.ts`
+- `<FEED_REPO>/packages/backend/src/server.ts`
+- `<FEED_REPO>/packages/backend/prisma/schema.prisma`
 
 ## Access Contract
 

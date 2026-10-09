@@ -41,6 +41,19 @@ must be configured and a valid projection published first. See
 
 ## Consumers and hosting
 
+- RC.11 Hanoi uses the isolated Arcade score store on Ready/completion/scope
+  transitions and explicit Save. Peg selection, moves, Undo, pauses and idle
+  periods add no score requests. Day of the Dead's assets and leaderboard mount
+  only after its warning is accepted. Neither change alters core snapshot gates.
+- RC.9's Memory Grid, deployed to WTH on October 8, initially used local best
+  turns only. The subsequent RC.10 scoring extension uses the existing Arcade
+  leaderboard through `ARCADE_DATABASE_URL` on Ready/completion/difficulty
+  transitions and on explicit score submission. No interval refresh or
+  card/pause/resume read is added; best turns remain in browser storage.
+  Its page still uses the shared Arcade layout, public configuration and Now
+  Serving banner, whose existing boundaries below continue to apply. Offline
+  game completion and bounded request-count checks do not establish zero
+  total Neon usage for a deployment.
 - Home, Display, Inventory queue alerts and Arcade Now Serving all share the
   Cloudflare source controller. Its lifecycle, failure and language-change
   tests count requests. Legacy/polling-only state requests use the same server
@@ -127,3 +140,33 @@ suspend operations and hourly consumption against arriving HTTP paths. Keep
 Hobby runtime-log retention (one hour) in mind. Remaining wakes must be attributed
 to cold configuration reads, authenticated clients, FEED sync, direct clients,
 or another measured source before proposing further changes.
+
+The October 8 evening read-only operations check found no WTH starts after
+October 7 at 22:23 PDT (suspended 22:36) through October 8 at 20:44. St. Johns'
+post-cutover starts at 11:57 and 20:45 PDT coincided with our two Neon-console
+checks; its 12:03–20:45 interval had no further starts. This is diagnostic
+correlation, not proven client attribution. Both primary computes are 0.25 CU,
+and the repeating half-hour pattern was absent from these intervals. No exact
+metered daily CU-hour comparison was obtained. RC.9's subsequent WTH maintenance
+publication deliberately read Neon and belongs outside this idle observation.
+See the [evening and RC.9 records](PUBLIC_CONFIGURATION_PUBLICATION.md#evening-compute-observation--october-8-2026).
+
+WTH RC.10 was activated October 8 at approximately 22:23 PDT after its separate
+Arcade constraint migration and configuration publication revision 4. Live
+Memory Grid completion/submission plus independent score readback succeeded.
+Anonymous catalog, Chinese pack and compatible queue GETs returned Cloudflare
+source headers. This release did not repeat SQL-counter measurements or the
+overnight study. Exclude its deliberate core publication and Arcade migration/
+play/save diagnostics (approximately 22:10–22:30 PDT) from idle comparisons;
+compute may remain billable afterward until it suspends.
+
+WTH RC.11 was activated October 9 at approximately 00:01 PDT after the separate
+Arcade constraint migration and explicit configuration publication revision 5.
+All 187 prior scores retained an identical checksum. A real seven-move Hanoi
+finish saved 2,000 points and passed independent readback; Day of the Dead's
+warning prevented its game/score loading until Continue. Anonymous catalog,
+Chinese pack and compatible queue GETs identify Cloudflare. This release did
+not repeat SQL-counter measurements or the overnight study. Exclude deliberate
+migration, staff checks, core publication and Arcade play/save diagnostics
+(October 8 23:54 through October 9 00:04 PDT), plus subsequent idle tails,
+from consumption comparisons. See the RC.11 publication record for receipts.

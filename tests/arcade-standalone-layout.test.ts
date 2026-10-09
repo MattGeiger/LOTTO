@@ -17,6 +17,8 @@ describe("Arcade standalone controls", () => {
 
     expect(standaloneRules).toContain(".arcade-snake-control-dock");
     expect(standaloneRules).toContain(".arcade-brick-control-dock");
+    expect(standaloneRules).toContain(".arcade-memory-control-dock");
+    expect(standaloneRules).toContain(".arcade-hanoi-control-dock");
     expect(standaloneRules).toContain(".arcade-zombie-control-dock");
     expect(standaloneRules.match(/\+ 2rem/g)).toHaveLength(2);
   });

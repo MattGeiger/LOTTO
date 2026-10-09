@@ -218,7 +218,7 @@ The Append confirmation modal (with 3 buttons: Cancel, "Append ticket range only
 ### Fix
 - Added `overflow-x-hidden` to `AlertDialogContent` on both append and batch dialogs.
 - Stacked append modal buttons vertically (`flex-col` + `w-full`) so all 3 buttons fit cleanly.
-- Pattern documented in `../zev_app/zev_dashboard/docs/modal-overflow-fix.md`.
+- Pattern documented in `<RELATED_REPO>/docs/modal-overflow-fix.md`.
 
 ---
 
@@ -1273,6 +1273,19 @@ range locking or the FEED indicator is defective. No assertion was loosened.
 If this exact failure recurs, stabilize the disabled-state assertion with
 `waitFor` rather than changing the range-locking contract.
 
+### Related application of the flake procedure — 2026-10-08
+
+The October 9 security candidate observed the same canary revision timing
+failure once. The unchanged file passed 9/9 in isolation and the unchanged
+full rerun passed all 146 files / 1,103 tests. No canary assertions, realtime
+implementation or global worker settings were changed.
+
+RC.11 validation on October 8, 2026 also observed one full-suite failure in
+`realtime-source-canary.test.tsx`: the ordinary-load assertion saw revision 1
+before the mock socket's revision 2. The file passed 9/9 in isolation, and the
+unchanged full rerun passed 1,083/1,083. No assertion or realtime implementation
+was changed; this remains a timing/resource-contention observation.
+
 ### Related application of the flake procedure — 2026-09-01
 
 During the Phase 4 exact-revision validation, one unchanged full-suite run
@@ -1289,20 +1302,56 @@ validation: the observer file passed 4/4 in isolation and the unchanged full
 suite then passed 908 tests with one expected skip. The assertion and
 implementation again remained unchanged.
 
+### Repeated Hanoi progression timeout — 2026-10-09
+
+The 3 → 4 → 5 progression test exceeded Vitest's default five-second limit
+in two full-suite runs. Between those runs, the unchanged file passed all six
+tests in isolation; progression alone took about 3.5 seconds. This scenario
+drives 53 moves / 106 peg activations through three complete boards, checks
+each score/difficulty and exercises explicit submission. After the timeout
+recurred, only this test received a 15-second budget. Assertions, application
+code and global worker/timeout settings were preserved.
+
+The adjusted progression test passed under the full suite. A separate
+personalized-display Arabic badge assertion then failed once; its unchanged
+file passed 8/8 in isolation and the unchanged full rerun passed 146 files /
+1,098 tests with one expected skip. The display assertion and implementation
+were left intact.
+
+During stable v2.0 preparation, the unchanged 15-second Hanoi test timed out
+in two default-worker full runs while its file passed in isolation (about
+3.5 seconds for progression). The initial run overlapped a production build;
+the repeat also ran during other local checks. A two-worker full-suite run
+was selected after recurrence to check the resource-pressure explanation,
+without changing tests, application code or the repository's worker settings.
+Its final result is recorded in `RELEASES.md`. The realtime canary also failed
+only in the initial full run and passed isolation and the default-worker rerun.
+
 ---
 
 ## Issue 28: Operating-hours API accepts malformed or conflicting time values
 
 ### Status
-- Open; documented for a later hardening milestone. No runtime behavior changed.
+- Resolved October 9, 2026 and deployed to WTH in RC.12. Live malformed-time
+  and equal-open/close requests return field-specific HTTP 400; public saved
+  hours and timezone are unchanged. Existing saved schedules were not modified.
+- Verification: 69 focused route/editor tests pass; the full suite passes
+  1,098 tests with one expected skip. TypeScript and lint pass. The isolated
+  production build, 49-chunk legacy scan and hydration smoke pass; local
+  backend/auth warnings are not real sign-in or legacy-device acceptance.
+- A controlled production-build comparison changed only the state API route
+  in the isolated copy. All 55 browser asset filenames/hashes (49 JavaScript
+  chunks plus CSS) were byte-identical with and without Issue 28. This confirms
+  the API fix adds no browser bundle change; it does not validate the separate
+  local Arcade/UI follow-ups on legacy hardware.
 
-### Observed
+### Observed Before the Fix
 The Admin operating-hours editor uses native time inputs, but the persisted
 state contract does not independently prove that each `openTime` and
 `closeTime` is a valid 24-hour `HH:mm` value. It also does not reject an open
 day whose closing time is equal to or earlier than its opening time.
 
-### Root Cause (Code References)
+### Root Cause Before the Fix (Code References)
 - `src/app/api/state/route.ts` validates the seven-day operating-hours object
   and timezone, but its day-level schema accepts arbitrary strings for
   `openTime` and `closeTime`.
@@ -1319,17 +1368,21 @@ day whose closing time is equal to or earlier than its opening time.
 - Invalid state can persist successfully and become harder to diagnose later
   because the editor itself appears constrained.
 
-### Recommended Fix
-Harden the centralized API schema rather than relying on the editor:
+### Implemented Fix
+The centralized API schema now independently validates submitted schedules:
 
-1. Require exact 24-hour `HH:mm` values (`00:00` through `23:59`) for every
-   stored opening and closing time.
+1. Require valid 24-hour `HH:mm` or `HH:mm:ss` values for every submitted
+   opening and closing time. Both formats are already used by LOTTO; values
+   pass through unchanged. Hours, minutes and optional seconds must be in range.
 2. For days marked open, require `closeTime > openTime`.
 3. Continue retaining time values for closed days so reopening a day does not
    erase the prior schedule.
-4. Return actionable validation copy identifying the affected day and field.
-5. Add route tests for malformed time strings, equal times, closing-before-
-   opening, closed-day retention, and a valid seven-day schedule.
+4. Return HTTP 400 with actionable validation copy identifying the affected
+   day and field, before calling the state manager or persistence layer.
+5. Route regression tests cover malformed strings, trailing whitespace,
+   boundary values, optional seconds and mixed formats, equal/reversed times,
+   every day, closed-day retention, and a valid seven-day schedule. The existing
+   shape and timezone checks remain in place.
 
 Overnight operating windows are not supported by the current UX. If they
 become a requirement, model them explicitly rather than weakening the

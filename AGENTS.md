@@ -233,6 +233,15 @@ consistent with existing patterns and workflows.
   prevent recurring.
 
 ## Arcade Guardrails
+- Follow `docs/ARCADE_CONTROLS.md` for all current and future game controls:
+  movement sliders/D-pads above the bottom Start/Pause/Resume action row,
+  Pause on the left when paired with another action, and stable physical order
+  in RTL. Day of the Dead pairs Pause left and A right under its slider.
+- The owner approved iOS 17 as the Arcade game testing floor on October 8,
+  2026, using the named iOS 17.5, 26.3 and 27.0 simulator tiers. The iOS 15
+  requirement remains for Admin/operator workflows. Arcade-only work does not
+  require an iOS 15 simulator run; shared dependencies/core UI must still
+  preserve the operator floor and its existing validation gates.
 - Keep Arcade explicitly separated from raffle/display features in both code and UX.
 - Do not integrate Arcade gameplay into `/` or `src/components/readonly-display.tsx`.
 - Do not reuse raffle-specific UI/state concepts for Arcade (ticket cards, queue legends, raffle statuses).

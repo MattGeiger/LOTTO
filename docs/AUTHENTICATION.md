@@ -61,7 +61,7 @@ issuance/verification.
 
 ```text
 # Exact-address policy for an agency temporarily using Gmail
-ADMIN_EMAIL_ALLOWLIST=director@gmail.com,operations@gmail.com
+ADMIN_EMAIL_ALLOWLIST=director@example.org,operations@example.org
 
 # Domain policy for an agency with managed organizational email
 ADMIN_EMAIL_DOMAIN=williamtemple.org

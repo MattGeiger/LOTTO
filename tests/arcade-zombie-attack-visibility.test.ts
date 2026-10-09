@@ -19,13 +19,13 @@ describe("Day of the Dead production visibility", () => {
     vi.unstubAllEnvs();
   });
 
-  it("routes production zombie-attack requests back to the Arcade index", async () => {
+  it("allows production access to the page's content warning", async () => {
     vi.stubEnv("NODE_ENV", "production");
 
     const response = await proxy(new NextRequest("https://example.com/arcade/zombie-attack"));
 
-    expect(response?.status).toBe(307);
-    expect(response?.headers.get("Location")).toBe("https://example.com/arcade");
+    expect(response?.headers.get("x-middleware-next")).toBe("1");
+    expect(response?.headers.get("Location")).toBeNull();
   });
 
   it("keeps the internal route available outside production", async () => {
@@ -36,7 +36,8 @@ describe("Day of the Dead production visibility", () => {
     expect(response?.headers.get("x-middleware-next")).toBe("1");
   });
 
-  it("keeps the proxy matcher scoped to protected and hidden routes", () => {
-    expect(config.matcher).toContain("/arcade/zombie-attack/:path*");
+  it("keeps the public game out of the staff/API proxy matcher", () => {
+    expect(config.matcher).not.toContain("/arcade/zombie-attack/:path*");
+    expect(config.matcher).toContain("/admin/:path*");
   });
 });

@@ -78,8 +78,12 @@ The paddle moves **horizontally only** along the bottom edge of the play area. T
 
 ### Control Dock Layout
 The control dock (sticky bottom bar) contains two controls stacked vertically with generous spacing to prevent accidental pauses while dragging the slider:
-1. A small **Pause/Play button** (top) — toggles between `RUNNING` and `PAUSED` states.
-2. A **paddle slider control** (bottom) — a horizontal track the player drags to position the paddle. This is the primary input for both touch and mouse.
+1. A **paddle slider control** (top) — a horizontal track the player drags to position the paddle. This is the primary input for both touch and mouse.
+2. A **Start/Pause/Resume button** (bottom) — starts or toggles the game state,
+   with a target at least 48 CSS pixels high.
+
+See [Arcade control layout standard](ARCADE_CONTROLS.md) for the shared order
+and accessibility requirements. The October 9 layout follow-up is local.
 
 The Snake-style D-pad is not used. Brick Mayhem replaces directional controls with a single-axis slider. No input is accepted on the play area itself — the board is view-only.
 

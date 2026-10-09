@@ -15,20 +15,23 @@ import {
   ARCADE_GAME_SLUGS,
   ARCADE_HIGH_SCORE_MAX_SCORE,
   isValidInitials,
+  isSupportedHighScoreScope,
   normalizeInitials,
 } from "@/arcade/lib/high-score-types";
 
 export const runtime = "nodejs";
 
-const getSchema = z.object({
+const scopeSchema = z.object({
   game: z.enum(ARCADE_GAME_SLUGS),
   difficulty: z.enum(ARCADE_DIFFICULTY_KEYS),
 });
+const getSchema = scopeSchema.refine(isSupportedHighScoreScope);
 
-const postSchema = getSchema.extend({
+const postSchema = scopeSchema.extend({
   initials: z.string().min(1).max(24),
   score: z.number().int().min(1).max(ARCADE_HIGH_SCORE_MAX_SCORE),
-});
+}).refine(isSupportedHighScoreScope).refine(({ game, score }) =>
+  !["memory-grid", "tower-of-hanoi"].includes(game) || (score >= 1000 && score <= 2000));
 
 function rateLimitKey(request: Request, action: "GET" | "POST"): string {
   const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();

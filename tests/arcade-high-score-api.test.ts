@@ -82,6 +82,23 @@ describe("API /api/arcade/high-scores", () => {
     expect(difficultyResponse.status).toBe(400);
   });
 
+  it("accepts Memory Grid points in its three difficulty scopes and rejects impossible scores", async () => {
+    const { GET, POST } = await import("@/app/api/arcade/high-scores/route");
+    mockStore.listTopScores.mockResolvedValue([]);
+    mockStore.submitScore.mockResolvedValue({ accepted: true, scores: [] });
+    for (const difficulty of ["easy", "normal", "hard"]) {
+      expect((await GET(getRequest(`http://localhost/api/arcade/high-scores?game=memory-grid&difficulty=${difficulty}`))).status).toBe(200);
+      expect((await POST(postRequest({ game: "memory-grid", difficulty, score: 1667, initials: "ABC" }))).status).toBe(200);
+    }
+    expect(mockStore.submitScore).toHaveBeenLastCalledWith({ game: "memory-grid", difficulty: "hard", score: 1667, initials: "ABC" });
+    const calls = mockStore.submitScore.mock.calls.length;
+    for (const score of [0, 999, 2001, 1667.5]) {
+      expect((await POST(postRequest({ game: "memory-grid", difficulty: "easy", score, initials: "ABC" }))).status).toBe(400);
+    }
+    expect((await GET(getRequest("http://localhost/api/arcade/high-scores?game=memory-grid&difficulty=nightmare"))).status).toBe(400);
+    expect(mockStore.submitScore).toHaveBeenCalledTimes(calls);
+  });
+
   it("normalizes and submits a qualifying score", async () => {
     mockStore.submitScore.mockResolvedValueOnce({ accepted: true, entry: scoreRow, scores: [scoreRow] });
     const { POST } = await import("@/app/api/arcade/high-scores/route");
@@ -101,6 +118,21 @@ describe("API /api/arcade/high-scores", () => {
       score: 120,
     });
     expect(await response.json()).toEqual({ accepted: true, entry: scoreRow, scores: [scoreRow] });
+  });
+  it("accepts Hanoi difficulty scopes and completion bounds without reaching storage for invalid input", async () => {
+    const { GET, POST } = await import("@/app/api/arcade/high-scores/route");
+    mockStore.listTopScores.mockResolvedValue([]);
+    mockStore.submitScore.mockResolvedValue({ accepted: true, scores: [] });
+    for (const difficulty of ["easy", "normal", "hard"]) {
+      expect((await GET(getRequest(`http://localhost/api/arcade/high-scores?game=tower-of-hanoi&difficulty=${difficulty}`))).status).toBe(200);
+      expect((await POST(postRequest({ game: "tower-of-hanoi", difficulty, score: 2000, initials: "ABC" }))).status).toBe(200);
+    }
+    for (const score of [999, 2001, 1500.5]) {
+      expect((await POST(postRequest({ game: "tower-of-hanoi", difficulty: "easy", score, initials: "ABC" }))).status).toBe(400);
+    }
+    expect((await GET(getRequest("http://localhost/api/arcade/high-scores?game=tower-of-hanoi&difficulty=nightmare"))).status).toBe(400);
+    expect(mockStore.submitScore).toHaveBeenCalledTimes(3);
+    expect(mockStore.listTopScores).toHaveBeenCalledTimes(3);
   });
 
   it("returns updated scores for a non-qualifying valid submission", async () => {

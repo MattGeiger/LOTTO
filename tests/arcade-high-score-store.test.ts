@@ -123,4 +123,15 @@ describe("createArcadeHighScoreStore", () => {
     await expect(failing.listTopScores({ game: "snake", difficulty: "normal" }))
       .rejects.toThrow(ArcadeHighScoreUnavailableError);
   });
+  it("allows a Hanoi cutoff tie and orders equal scores newest first", async () => {
+    const perfect = Array.from({ length: 10 }, (_, i) => ({ ...row(2000, i), game_slug: "tower-of-hanoi", difficulty: "easy" }));
+    const fresh = { ...perfect[0], id: "fresh", initials: "NEW", created_at: "2026-10-09T06:00:00Z" };
+    mockQueryResults.push(perfect, [fresh], [fresh, ...perfect.slice(0,9)]);
+    const store = createArcadeHighScoreStore("postgresql://arcade:test@localhost/db");
+    const result = await store.submitScore({ game: "tower-of-hanoi", difficulty: "easy", initials: "NEW", score: 2000 });
+    expect(result.accepted).toBe(true);
+    expect(result.scores[0].id).toBe("fresh");
+    expect(mockSql).toHaveBeenCalledTimes(3);
+    expect(String((mockSql as unknown as {mock:{calls:unknown[][]}}).mock.calls[0][0])).toContain("order by score desc, created_at desc, id asc");
+  });
 });

@@ -91,7 +91,7 @@ describe("admin email policy", () => {
       expect(isAdminEmailAllowed("director@templepdx.com", env)).toBe(true);
       expect(isAdminEmailAllowed("  Director@TemplePDX.com  ", env)).toBe(true);
       expect(isAdminEmailAllowed("first.last+tag@templepdx.com", env)).toBe(true);
-      expect(isAdminEmailAllowed("et2.geiger@gmail.com", { NODE_ENV: "development" })).toBe(true);
+      expect(isAdminEmailAllowed("visitor@example.org", { NODE_ENV: "development" })).toBe(true);
     });
   });
 });

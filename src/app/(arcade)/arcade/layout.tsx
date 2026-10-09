@@ -9,6 +9,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 
 import "@/arcade/styles/arcade.css";
+import "@/arcade/styles/control-layout.css";
 import { ArcadeLanguageSwitcher } from "@/arcade/components/arcade-language-switcher";
 import { ArcadeModeSwitcher } from "@/arcade/components/arcade-mode-switcher";
 import { ArcadeShell } from "@/arcade/components/arcade-shell";

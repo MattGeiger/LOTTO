@@ -25,17 +25,17 @@ Use FEED as the canonical implementation for these LOTTO surfaces:
 
 Relevant FEED frontend paths:
 
-- `../williamtemple-feed/packages/frontend/src/components/ai-configuration/index.tsx`
-- `../williamtemple-feed/packages/frontend/src/components/ai-configuration/AddAIModelDialog.tsx`
-- `../williamtemple-feed/packages/frontend/src/components/ai-configuration/EditAIModelDialog.tsx`
-- `../williamtemple-feed/packages/frontend/src/components/ai-configuration/AddSystemPromptDialog.tsx`
-- `../williamtemple-feed/packages/frontend/src/components/ai-configuration/EditSystemPromptDialog.tsx`
-- `../williamtemple-feed/packages/frontend/src/components/ai-configuration/shared/BaseAIConfigDialog.tsx`
-- `../williamtemple-feed/packages/frontend/src/components/ai-configuration/shared/StepWrapper.tsx`
-- `../williamtemple-feed/packages/frontend/src/components/ai-configuration/shared/stepDefinitions.ts`
-- `../williamtemple-feed/packages/frontend/src/components/ai-configuration/steps/*`
-- `../williamtemple-feed/packages/frontend/src/components/translation-management/*`
-- `../williamtemple-feed/packages/frontend/src/components/language-management/*`
+- `<FEED_REPO>/packages/frontend/src/components/ai-configuration/index.tsx`
+- `<FEED_REPO>/packages/frontend/src/components/ai-configuration/AddAIModelDialog.tsx`
+- `<FEED_REPO>/packages/frontend/src/components/ai-configuration/EditAIModelDialog.tsx`
+- `<FEED_REPO>/packages/frontend/src/components/ai-configuration/AddSystemPromptDialog.tsx`
+- `<FEED_REPO>/packages/frontend/src/components/ai-configuration/EditSystemPromptDialog.tsx`
+- `<FEED_REPO>/packages/frontend/src/components/ai-configuration/shared/BaseAIConfigDialog.tsx`
+- `<FEED_REPO>/packages/frontend/src/components/ai-configuration/shared/StepWrapper.tsx`
+- `<FEED_REPO>/packages/frontend/src/components/ai-configuration/shared/stepDefinitions.ts`
+- `<FEED_REPO>/packages/frontend/src/components/ai-configuration/steps/*`
+- `<FEED_REPO>/packages/frontend/src/components/translation-management/*`
+- `<FEED_REPO>/packages/frontend/src/components/language-management/*`
 
 ## Required Porting Approach
 

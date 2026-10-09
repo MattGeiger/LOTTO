@@ -68,7 +68,7 @@ requests, model-specific access checks, and clearer provider errors. FEED also
 added accounting, limits, billed verification, and broader controls suited to
 its own workload; those do not become LOTTO requirements.
 
-Primary sources in `../williamtemple-feed`:
+Primary sources in `<FEED_REPO>`:
 
 - `CHANGELOG.md` and `docs/ai-config/model-catalogue-refresh-2026-09.md`
 - `docs/ai-config/phase5-validation-2026-09-14.md`

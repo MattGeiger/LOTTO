@@ -57,7 +57,7 @@ const REQUESTED_NAMES = new Set(
     .filter(Boolean),
 );
 
-/** @typedef {"appearance"|"home-ticket"|"themes"|"admin-advanced"|"admin-status-lists"|"admin-status-revert"|"feed-history"|"feed-setup"|"announcement"|"announcement-code"|"translation"|"translation-ai-config"|"translation-management"|"appearance-help"|"appearance-wizard"|"appearance-step-identity"|"appearance-step-logos"|"appearance-step-colors"|"appearance-step-staff"|"appearance-step-inventory"|"appearance-step-review"|"arcade-game"|"login-code"} Preparation */
+/** @typedef {"appearance"|"home-ticket"|"themes"|"admin-advanced"|"admin-status-lists"|"admin-status-revert"|"feed-history"|"feed-setup"|"announcement"|"announcement-code"|"translation"|"translation-ai-config"|"translation-management"|"appearance-help"|"appearance-wizard"|"appearance-step-identity"|"appearance-step-logos"|"appearance-step-colors"|"appearance-step-staff"|"appearance-step-inventory"|"appearance-step-review"|"arcade-game"|"memory-grid"|"tower-of-hanoi"|"login-code"} Preparation */
 /** @typedef {{name:string,route:string,width:number,height:number,theme?:"light"|"dark",lang?:string,prepare?:Preparation,outDir?:string,target?:string,format?:"png"|"webp",deviceScaleFactor?:number,isMobile?:boolean,hasTouch?:boolean}} Shot */
 
 /** @type {Shot[]} */
@@ -90,6 +90,9 @@ const HELP_SHOT_BASES = [
   { name: "themes", route: "/", width: 375, height: 812, deviceScaleFactor: 2, isMobile: true, hasTouch: true, prepare: "themes" },
   { name: "arcade", route: "/arcade", width: 375, height: 812, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
   { name: "arcade-game", route: "/arcade/snake", width: 375, height: 812, deviceScaleFactor: 2, isMobile: true, hasTouch: true, prepare: "arcade-game" },
+  { name: "memory-grid", route: "/arcade/memory-grid", width: 375, height: 812, deviceScaleFactor: 2, isMobile: true, hasTouch: true, prepare: "memory-grid" },
+  { name: "tower-of-hanoi", route: "/arcade/tower-of-hanoi", width: 375, height: 812, deviceScaleFactor: 2, isMobile: true, hasTouch: true, prepare: "tower-of-hanoi" },
+  { name: "cartoon-violence-warning", route: "/arcade/zombie-attack", width: 375, height: 812, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
   { name: "sign-in-code", route: "/login", width: 1100, height: 760, prepare: "login-code" },
   {
     name: "ticket-status-lists",
@@ -547,6 +550,25 @@ async function run() {
       if (shot.prepare === "arcade-game") {
         await page.click("button[aria-label='Start game']");
         await wait(700);
+      }
+
+      if (shot.prepare === "memory-grid") {
+        await page.waitForFunction(() => {
+          const start = document.querySelector("#memory-start");
+          return start instanceof HTMLButtonElement && !start.disabled;
+        });
+        await page.click("#memory-start");
+        await page.waitForSelector(".arcade-memory-card", { visible: true });
+        await page.click(".arcade-memory-card");
+        await wait(500);
+      }
+
+      if (shot.prepare === "tower-of-hanoi") {
+        await page.waitForSelector("#hanoi-start");
+        await page.click("#hanoi-start");
+        await page.click("#hanoi-peg-0");
+        await page.click("#hanoi-peg-2");
+        await wait(500);
       }
 
       const format = shot.format ?? "png";

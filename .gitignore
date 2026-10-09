@@ -41,6 +41,21 @@ data/*.tmp
 # Local agent configuration and file-backed operational closeouts.
 /.claude/
 /data/queue-summaries/
+/data/agent-progress/
+/data/security-reviews/
+/progress.md
+
+# Local browser traces, reports and credential exports are not public assets.
+*.har
+*.p12
+*.pfx
+*.key
+/credentials*.json
+/playwright-report/
+/test-results/
+/data/*.dump
+/data/*.sql
+/data/*.log
 
 # env files (can opt-in for committing if needed)
 .env*

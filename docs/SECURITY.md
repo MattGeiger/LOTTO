@@ -3,10 +3,31 @@
 **Application:** William Temple House Digital Raffle System
 **Date:** 2026-02-09
 **Auditor:** Automated security review (Claude)
-**Scope:** Full codebase review of `.`
+**Scope:** Full codebase review of `<LOTTO_REPO>`
 **Status:** Complete. All 12 findings fixed, tested, and verified in production (v1.2.2).
 
+This is a historical February audit, not a current security clearance. The
+October 9, 2026 session-start production dependency audit reports 26 moderate,
+nine high and one critical advisory. The RC.12 dependency candidate reduces
+that to four high affected packages in the Nodemailer/Auth.js family, with
+zero moderate or critical. Live deployment and real-iPad acceptance are
+recorded separately. See [the dependency security review](DEPENDENCY_SECURITY_REVIEW.md)
+for exposure evidence, the SMTP exception and validation gates.
+Issue 28 adds stricter time-value/order validation to
+the earlier M4 shape/timezone fix; it shipped to WTH in RC.12, with live
+invalid-time/order rejection and unchanged saved hours verified.
+See [the public repository review](PUBLIC_REPOSITORY_REVIEW.md) for the latest
+credential, privacy and artifact review and its limits.
+
 ---
+
+## Reporting Security Issues
+
+Report suspected vulnerabilities privately to the maintainer at
+[matt@templepdx.com](mailto:matt@templepdx.com), the project's published business
+contact. Include the affected version and a minimal reproduction. Do not post
+credentials, personal records or exploit details in a public issue. Use
+synthetic data and redact tokens from screenshots and logs.
 
 ## Summary
 
@@ -247,6 +268,13 @@ All 12 findings have been fixed, tested (82 unit tests passing), and verified in
 ---
 
 ## Provisional v2.0 Realtime Shadow-Publication Boundary
+
+**Historical proof-stage design.** The section below records the earlier beta
+proposal. Production activation, account ownership and public recovery have
+since changed; use [PUBLIC_CONFIGURATION_PUBLICATION.md](PUBLIC_CONFIGURATION_PUBLICATION.md)
+and [DEPLOYMENT_MIGRATION.md](DEPLOYMENT_MIGRATION.md) for current behavior and
+release evidence. This historical proposal does not waive outstanding security
+or release validation work.
 
 The Phase 3 proof originated as beta-only and is not a production security
 approval. As of v2.0.0-rc.3 realtime may also activate when

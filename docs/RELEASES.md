@@ -1,3 +1,137 @@
+# LOTTO v2.0.0
+
+**Stable release approved October 9, 2026.** Promotes the owner-accepted RC.12
+application and dependency set, with 2.0.0 package/lock metadata, condensed
+in-app notes and a celebratory README highlighting realtime updates, reduced
+public-read overhead, five games, UI polish, updated AI model support and
+configurable branding. Full RC notes remain in
+`archive/V2.0_RELEASE_CANDIDATES.md`.
+
+The owner reports more than 24 hours without recurrence of the former
+30-minute wake pattern. No new Neon measurement was made during this release
+turn; the longer WTH/St. Johns comparison remains scheduled for October 11,
+2026 at 12:08:52 PDT. Legitimate staff/auth/publication and explicit Arcade
+score activity can still incur compute. A recurrence will be investigated for
+a subsequent point release rather than delaying this owner-approved release.
+
+Production audit remains four high affected packages in the documented
+Nodemailer/Auth.js exception, zero moderate and zero critical. Application
+code and dependency resolutions are unchanged from RC.12; real-iPad
+sign-in/editor acceptance is owner-reported, as recorded below. Final stable
+deployment, verification and GitHub receipts follow this entry.
+
+## Stable WTH receipt
+
+- Verified WTH account `technology-3236`, scope `wth-apps`, project
+  `wthlotto` / `prj_zNP9ZGxuCuG6OhXgtyCwth1KTzdm`, and retained RC.12
+  `dpl_Aw5EK2MXYV6JRuuVBiQgrMJg8FR8` as the recovery reference. No rollback
+  was performed. Personal GitHub source ownership is unchanged.
+- Isolated source manifest SHA-256:
+  `99d9128ea10da0cf9858d52a81b0ed9845ae0519c4ada7b693e80e45d7fc787e`.
+  Application and lockfile dependency graph match accepted RC.12; stable
+  version/notes and README/documentation are the release changes. Final
+  documentation receipts follow the deployed snapshot.
+- Production build, TypeScript, lint, 49-chunk legacy scan and modern Chromium
+  hydration/interactivity smoke pass. Smoke uses a dummy local database and
+  file storage, with expected missing-Resend/backend warnings; it is not real
+  email delivery or old-WebKit acceptance. Owner-reported real-iPad RC.12
+  acceptance applies to the unchanged application/dependency set.
+- Full suite passes with two workers: **146 files, 1,102 tests passed and one
+  expected skip**. Two default-worker runs hit the known Hanoi progression
+  timeout; its unchanged file and realtime canary passed isolation. The canary
+  passed the default-worker rerun. No test assertions or repository worker
+  settings changed; see Issue 27.
+- Gate-off deployment `dpl_3a3j84wJ7ttJcyrvsvSmVmg63T1j` reached Ready and
+  was promoted. Authenticated configuration activation accepted revision 7,
+  release `2.0.0`; independent schema/checksum validation and exact public-data
+  comparison passed. Saved branding, languages, announcements, hours and queue
+  were not changed.
+- Gate-on deployment `dpl_8oZPRkxPLWojL2vZ6STGGAZeqG3X`,
+  `wthlotto-no2sh6jdv-wth-apps.vercel.app`, reached Ready and was promoted to
+  `williamtemple.app` at approximately **14:18 PDT on October 9**. Both hosted
+  builds pass. Live Chrome verifies v2.0.0, responsive sign-in tabs and the
+  consolidated stable notes. The public Arcade lists all five games.
+- Anonymous language catalog, Chinese pack, compatible legacy queue request,
+  manifest and public pages return HTTP 200. Catalog/pack and queue identify
+  Cloudflare as their source. These are routing checks, not new SQL-counter
+  evidence or a measured monthly savings claim.
+
+Exclude release activity beginning around **14:15 PDT**, configuration
+publication at **14:16:49 PDT**, subsequent staff/session and live diagnostic
+checks, and their billable idle tails from quiet Neon comparisons. The
+October 11 read-only comparison remains scheduled for both agencies.
+
+Both Vercel projects track GitHub `main`. Shared-main reconciliation and a
+St. Johns stable rollout await explicit target confirmation; WTH's deployment
+does not imply other-agency activation. Stable GitHub publication can reference
+the prepared `dev` release commit without pushing `main`.
+
+# LOTTO v2.0.0-rc.12
+
+WTH-only security and release-preparation candidate. Updates Next.js to 16.3.8,
+Tiptap to 3.31.4, sharp to 0.35.5 and patched transitive HTTP/Markdown/source-map
+libraries. Audit: four high affected packages remain in Nodemailer/Auth.js;
+zero moderate or critical. Production SMTP is unreachable under tested guards.
+See [dependency review](DEPENDENCY_SECURITY_REVIEW.md) for exposure and limits.
+
+Includes the approved local Issue 28, Arcade control/progression/warning and
+font-credit improvements, plus consolidated stable-v2.0 preview notes.
+Automated candidate checks pass 1,103 tests, build, 49-chunk legacy scan and
+modern Chromium hydration smoke. The owner explicitly authorized WTH production
+testing instead of a preview; physical iPadOS 15 sign-in/editor acceptance is
+owner-reported complete, with no issues reported. WTH production activation
+completed October 9 at approximately
+11:17 PDT: final deployment `dpl_Aw5EK2MXYV6JRuuVBiQgrMJg8FR8`, Cloudflare
+configuration revision 6 with unchanged public data. Live version, condensed
+notes, font credit, Cloudflare routing and invalid-hours rejection pass.
+See the dependency review for complete receipts and diagnostic exclusions. RC.11
+`dpl_3BzpskbJRajU4CpofTTSqvisrEFQ` is the recovery reference; rollback needs
+owner authorization. St. Johns and GitHub ownership remain unchanged.
+
+# LOTTO v2.0.0-rc.11
+
+WTH-only release: Tower of Hanoi's untimed 3/4/5-disk puzzle, shared scores and
+counted Undo, plus Day of the Dead restored behind a localized cartoon-violence
+warning. Other game scoring and dependencies are unchanged; St. Johns stays
+on RC.8. Release verification and deployment receipts are recorded in
+`TOWER_OF_HANOI.md`; the preceding RC.10 remains a recovery reference.
+
+**Live activation:** October 9, 2026, approximately 00:01 PDT (the implementation
+and version entry are dated October 8). Final deployment
+`dpl_3BzpskbJRajU4CpofTTSqvisrEFQ`; Cloudflare configuration revision 5.
+All 187 prior Arcade scores retained their checksum. A real seven-move finish
+saved `TST` / 2,000 points and passed independent readback. Live version,
+release notes, game warning/Continue/Back/reload and five-game menu checks pass.
+1,083 tests, lint, build, 49-chunk scan and core hydration smoke pass; local
+auth warnings and simulator touch/physical-device limits are documented.
+
+# LOTTO v2.0.0-rc.10
+
+**WTH production rollout:** October 8, 2026, approximately 22:23 PDT.
+
+Memory Grid now awards 1,000 completion points plus a memory-efficiency bonus,
+with shared Top 10 scores per difficulty and untimed three-letter initials.
+Thinking time and pauses never affect the score; device-local best turns remain.
+St. Johns remains on RC.8.
+
+WTH's isolated Arcade migration preserved all 184 previous scores with an
+identical checksum. Release-specific Cloudflare configuration revision 4 was
+published and verified before enabling the final build's public-read gate.
+Final deployment: `dpl_5kuzLacPfYz1YosqVjuz91DGKR6J`. Live version/release notes,
+earned 1,750-point score Save and independent leaderboard readback passed.
+Public queue/catalog/pack checks retain Cloudflare routing. No dependencies
+changed; the new scoring flow awaits the owner's live hardware acceptance.
+
+The preceding implementation passed 1,062 tests, build/lint, the 48-chunk legacy
+scan and core hydration smoke. Release-turn regression checks passed 55 tests
+and lint; both hosted builds passed. Local smoke is not real email sign-in or
+an old-WebKit device test. See [Memory Grid evidence](MEMORY_GRID.md) and
+[publication record](PUBLIC_CONFIGURATION_PUBLICATION.md).
+
+No GitHub commit, push or tag was made. The RC.9 deployment
+`dpl_Fphreh4KPtcfgxmeNcA4CJqmj5z5` remains a recovery reference; rollback requires
+the owner's authorization.
+
 # LOTTO v2.0.0-rc.6
 
 **Production rollout:** October 2, 2026 (WTH); October 3, 2026 (St. Johns).

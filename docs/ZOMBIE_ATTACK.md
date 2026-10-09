@@ -5,11 +5,8 @@
 > Its internal slug stays `zombie-attack` (route `/arcade/zombie-attack`, module
 > `src/arcade/game/zombie-attack/`, `arcade-zombie-*` CSS, `zombieAttack*` i18n
 > keys) since that describes the genre and avoids churn.
-> As of v1.15.1, Day of the Dead is intentionally hidden from clients as a
-> **trauma-informed choice** (see [Production Visibility](#production-visibility--intentionally-hidden)):
-> it is omitted from the Arcade menu and production requests to
-> `/arcade/zombie-attack` redirect to `/arcade`. The route and game code remain
-> fully intact for development and future reactivation.
+> RC.11 restores public access at the owner's request. A localized cartoon-violence
+> warning appears on the menu card and before direct-route game play.
 
 ## Status
 - **Implemented and shipped (v1.12.0).** Top-down survival rework of the v1.11.0
@@ -23,71 +20,27 @@
   (`tests/arcade-zombie-attack-engine.test.ts`, 9 cases).
 - Arcade Top 10 Scores integration is implemented via the shared Arcade
   leaderboard UI and isolated `ARCADE_DATABASE_URL` persistence.
-- Production visibility is currently disabled; the game is not linked from the
-  Arcade index and direct production access redirects to `/arcade`.
+- RC.11 exposes the game after a per-page-visit content warning.
 
-## Production Visibility — intentionally hidden
+## Production visibility — warning before play
 
-Day of the Dead is **deliberately hidden from clients as a trauma-informed
-choice**, not because of any technical limitation. LOTTO serves clients who may
-have experienced trauma; while the game is stylized and not graphically violent,
-a zombie-survival theme could be activating. The game is kept fully in the
-codebase — it works, it is fun, and it can be re-enabled at any time — it is
-simply not exposed to clients by default.
+Local October 9 follow-up: the menu notice and full warning use red text,
+a red border, tinted background and an exclamation mark. The scoped stylesheet
+consumes protected shared danger tokens, so branding cannot change the red
+meaning. This presentation update is not yet in the live RC.11 release.
 
-### How it is hidden
+The owner authorized restoring the game for spooky season. The menu card says
+“Contains cartoon violence.” Direct links and menu navigation both show a
+localized warning describing zombie shooting and explosions, with explicit
+Continue to game and Back to games choices. The game component, artwork and
+leaderboard mount only after Continue. A fresh navigation or reload shows the
+warning again; replay within the visit does not. No consent is stored, no
+agency setting is changed, and no automatic November relock is included.
 
-Two independent guards. Either one alone would not fully hide the game, so both
-are in place:
-
-1. **Menu omission** — `src/app/(arcade)/arcade/page.tsx` builds its
-   `launchGames` list with only Snake and Brick Mayhem (plus the "more games
-   coming" card). There is no Day of the Dead card in **any** environment, so it
-   never appears in the Arcade menu. Covered by `tests/arcade-home-page.test.tsx`.
-2. **Production route redirect** — `src/proxy.ts` redirects any request to
-   `/arcade/zombie-attack/*` to `/arcade` whenever `NODE_ENV === "production"`
-   (the route is in `config.matcher` as `"/arcade/zombie-attack/:path*"`). This
-   blocks direct-URL access on the deployed site. In local development
-   (`NODE_ENV !== "production"`) the route loads normally, so the game stays
-   playable for development and review. Covered by
-   `tests/arcade-zombie-attack-visibility.test.ts`.
-
-### How to re-enable it for clients
-
-Do **both** changes, then update the guard tests and ship:
-
-1. **Add the menu card.** In `src/app/(arcade)/arcade/page.tsx`, add an entry to
-   `launchGames` (before the `more` / coming-soon card):
-
-   ```ts
-   {
-     id: "zombie-attack",
-     title: t("zombieAttackTitle"), // "Day of the Dead"
-     href: "/arcade/zombie-attack",
-     ctaLabel: "PLAY",
-   },
-   ```
-
-2. **Allow the production route.** In `src/proxy.ts`, remove the redirect guard:
-
-   ```ts
-   if (isZombieAttack && process.env.NODE_ENV === "production") {
-     return NextResponse.redirect(new URL("/arcade", request.url));
-   }
-   ```
-
-   You may also drop `"/arcade/zombie-attack/:path*"` from `config.matcher` and
-   the now-unused `isZombieAttack` variable.
-
-3. **Update the guard tests** so they assert the new (visible) behavior:
-   `tests/arcade-home-page.test.tsx` (expects the card present) and
-   `tests/arcade-zombie-attack-visibility.test.ts` (expects no production
-   redirect). Then run the suite, bump the version, and update `CHANGELOG.md`.
-
-To verify the current hidden state locally, note that `NODE_ENV` is
-`development`, so the redirect does **not** fire on your machine — the route is
-reachable at `/arcade/zombie-attack` directly even though it is hidden from the
-menu. The redirect only applies to production builds.
+`CartoonViolenceGate` wraps the existing route. The former production redirect
+and Arcade-only proxy matcher entry are removed; staff/API authentication
+remains unchanged. Tests cover public production routing, menu warning and
+asset/score deferral before consent. All original game and scoring rules remain.
 
 ## Concept
 
@@ -163,6 +116,10 @@ on round 4.
 ## Controls
 
 All input is in the control dock; the play area stays unobstructed.
+- Layout follows [the Arcade control standard](ARCADE_CONTROLS.md): full-width
+  movement slider above a bottom action row, Pause on the left and A on the
+  right, including RTL languages. Start/Resume use Pause's same position.
+  This October 9 layout follow-up shipped to WTH in RC.12.
 - **Movement slider** (wide) — thumb X maps 1:1 to the hero's X.
 - **Fire button "A"** (compact) — hold to autofire. `touch-action: none` +
   `user-select: none` keep a held/dragged press from scrolling or selecting text.

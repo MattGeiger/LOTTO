@@ -1,0 +1,54 @@
+/* Shared Arcade layout contract: movement above the bottom action row.
+   Physical controls stay LTR, including in translated RTL interfaces. */
+.arcade-scope .arcade-snake-pause-btn {
+  grid-column: 1 / -1;
+  min-height: 48px;
+  height: auto;
+  padding: .65rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+
+.arcade-scope .arcade-brick-control-btn {
+  min-height: 48px;
+  height: auto;
+  width: min(100%, 240px);
+  padding: .65rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+
+/* Reserve room for the movement slider plus the full-height action row. */
+.arcade-scope .arcade-zombie-shell {
+  --arcade-board-size: clamp(170px, min(94vw, calc((100dvh - 22rem) / 1.5)), 380px);
+}
+@media (min-width: 640px) {
+  .arcade-scope .arcade-zombie-shell {
+    --arcade-board-size: clamp(196px, min(82vw, calc((100dvh - 22rem) / 1.5)), 600px);
+  }
+}
+.arcade-scope .arcade-zombie-move-track { width: 100%; }
+.arcade-scope .arcade-zombie-fire-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+}
+.arcade-scope .arcade-zombie-center-btn {
+  min-width: 0;
+  width: 100%;
+  min-height: 48px;
+  height: auto;
+  padding: .65rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+  letter-spacing: .1em;
+}
+.arcade-scope .arcade-zombie-fire-btn {
+  min-height: 48px;
+  height: auto;
+  width: clamp(3rem, 13vw, 3.4rem);
+}
+.arcade-scope .arcade-hanoi-control-dock { direction: ltr; }

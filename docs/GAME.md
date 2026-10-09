@@ -1,6 +1,39 @@
 # Arcade Architecture and Implementation Record
 
 ## Status
+- **Stable v2.0 (October 9):** The owner approved the five-game Arcade and
+  accepted RC.12 application for stable release. Target activation and final
+  verification are recorded in `RELEASES.md`; the entries below preserve each
+  candidate's implementation and deployment history.
+- **Control layout standard:** See `ARCADE_CONTROLS.md`. Movement controls sit
+  above the bottom Start/Pause/Resume row. Day of the Dead pairs Pause left and
+  A right; Snake separates Pause from its D-pad. Shipped to WTH in RC.12.
+- **RC.12 follow-up (October 9):** Hanoi's completed 3/4-disk puzzles offer
+  Continue to start 4/5 disks immediately. Difficulty, fresh run and score scopes
+  stay synchronized; five disks remains the supported ceiling. Live on WTH.
+- **RC.11:** Tower of Hanoi implements 3–5 disks, untimed completion/efficiency
+  scoring, cumulative Undo moves, local bests and shared scores with scoped
+  perfect-score tie handling. Day of the Dead returns behind a localized
+  cartoon-violence warning, including direct links. See `TOWER_OF_HANOI.md`.
+  WTH activation completed October 9 at approximately 00:01 PDT; a seven-move
+  finish saved 2,000 points and passed independent readback. St. Johns stays RC.8.
+- WTH's RC.9 deployment adds **Memory Grid**, a food-card matching game using
+  Snake/Brick Mayhem's pixel cabinet presentation. Its pure engine, local best
+  scores, accessibility, artwork and verification contract are documented in
+  [`MEMORY_GRID.md`](MEMORY_GRID.md). It introduces no gameplay API or database
+  path. WTH production activation completed October 8, 2026; St. Johns remains
+  on RC.8. The owner accepted the original game's live gameplay/localizations.
+- Arcade-specific validation uses the owner-approved iOS 17 floor. Shared core
+  and Admin/operator compatibility retain iOS 15; see `BROWSER_SUPPORT.md`.
+- RC.10 adds Memory Grid's completion-and-efficiency
+  points and shared Top 10 per Easy/Normal/Hard, with untimed initials entry.
+  Its existing local best turns remain. No clock contributes to points or
+  ranking, and no gameplay/idle leaderboard polling is added. The isolated WTH
+  Arcade game-constraint migration in
+  `scripts/migrations/2026-10-08-memory-grid-high-scores.sql` was applied before
+  the authorized rollout, preserving all 184 existing score records. WTH RC.10
+  is live; a completed Easy board's 1,750-point score saved and read back from
+  the shared leaderboard. See `MEMORY_GRID.md` for deployment receipts and limits.
 - This document is the source of truth for Arcade separation rules and shipped
   implementation history.
 - `docs/V1.30_PLANNED_FEATURES.md` is the current next-game candidate plan.
@@ -340,8 +373,8 @@ public/
 - Mobile simulation testing passes for controls and layout.
 
 ## Open Questions
-- Which candidate in `docs/V1.30_PLANNED_FEATURES.md` should advance after the
-  phone-size prototype pass?
+- Tower of Hanoi is selected; validate its controls and scoring on phone-size
+  prototypes before release, including the proposed equal-score board policy.
 - Should Snake's page-local engine extraction happen before or alongside the
   next game?
 

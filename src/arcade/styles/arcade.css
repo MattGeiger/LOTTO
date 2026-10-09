@@ -106,6 +106,8 @@ html.light .arcade-scope {
 @media (display-mode: standalone) {
   .arcade-snake-control-dock,
   .arcade-brick-control-dock,
+  .arcade-memory-control-dock,
+  .arcade-hanoi-control-dock,
   .arcade-zombie-control-dock {
     padding-bottom: calc(max(env(safe-area-inset-bottom), 0.9rem) + 2rem);
   }
@@ -113,6 +115,8 @@ html.light .arcade-scope {
 
 html[data-app-mode="standalone"] .arcade-snake-control-dock,
 html[data-app-mode="standalone"] .arcade-brick-control-dock,
+html[data-app-mode="standalone"] .arcade-memory-control-dock,
+html[data-app-mode="standalone"] .arcade-hanoi-control-dock,
 html[data-app-mode="standalone"] .arcade-zombie-control-dock {
   padding-bottom: calc(max(env(safe-area-inset-bottom), 0.9rem) + 2rem);
 }

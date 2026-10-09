@@ -1,9 +1,199 @@
 # Changelog
 
-## [Unreleased]
+## [2.0.0] — October 9, 2026
+
+### Stable major release
+
+- Promoted the tested RC.12 application and dependency set to stable v2.0,
+  with condensed in-app notes covering changes since v1.26.0. Detailed RC
+  notes remain in `docs/archive/V2.0_RELEASE_CANDIDATES.md`.
+- Reworked the README to celebrate realtime updates, lower public-read
+  overhead, five Arcade games, polished UI, updated AI model support and
+  configurable branding, with Memory Grid and Hanoi screenshots.
+- Updated the architecture/release status to reflect Cloudflare queue and
+  public-configuration recovery. No gameplay, saved agency settings or
+  dependency resolutions changed from the accepted RC.12 candidate.
+- The owner authorized stable release after more than 24 hours without the
+  former predictable 30-minute wake pattern. This is preliminary observation,
+  not a quantified savings claim. The scheduled October 11 comparison remains
+  in place; any recurrence will be investigated for a subsequent point release.
+
+
+## [2.0.0-rc.12] — October 9, 2026
+
+### Security and stable-release preparation
+
+- Updated Next.js to 16.3.8 and the Tiptap cohort to 3.31.4, with patched
+  ProseMirror, markdown-it and source-map-js resolutions. Retained React and
+  the exact NextAuth pin. Sharp 0.35.5 and Blob's Undici 6.29.0 complete the
+  server fixes. Production audit falls from 36 affected packages to four high
+  packages in the remaining Nodemailer/Auth.js family, with no moderate or
+  critical findings. Production SMTP is blocked; the exception and all eight
+  advisory families are documented in `docs/DEPENDENCY_SECURITY_REVIEW.md`.
+- Includes the approved local Issue 28 validation, Hanoi progression, prominent
+  cartoon-violence warning, standardized control docks, font credits and
+  condensed v2.0 release preview described below. Historical RC notes remain
+  in the archive; stable v2.0 is still pending.
+- The tested candidate passes 1,103 tests, production build, legacy bundle scan
+  and modern-browser hydration smoke. WTH production testing replaces the
+  usual preview at the owner's direction. WTH is live at approximately
+  11:17 PDT, with configuration revision 6, verified notes/credits, Cloudflare
+  routing and invalid-hours rejection. Real iPadOS 15 sign-in/editor acceptance
+  is owner-reported complete with no issues reported; see
+  `docs/DEPENDENCY_SECURITY_REVIEW.md` for receipts and evidence limits.
+
+## [2.0.0-rc.11] — October 8, 2026
+
+### Added — Tower of Hanoi and optional spooky-season play
+
+- Added an original pixel-art Tower of Hanoi cabinet with three, four and five
+  disks, tap/keyboard controls, explicit pause/resume, counted Undo and local
+  best completed moves. No timer or speed bonus: completion earns 1,000 points
+  plus a rounded move-efficiency bonus, up to 2,000.
+- Shared per-difficulty scores use untimed three-letter entry. Hanoi alone
+  accepts cutoff ties and places newer equal scores first. Other games retain
+  their ranking and countdown rules. Its isolated Arcade migration preserves
+  existing records; moves and idle time add no leaderboard requests.
+- Restored Day of the Dead to the menu and production route with a localized
+  cartoon-violence notice on the card and explicit Continue/Back warning before
+  game assets or scores load. No seasonal auto-lock or agency settings change.
+- Updated eight built-in locales, Arcade Help/screenshots, game contracts,
+  architecture, candidate plans and database-read documentation together.
+  Dependencies are unchanged. WTH is the sole deployment target for this release.
+- WTH activation completed just after midnight October 9; live notes, all five
+  games, warning recovery and a real 2,000-point Hanoi Save/readback passed.
+  1,083 tests and built Chromium/WebKit checks pass. See `docs/TOWER_OF_HANOI.md`
+  for migration, deployment, compute-observation exclusions and device limits.
+
+## [2.0.0-rc.10] — October 8, 2026
+
+### Changed — Memory Grid untimed scoring
+
+- Completed boards earn 1,000 points plus `round(1000 * pairs / turns)` memory
+  bonus. Added final-score breakdown and shared per-difficulty Top 10 through
+  the existing Arcade store, retaining device-local best turns. No speed bonus,
+  par target or score deductions during play.
+- Memory Grid initials entry is untimed; other games retain their 30-second
+  entry. Leaderboard reads occur at ready/completion/difficulty transitions,
+  with explicit Save submissions and no idle or per-card polling. Offline
+  completion and local records remain usable.
+- Registered Memory Grid in API validation and the canonical Arcade schema;
+  applied an atomic, repeatable Arcade-only constraint migration that retains
+  all existing scores. Updated all eight built-in locales, Help and game/read-audit
+  docs. WTH production deployment, live release notes and an earned 1,750-point
+  score submission/readback passed; verification is recorded in
+  `docs/MEMORY_GRID.md`. St. Johns remains on RC.8. New scoring acceptance on
+  physical hardware remains with the owner.
+
+## RC.12 implementation details — October 9, 2026
+
+### Security — Initial server-patch checkpoint
+
+- Reviewed all production advisory families against LOTTO's actual imports,
+  hosting and options. Updated sharp to 0.35.5 and refreshed Blob's Undici
+  resolution to 6.29.0 within its existing range; production audit falls from
+  36 to 34 affected packages. Next.js/editor fixes remain separately gated
+  by legacy-device validation at this earlier checkpoint. The completed RC.12
+  dependency rollout and current four-package audit are recorded above.
+- Added OTP/Magic Link tests proving that production Resend rejection and
+  network failure cannot fall back to SMTP. Retained the exact NextAuth pin
+  and documented the Nodemailer production-unreachability exception and
+  unsupported peer-upgrade constraint in `docs/DEPENDENCY_SECURITY_REVIEW.md`.
+
+### Fixed — Operating-hours validation (Issue 28)
+
+- Validate 24-hour opening/closing times on the server in both existing
+  `HH:mm` and `HH:mm:ss` formats, without changing saved values. Open days
+  require a later closing time; closed days retain valid saved times.
+  Invalid requests return the affected day/field before persistence. Added
+  route regression coverage and updated Staff Controls and Issue 28.
+
+- After two full-suite-only timeouts and a successful isolated run, gave the
+  53-move Hanoi progression integration test a 15-second budget. Preserved
+  every assertion and global test settings; documented the recurrence under
+  Issue 27. No gameplay behavior changed.
+
+### Documentation — Stable v2.0 release preparation
+
+- Consolidated the in-app release preview into improvements since v1.26.0,
+  the last stable point release. Preserved the original v2.0 RC notes separately
+  in `docs/archive/V2.0_RELEASE_CANDIDATES.md`; the developer changelog retains
+  its detailed chronology. Stable versioning and deployment remain pending.
+
+- Reviewed publishable files, locally reachable Git history and screenshots
+  for credentials and personal information. Replaced operational login
+  addresses and personal machine paths with role/path placeholders, moved
+  the scratch progress log to ignored local storage and ignored private
+  traces/credential exports. Kept license credits, public contact details,
+  intentional test fixtures and release evidence. Recorded review scope and
+  limits in `docs/PUBLIC_REPOSITORY_REVIEW.md`; no Git history was rewritten.
+
+### Added — Shared font attribution
+
+- Added Seven Fifteen font credit for Douglas Vautour (Burpy Fresh), its source,
+  CC BY 4.0 license link and web-delivery processing notice to About, README,
+  asset credits and Arcade Help. Preserved the bundled creator readme and the
+  font's separate license. Shipped and verified in WTH RC.12.
+
+### Changed — Progressive Tower of Hanoi
+
+- Completed three- and four-disk puzzles offer a localized Continue button to
+  start the next level immediately, with one additional disk up to the existing
+  five-disk ceiling. Difficulty selection, move/history resets, local bests and
+  per-level high scores stay aligned. Continue itself sends no score read/write;
+  score submission stays explicit. Updated Arcade Help and implementation plans.
+  This follow-up shipped in WTH RC.12.
+
+- Highlighted Day of the Dead's menu and pre-game content warnings in red with
+  a red border, tinted background and exclamation mark, using protected shared
+  danger colors in light/dark mode. Updated Arcade Help and game documentation.
+- Standardized control docks: movement controls above the bottom Pause row,
+  Snake Pause below its D-pad, and Day of the Dead's slider above Pause (left)
+  and A (right). Preserved physical order in RTL and installed-app padding;
+  action targets are at least 48 pixels high. Documented the standard in
+  `docs/ARCADE_CONTROLS.md`, AGENTS.md, Arcade Help and game guides for future work.
+
+### Documentation — Tower of Hanoi plan
+
+- Recorded the owner's next-game selection and a comprehensive plan for
+  3/4/5 disks, untimed completion/efficiency points, cumulative Undo moves,
+  shared three-letter high scores and Hanoi-specific perfect-score ties.
+  Aligned Arcade architecture and feature plans. No game implementation,
+  application version, schema migration or deployment is part of this update.
+
+### Added — RC.9 WTH release (October 8, 2026)
+
+- Built Memory Grid at `/arcade/memory-grid`, following Snake and Brick Mayhem's
+  pixel cabinet aesthetic: food matching, 6/8/12 pairs, untimed two-card turns,
+  keyboard/touch controls and a device-local best score per difficulty. Gameplay
+  adds no datastore reads, leaderboard calls or polling.
+- Added ticket-call and hidden-tab pause with explicit resume and frozen
+  mismatch recovery; native card buttons expose revealed foods to assistive
+  technology without disclosing hidden cards. Turn-result announcements retain
+  revealed names until the next selection, avoiding a screen-reader time limit.
+  Localized new copy in eight
+  built-in languages and registered English sources for dynamic packs.
+- Included twelve unchanged Henry Software Free Pixel Food! sprites under CC0,
+  their provenance/hashes and creator readme. Credits appear in README, About
+  and the game. Arcade difficulty sliders now label their actual focusable thumb.
+- Documented the game plan, Arcade Help, asset credits and owner-approved iOS 17
+  Arcade test floor; operator/shared-core support remains iOS 15. Package and
+  root lock versions are `2.0.0-rc.9`. The owner subsequently authorized WTH
+  deployment for real-hardware testing; both hosted builds, matching Cloudflare
+  publication, live controls, version/release notes and About credits passed.
+  St. Johns remains on RC.8. The owner subsequently accepted the original game's
+  live gameplay and localizations; the later local scoring extension still
+  requires its own device and hosted-persistence verification.
 
 ### Documentation
 
+- Recorded the October 8 evening Neon operations check: the former half-hour
+  pattern was absent on WTH and St. Johns; St. Johns starts coincided with
+  diagnostic console checks. Preserved attribution, exact metering and
+  48–72-hour observation limits, and separated RC.9 publication from idle data.
+- Added Tower of Hanoi to the Arcade candidate plan, with tap-based peg
+  selection, untimed move scoring, a 3–5-disk prototype range and accessibility
+  requirements. It remains a planning candidate, not a released game.
 - Reconciled local RC.7/RC.8 release housekeeping into operational guidance,
   public-configuration implementation and navigation release commits. Preserved
   deployed application source and the dependency graph; 90 targeted tests in

@@ -738,19 +738,7 @@ export default function SnakePage() {
           >
             <ChevronArrowLeftIcon className="h-5 w-auto text-[var(--arcade-dot)]" />
           </Button>
-          <Button
-            type="button"
-            variant="default"
-            haptic="uiConfirm"
-            className={cn(
-              "arcade-snake-control-btn arcade-ui",
-              isLargeSnakeTextLocale ? "text-[20px] sm:text-[22px]" : "text-[13px]",
-            )}
-            aria-label={centerControlAriaLabel}
-            onClick={handleCenterControl}
-          >
-            {centerControlLabel}
-          </Button>
+          <span aria-hidden="true" />
           <Button
             type="button"
             variant="outline"
@@ -774,6 +762,19 @@ export default function SnakePage() {
             <ChevronArrowDownIcon className="h-4 w-auto text-[var(--arcade-dot)] sm:h-5" />
           </Button>
           <span aria-hidden="true" />
+          <Button
+            type="button"
+            variant="default"
+            haptic="uiConfirm"
+            className={cn(
+              "arcade-snake-control-btn arcade-snake-pause-btn arcade-ui",
+              isLargeSnakeTextLocale ? "text-[20px] sm:text-[22px]" : "text-[13px]",
+            )}
+            aria-label={centerControlAriaLabel}
+            onClick={handleCenterControl}
+          >
+            {centerControlLabel}
+          </Button>
         </div>
       </section>
     </div>

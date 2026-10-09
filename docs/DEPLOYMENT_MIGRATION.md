@@ -116,9 +116,9 @@ development and production. Local Docker should read `.env.local`.
 ### WTH infrastructure handoff — October 6, 2026
 
 The production Vercel project and both production databases now belong to the
-WTH team `wth_apps`, owned solely by `technology@williamtemple.org`. On October 7,
-the owner explicitly directed removal of backup Owner `mgeiger@williamtemple.org`
-and temporary Member `et2.geiger@gmail.com`; both removals were verified. Automatic
+WTH team `wth_apps`, owned solely by `<WTH_TECHNOLOGY_EMAIL>`. On October 7,
+the owner explicitly directed removal of backup Owner `<STAFF_TEST_EMAIL>`
+and temporary Member `<PERSONAL_ACCOUNT_EMAIL>`; both removals were verified. Automatic
 paid-seat enrollment is Off (Manual approval). The detailed upcoming invoice for
 November 6 now shows $20 total, with one Pro subscription and no additional-seat
 charge. This estimate can still change with usage. Other vendors' backup-admin
@@ -245,14 +245,14 @@ using the WTH keys. The domain subsequently verified without further DNS
 changes or payments; fresh lookups through both Cloudflare and Google public
 resolvers also match. Both production OTP endpoints now return HTTP 200, and
 WTH's Resend dashboard reports both emails delivered to
-`mgeiger@williamtemple.org`. The old
+`<STAFF_TEST_EMAIL>`. The old
 WTH-only keys have not been recorded as revoked. Permanent deletion of the two
 obsolete personal production databases remains pending confirmation; the owner
 reported deleting the WTH beta database on October 7. On October 7, the owner confirmed
 successful logins in fresh browser sessions for both LOTTO and FEED. This is
 human-reported evidence, not a separately observed physical-iPad test or proof
 of separate magic-link and OTP coverage.
-Actual OTP requests to `mgeiger@williamtemple.org` were attempted through both
+Actual OTP requests to `<STAFF_TEST_EMAIL>` were attempted through both
 production applications and failed during this verification window. Preserve
 that failure as historical evidence of the temporary interruption; existing
 sessions and public-page HTTP success did not prove new email delivery.
@@ -321,7 +321,7 @@ required. Unchecked items remain outstanding; the full handoff is not complete.
 - [ ] **Both:** Establish WTH-controlled FEED image availability and independent
   Pi access/recovery. Application restore/startup was not separately rehearsed.
 - [x] **Human:** Complete free Docker Hub signup for `williamtempletech` using
-  `technology@williamtemple.org`, including password creation, terms acceptance
+  `<WTH_TECHNOLOGY_EMAIL>`, including password creation, terms acceptance
   and email verification. The owner selected this name because `wthtechnology`
   was taken. The agent verified Docker marks Technology's email VERIFIED on
   October 7. The first CLI device request expired; the owner-approved retry
@@ -349,7 +349,7 @@ required. Unchecked items remain outstanding; the full handoff is not complete.
   deactivation are confirmed; OAuth refresh-token revocation is not. No personal
   Docker credentials were changed.
 - [x] **Human:** Complete a free Raspberry Pi ID for
-  `technology@williamtemple.org`, including password creation, terms acceptance
+  `<WTH_TECHNOLOGY_EMAIL>`, including password creation, terms acceptance
   and email verification. The owner completed signup on October 7; the agent
   verified the WTH Technology profile and signed in to its free Connect account.
   The account has no devices yet. After the owner's proceed instruction, an

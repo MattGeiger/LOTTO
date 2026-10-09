@@ -53,7 +53,7 @@ export function AboutDialog({ version }: AboutDialogProps) {
           About
         </button>
       </DialogTrigger>
-      <DialogContent className="border-0 bg-transparent p-0 shadow-none sm:max-w-xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-0 bg-transparent p-0 shadow-none sm:max-w-xl">
         <DialogHeader className="sr-only">
           <DialogTitle>About LOTTO</DialogTitle>
           <DialogDescription>Product, credits, and version information for LOTTO.</DialogDescription>
@@ -136,6 +136,16 @@ export function AboutDialog({ version }: AboutDialogProps) {
                 </div>
               ))}
             </dl>
+
+            <p className="max-w-md text-xs leading-5 text-muted-foreground">
+              Memory Grid food artwork: <a href="https://henrysoftware.itch.io/pixel-food" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Henry Software</a>,{" "}
+              <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">CC0 1.0 Universal</a>.
+            </p>
+
+            <p className="max-w-md text-xs leading-5 text-muted-foreground">
+              <a href="https://burpyfresh.itch.io/seven-fifteen-font" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Seven Fifteen font</a> by Douglas Vautour (Burpy Fresh),{" "}
+              <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">CC BY 4.0</a>. Processed for web delivery.
+            </p>
 
             <p className="max-w-md text-xs leading-5 text-muted-foreground">
               The application code is open source under AGPL-3.0-or-later. {brandProfile.brandingNotice}

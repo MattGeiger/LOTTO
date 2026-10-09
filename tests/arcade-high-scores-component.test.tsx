@@ -80,6 +80,19 @@ describe("ArcadeHighScores", () => {
     expect(screen.getByRole("button", { name: "SAVE" })).toBeDisabled();
   });
 
+  it("keeps Memory Grid initials entry open after an hour without timer or repeated reads", async () => {
+    vi.useFakeTimers();
+    vi.mocked(fetch).mockImplementation(async () => new Response(JSON.stringify({ scores: [] })));
+    renderPanel({ game: "memory-grid", difficulty: "easy", status: "GAME_OVER", score: 1667, entryTimeLimitSeconds: null });
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(screen.getByLabelText("3 INITIALS")).toBeEnabled();
+    expect(screen.queryByText(/LEFT|EXPIRED/)).not.toBeInTheDocument();
+    await act(async () => { vi.advanceTimersByTime(3600_000); });
+    fireEvent.change(screen.getByLabelText("3 INITIALS"), { target: { value: "ABC" } });
+    expect(screen.getByRole("button", { name: "SAVE" })).toBeEnabled();
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
   it("adds the overlay variant class only when requested", async () => {
     vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ scores: [] }), { status: 200 }));
 
@@ -98,6 +111,14 @@ describe("ArcadeHighScores", () => {
       </LanguageProvider>,
     );
     expect(screen.getByTestId("arcade-high-scores")).toHaveClass("arcade-high-scores-overlay");
+  });
+  it("offers untimed entry for a Hanoi perfect-score tie on a full board", async () => {
+    const scores = Array.from({ length: 10 }, (_, i) => ({ ...scoreRow, id: `perfect-${i}`, game: "tower-of-hanoi", score: 2000 }));
+    vi.mocked(fetch).mockImplementation(async () => new Response(JSON.stringify({ scores })));
+    renderPanel({ game: "tower-of-hanoi", difficulty: "easy", status: "GAME_OVER", score: 2000, entryTimeLimitSeconds: null });
+    expect(await screen.findByLabelText("3 INITIALS")).toBeEnabled();
+    expect(screen.queryByText(/LEFT|EXPIRED/)).not.toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
   it("saves multilingual initials and refreshes the leaderboard", async () => {
