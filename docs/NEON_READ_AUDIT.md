@@ -1,4 +1,4 @@
-# Neon read audit — updated October 8, 2026
+# Neon read audit — updated October 9, 2026
 
 ## Scope and result
 
@@ -36,11 +36,22 @@ must be configured and a valid projection published first. See
 | `ai/system-prompt-store-db.ts` | Prompt list/selection, CRUD | Admin component GET still reads SQL with existing access rules; explicit processing remains staff-driven. No ordinary display consumer. |
 | `feed-integration-token/store-db.ts` | LOTTO integration token hash/status; usage metadata | Existing LOTTO pairing and daily-summary API behavior remains unchanged. The daily-summary handler reads token status before authorization; supplied tokens are checked against authoritative credentials. This is separate from FEED's public inventory server. |
 | `db.ts` pool, `auth.ts`, OTP request and Auth.js Postgres adapter | Users, verification tokens, OTP failures and sign-in operations | Sign-in is intentionally database-backed. Existing session validation uses JWT. Constructing the lazy pool/adapter does not execute a query. Public queue GET without cookies does not initialize Auth.js. |
-| `arcade/lib/high-score-store.ts` | Top scores; qualification and score submission | Uses separate `ARCADE_DATABASE_URL`, not WTH's queue database. Reads occur when Ready/Game Over changes game scope, not from the one-second UI countdown. This release leaves that store untouched. |
+| `arcade/lib/high-score-store.ts` | Top scores; qualification and score submission | Uses each agency's separate `ARCADE_DATABASE_URL`, with no fallback to the queue connection. WTH and St. Johns now have independent Arcade Neon projects/computes. Reads occur when Ready/Game Over changes game scope, not from the one-second UI countdown. |
 | `scripts/apply-schema.mjs` | Explicit schema application/transaction | Operator CLI only; no scheduled invocation or application polling. Not run for this release. |
 
 ## Consumers and hosting
 
+- St. Johns shared scores were activated on October 9 at 14:59 PDT using
+  `wispy-darkness-55751569`, branch `br-winter-tree-b8613fc0`, compute
+  `ep-aged-paper-b86pw57r` (fixed 0.25 CU; five-minute suspension). Its queue
+  remains on `late-violet-21570715` / `ep-weathered-surf-aulagqr4`. A real Hanoi
+  score was saved, independently read back and confirmed on the new endpoint;
+  only its diagnostic row was removed. Existing environment records and
+  Cloudflare queue/configuration documents were preserved. This validates
+  routing, not zero total Neon usage. Exclude provisioning/console/diagnostic
+  activity approximately 14:43–15:04 PDT and subsequent suspension tails from
+  the scheduled October 11 idle comparison. See
+  [the activation record](STJOHNS_ARCADE_DATABASE.md) for checks and limits.
 - RC.11 Hanoi uses the isolated Arcade score store on Ready/completion/scope
   transitions and explicit Save. Peg selection, moves, Undo, pauses and idle
   periods add no score requests. Day of the Dead's assets and leaderboard mount

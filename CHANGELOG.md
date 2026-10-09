@@ -19,9 +19,21 @@
   in place; any recurrence will be investigated for a subsequent point release.
 - Stable v2.0 activated independently for both WTH and St. Johns after explicit
   scope confirmation. Matching configuration publications preserve each agency's
-  data. St. Johns has no optional Arcade database configured, so shared scores
-  remain unavailable and no migration is needed. The shared `main` update is
+  data. St. Johns initially had no optional Arcade database configured, so shared
+  scores were unavailable at the initial activation. The shared `main` update is
   authorized after both activations; source ownership remains personal.
+
+### St. Johns shared-score activation
+
+- Subsequently activated all five games' shared scores on St. Johns using a
+  dedicated Neon project/compute and a restricted read/insert role. Preserved
+  the queue connection and Cloudflare documents; no WTH infrastructure,
+  application source, dependency or version change was required.
+- Verified live Hanoi completion/save, independent readback and the new
+  endpoint's row; removed only the diagnostic entry. Documented compute size,
+  suspension, permissions, deployment, build comparison and idle-observation
+  exclusions in `docs/STJOHNS_ARCADE_DATABASE.md`, and updated the score and
+  Neon read inventories. Configuration-only activation remains v2.0.0.
 
 
 ## [2.0.0-rc.12] — October 9, 2026
