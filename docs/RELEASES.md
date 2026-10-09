@@ -66,6 +66,23 @@ St. Johns stable rollout await explicit target confirmation; WTH's deployment
 does not imply other-agency activation. Stable GitHub publication can reference
 the prepared `dev` release commit without pushing `main`.
 
+## GitHub stable receipt
+
+- Source commit `2822d76a8320403aa151bc274db1bc8f116dba97` was pushed to
+  `dev` with annotated tag `v2.0.0`. GitHub release
+  [LOTTO 2.0 — A better way to wait](https://github.com/MattGeiger/LOTTO/releases/tag/v2.0.0)
+  was published October 9 at **14:19:37 PDT**, explicitly as Latest.
+  GitHub's `/releases/latest` confirms `v2.0.0`, `prerelease: false` and
+  `draft: false`. The stable tag is immutable; this receipt is a subsequent
+  documentation update.
+- The celebratory README is available on `dev` and the stable tag. Default
+  `main` remains at `6134c0a` because updating it automatically deploys both
+  agencies. Its landing-page update awaits confirmation of St. Johns rollout
+  scope. No GitHub ownership or source-license change occurred.
+- The reviewed publication preserves Henry Software's original CRLF readme
+  byte-for-byte for asset provenance; its upstream line endings are the only
+  staged whitespace-check findings. Application/docs whitespace checks pass.
+
 # LOTTO v2.0.0-rc.12
 
 WTH-only security and release-preparation candidate. Updates Next.js to 16.3.8,
