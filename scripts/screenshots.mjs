@@ -18,7 +18,8 @@
 // language-context `display-language` / `display-language-session`) so the
 // screenshots match what a real user with those settings would see.
 
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import puppeteer from "puppeteer-core";
@@ -75,10 +76,18 @@ const SHOTS = [
   // Dark mode
   { name: "display-board-dark", route: "/display", width: 1600, height: 900, theme: "dark" },
   { name: "login-dark", route: "/login", width: 1440, height: 900, theme: "dark" },
+  { name: "client-ticket-dark", route: "/", width: 1440, height: 900, prepare: "home-ticket", theme: "dark" },
+  { name: "admin-dashboard-dark", route: "/admin", width: 1440, height: 900, theme: "dark" },
+  { name: "inventory-dark", route: "/inventory", width: 1440, height: 1000, theme: "dark" },
+  { name: "admin-appearance-dark", route: "/admin", width: 1440, height: 1000, prepare: "appearance", theme: "dark" },
+  { name: "help-dark", route: "/help", width: 1440, height: 1000, theme: "dark" },
   // Localizations
   { name: "display-board-zh", route: "/display", width: 1600, height: 900, lang: "zh" },
   { name: "display-board-ru", route: "/display", width: 1600, height: 900, lang: "ru" },
   { name: "display-board-ar", route: "/display", width: 1600, height: 900, lang: "ar" },
+  { name: "display-board-zh-dark", route: "/display", width: 1600, height: 900, lang: "zh", theme: "dark" },
+  { name: "display-board-ru-dark", route: "/display", width: 1600, height: 900, lang: "ru", theme: "dark" },
+  { name: "display-board-ar-dark", route: "/display", width: 1600, height: 900, lang: "ar", theme: "dark" },
 ];
 
 /** @type {Omit<Shot, "theme"|"outDir">[]} */
@@ -200,6 +209,24 @@ for (const base of HELP_SHOT_BASES) {
 }
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// GitHub serves same-path raw images through caches. Revise only README image
+// URLs when their bytes change; keep filenames and historical references stable.
+// This reads authored Arcade mockups but never modifies them.
+function refreshReadmeScreenshotRevisions() {
+  const readmePath = join(REPO_ROOT, "README.md");
+  const readme = readFileSync(readmePath, "utf8");
+  const revised = readme.replace(
+    /(\.\/docs\/screenshots\/[^"\s?]+\.png)(?:\?v=[a-f0-9]+)?/g,
+    (url, assetPath) => {
+      const file = join(REPO_ROOT, assetPath);
+      if (!existsSync(file)) throw new Error(`README screenshot missing: ${assetPath}`);
+      const revision = createHash("sha256").update(readFileSync(file)).digest("hex").slice(0, 12);
+      return `${assetPath}?v=${revision}`;
+    },
+  );
+  if (revised !== readme) writeFileSync(readmePath, revised, "utf8");
+}
 
 // A Help screenshot renders at 1x its captured CSS size, capped by the guide
 // column (docs/HELP_SYSTEM.md). The markdown renderer cannot infer a capture's
@@ -596,6 +623,7 @@ async function run() {
   // Always rebuild the manifest from what is on disk, even for a bounded
   // SCREENSHOT_NAMES run, so a partial refresh cannot leave it half-stale.
   await writeHelpScreenshotManifest();
+  refreshReadmeScreenshotRevisions();
 }
 
 run().catch((error) => {

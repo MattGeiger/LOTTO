@@ -44,6 +44,12 @@
 - Refreshed the core README captures and removed unused screenshot assets
   after checking repository references. No application behavior or deployment
   change is part of this documentation update.
+- Completed the core gallery's light/dark pairs, including Chinese, Russian
+  and Arabic boards, with current pill navigation. Replaced fixed light images
+  and the redundant dark-only gallery with theme-aware previews throughout.
+  Content revisions in image URLs refresh cached captures; the capture helper
+  maintains every core pair and updates those revisions without replacing the
+  owner's Arcade mockups. Verified the published README in both appearances.
 
 
 ## [2.0.0-rc.12] — October 9, 2026
