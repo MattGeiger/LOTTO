@@ -112,6 +112,15 @@ then promoted, and public catalog/pack/compatible queue requests identify
 Cloudflare. No saved operating data or Worker configuration was changed.
 See `RELEASES.md` for deployment IDs, validation limits and compute exclusions.
 
+**Stable v2.0 St. Johns publication (October 9, 2026, 14:30:55 PDT):** After
+explicit authorization for both deployments, St. Johns independently activated
+`2.0.0` as revision 2 through its existing staff session. Envelope schema,
+agency/release, checksum and unchanged configuration data pass. Its final
+gate-on deployment serves catalog/pack/compatible queue requests from Cloudflare;
+the queue snapshot remains byte-identical at revision 3. No saved settings or
+Worker configuration changed. Both agencies' existing production read flags
+are persisted as `true` before the authorized shared-main update; see `RELEASES.md`.
+
 Local tests exercise forced cache misses and fail-on-access SQL mocks for
 branding, catalogs, packs and announcement selection; missing/wrong release,
 agency and checksum; custom legacy-safe branding; staff commit/publication

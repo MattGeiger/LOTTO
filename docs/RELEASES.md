@@ -61,10 +61,10 @@ publication at **14:16:49 PDT**, subsequent staff/session and live diagnostic
 checks, and their billable idle tails from quiet Neon comparisons. The
 October 11 read-only comparison remains scheduled for both agencies.
 
-Both Vercel projects track GitHub `main`. Shared-main reconciliation and a
-St. Johns stable rollout await explicit target confirmation; WTH's deployment
-does not imply other-agency activation. Stable GitHub publication can reference
-the prepared `dev` release commit without pushing `main`.
+Both Vercel projects track GitHub `main`. The owner subsequently confirmed
+**both deployments and GitHub**, authorizing St. Johns activation and shared-main
+reconciliation. Each agency's configuration was independently activated and
+validated before updating the shared branch. See the St. Johns receipt below.
 
 ## GitHub stable receipt
 
@@ -76,12 +76,61 @@ the prepared `dev` release commit without pushing `main`.
   `draft: false`. The stable tag is immutable; this receipt is a subsequent
   documentation update.
 - The celebratory README is available on `dev` and the stable tag. Default
-  `main` remains at `6134c0a` because updating it automatically deploys both
-  agencies. Its landing-page update awaits confirmation of St. Johns rollout
-  scope. No GitHub ownership or source-license change occurred.
+  `main` was initially held at `6134c0a` because updating it deploys both
+  agencies. After the owner's explicit confirmation, the stable `dev` history
+  is the authorized fast-forward source for `main`. No history rewrite,
+  GitHub ownership or source-license change is included.
 - The reviewed publication preserves Henry Software's original CRLF readme
   byte-for-byte for asset provenance; its upstream line endings are the only
   staged whitespace-check findings. Application/docs whitespace checks pass.
+
+## Stable St. Johns receipt
+
+- The owner confirmed **both deployments and GitHub** after WTH activation.
+  Verified personal Vercel user `mattgeiger`, scope
+  `matthew-geigers-projects-73851078`, project `stjohns-food-share` /
+  `prj_l9AVyDAMFCc2U9cKy9jr1WGNpZH6`. RC.8 deployment
+  `dpl_CV8H8mkB2LyjEjmcFnieXa8xiHwZ` remains the recovery reference.
+- Stable application, assets, version and dependency graph match WTH's accepted
+  stable source. Both St. Johns hosted Turbopack builds pass. No new application
+  code, dependencies, Worker deployment or core database migration was added.
+- Contrary to the initial migration assumption, St. Johns has **no
+  `ARCADE_DATABASE_URL` configured** in its Vercel environment inventory.
+  Its existing Snake score API reports `{scores:[],unavailable:true}`. No
+  Arcade database migration, new database, grants or score write was performed.
+  The five games ship; local records work independently, and shared leaderboards
+  remain unavailable until that optional isolated database is configured.
+- Gate-off deployment `dpl_2A9tR2hTeiSQqi6dcT9tpzytUjKD` was promoted.
+  The existing Safari staff session accepted authenticated publication with
+  HTTP 200 / `accepted:true`, revision **2**, at **14:30:55 PDT**. Independent
+  envelope schema, exact agency/release, checksum and unchanged-data checks pass.
+- Gate-on deployment `dpl_6jXXWh4p22A8wWaQHdgs5FcktRL4`,
+  `stjohns-food-share-7oxq5m6z6-matthew-geigers-projects-73851078.vercel.app`,
+  reached Ready and was promoted to `stjohnsfoodshare.app`. Live Chrome verifies
+  St. Johns branding, v2.0.0, responsive login tabs and stable release notes.
+  All five games are listed; both new game routes and the warning route load.
+  Refreshed authenticated Safari Admin also shows v2.0.0 and **Persistence
+  confirmed**, retaining the October 3 last-write time. The agent-created
+  staff tab was closed after verification to stop its deliberate reads.
+- Anonymous catalog, Chinese pack, compatible legacy queue request, manifest
+  and public routes return HTTP 200; catalog/pack and queue identify Cloudflare.
+  The public queue snapshot remains byte-identical at revision **3**, and the
+  published configuration data is unchanged. Saved agency settings were not
+  edited. Routing checks do not quantify global SQL or compute savings.
+- Both projects' existing production configuration-read flags were explicitly
+  persisted as `true` for future Git builds, preserving their sensitive setting
+  type and limiting the update to production. Each 2.0.0 configuration was
+  already validated before this step. Root Vercel linkage remains WTH; St. Johns
+  used its own isolated release folder.
+
+Exclude St. Johns staff/session diagnostics beginning around **14:26 PDT**,
+deployment/publication, subsequent live checks and billable idle tails from
+quiet compute measurements. Shared-main Git builds and subsequent verification
+are additional deliberate release activity. The October 11 comparison remains
+scheduled for both agencies. No new real-iPad or fresh email-delivery test was
+performed for St. Johns; the unchanged shared application/dependency set retains
+the owner's WTH RC.12 device acceptance. Receipts are under
+`/tmp/lotto-v2-stjohns-*` and shared-main verification receipts.
 
 # LOTTO v2.0.0-rc.12
 

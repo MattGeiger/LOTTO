@@ -11,6 +11,11 @@
   the board.
 - An optional Pride-month tribute seed (`seed.arcade-high-scores.sql`) was added
   in v1.15.4.
+- Stable v2.0 deployment inventory (October 9, 2026): WTH has the isolated
+  Arcade database and registered new games. St. Johns has no
+  `ARCADE_DATABASE_URL` environment variable, so its shared score API returns
+  unavailable. Local records/play remain usable; this release does not create
+  a database or copy WTH's connection or scores into St. Johns.
 
 ## Data Boundary
 Arcade high scores must use a separate Neon project/database from the core LOTTO

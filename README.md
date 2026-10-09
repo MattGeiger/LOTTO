@@ -28,7 +28,8 @@ or sequential lines — built for [William Temple House](https://www.williamtemp
 and shared as a configurable open-source app for other nonprofits running
 ticketed distributions (food pantries, clinics, giveaways, and similar).
 
-**Production deployment:** https://williamtemple.app
+**Production deployments:** [William Temple House](https://williamtemple.app)
+and [St. Johns Food Share](https://stjohnsfoodshare.app)
 **License:** [AGPL-3.0-or-later](./LICENSE)
 **Release:** v2.0.0 — see [release notes](./docs/release-notes.md) and
 [deployment records](./docs/RELEASES.md).

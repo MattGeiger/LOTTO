@@ -17,6 +17,11 @@
   former predictable 30-minute wake pattern. This is preliminary observation,
   not a quantified savings claim. The scheduled October 11 comparison remains
   in place; any recurrence will be investigated for a subsequent point release.
+- Stable v2.0 activated independently for both WTH and St. Johns after explicit
+  scope confirmation. Matching configuration publications preserve each agency's
+  data. St. Johns has no optional Arcade database configured, so shared scores
+  remain unavailable and no migration is needed. The shared `main` update is
+  authorized after both activations; source ownership remains personal.
 
 
 ## [2.0.0-rc.12] — October 9, 2026
