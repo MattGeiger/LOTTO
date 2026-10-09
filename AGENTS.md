@@ -214,6 +214,11 @@ consistent with existing patterns and workflows.
 
 ## Documentation Priority
 - Documentation is a first-class requirement for this repo.
+- README game previews must show mobile gameplay and its controls, not a
+  desktop page or instructions alone. Preserve the owner's light/dark phone
+  mockups in `docs/screenshots/`; automated captures must not overwrite them.
+  Before removing screenshot assets, check all repository references, including
+  guides and historical deployment records. Keep in-app Help assets separate.
 - Any feature implementation or behavior change must update docs to reflect the current state.
 - New features should have comprehensive implementation planning documented before major coding begins.
 - `docs/GAME.md` and `docs/V2.0_PLANNED_FEATURES.md` should be kept aligned with live Arcade behavior and planned scope.

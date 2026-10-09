@@ -35,6 +35,16 @@
   exclusions in `docs/STJOHNS_ARCADE_DATABASE.md`, and updated the score and
   Neon read inventories. Configuration-only activation remains v2.0.0.
 
+### README screenshot refresh
+
+- Replaced desktop/instruction-only Arcade previews with the owner's light/dark
+  phone mockups for the menu, Memory Grid, Tower of Hanoi and Day of the Dead.
+  Theme-aware images show gameplay and controls; documented mobile preview
+  standards and kept authored mockups separate from automated captures.
+- Refreshed the core README captures and removed unused screenshot assets
+  after checking repository references. No application behavior or deployment
+  change is part of this documentation update.
+
 
 ## [2.0.0-rc.12] — October 9, 2026
 

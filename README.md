@@ -151,20 +151,31 @@ and a QR code back to the personalized experience:
 |---|---|
 | ![Appearance management and live preview](./docs/screenshots/admin-appearance.png) | ![Staff sign-in page](./docs/screenshots/login.png) |
 
-| Public inventory | Searchable in-app Help | Optional Arcade |
-|---|---|---|
-| ![Public inventory page](./docs/screenshots/inventory.png) | ![In-app help index](./docs/screenshots/help.png) | ![Arcade index](./docs/screenshots/arcade.png) |
-
-Two new pixel cabinets bring a more thoughtful pace to the Arcade:
-
-| Memory Grid | Tower of Hanoi |
+| Public inventory | Searchable in-app Help |
 |---|---|
-| ![Memory Grid pixel cabinet in dark mode](./docs/screenshots/memory-grid-dark.png) | ![Tower of Hanoi completed puzzle with Continue](./docs/screenshots/tower-of-hanoi-continue.png) |
+| ![Public inventory page](./docs/screenshots/inventory.png) | ![In-app help index](./docs/screenshots/help.png) |
+
+### Optional Arcade
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/arcade_dark.png">
+    <img alt="Optional Arcade menu on a phone" src="./docs/screenshots/arcade_light.png" width="300">
+  </picture>
+</p>
+
+Mobile game previews show the playfields and controls. The images follow your
+light or dark appearance preference:
+
+| Memory Grid | Tower of Hanoi | Day of the Dead |
+|---|---|---|
+| <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/mem_dark.png"><img alt="Memory Grid on a phone, showing food cards, turn and pair counters, and Pause and Restart controls" src="./docs/screenshots/mem_light.png"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/toh_dark.png"><img alt="Tower of Hanoi on a phone, showing numbered disks, three pegs, and Pause, Undo and Restart controls" src="./docs/screenshots/toh_light.png"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/dod_dark.png"><img alt="Day of the Dead on a phone, showing gameplay, the movement slider and bottom Pause and A controls" src="./docs/screenshots/dod_light.png"></picture> |
 
 Memory Grid rewards accurate matching. Hanoi rewards efficient moves and offers
 Continue from three to four to five disks. Neither uses a timer or speed bonus.
 
-[Light-mode game preview](./docs/screenshots/memory-grid-light.png).
+Day of the Dead asks players to acknowledge its cartoon-violence warning before
+play. These phone mockups were prepared by the project owner.
 
 ### Dark mode
 
@@ -184,8 +195,10 @@ layout for Arabic (and Persian), with ticket numbers kept in their natural order
 |---|---|---|
 | ![Display board in Chinese](./docs/screenshots/display-board-zh.png) | ![Display board in Russian](./docs/screenshots/display-board-ru.png) | ![Display board in Arabic](./docs/screenshots/display-board-ar.png) |
 
-> Regenerate all screenshots with `npm run screenshots` while the app is running
-> (drives your installed Chrome via `puppeteer-core`).
+> Automated app captures can be regenerated with `npm run screenshots` while
+> the app is running (drives your installed Chrome via `puppeteer-core`). The
+> owner-created Arcade phone mockups are maintained separately. Keep README
+> game previews mobile and show the actual playfield and controls.
 
 ---
 

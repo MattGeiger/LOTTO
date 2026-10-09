@@ -1,6 +1,8 @@
 // Regenerates the README screenshots in docs/screenshots/ and the light/dark
 // in-app Help pairs in public/help-screenshots/ by driving the installed Google
 // Chrome via puppeteer-core (no bundled browser download).
+// Owner-created README Arcade phone mockups are maintained separately; this
+// script must not replace them with desktop captures.
 //
 // Usage:
 //   1. Start the app:  npm run dev   (or `npm start` after a build)
@@ -68,7 +70,6 @@ const SHOTS = [
   { name: "admin-dashboard", route: "/admin", width: 1440, height: 900 },
   { name: "display-board", route: "/display", width: 1600, height: 900 },
   { name: "inventory", route: "/inventory", width: 1440, height: 1000 },
-  { name: "arcade", route: "/arcade", width: 1440, height: 950 },
   { name: "admin-appearance", route: "/admin", width: 1440, height: 1000, prepare: "appearance" },
   { name: "help", route: "/help", width: 1440, height: 1000 },
   // Dark mode
