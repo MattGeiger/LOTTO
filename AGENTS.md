@@ -218,8 +218,10 @@ consistent with existing patterns and workflows.
   desktop page or instructions alone. Preserve the owner's light/dark phone
   mockups in `docs/screenshots/`; automated captures must not overwrite them.
   All current README previews need matching light/dark sources, including core
-  and localized screens. Refresh image URL content revisions after recapture,
-  and verify the rendered GitHub `main` README in both appearances after pushing.
+  and localized screens. Commit captures first, then pin README image URLs to
+  that commit on `raw.githubusercontent.com`; branch URLs and query revisions
+  can still serve cached files. Verify the rendered GitHub `main` README in
+  both appearances after pushing.
   Before removing screenshot assets, check all repository references, including
   guides and historical deployment records. Keep in-app Help assets separate.
 - Any feature implementation or behavior change must update docs to reflect the current state.

@@ -47,9 +47,11 @@
 - Completed the core gallery's light/dark pairs, including Chinese, Russian
   and Arabic boards, with current pill navigation. Replaced fixed light images
   and the redundant dark-only gallery with theme-aware previews throughout.
-  Content revisions in image URLs refresh cached captures; the capture helper
-  maintains every core pair and updates those revisions without replacing the
-  owner's Arcade mockups. Verified the published README in both appearances.
+  The capture helper maintains every core pair without replacing the owner's
+  Arcade mockups. Verified the published README in both appearances.
+- Live verification found GitHub's branch-image cache still returning older
+  bytes despite revised query strings. Pinned README image sources to the
+  capture commit's immutable raw URLs and documented that publication workflow.
 
 
 ## [2.0.0-rc.12] — October 9, 2026

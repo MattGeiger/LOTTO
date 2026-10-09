@@ -141,32 +141,32 @@ focused dashboard:
 
 | Personalized client view | Staff dashboard |
 |---|---|
-| <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/client-ticket-dark.png?v=88d218adff73"><img alt="Personalized LOTTO ticket status" src="./docs/screenshots/client-ticket.png?v=2b088fd9a4c9"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/admin-dashboard-dark.png?v=4141146820a7"><img alt="LOTTO staff queue controls" src="./docs/screenshots/admin-dashboard.png?v=035823cc4363"></picture> |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/client-ticket-dark.png"><img alt="Personalized LOTTO ticket status" src="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/client-ticket.png"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/admin-dashboard-dark.png"><img alt="LOTTO staff queue controls" src="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/admin-dashboard.png"></picture> |
 
 The lobby display gives the room a shared, large-format view with ticket search
 and a QR code back to the personalized experience:
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/display-board-dark.png?v=c775969b4864">
-  <img alt="LOTTO public display board" src="./docs/screenshots/display-board.png?v=42df6d44f80b">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/display-board-dark.png">
+  <img alt="LOTTO public display board" src="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/display-board.png">
 </picture>
 
 ### Administration and optional surfaces
 
 | Appearance management | Scanner-safe staff sign-in |
 |---|---|
-| <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/admin-appearance-dark.png?v=a69dca1f4d26"><img alt="Appearance management and live preview" src="./docs/screenshots/admin-appearance.png?v=65c0998ca6e0"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/login-dark.png?v=18eae8d1d780"><img alt="Staff sign-in page" src="./docs/screenshots/login.png?v=283d66d5b877"></picture> |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/admin-appearance-dark.png"><img alt="Appearance management and live preview" src="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/admin-appearance.png"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/login-dark.png"><img alt="Staff sign-in page" src="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/login.png"></picture> |
 
 | Public inventory | Searchable in-app Help |
 |---|---|
-| <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/inventory-dark.png?v=c65cf050e86c"><img alt="Public inventory page" src="./docs/screenshots/inventory.png?v=266ef52e2d50"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/help-dark.png?v=ff8d2662a13b"><img alt="In-app help index" src="./docs/screenshots/help.png?v=55969d592faf"></picture> |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/inventory-dark.png"><img alt="Public inventory page" src="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/inventory.png"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/help-dark.png"><img alt="In-app help index" src="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/help.png"></picture> |
 
 ### Optional Arcade
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/arcade_dark.png?v=dfa52970d19f">
-    <img alt="Optional Arcade menu on a phone" src="./docs/screenshots/arcade_light.png?v=e32c021a90a8" width="300">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/arcade_dark.png">
+    <img alt="Optional Arcade menu on a phone" src="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/arcade_light.png" width="300">
   </picture>
 </p>
 
@@ -175,7 +175,7 @@ light or dark appearance preference:
 
 | Memory Grid | Tower of Hanoi | Day of the Dead |
 |---|---|---|
-| <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/mem_dark.png?v=848f2b3ae4ef"><img alt="Memory Grid on a phone, showing food cards, turn and pair counters, and Pause and Restart controls" src="./docs/screenshots/mem_light.png?v=bb96d2fa66be"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/toh_dark.png?v=e83d121a35ec"><img alt="Tower of Hanoi on a phone, showing numbered disks, three pegs, and Pause, Undo and Restart controls" src="./docs/screenshots/toh_light.png?v=49b6eadbfdd3"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/dod_dark.png?v=a84ff4e6f8eb"><img alt="Day of the Dead on a phone, showing gameplay, the movement slider and bottom Pause and A controls" src="./docs/screenshots/dod_light.png?v=16ef70700647"></picture> |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/mem_dark.png"><img alt="Memory Grid on a phone, showing food cards, turn and pair counters, and Pause and Restart controls" src="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/mem_light.png"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/toh_dark.png"><img alt="Tower of Hanoi on a phone, showing numbered disks, three pegs, and Pause, Undo and Restart controls" src="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/toh_light.png"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/dod_dark.png"><img alt="Day of the Dead on a phone, showing gameplay, the movement slider and bottom Pause and A controls" src="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/dod_light.png"></picture> |
 
 Memory Grid rewards accurate matching. Hanoi rewards efficient moves and offers
 Continue from three to four to five disks. Neither uses a timer or speed bonus.
@@ -190,14 +190,15 @@ layout for Arabic (and Persian), with ticket numbers kept in their natural order
 
 | 中文 (Chinese) | Русский (Russian) | العربية (Arabic, RTL) |
 |---|---|---|
-| <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/display-board-zh-dark.png?v=1778fc64caad"><img alt="Display board in Chinese" src="./docs/screenshots/display-board-zh.png?v=be1dde68a576"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/display-board-ru-dark.png?v=cbea2dfa9c32"><img alt="Display board in Russian" src="./docs/screenshots/display-board-ru.png?v=d612c46e352b"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/screenshots/display-board-ar-dark.png?v=e798b1e44f91"><img alt="Display board in Arabic" src="./docs/screenshots/display-board-ar.png?v=e6f8c46752a4"></picture> |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/display-board-zh-dark.png"><img alt="Display board in Chinese" src="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/display-board-zh.png"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/display-board-ru-dark.png"><img alt="Display board in Russian" src="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/display-board-ru.png"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/display-board-ar-dark.png"><img alt="Display board in Arabic" src="https://raw.githubusercontent.com/MattGeiger/LOTTO/f0397578200a85f68d14cf9497feba3ed9747395/docs/screenshots/display-board-ar.png"></picture> |
 
 > Automated app captures can be regenerated with `npm run screenshots` while
 > the app is running (drives your installed Chrome via `puppeteer-core`). The
 > owner-created Arcade phone mockups are maintained separately. Keep README
 > game previews mobile and show the actual playfield and controls. Capture both
-> themes, and refresh each image's content revision in its README URL so cached
-> captures are replaced. The capture script updates those revisions automatically.
+> themes. Commit refreshed captures first, then point the README image URLs at
+> that commit on `raw.githubusercontent.com`. Immutable image URLs avoid stale
+> branch-image caches; adding a query revision to a branch URL is insufficient.
 
 ---
 

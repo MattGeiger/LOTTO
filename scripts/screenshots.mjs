@@ -18,8 +18,7 @@
 // language-context `display-language` / `display-language-session`) so the
 // screenshots match what a real user with those settings would see.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import puppeteer from "puppeteer-core";
@@ -209,24 +208,6 @@ for (const base of HELP_SHOT_BASES) {
 }
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// GitHub serves same-path raw images through caches. Revise only README image
-// URLs when their bytes change; keep filenames and historical references stable.
-// This reads authored Arcade mockups but never modifies them.
-function refreshReadmeScreenshotRevisions() {
-  const readmePath = join(REPO_ROOT, "README.md");
-  const readme = readFileSync(readmePath, "utf8");
-  const revised = readme.replace(
-    /(\.\/docs\/screenshots\/[^"\s?]+\.png)(?:\?v=[a-f0-9]+)?/g,
-    (url, assetPath) => {
-      const file = join(REPO_ROOT, assetPath);
-      if (!existsSync(file)) throw new Error(`README screenshot missing: ${assetPath}`);
-      const revision = createHash("sha256").update(readFileSync(file)).digest("hex").slice(0, 12);
-      return `${assetPath}?v=${revision}`;
-    },
-  );
-  if (revised !== readme) writeFileSync(readmePath, revised, "utf8");
-}
 
 // A Help screenshot renders at 1x its captured CSS size, capped by the guide
 // column (docs/HELP_SYSTEM.md). The markdown renderer cannot infer a capture's
@@ -623,7 +604,6 @@ async function run() {
   // Always rebuild the manifest from what is on disk, even for a bounded
   // SCREENSHOT_NAMES run, so a partial refresh cannot leave it half-stale.
   await writeHelpScreenshotManifest();
-  refreshReadmeScreenshotRevisions();
 }
 
 run().catch((error) => {
