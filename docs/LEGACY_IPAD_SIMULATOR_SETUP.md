@@ -261,7 +261,8 @@ eval `printf '\163\167\137\166\145\162\163'`
 
 The older UTM guest instructions' `mount_virtiofs share installers` failed with
 `fs_tag share not found`. UTM 4.7.5 automatically mounted the share at
-`<shared-installers>`; no manual remount was needed.
+the shared installer directory; no manual remount was needed. In the examples
+below, replace `<shared-installers>` with that directory's guest mount path.
 This matches the [UTM project's outdated-documentation report](https://github.com/utmapp/UTM/issues/7677).
 Guest `/Applications` contained only Safari and Utilities before installation,
 and the guest filesystem reported **125 GiB available**. Xcode unpacking was

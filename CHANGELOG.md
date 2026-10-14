@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### Documentation
+
+- Replaced a machine-specific simulator installer mount path with a named
+  placeholder. Audited tracked files for client-record identifiers, personal
+  checkout paths, and project contacts; retained deployment identity and
+  synthetic examples.
+
 ## [2.0.0] — October 9, 2026
 
 ### Stable major release
