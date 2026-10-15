@@ -4,8 +4,8 @@
 
 ### Documentation
 
-- Repinned README screenshots to rewritten capture commits; image contents
-  remain unchanged and no longer depend on retained pre-rewrite Git objects.
+- Updated README screenshot links to the current capture commit; image
+  contents are unchanged.
 - Replaced a machine-specific simulator installer mount path with a named
   placeholder. Audited tracked files for client-record identifiers, personal
   checkout paths, and project contacts; retained deployment identity and
