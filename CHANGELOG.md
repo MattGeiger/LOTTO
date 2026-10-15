@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Documentation
+
+- Repinned README screenshots to rewritten capture commits; image contents
+  remain unchanged and no longer depend on retained pre-rewrite Git objects.
+
 ## [2.0.0] — October 9, 2026
 
 ### Stable major release
